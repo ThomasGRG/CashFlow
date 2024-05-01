@@ -1,15 +1,23 @@
 package jp.ikigai.cash.flow.data.entity
 
 import android.icu.util.Currency
+import androidx.compose.ui.graphics.vector.ImageVector
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
-import org.mongodb.kbson.ObjectId
+import jp.ikigai.cash.flow.utils.getIconForSource
 
-class Source : RealmObject {
+class Source() : RealmObject {
     @PrimaryKey
-    var _id: ObjectId = ObjectId()
+    var uuid: String = ""
     var name: String = ""
-    var iconName: String = ""
+    private var iconName: String = ""
+    var icon: ImageVector
+        get() {
+            return iconName.getIconForSource()
+        }
+        set(value) {
+            iconName = value.name
+        }
     var currency: String = Currency.getInstance("INR").currencyCode
     var balance: Double = 0.0
     var frequency: Int = 0
