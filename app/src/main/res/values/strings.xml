@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">CashFlow</string>
+
+    <!--  Card Strings  -->
+    <string name="frequency_of_use_label">Frequency of use : %1$s</string>
+    <!--  Card Strings  -->
 </resources>
