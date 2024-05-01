@@ -54,6 +54,7 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.dialogs.IconDetailsDialog
 import jp.ikigai.cash.flow.ui.viewmodels.common.ChooseIconScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
+import jp.ikigai.cash.flow.utils.getNumberFormatter
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -67,6 +68,10 @@ fun ChooseIconScreen(
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val numberFormatter by remember {
+        mutableStateOf(getNumberFormatter())
+    }
+
     val icons by remember(key1 = state.icons) {
         mutableStateOf(state.icons)
     }
@@ -76,11 +81,17 @@ fun ChooseIconScreen(
     }
 
     val iconCount by remember(key1 = state.iconCount) {
-        mutableStateOf(state.iconCount)
+        mutableStateOf(
+            numberFormatter.format(state.iconCount).toString()
+        )
     }
 
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
+    }
+
+    val searching by remember(key1 = state.searching) {
+        mutableStateOf(state.searching)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -109,7 +120,7 @@ fun ChooseIconScreen(
     }
 
     OneHandModeScaffold(
-        loading = loading,
+        loading = loading || searching,
         showToastBar = false,
         toastBarText = "",
         onDismissToastBar = {},
