@@ -226,13 +226,7 @@ class UpsertTransactionScreenViewModel(
                 )
             }
 
-            val transaction = state.value.transaction.apply {
-                title = newTitle
-                description = newDescription
-                amount = state.value.amount
-                taxAmount = state.value.taxAmount
-                time = state.value.dateTime.toEpochMilli()
-            }
+            val transaction = state.value.transaction
             val selectedCategory = state.value.selectedCategory
             val selectedCounterParty = state.value.selectedCounterParty
             val selectedMethod = state.value.selectedMethod
@@ -248,10 +242,10 @@ class UpsertTransactionScreenViewModel(
             if (transactionUuid.isNotBlank()) {
                 updateSource(
                     source = selectedSource,
-                    amount = transaction.amount,
+                    amount = state.value.amount,
                     frequency = selectedSource.frequency,
                     time = time,
-                    isDebit = transaction.type == TransactionType.DEBIT
+                    isDebit = state.value.type == TransactionType.DEBIT
                 )
             } else {
                 updateCategory(
@@ -271,14 +265,16 @@ class UpsertTransactionScreenViewModel(
                 )
                 updateSource(
                     source = selectedSource,
-                    amount = transaction.amount,
+                    amount = state.value.amount,
                     frequency = selectedSource.frequency + 1,
                     time = time,
-                    isDebit = transaction.type == TransactionType.DEBIT
+                    isDebit = state.value.type == TransactionType.DEBIT
                 )
             }
             updateTransaction(
                 transaction = transaction,
+                newTitle = newTitle,
+                newDescription = newDescription,
                 category = selectedCategory,
                 counterParty = selectedCounterParty,
                 method = selectedMethod,
@@ -324,13 +320,10 @@ class UpsertTransactionScreenViewModel(
                 frequency = selectedMethod.frequency - 1,
             )
             realm.write {
-                copyToRealm(
-                    instance = selectedSource.apply {
-                        frequency = selectedSource.frequency - 1
-                        balance = previousBalance
-                    },
-                    updatePolicy = UpdatePolicy.ALL
-                )
+                findLatest(selectedSource)?.also {
+                    it.frequency = it.frequency - 1
+                    it.balance = previousBalance
+                }
             }
             realm.write {
                 findLatest(transaction)?.also {
@@ -348,6 +341,8 @@ class UpsertTransactionScreenViewModel(
 
     private suspend fun updateTransaction(
         transaction: Transaction,
+        newTitle: String,
+        newDescription: String,
         category: Category,
         counterParty: CounterParty,
         method: Method,
@@ -363,6 +358,12 @@ class UpsertTransactionScreenViewModel(
                 copyToRealm(
                     instance = transaction.apply {
                         this.uuid = UUID.randomUUID().toString()
+                        this.title = newTitle
+                        this.description = newDescription
+                        this.amount = state.value.amount
+                        this.taxAmount = state.value.taxAmount
+                        this.time = state.value.dateTime.toEpochMilli()
+                        this.type = state.value.type
                         this.category = latestCategory
                         this.method = latestMethod
                         this.source = latestSource
@@ -373,6 +374,12 @@ class UpsertTransactionScreenViewModel(
                 )
             } else {
                 findLatest(transaction)?.also {
+                    it.title = newTitle
+                    it.description = newDescription
+                    it.amount = state.value.amount
+                    it.taxAmount = state.value.taxAmount
+                    it.time = state.value.dateTime.toEpochMilli()
+                    it.type = state.value.type
                     it.category = latestCategory
                     it.method = latestMethod
                     it.source = latestSource
@@ -612,9 +619,7 @@ class UpsertTransactionScreenViewModel(
     fun setTransactionType(transactionType: TransactionType) {
         _state.update {
             it.copy(
-                transaction = it.transaction.apply {
-                    type = transactionType
-                }
+                type = transactionType
             )
         }
         if (transactionType == TransactionType.DEBIT) {

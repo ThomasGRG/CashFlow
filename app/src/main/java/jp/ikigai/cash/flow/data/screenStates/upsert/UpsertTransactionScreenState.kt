@@ -7,6 +7,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -20,6 +21,7 @@ data class UpsertTransactionScreenState(
     val dateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.systemDefault()),
     val dateString: String = "",
     val timeString: String = "",
+    val type: TransactionType = TransactionType.DEBIT,
     val selectedCategory: Category = Category(),
     val selectedCounterParty: CounterParty = CounterParty(),
     val selectedMethod: Method = Method(),
