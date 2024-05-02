@@ -2,13 +2,14 @@ package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -377,7 +378,8 @@ fun UpsertTransactionScreen(
 
         SheetType.COUNTERPARTY -> {
             CommonSelectionSheet(
-                index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }.coerceAtLeast(0),
+                index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
+                    .coerceAtLeast(0),
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -545,7 +547,14 @@ fun UpsertTransactionScreen(
         SheetType.AUTO_COMPLETE -> {
             AutoCompleteTextFieldBottomSheet(
                 fieldValue = titleFieldValue,
-                setFieldValue = { titleFieldValue = it },
+                setFieldValue = {
+                    scope.launch {
+                        keyboardController?.hide()
+                        sheetState.hide()
+                        sheetType = SheetType.NONE
+                        titleFieldValue = it
+                    }
+                },
                 enabled = enabled,
                 icon = TablerIcons.Typography,
                 iconDescription = "title icon",
@@ -571,6 +580,7 @@ fun UpsertTransactionScreen(
                             setTitleFromAutoComplete(title)
                         }
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
             }
         }
