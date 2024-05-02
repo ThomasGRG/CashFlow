@@ -81,8 +81,10 @@ import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
+import jp.ikigai.cash.flow.ui.components.sheets.AutoCompleteTextFieldBottomSheet
 import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
 import jp.ikigai.cash.flow.ui.components.sheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.sheets.DatePickerBottomSheet
@@ -134,7 +136,8 @@ fun UpsertTransactionScreen(
         mutableStateOf(
             object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    val currentDateMillis = LocalDate.now(ZoneId.of("UTC")).plusDays(1).toEpochDay() * 24 * 60 * 60 * 1000
+                    val currentDateMillis = LocalDate.now(ZoneId.of("UTC")).plusDays(1)
+                        .toEpochDay() * 24 * 60 * 60 * 1000
                     return utcTimeMillis < currentDateMillis
                 }
 
@@ -250,6 +253,10 @@ fun UpsertTransactionScreen(
 
     var selectedTransactionItem by remember {
         mutableStateOf(TransactionItem())
+    }
+
+    val titles by remember(key1 = state.titles) {
+        mutableStateOf(state.titles)
     }
 
     val isDebit by remember(key1 = state.type) {
@@ -523,6 +530,38 @@ fun UpsertTransactionScreen(
             )
         }
 
+        SheetType.AUTO_COMPLETE -> {
+            AutoCompleteTextFieldBottomSheet(
+                fieldValue = titleFieldValue,
+                setFieldValue = { titleFieldValue = it },
+                enabled = enabled,
+                icon = TablerIcons.Typography,
+                iconDescription = "title icon",
+                iconTint = MaterialTheme.colorScheme.onBackground,
+                label = "Title",
+                dismiss = {
+                    scope.launch {
+                        sheetState.hide()
+                        sheetType = SheetType.NONE
+                    }
+                },
+                sheetState = sheetState
+            ) { setTitleFromAutoComplete ->
+                items(
+                    items = titles,
+                    key = { title -> title }
+                ) { title ->
+                    ToggleButton(
+                        label = title,
+                        selected = false,
+                        toggle = {
+                            setTitleFromAutoComplete(title)
+                        }
+                    )
+                }
+            }
+        }
+
         else -> {}
     }
 
@@ -585,32 +624,42 @@ fun UpsertTransactionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedTextField(
-                    value = titleFieldValue,
-                    onValueChange = {
-                        titleFieldValue = it
+                ExposedDropdownMenuBox(
+                    expanded = false,
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.AUTO_COMPLETE
+                        }
                     },
-                    singleLine = true,
-                    enabled = enabled,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.Typography,
-                            contentDescription = "title icon",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = "Title"
-                        )
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = titleFieldValue,
+                        onValueChange = {},
+                        singleLine = true,
+                        readOnly = true,
+                        enabled = enabled,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = TablerIcons.Typography,
+                                contentDescription = "title icon",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = "Title"
+                            )
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                }
                 OutlinedTextField(
                     value = descriptionFieldValue,
                     onValueChange = {
@@ -679,7 +728,11 @@ fun UpsertTransactionScreen(
                 )
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.DATE },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.DATE
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -712,7 +765,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.TIME },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.TIME
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -745,7 +802,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.CATEGORY },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.CATEGORY
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -776,7 +837,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.COUNTERPARTY },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.COUNTERPARTY
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -809,7 +874,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.METHOD },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.METHOD
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -842,7 +911,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.SOURCE },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.SOURCE
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -875,7 +948,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.TYPE },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.TYPE
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
@@ -920,8 +997,10 @@ fun UpsertTransactionScreen(
                         ExposedDropdownMenuBox(
                             expanded = false,
                             onExpandedChange = {
-                                selectedTransactionItem = entry.value
-                                sheetType = SheetType.ITEMS
+                                if (enabled) {
+                                    selectedTransactionItem = entry.value
+                                    sheetType = SheetType.ITEMS
+                                }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -940,7 +1019,9 @@ fun UpsertTransactionScreen(
                         }
                         IconButton(
                             onClick = {
-                                removeItem(entry.value)
+                                if (enabled) {
+                                    removeItem(entry.value)
+                                }
                             },
                             modifier = Modifier.align(Alignment.CenterEnd)
                         ) {
@@ -991,7 +1072,11 @@ fun UpsertTransactionScreen(
                 }
                 ExposedDropdownMenuBox(
                     expanded = false,
-                    onExpandedChange = { sheetType = SheetType.ITEMS },
+                    onExpandedChange = {
+                        if (enabled) {
+                            sheetType = SheetType.ITEMS
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
