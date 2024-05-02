@@ -14,5 +14,6 @@ enum class SheetType {
     MORE_OPTIONS,
     FILTER,
     TEMPLATES,
-    ITEMS
+    ITEMS,
+    AUTO_COMPLETE
 }
