@@ -31,6 +31,7 @@ data class UpsertTransactionScreenState(
     val methods: List<Method> = emptyList(),
     val sources: List<Source> = emptyList(),
     val items: List<Item> = emptyList(),
+    val titles: List<String> = emptyList(),
     val transactionItems: Map<Item, TransactionItem> = emptyMap(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
