@@ -1,36 +1,24 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -51,7 +39,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,9 +52,10 @@ import compose.icons.tablericons.Alarm
 import compose.icons.tablericons.ArrowDownCircle
 import compose.icons.tablericons.ArrowUpCircle
 import compose.icons.tablericons.CalendarEvent
-import compose.icons.tablericons.CurrencyDollar
+import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
+import compose.icons.tablericons.Stack
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -82,8 +70,9 @@ import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
-import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
-import jp.ikigai.cash.flow.ui.components.common.ToastBar
+import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
+import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.sheets.AutoCompleteTextFieldBottomSheet
 import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
 import jp.ikigai.cash.flow.ui.components.sheets.ConfirmDeleteSheet
@@ -208,7 +197,7 @@ fun UpsertTransactionScreen(
     }
 
     val transactionItems by remember(key1 = state.transactionItems) {
-        mutableStateOf(state.transactionItems)
+        mutableStateOf(state.transactionItems.values.toList())
     }
 
     val itemHeaderVisible by remember(key1 = state.transactionItems) {
@@ -521,6 +510,7 @@ fun UpsertTransactionScreen(
                 addItem = addItem,
                 dismiss = {
                     scope.launch {
+                        keyboardController?.hide()
                         sheetState.hide()
                         sheetType = SheetType.NONE
                     }
@@ -541,6 +531,7 @@ fun UpsertTransactionScreen(
                 label = "Title",
                 dismiss = {
                     scope.launch {
+                        keyboardController?.hide()
                         sheetState.hide()
                         sheetType = SheetType.NONE
                     }
@@ -565,11 +556,18 @@ fun UpsertTransactionScreen(
         else -> {}
     }
 
-    Scaffold(
-        modifier = Modifier
-            .navigationBarsPadding()
-            .imePadding()
-            .fillMaxSize(),
+    OneHandModeScaffold(
+        loading = loading,
+        showToastBar = showToastBar,
+        toastBarText = toastBarString,
+        onDismissToastBar = {
+            showToastBar = false
+            if (currentEvent == Event.SaveSuccess) {
+                navigateBack()
+            }
+        },
+        showEmptyPlaceholder = false,
+        emptyPlaceholderText = "",
         topBar = {
             TopAppBar(
                 title = {
@@ -583,7 +581,10 @@ fun UpsertTransactionScreen(
         },
         bottomBar = {
             ThreeSlotRoundedBottomBar(
-                navigateBack = navigateBack,
+                navigateBack = {
+                    keyboardController?.hide()
+                    navigateBack()
+                },
                 floatingButtonIcon = {
                     Icon(
                         imageVector = TablerIcons.DeviceFloppy,
@@ -608,382 +609,191 @@ fun UpsertTransactionScreen(
                 } else null
             )
         }
-    ) { contentPadding ->
-        Box(
+    ) { oneHandModeBoxHeight, resetOneHandMode ->
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(contentPadding)
+                .padding(start = 10.dp, end = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 10.dp, end = 10.dp)
-                    .verticalScroll(
-                        rememberScrollState()
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            item(
+                key = "one-hand-mode-expand-row",
+                contentType = "row"
             ) {
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.AUTO_COMPLETE
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = titleFieldValue,
-                        onValueChange = {},
-                        singleLine = true,
-                        readOnly = true,
-                        enabled = enabled,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Sentences
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.Typography,
-                                contentDescription = "title icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Title"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                OutlinedTextField(
-                    value = descriptionFieldValue,
-                    onValueChange = {
-                        descriptionFieldValue = it
-                    },
+                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
+            }
+            item(
+                key = "title",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.AUTO_COMPLETE,
                     enabled = enabled,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.FileText,
-                            contentDescription = "description icon",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = "Description"
-                        )
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    value = titleFieldValue,
+                    label = "Title",
+                    icon = TablerIcons.Typography,
+                    iconDescription = "title icon",
+                    onClick = {
+                        sheetType = SheetType.AUTO_COMPLETE
+                    }
                 )
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = setAmount,
-                    singleLine = true,
-                    isError = !amountValid,
-                    enabled = enabled && !itemHeaderVisible,
+            }
+            item(
+                key = "description",
+                contentType = "textField"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    value = descriptionFieldValue,
+                    onValueChange = { descriptionFieldValue = it },
+                    enabled = enabled,
+                    label = "Description",
+                    icon = TablerIcons.FileText,
+                    iconDescription = "description icon",
                     keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.None,
-                        autoCorrect = false,
-                        keyboardType = KeyboardType.Number,
+                        capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Done
                     ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            keyboardController?.hide()
-                        }
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.CurrencyDollar,
-                            contentDescription = "amount icon",
-                            tint = if (!amountValid) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onBackground
-                            }
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = "Amount"
-                        )
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    onDone = {
+                        keyboardController?.hide()
+                    }
                 )
-                AnimatedTextFieldErrorLabel(
-                    visible = !amountValid,
-                    errorLabel = "Enter a number > 0"
+            }
+            item(
+                key = "amount",
+                contentType = "textField"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    value = amount,
+                    onValueChange = setAmount,
+                    enabled = enabled && !itemHeaderVisible,
+                    label = "Amount",
+                    icon = TablerIcons.CashBanknote,
+                    iconDescription = "amount icon",
+                    isError = !amountValid,
+                    errorHint = "Enter a number > 0",
+                    onDone = {
+                        keyboardController?.hide()
+                    }
                 )
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.DATE
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+            }
+            item(
+                key = "date",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.DATE,
+                    enabled = enabled,
+                    value = date,
+                    label = "Date",
+                    icon = TablerIcons.CalendarEvent,
+                    iconDescription = "date icon",
+                    onClick = {
+                        sheetType = SheetType.DATE
+                    }
+                )
+            }
+            item(
+                key = "time",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.TIME,
+                    enabled = enabled,
+                    value = time,
+                    label = "Time",
+                    icon = TablerIcons.Alarm,
+                    iconDescription = "time icon",
+                    onClick = {
+                        sheetType = SheetType.TIME
+                    }
+                )
+            }
+            item(
+                key = "category",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.CATEGORY,
+                    enabled = enabled,
+                    value = selectedCategory.name,
+                    label = "Category",
+                    icon = selectedCategory.icon,
+                    iconDescription = "category icon",
+                    onClick = {
+                        sheetType = SheetType.CATEGORY
+                    }
+                )
+            }
+            item(
+                key = "counterParty",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.COUNTERPARTY,
+                    enabled = enabled,
+                    value = selectedCounterParty.name,
+                    label = "Counter party",
+                    icon = selectedCounterParty.icon,
+                    iconDescription = "counter party icon",
+                    onClick = {
+                        sheetType = SheetType.COUNTERPARTY
+                    }
+                )
+            }
+            item(
+                key = "method",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.METHOD,
+                    enabled = enabled,
+                    value = selectedMethod.name,
+                    label = "Method",
+                    icon = selectedMethod.icon,
+                    iconDescription = "method icon",
+                    onClick = {
+                        sheetType = SheetType.METHOD
+                    }
+                )
+            }
+            item(
+                key = "source",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.SOURCE,
+                    enabled = enabled,
+                    value = selectedSource.name,
+                    label = "Source",
+                    icon = selectedSource.icon,
+                    iconDescription = "source icon",
+                    onClick = {
+                        sheetType = SheetType.SOURCE
+                    }
+                )
+            }
+            item(
+                key = "transactionType",
+                contentType = "dropDown"
+            ) {
+                RoundedCornerOutlinedTextField(
+                    expanded = sheetType == SheetType.TYPE,
+                    enabled = enabled,
+                    value = if (isDebit) "Debit" else "Credit",
+                    label = "Transaction type",
+                    icon = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
+                    iconDescription = "type icon",
+                    onClick = {
+                        sheetType = SheetType.TYPE
+                    }
+                )
+            }
+            if (itemHeaderVisible) {
+                item(
+                    key = "itemHeader",
+                    contentType = "header"
                 ) {
-                    OutlinedTextField(
-                        value = date,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.CalendarEvent,
-                                contentDescription = "date icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.DATE
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Date"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.TIME
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = time,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.Alarm,
-                                contentDescription = "time icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.TIME
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Time"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.CATEGORY
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedCategory.name,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = selectedCategory.icon,
-                                contentDescription = "category icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = sheetType == SheetType.CATEGORY)
-                        },
-                        label = {
-                            Text(
-                                text = "Category"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.COUNTERPARTY
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedCounterParty.name,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = selectedCounterParty.icon,
-                                contentDescription = "counter party icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.COUNTERPARTY
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Counter party"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.METHOD
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedMethod.name,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = selectedMethod.icon,
-                                contentDescription = "method icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.METHOD
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Method"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.SOURCE
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = selectedSource.name,
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = selectedSource.icon,
-                                contentDescription = "source icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.SOURCE
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Source"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            sheetType = SheetType.TYPE
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = if (isDebit) "Debit" else "Credit",
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
-                                contentDescription = "type icon",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = sheetType == SheetType.TYPE
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Transaction Type"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
-                if (itemHeaderVisible) {
                     Text(
                         text = "Items",
                         modifier = Modifier
@@ -992,84 +802,61 @@ fun UpsertTransactionScreen(
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-                transactionItems.forEach { entry ->
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        ExposedDropdownMenuBox(
-                            expanded = false,
-                            onExpandedChange = {
-                                if (enabled) {
-                                    selectedTransactionItem = entry.value
-                                    sheetType = SheetType.ITEMS
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = "${entry.value.item!!.name}\nQuantity: ${entry.value.quantity}, Price: ${entry.value.price}, Unit: ${entry.value.unit.code}",
-                                onValueChange = {},
-                                enabled = enabled,
-                                readOnly = true,
-                                singleLine = false,
-                                maxLines = 2,
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
-                            )
+            }
+            itemsIndexed(
+                items = transactionItems,
+                key = { _, transactionItem -> transactionItem.item!!.uuid }
+            ) { index, transactionItem ->
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    RoundedCornerOutlinedTextField(
+                        expanded = false,
+                        enabled = enabled,
+                        value = "${transactionItem.item!!.name}\nQuantity: ${transactionItem.quantity}, Price: ${transactionItem.price}, Unit: ${transactionItem.unit.code}",
+                        label = "Item #$index",
+                        icon = TablerIcons.Stack,
+                        iconDescription = "item icon",
+                        onClick = {
+                            selectedTransactionItem = transactionItem
+                            sheetType = SheetType.ITEMS
                         }
-                        IconButton(
-                            onClick = {
-                                if (enabled) {
-                                    removeItem(entry.value)
-                                }
-                            },
-                            modifier = Modifier.align(Alignment.CenterEnd)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Clear,
-                                contentDescription = "remove item",
-                            )
-                        }
+                    )
+                    IconButton(
+                        onClick = {
+                            if (enabled) {
+                                removeItem(transactionItem)
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "remove item",
+                        )
                     }
                 }
-                if (itemHeaderVisible) {
-                    OutlinedTextField(
+            }
+            if (itemHeaderVisible) {
+                item(
+                    key = "taxAmount",
+                    contentType = "textField"
+                ) {
+                    RoundedCornerOutlinedTextField(
                         value = taxAmount,
                         onValueChange = setTaxAmount,
-                        singleLine = true,
                         enabled = enabled,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrect = false,
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                            }
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.CurrencyDollar,
-                                contentDescription = "tax amount icon",
-                                tint = if (!amountValid) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.onBackground
-                                }
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Tax"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        label = "Tax",
+                        icon = TablerIcons.CashBanknote,
+                        iconDescription = "tax amount icon",
+                        onDone = {
+                            keyboardController?.hide()
+                        }
                     )
                 }
+            }
+            item(
+                key = "addItemButton",
+                contentType = "button"
+            ) {
                 ExposedDropdownMenuBox(
                     expanded = false,
                     onExpandedChange = {
@@ -1093,25 +880,6 @@ fun UpsertTransactionScreen(
                             .menuAnchor()
                     )
                 }
-            }
-            AnimatedVisibility(
-                visible = showToastBar,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                ToastBar(
-                    message = toastBarString,
-                    onDismiss = {
-                        showToastBar = false
-                        if (currentEvent == Event.SaveSuccess) {
-                            navigateBack()
-                        }
-                    }
-                )
-            }
-            if (loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
         }
     }
