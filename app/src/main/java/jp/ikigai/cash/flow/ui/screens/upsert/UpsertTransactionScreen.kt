@@ -216,28 +216,12 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.categories)
     }
 
-    val categorySheetRowCount by remember(key1 = state.categories) {
-        derivedStateOf { (state.categories.size / 3).coerceIn(1, 3) }
-    }
-
-    val categorySheetMaxHeight by remember(key1 = categorySheetRowCount) {
-        derivedStateOf { categorySheetRowCount * 60.0 }
-    }
-
     val selectedCategory by remember(key1 = state.selectedCategory) {
         mutableStateOf(state.selectedCategory)
     }
 
     val counterParties by remember(key1 = state.counterParties) {
         mutableStateOf(state.counterParties)
-    }
-
-    val counterPartySheetRowCount by remember(key1 = state.counterParties) {
-        derivedStateOf { (state.counterParties.size / 3).coerceIn(1, 3) }
-    }
-
-    val counterPartySheetMaxHeight by remember(key1 = counterPartySheetRowCount) {
-        derivedStateOf { counterPartySheetRowCount * 60.0 }
     }
 
     val selectedCounterParty by remember(key1 = state.selectedCounterParty) {
@@ -248,28 +232,12 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.methods)
     }
 
-    val methodSheetRowCount by remember(key1 = state.methods) {
-        derivedStateOf { (state.methods.size / 3).coerceIn(1, 3) }
-    }
-
-    val methodSheetMaxHeight by remember(key1 = methodSheetRowCount) {
-        derivedStateOf { methodSheetRowCount * 60.0 }
-    }
-
     val selectedMethod by remember(key1 = state.selectedMethod) {
         mutableStateOf(state.selectedMethod)
     }
 
     val sources by remember(key1 = state.sources) {
         mutableStateOf(state.sources)
-    }
-
-    val sourceSheetRowCount by remember(key1 = state.sources) {
-        derivedStateOf { (state.sources.size / 3).coerceIn(1, 3) }
-    }
-
-    val sourceSheetMaxHeight by remember(key1 = sourceSheetRowCount) {
-        derivedStateOf { sourceSheetRowCount * 60.0 }
     }
 
     val selectedSource by remember(key1 = state.selectedSource) {
@@ -370,8 +338,7 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = categorySheetMaxHeight,
-                rowCount = categorySheetRowCount,
+                itemCount = categories.size,
                 sheetState = sheetState
             ) {
                 items(
@@ -402,8 +369,7 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = counterPartySheetMaxHeight,
-                rowCount = counterPartySheetRowCount,
+                itemCount = counterParties.size,
                 sheetState = sheetState
             ) {
                 items(
@@ -439,8 +405,7 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = methodSheetMaxHeight,
-                rowCount = methodSheetRowCount,
+                itemCount = methods.size,
                 sheetState = sheetState
             ) {
                 items(
@@ -471,8 +436,7 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = sourceSheetMaxHeight,
-                rowCount = sourceSheetRowCount,
+                itemCount = sources.size,
                 sheetState = sheetState
             ) {
                 items(
@@ -503,8 +467,7 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = 60.0,
-                rowCount = 1,
+                itemCount = 1,
                 sheetState = sheetState
             ) {
                 item(

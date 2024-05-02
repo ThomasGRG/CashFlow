@@ -155,8 +155,7 @@ fun UpsertSourceScreen(
                     currencyExpanded = false
                 }
             },
-            rowCount = 3,
-            maxHeight = 180.0
+            itemCount = 3,
         ) {
             items(
                 items = currencies,

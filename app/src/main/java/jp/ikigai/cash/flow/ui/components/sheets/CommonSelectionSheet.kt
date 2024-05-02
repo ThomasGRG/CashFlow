@@ -15,6 +15,9 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -23,11 +26,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CommonSelectionSheet(
     dismiss: () -> Unit,
-    rowCount: Int,
-    maxHeight: Double,
+    itemCount: Int,
     sheetState: SheetState,
     items: LazyStaggeredGridScope.() -> Unit,
 ) {
+    val rowCount by remember(key1 = itemCount) {
+        mutableStateOf(
+            if (itemCount > 3) {
+                (itemCount / 3).coerceIn(1, 3)
+            } else {
+                itemCount
+            }
+        )
+    }
+
+    val maxHeight by remember(key1 = rowCount) {
+        mutableStateOf(
+            rowCount * 60.0
+        )
+    }
+
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {

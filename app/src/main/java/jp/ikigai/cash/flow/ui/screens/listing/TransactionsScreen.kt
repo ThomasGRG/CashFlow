@@ -233,8 +233,7 @@ fun TransactionsScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                rowCount = 3,
-                maxHeight = 180.0,
+                itemCount = 3,
                 sheetState = sheetState
             ) {
                 items(
