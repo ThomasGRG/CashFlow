@@ -1,46 +1,54 @@
 package jp.ikigai.cash.flow.ui.components.sheets
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LeadingIconTab
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
-import compose.icons.tablericons.CurrencyDollar
+import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.data.dto.Filters
+import jp.ikigai.cash.flow.data.enums.FilterTabs
+import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun FilterSheet(
     filters: Filters,
@@ -50,7 +58,16 @@ fun FilterSheet(
     sheetState: SheetState,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val scrollState = rememberScrollState()
+
+    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(
+        pageCount = { FilterTabs.values().size },
+        initialPage = 0
+    )
+
+    val selectedTabIndex by remember {
+        derivedStateOf { pagerState.currentPage }
+    }
 
     val transactionTypes by remember(filters.transactionTypes) {
         mutableStateOf(filters.transactionTypes)
@@ -96,11 +113,18 @@ fun FilterSheet(
         mutableStateOf(filters.filterAmountMin)
     }
 
+    var displayFromAmount by remember {
+        mutableStateOf(filters.filterAmountMin.toString())
+    }
+
     var toAmount by remember {
         mutableStateOf(filters.filterAmountMax)
     }
 
-    // TODO: Replace flow row with contextual flow row when stable and use tabs to separate items
+    var displayToAmount by remember {
+        mutableStateOf(filters.filterAmountMax.toString())
+    }
+
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
@@ -112,336 +136,277 @@ fun FilterSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = maxHeight.dp)
-                .verticalScroll(scrollState)
-                .padding(10.dp)
         ) {
-            Text(
-                text = "Amount",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp, bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            SecondaryScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 4.dp, end = 4.dp)
-                ) {
-                    OutlinedTextField(
-                        value = "$fromAmount",
-                        onValueChange = {
-                            val amount = it.toDoubleOrNull()
-                            fromAmount = amount ?: 0.0
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrect = false,
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                            }
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.CurrencyDollar,
-                                contentDescription = "amount icon",
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "From"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 4.dp, end = 4.dp)
-                ) {
-                    OutlinedTextField(
-                        value = "$toAmount",
-                        onValueChange = {
-                            val amount = it.toDoubleOrNull()
-                            toAmount = amount ?: 0.0
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrect = false,
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                            }
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.CurrencyDollar,
-                                contentDescription = "amount icon",
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "To"
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                    )
-                }
-            }
-            Text(
-                text = "Transaction types",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                transactionTypes.forEach { transactionType ->
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedTransactionTypes.contains(transactionType.id),
-                            onClick = {
-                                val types = selectedTransactionTypes.toMutableList()
-                                if (selectedTransactionTypes.contains(transactionType.id)) {
-                                    if (selectedTransactionTypes.size > 1) {
-                                        types.remove(transactionType.id)
-                                    }
-                                } else {
-                                    types.add(transactionType.id)
-                                }
-                                selectedTransactionTypes = types
-                            },
-                            label = {
-                                Text(text = transactionType.name)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = transactionType.icon,
-                                    contentDescription = transactionType.icon.name
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-            Text(
-                text = "Categories",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                categories.forEach { category ->
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedCategories.contains(category.uuid),
-                            onClick = {
-                                val categoryList = selectedCategories.toMutableList()
-                                if (selectedCategories.contains(category.uuid)) {
-                                    if (selectedCategories.size > 1) {
-                                        categoryList.remove(category.uuid)
-                                    }
-                                } else {
-                                    categoryList.add(category.uuid)
-                                }
-                                selectedCategories = categoryList
-                            },
-                            label = {
-                                Text(text = category.name)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = category.icon,
-                                    contentDescription = category.icon.name
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-            Text(
-                text = "Counter parties",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Row(
-                    modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                ) {
-                    FilterChip(
-                        selected = selectedCounterParties.contains(""),
+                FilterTabs.values().forEach { tab ->
+                    LeadingIconTab(
+                        selected = selectedTabIndex == tab.index,
                         onClick = {
-                            val counterPartyList = selectedCounterParties.toMutableList()
-                            if (selectedCounterParties.contains("")) {
-                                if (selectedCounterParties.size > 1) {
-                                    counterPartyList.remove("")
-                                }
-                            } else {
-                                counterPartyList.add("")
+                            scope.launch {
+                                pagerState.animateScrollToPage(tab.index)
                             }
-                            selectedCounterParties = counterPartyList
                         },
-                        label = {
-                            Text(text = "No counter party")
+                        text = {
+                            Text(text = tab.text)
                         },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = TablerIcons.Users,
-                                contentDescription = TablerIcons.Users.name
-                            )
+                        icon = {
+                            Icon(imageVector = tab.icon, contentDescription = tab.icon.name)
                         }
                     )
                 }
-                counterParties.forEach { counterParty ->
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedCounterParties.contains(counterParty.uuid),
-                            onClick = {
-                                val counterPartyList = selectedCounterParties.toMutableList()
-                                if (selectedCounterParties.contains(counterParty.uuid)) {
-                                    if (selectedCounterParties.size > 1) {
-                                        counterPartyList.remove(counterParty.uuid)
-                                    }
-                                } else {
-                                    counterPartyList.add(counterParty.uuid)
-                                }
-                                selectedCounterParties = counterPartyList
-                            },
-                            label = {
-                                Text(text = counterParty.name)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = counterParty.icon,
-                                    contentDescription = counterParty.icon.name
-                                )
-                            }
-                        )
-                    }
-                }
             }
-            Text(
-                text = "Methods",
-                textAlign = TextAlign.Center,
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                methods.forEach { method ->
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedMethods.contains(method.uuid),
-                            onClick = {
-                                val methodList = selectedMethods.toMutableList()
-                                if (selectedMethods.contains(method.uuid)) {
-                                    if (selectedMethods.size > 1) {
-                                        methodList.remove(method.uuid)
-                                    }
-                                } else {
-                                    methodList.add(method.uuid)
+            ) { pageIndex ->
+                when (pageIndex) {
+                    0 -> {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            RoundedCornerOutlinedTextField(
+                                value = displayFromAmount,
+                                onValueChange = {
+                                    displayFromAmount = it
+                                    val newFromAmount = it.toDoubleOrNull()
+                                    fromAmount = newFromAmount ?: 0.0
+                                },
+                                enabled = true,
+                                label = "Minimum amount",
+                                icon = TablerIcons.CashBanknote,
+                                iconDescription = "minimum amount icon",
+                                onDone = {
+                                    keyboardController?.hide()
                                 }
-                                selectedMethods = methodList
-                            },
-                            label = {
-                                Text(text = method.name)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = method.icon,
-                                    contentDescription = method.icon.name
-                                )
-                            }
-                        )
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            RoundedCornerOutlinedTextField(
+                                value = displayToAmount,
+                                onValueChange = {
+                                    displayToAmount = it
+                                    val newToAmount = it.toDoubleOrNull()
+                                    toAmount = newToAmount ?: Double.MAX_VALUE
+                                },
+                                enabled = true,
+                                label = "Maximum amount",
+                                icon = TablerIcons.CashBanknote,
+                                iconDescription = "maximum amount icon",
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
+                            )
+                        }
                     }
-                }
-            }
-            Text(
-                text = "Sources",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge
-            )
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                sources.forEach { source ->
-                    Row(
-                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        FilterChip(
-                            selected = selectedSources.contains(source.uuid),
-                            onClick = {
-                                val sourceList = selectedSources.toMutableList()
-                                if (selectedSources.contains(source.uuid)) {
-                                    if (selectedSources.size > 1) {
-                                        sourceList.remove(source.uuid)
+
+                    1 -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            transactionTypes.forEach { transactionType ->
+                                Spacer(modifier = Modifier.width(5.dp))
+                                IconToggleButton(
+                                    label = transactionType.name,
+                                    icon = transactionType.icon,
+                                    selected = selectedTransactionTypes.contains(transactionType.id),
+                                    toggle = {
+                                        val types = selectedTransactionTypes.toMutableList()
+                                        if (selectedTransactionTypes.contains(transactionType.id)) {
+                                            if (selectedTransactionTypes.size > 1) {
+                                                types.remove(transactionType.id)
+                                            }
+                                        } else {
+                                            types.add(transactionType.id)
+                                        }
+                                        selectedTransactionTypes = types
                                     }
-                                } else {
-                                    sourceList.add(source.uuid)
-                                }
-                                selectedSources = sourceList
-                            },
-                            label = {
-                                Text(text = source.name)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = source.icon,
-                                    contentDescription = source.icon.name
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                            }
+                        }
+                    }
+
+                    2 -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
+                        ) {
+                            items(
+                                items = categories,
+                                key = { category -> category.uuid }
+                            ) { category ->
+                                IconToggleRow(
+                                    label = category.name,
+                                    icon = category.icon,
+                                    selected = selectedCategories.contains(category.uuid),
+                                    onClick = {
+                                        val categoryList = selectedCategories.toMutableList()
+                                        if (selectedCategories.contains(category.uuid)) {
+                                            if (selectedCategories.size > 1) {
+                                                categoryList.remove(category.uuid)
+                                            }
+                                        } else {
+                                            categoryList.add(category.uuid)
+                                        }
+                                        selectedCategories = categoryList
+                                    }
                                 )
                             }
-                        )
+                        }
+                    }
+
+                    3 -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
+                        ) {
+                            item(
+                                key = "noCounterPartyChip"
+                            ) {
+                                IconToggleRow(
+                                    selected = selectedCounterParties.contains(""),
+                                    onClick = {
+                                        val counterPartyList =
+                                            selectedCounterParties.toMutableList()
+                                        if (selectedCounterParties.contains("")) {
+                                            if (selectedCounterParties.size > 1) {
+                                                counterPartyList.remove("")
+                                            }
+                                        } else {
+                                            counterPartyList.add("")
+                                        }
+                                        selectedCounterParties = counterPartyList
+                                    },
+                                    label = "No counter party",
+                                    icon = TablerIcons.Users
+                                )
+                            }
+                            items(
+                                items = counterParties,
+                                key = { counterParty -> counterParty.uuid }
+                            ) { counterParty ->
+                                IconToggleRow(
+                                    label = counterParty.name,
+                                    icon = counterParty.icon,
+                                    selected = selectedCounterParties.contains(counterParty.uuid),
+                                    onClick = {
+                                        val counterPartyList =
+                                            selectedCounterParties.toMutableList()
+                                        if (selectedCounterParties.contains(counterParty.uuid)) {
+                                            if (selectedCounterParties.size > 1) {
+                                                counterPartyList.remove(counterParty.uuid)
+                                            }
+                                        } else {
+                                            counterPartyList.add(counterParty.uuid)
+                                        }
+                                        selectedCounterParties = counterPartyList
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    4 -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
+                        ) {
+                            items(
+                                items = methods,
+                                key = { method -> method.uuid }
+                            ) { method ->
+                                IconToggleRow(
+                                    label = method.name,
+                                    icon = method.icon,
+                                    selected = selectedMethods.contains(method.uuid),
+                                    onClick = {
+                                        val methodList = selectedMethods.toMutableList()
+                                        if (selectedMethods.contains(method.uuid)) {
+                                            if (selectedMethods.size > 1) {
+                                                methodList.remove(method.uuid)
+                                            }
+                                        } else {
+                                            methodList.add(method.uuid)
+                                        }
+                                        selectedMethods = methodList
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    5 -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
+                        ) {
+                            items(
+                                items = sources,
+                                key = { source -> source.uuid }
+                            ) { source ->
+                                IconToggleRow(
+                                    label = source.name,
+                                    icon = source.icon,
+                                    selected = selectedSources.contains(source.uuid),
+                                    onClick = {
+                                        val sourceList = selectedSources.toMutableList()
+                                        if (selectedSources.contains(source.uuid)) {
+                                            if (selectedSources.size > 1) {
+                                                sourceList.remove(source.uuid)
+                                            }
+                                        } else {
+                                            sourceList.add(source.uuid)
+                                        }
+                                        selectedSources = sourceList
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    6 -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
+                        ) {
+                            items(
+                                items = categories,
+                                key = { category -> category.uuid }
+                            ) { category ->
+                                IconToggleRow(
+                                    label = category.name,
+                                    icon = category.icon,
+                                    selected = selectedCategories.contains(category.uuid),
+                                    onClick = {
+                                        val categoryList = selectedCategories.toMutableList()
+                                        if (selectedCategories.contains(category.uuid)) {
+                                            if (selectedCategories.size > 1) {
+                                                categoryList.remove(category.uuid)
+                                            }
+                                        } else {
+                                            categoryList.add(category.uuid)
+                                        }
+                                        selectedCategories = categoryList
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
