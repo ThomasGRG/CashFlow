@@ -1,13 +1,12 @@
 package jp.ikigai.cash.flow.ui.components.sheets
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,7 +46,7 @@ fun AutoCompleteTextFieldBottomSheet(
     label: String,
     dismiss: () -> Unit,
     sheetState: SheetState,
-    items: LazyStaggeredGridScope.((String) -> Unit) -> Unit,
+    items: LazyListScope.((String) -> Unit) -> Unit,
 ) {
     val focusRequester = remember {
         FocusRequester()
@@ -102,14 +101,12 @@ fun AutoCompleteTextFieldBottomSheet(
                     .focusRequester(focusRequester)
             )
         }
-        LazyHorizontalStaggeredGrid(
-            rows = StaggeredGridCells.Fixed(count = 1),
+        LazyRow(
             modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 60.dp)
-                .padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalItemSpacing = 8.dp
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            contentPadding = PaddingValues(start = 10.dp, top = 10.dp)
         ) {
             items {
                 textFieldValue = TextFieldValue(text = it, selection = TextRange(it.length))
@@ -133,7 +130,6 @@ fun AutoCompleteTextFieldBottomSheet(
             TextButton(
                 onClick = {
                     setFieldValue(textFieldValue)
-                    dismiss()
                 },
                 modifier = Modifier.weight(1f)
             ) {
