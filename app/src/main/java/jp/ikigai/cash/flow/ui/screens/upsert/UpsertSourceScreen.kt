@@ -5,21 +5,15 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -52,16 +46,19 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
+import compose.icons.tablericons.CashBanknote
+import compose.icons.tablericons.CurrencyDollar
 import compose.icons.tablericons.DeviceFloppy
+import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
-import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
 import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
@@ -315,37 +312,24 @@ fun UpsertSourceScreen(
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 }
             )
-            OutlinedTextField(
+            RoundedCornerOutlinedTextField(
+                enabled = enabled,
                 value = nameFieldValue,
                 onValueChange = { value ->
                     nameFieldValue = value
                     nameValid = value.text.isNotBlank()
                 },
-                enabled = enabled,
-                modifier = Modifier
-                    .focusRequester(focusRequester = focusRequester)
-                    .fillMaxWidth(),
-                label = {
-                    Text(text = "Name")
-                },
+                modifier = Modifier.focusRequester(focusRequester = focusRequester),
+                label = "Name",
+                icon = TablerIcons.Typography,
+                iconDescription = "name icon",
                 isError = !nameValid,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
+                errorHint = "Name cannot be empty",
+                onDone = {
+                    keyboardController?.hide()
+                }
             )
-            AnimatedTextFieldErrorLabel(
-                visible = !nameValid,
-                errorLabel = "Name cannot be empty"
-            )
-            OutlinedTextField(
+            RoundedCornerOutlinedTextField(
                 value = balanceFieldValue,
                 onValueChange = { value ->
                     balanceFieldValue = value
@@ -353,52 +337,33 @@ fun UpsertSourceScreen(
                     balanceValid = newBalance != null
                 },
                 enabled = enabled,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                label = {
-                    Text(text = "Balance")
-                },
+                label = "Balance",
+                icon = TablerIcons.CashBanknote,
+                iconDescription = "balance icon",
                 isError = !balanceValid,
-                singleLine = true,
+                errorHint = "Enter a number >= 0",
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
                     autoCorrect = false,
-                    keyboardType = KeyboardType.Number
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
                 ),
-                shape = RoundedCornerShape(14.dp),
+                onDone = {
+                    keyboardController?.hide()
+                }
             )
-            AnimatedTextFieldErrorLabel(
-                visible = !balanceValid,
-                errorLabel = "Enter a number >= 0"
+            RoundedCornerOutlinedTextField(
+                expanded = currencyExpanded,
+                enabled = enabled,
+                value = selectedCurrencyFieldValue,
+                label = "Currency",
+                icon = TablerIcons.CurrencyDollar,
+                iconDescription = "currency icon",
+                onClick = {
+                    resetOneHandMode()
+                    currencyExpanded = true
+                }
             )
-            ExposedDropdownMenuBox(
-                expanded = false,
-                onExpandedChange = {
-                    if (enabled) {
-                        resetOneHandMode()
-                        currencyExpanded = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = selectedCurrencyFieldValue,
-                    onValueChange = {},
-                    enabled = enabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = currencyExpanded)
-                    },
-                    label = {
-                        Text(text = "Currency")
-                    },
-                    singleLine = true,
-                    readOnly = true,
-                    shape = RoundedCornerShape(14.dp),
-                )
-            }
         }
     }
 }

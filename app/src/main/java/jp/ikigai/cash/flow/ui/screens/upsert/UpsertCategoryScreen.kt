@@ -5,18 +5,13 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -36,8 +31,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,14 +40,15 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.DeviceFloppy
+import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -242,35 +236,22 @@ fun UpsertCategoryScreen(
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 }
             )
-            OutlinedTextField(
+            RoundedCornerOutlinedTextField(
+                enabled = enabled,
                 value = nameFieldValue,
                 onValueChange = { value ->
                     nameFieldValue = value
                     nameValid = value.text.isNotBlank()
                 },
-                enabled = enabled,
-                modifier = Modifier
-                    .focusRequester(focusRequester = focusRequester)
-                    .fillMaxWidth(),
-                label = {
-                    Text(text = "Name")
-                },
+                modifier = Modifier.focusRequester(focusRequester = focusRequester),
+                label = "Name",
+                icon = TablerIcons.Typography,
+                iconDescription = "name icon",
                 isError = !nameValid,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
-            )
-            AnimatedTextFieldErrorLabel(
-                visible = !nameValid,
-                errorLabel = "Name cannot be empty"
+                errorHint = "Name cannot be empty",
+                onDone = {
+                    keyboardController?.hide()
+                }
             )
         }
     }
