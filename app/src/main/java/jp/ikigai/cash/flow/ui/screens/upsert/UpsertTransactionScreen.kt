@@ -635,6 +635,7 @@ fun UpsertTransactionScreen(
                     icon = TablerIcons.Typography,
                     iconDescription = "title icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.AUTO_COMPLETE
                     }
                 )
@@ -689,6 +690,7 @@ fun UpsertTransactionScreen(
                     icon = TablerIcons.CalendarEvent,
                     iconDescription = "date icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.DATE
                     }
                 )
@@ -705,6 +707,7 @@ fun UpsertTransactionScreen(
                     icon = TablerIcons.Alarm,
                     iconDescription = "time icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.TIME
                     }
                 )
@@ -721,6 +724,7 @@ fun UpsertTransactionScreen(
                     icon = selectedCategory.icon,
                     iconDescription = "category icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.CATEGORY
                     }
                 )
@@ -737,6 +741,7 @@ fun UpsertTransactionScreen(
                     icon = selectedCounterParty.icon,
                     iconDescription = "counter party icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.COUNTERPARTY
                     }
                 )
@@ -753,6 +758,7 @@ fun UpsertTransactionScreen(
                     icon = selectedMethod.icon,
                     iconDescription = "method icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.METHOD
                     }
                 )
@@ -769,6 +775,7 @@ fun UpsertTransactionScreen(
                     icon = selectedSource.icon,
                     iconDescription = "source icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.SOURCE
                     }
                 )
@@ -785,6 +792,7 @@ fun UpsertTransactionScreen(
                     icon = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
                     iconDescription = "type icon",
                     onClick = {
+                        resetOneHandMode()
                         sheetType = SheetType.TYPE
                     }
                 )
@@ -816,6 +824,7 @@ fun UpsertTransactionScreen(
                         icon = TablerIcons.Stack,
                         iconDescription = "item icon",
                         onClick = {
+                            resetOneHandMode()
                             selectedTransactionItem = transactionItem
                             sheetType = SheetType.ITEMS
                         }
@@ -823,6 +832,7 @@ fun UpsertTransactionScreen(
                     IconButton(
                         onClick = {
                             if (enabled) {
+                                resetOneHandMode()
                                 removeItem(transactionItem)
                             }
                         },
