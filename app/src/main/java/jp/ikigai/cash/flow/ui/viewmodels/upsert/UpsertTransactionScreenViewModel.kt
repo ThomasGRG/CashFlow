@@ -71,7 +71,7 @@ class UpsertTransactionScreenViewModel(
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
 
-    private val transactionTitleQuery = realm.query<Transaction>().distinct("title")
+    private val transactionTitleQuery = realm.query<Transaction>("title != $0", "").distinct("title")
 
     init {
         getTransactionTitleJob = getTransactionTitles()
@@ -102,7 +102,7 @@ class UpsertTransactionScreenViewModel(
         transactionTitleQuery.asFlow().collectLatest { changes ->
             _state.update {
                 it.copy(
-                    titles = changes.list.filter { transaction -> transaction.title.isBlank() }.map { transaction -> transaction.title }
+                    titles = changes.list.map { transaction -> transaction.title }
                 )
             }
         }
@@ -371,6 +371,15 @@ class UpsertTransactionScreenViewModel(
             val latestCounterParty = if (counterParty.uuid.isNotBlank()) findLatest(counterParty) else null
             val latestMethod = findLatest(method)
             val latestSource = findLatest(source)
+            val latestTransactionItems = transactionItems.map {
+                val latestItem = findLatest(it.item!!)
+                TransactionItem(
+                    item = latestItem,
+                    price = it.price,
+                    quantity = it.quantity,
+                    unit = it.unit
+                )
+            }.toRealmList()
             if (transactionUuid.isBlank()) {
                 copyToRealm(
                     instance = transaction.apply {
@@ -385,7 +394,7 @@ class UpsertTransactionScreenViewModel(
                         this.method = latestMethod
                         this.source = latestSource
                         this.counterParty = latestCounterParty
-                        this.items = transactionItems.toRealmList()
+                        this.items = latestTransactionItems
                     },
                     updatePolicy = UpdatePolicy.ALL
                 )
@@ -401,7 +410,7 @@ class UpsertTransactionScreenViewModel(
                     it.method = latestMethod
                     it.source = latestSource
                     it.counterParty = latestCounterParty
-                    it.items = transactionItems.toRealmList()
+                    it.items = latestTransactionItems
                 }
             }
         }
