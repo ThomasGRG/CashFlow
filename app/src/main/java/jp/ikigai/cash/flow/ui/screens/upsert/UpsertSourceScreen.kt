@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -21,17 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
@@ -55,7 +58,7 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
@@ -84,6 +87,19 @@ fun UpsertSourceScreen(
 ) {
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val configuration = LocalConfiguration.current
+
+    var screenHeight by remember {
+        mutableIntStateOf(configuration.screenHeightDp)
+    }
+    val sheetMaxHeight = remember(key1 = screenHeight) {
+        screenHeight * 0.4
+    }
+
+    LaunchedEffect(configuration) {
+        snapshotFlow { configuration.screenHeightDp }
+            .collectLatest { screenHeight = it }
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -152,21 +168,22 @@ fun UpsertSourceScreen(
                     currencyExpanded = false
                 }
             },
-            itemCount = 3,
+            maxHeight = sheetMaxHeight,
         ) {
             items(
                 items = currencies,
                 key = { currency -> "currency-${currency.currencyCode}" }
             ) {
-                ToggleButton(
+                ToggleRow(
+                    currencyCode = it.currencyCode,
                     label = "${it.displayName} (${it.currencyCode})",
                     selected = it.currencyCode == selectedCurrencyFieldValue.text,
-                    toggle = {
-                        selectedCurrencyFieldValue =
-                            selectedCurrencyFieldValue.copy(text = it.currencyCode)
+                    onClick = { currencyCode ->
                         scope.launch {
                             currencySheetState.hide()
                             currencyExpanded = false
+                            selectedCurrencyFieldValue =
+                                selectedCurrencyFieldValue.copy(text = currencyCode)
                         }
                     }
                 )

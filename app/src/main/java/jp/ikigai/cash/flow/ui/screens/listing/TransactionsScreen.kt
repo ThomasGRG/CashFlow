@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +54,7 @@ import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
@@ -95,7 +94,7 @@ fun TransactionsScreen(
     var screenHeight by remember {
         mutableIntStateOf(configuration.screenHeightDp)
     }
-    val filterSheetMaxHeight = remember(key1 = screenHeight) {
+    val sheetMaxHeight = remember(key1 = screenHeight) {
         screenHeight * 0.4
     }
 
@@ -220,7 +219,7 @@ fun TransactionsScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                maxHeight = filterSheetMaxHeight,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             )
         }
@@ -233,21 +232,22 @@ fun TransactionsScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = 3,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 items(
                     items = currencies,
                     key = { currency -> "currency-${currency.currencyCode}" }
                 ) { currency ->
-                    ToggleButton(
+                    ToggleRow(
+                        currencyCode = currency.currencyCode,
                         label = "${currency.displayName} (${currency.currencyCode})",
                         selected = currency.currencyCode == selectedCurrency,
-                        toggle = {
-                            setCurrency(currency.currencyCode)
+                        onClick = { currencyCode ->
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setCurrency(currencyCode)
                             }
                         }
                     )

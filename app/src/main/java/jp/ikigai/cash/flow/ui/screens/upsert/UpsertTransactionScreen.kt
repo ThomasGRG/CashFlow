@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,13 +29,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -68,7 +72,7 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
@@ -114,6 +118,19 @@ fun UpsertTransactionScreen(
     state: UpsertTransactionScreenState
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val configuration = LocalConfiguration.current
+
+    var screenHeight by remember {
+        mutableIntStateOf(configuration.screenHeightDp)
+    }
+    val sheetMaxHeight = remember(key1 = screenHeight) {
+        screenHeight * 0.4
+    }
+
+    LaunchedEffect(configuration) {
+        snapshotFlow { configuration.screenHeightDp }
+            .collectLatest { screenHeight = it }
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -334,22 +351,22 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = categories.size,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 items(
                     items = categories,
                     key = { category -> category.uuid }
                 ) { category ->
-                    IconToggleButton(
+                    IconToggleRow(
                         label = category.name,
                         icon = category.icon,
                         selected = category.uuid == selectedCategory.uuid,
-                        toggle = {
-                            setSelectedCategory(category)
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setSelectedCategory(category)
                             }
                         }
                     )
@@ -365,26 +382,26 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = counterParties.size,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 items(
                     items = counterParties,
                     key = { counterParty -> counterParty.uuid }
                 ) { counterParty ->
-                    IconToggleButton(
+                    IconToggleRow(
                         label = counterParty.name,
                         icon = counterParty.icon,
                         selected = counterParty.uuid == selectedCounterParty.uuid,
-                        toggle = {
-                            if (counterParty.uuid == selectedCounterParty.uuid) {
-                                setSelectedCounterParty(CounterParty())
-                            } else {
-                                setSelectedCounterParty(counterParty)
-                            }
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                if (counterParty.uuid == selectedCounterParty.uuid) {
+                                    setSelectedCounterParty(CounterParty())
+                                } else {
+                                    setSelectedCounterParty(counterParty)
+                                }
                             }
                         }
                     )
@@ -401,22 +418,22 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = methods.size,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 items(
                     items = methods,
                     key = { method -> method.uuid }
                 ) { method ->
-                    IconToggleButton(
+                    IconToggleRow(
                         label = method.name,
                         icon = method.icon,
                         selected = method.uuid == selectedMethod.uuid,
-                        toggle = {
-                            setSelectedMethod(method)
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setSelectedMethod(method)
                             }
                         }
                     )
@@ -432,22 +449,22 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = sources.size,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 items(
                     items = sources,
                     key = { source -> source.uuid }
                 ) { source ->
-                    IconToggleButton(
+                    IconToggleRow(
                         label = "${source.name} (${source.balance} ${source.currency})",
                         icon = source.icon,
                         selected = source.uuid == selectedSource.uuid,
-                        toggle = {
-                            setSelectedSource(source)
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setSelectedSource(source)
                             }
                         }
                     )
@@ -463,22 +480,22 @@ fun UpsertTransactionScreen(
                         sheetType = SheetType.NONE
                     }
                 },
-                itemCount = 1,
+                maxHeight = sheetMaxHeight,
                 sheetState = sheetState
             ) {
                 item(
                     key = "debit",
                     contentType = "row"
                 ) {
-                    IconToggleButton(
+                    IconToggleRow(
                         label = "Debit",
                         icon = TablerIcons.ArrowUpCircle,
                         selected = isDebit,
-                        toggle = {
-                            setTransactionType(TransactionType.DEBIT)
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setTransactionType(TransactionType.DEBIT)
                             }
                         }
                     )
@@ -487,15 +504,15 @@ fun UpsertTransactionScreen(
                     key = "credit",
                     contentType = "row"
                 ) {
-                    IconToggleButton(
+                    IconToggleRow(
                         label = "Credit",
                         icon = TablerIcons.ArrowDownCircle,
                         selected = !isDebit,
-                        toggle = {
-                            setTransactionType(TransactionType.CREDIT)
+                        onClick = {
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
+                                setTransactionType(TransactionType.CREDIT)
                             }
                         }
                     )
