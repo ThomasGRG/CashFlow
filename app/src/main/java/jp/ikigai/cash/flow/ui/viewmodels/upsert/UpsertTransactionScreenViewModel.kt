@@ -46,6 +46,7 @@ class UpsertTransactionScreenViewModel(
     private val transactionUuid: String = checkNotNull(savedStateHandle["id"])
 
     private var getTransactionJob: Job? = null
+    private var getTransactionTitleJob: Job? = null
     private var getCategoryJob: Job? = null
     private var getCounterPartyJob: Job? = null
     private var getMethodJob: Job? = null
@@ -70,7 +71,10 @@ class UpsertTransactionScreenViewModel(
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
 
+    private val transactionTitleQuery = realm.query<Transaction>().distinct("title")
+
     init {
+        getTransactionTitleJob = getTransactionTitles()
         getCategoryJob = getCategories()
         getCounterPartyJob = getCounterParties()
         getItemJob = getItems()
@@ -92,6 +96,16 @@ class UpsertTransactionScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun getTransactionTitles() = viewModelScope.launch {
+        transactionTitleQuery.asFlow().collectLatest { changes ->
+            _state.update {
+                it.copy(
+                    titles = changes.list.filter { transaction -> transaction.title.isBlank() }.map { transaction -> transaction.title }
+                )
+            }
+        }
     }
 
     private fun getCategories() = viewModelScope.launch {
@@ -181,7 +195,7 @@ class UpsertTransactionScreenViewModel(
     }
 
     private fun isFormValid(): Boolean {
-        val amount = state.value.transaction.amount
+        val amount = state.value.amount
         val amountValid = amount > 0.0
 
         _state.update {
@@ -192,7 +206,7 @@ class UpsertTransactionScreenViewModel(
 
         val selectedSource = state.value.selectedSource
 
-        if (amountValid && selectedSource.uuid.isNotBlank() && state.value.transaction.type == TransactionType.DEBIT && amount > selectedSource.balance) {
+        if (amountValid && selectedSource.uuid.isNotBlank() && state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
             viewModelScope.launch {
                 _event.send(Event.NotEnoughBalance)
             }
@@ -202,9 +216,9 @@ class UpsertTransactionScreenViewModel(
     }
 
     private fun hasSufficientBalance() {
-        val amount = state.value.transaction.amount
+        val amount = state.value.amount
         val selectedSource = state.value.selectedSource
-        if (amount > 0.0 && selectedSource.uuid.isNotBlank() && state.value.transaction.type == TransactionType.DEBIT && amount > selectedSource.balance) {
+        if (amount > 0.0 && selectedSource.uuid.isNotBlank() && state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
             viewModelScope.launch {
                 _event.send(Event.NotEnoughBalance)
             }
@@ -215,6 +229,7 @@ class UpsertTransactionScreenViewModel(
         val formValid = isFormValid()
         if (formValid) {
             getSourceJob?.cancelAndJoin()
+            getTransactionTitleJob?.cancelAndJoin()
             getMethodJob?.cancelAndJoin()
             getItemJob?.cancelAndJoin()
             getCounterPartyJob?.cancelAndJoin()
@@ -290,6 +305,7 @@ class UpsertTransactionScreenViewModel(
             getSourceJob?.cancelAndJoin()
             getMethodJob?.cancelAndJoin()
             getItemJob?.cancelAndJoin()
+            getTransactionTitleJob?.cancelAndJoin()
             getCounterPartyJob?.cancelAndJoin()
             getCategoryJob?.cancelAndJoin()
             getTransactionJob?.cancelAndJoin()
