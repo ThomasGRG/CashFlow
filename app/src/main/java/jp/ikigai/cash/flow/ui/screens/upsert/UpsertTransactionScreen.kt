@@ -284,8 +284,8 @@ fun UpsertTransactionScreen(
         mutableStateOf(TransactionItem())
     }
 
-    val isDebit by remember(key1 = state.transaction.type) {
-        mutableStateOf(state.transaction.type == TransactionType.DEBIT)
+    val isDebit by remember(key1 = state.type) {
+        mutableStateOf(state.type == TransactionType.DEBIT)
     }
 
     val transactionUuid by remember(key1 = state.transaction.uuid) {
@@ -415,7 +415,11 @@ fun UpsertTransactionScreen(
                         icon = counterParty.icon,
                         selected = counterParty.uuid == selectedCounterParty.uuid,
                         toggle = {
-                            setSelectedCounterParty(counterParty)
+                            if (counterParty.uuid == selectedCounterParty.uuid) {
+                                setSelectedCounterParty(CounterParty())
+                            } else {
+                                setSelectedCounterParty(counterParty)
+                            }
                             scope.launch {
                                 sheetState.hide()
                                 sheetType = SheetType.NONE
