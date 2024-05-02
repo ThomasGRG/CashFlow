@@ -167,6 +167,7 @@ class UpsertTransactionScreenViewModel(
                     taxAmount = transaction.taxAmount,
                     displayAmount = transaction.amount.toString(),
                     displayTaxAmount = transaction.taxAmount.toString(),
+                    type = transaction.type,
                     selectedCategory = category,
                     selectedCounterParty = counterParty,
                     selectedMethod = method,
@@ -245,7 +246,7 @@ class UpsertTransactionScreenViewModel(
                     amount = state.value.amount,
                     frequency = selectedSource.frequency,
                     time = time,
-                    isDebit = state.value.type == TransactionType.DEBIT
+                    type = state.value.type
                 )
             } else {
                 updateCategory(
@@ -268,7 +269,7 @@ class UpsertTransactionScreenViewModel(
                     amount = state.value.amount,
                     frequency = selectedSource.frequency + 1,
                     time = time,
-                    isDebit = state.value.type == TransactionType.DEBIT
+                    type = state.value.type
                 )
             }
             updateTransaction(
@@ -454,14 +455,14 @@ class UpsertTransactionScreenViewModel(
         amount: Double,
         frequency: Int,
         time: Long? = null,
-        isDebit: Boolean
+        type: TransactionType
     ) {
         val currentBalance = if (transactionUuid.isNotBlank()) {
             previousBalance
         } else {
             source.balance
         }
-        val newBalance = if (isDebit) {
+        val newBalance = if (type == TransactionType.DEBIT) {
             currentBalance - amount
         } else {
             currentBalance + amount
