@@ -226,6 +226,7 @@ fun TransactionsScreen(
 
         SheetType.CURRENCY -> {
             CommonSelectionSheet(
+                index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
                 dismiss = {
                     scope.launch {
                         sheetState.hide()

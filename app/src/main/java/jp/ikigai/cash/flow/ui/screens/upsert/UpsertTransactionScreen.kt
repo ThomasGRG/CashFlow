@@ -345,6 +345,7 @@ fun UpsertTransactionScreen(
 
         SheetType.CATEGORY -> {
             CommonSelectionSheet(
+                index = categories.indexOfFirst { it.uuid == selectedCategory.uuid },
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -376,6 +377,7 @@ fun UpsertTransactionScreen(
 
         SheetType.COUNTERPARTY -> {
             CommonSelectionSheet(
+                index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }.coerceAtLeast(0),
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -412,6 +414,7 @@ fun UpsertTransactionScreen(
 
         SheetType.METHOD -> {
             CommonSelectionSheet(
+                index = methods.indexOfFirst { it.uuid == selectedMethod.uuid },
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -443,6 +446,7 @@ fun UpsertTransactionScreen(
 
         SheetType.SOURCE -> {
             CommonSelectionSheet(
+                index = sources.indexOfFirst { it.uuid == selectedSource.uuid },
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -474,6 +478,7 @@ fun UpsertTransactionScreen(
 
         SheetType.TYPE -> {
             CommonSelectionSheet(
+                index = if (isDebit) 0 else 1,
                 dismiss = {
                     scope.launch {
                         sheetState.hide()

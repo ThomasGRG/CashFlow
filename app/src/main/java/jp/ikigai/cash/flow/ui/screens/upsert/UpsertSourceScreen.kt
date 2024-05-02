@@ -161,6 +161,7 @@ fun UpsertSourceScreen(
 
     if (currencyExpanded) {
         CommonSelectionSheet(
+            index = currencies.indexOfFirst { it.currencyCode == selectedCurrencyFieldValue.text },
             sheetState = currencySheetState,
             dismiss = {
                 scope.launch {

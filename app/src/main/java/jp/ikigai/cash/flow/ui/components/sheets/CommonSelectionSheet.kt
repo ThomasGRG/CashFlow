@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -14,6 +15,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,11 +23,18 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommonSelectionSheet(
-    dismiss: () -> Unit,
+    index: Int,
     maxHeight: Double,
     sheetState: SheetState,
+    dismiss: () -> Unit,
     items: LazyListScope.() -> Unit,
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        listState.animateScrollToItem(index)
+    }
+
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
@@ -34,6 +43,7 @@ fun CommonSelectionSheet(
         shape = RoundedCornerShape(10)
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = maxHeight.dp)
