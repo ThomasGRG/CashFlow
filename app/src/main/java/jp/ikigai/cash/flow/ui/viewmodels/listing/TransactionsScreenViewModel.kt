@@ -71,6 +71,7 @@ class TransactionsScreenViewModel(
         getCounterPartyFilterData()
         getMethodFilterData()
         getSourceFilterData()
+        getItemFilterData()
         updateBalance()
         getTransactions()
     }
@@ -78,6 +79,19 @@ class TransactionsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun getItemFilterData() = viewModelScope.launch {
+        itemsQuery.asFlow().collectLatest { changes ->
+            _state.update {
+                it.copy(
+                    filters = it.filters.copy(
+                        items = changes.list,
+                        selectedItems = it.filters.selectedItems.ifEmpty { changes.list.map { item -> item.uuid } }
+                    )
+                )
+            }
+        }
     }
 
     private fun getCategoryFilterData() = viewModelScope.launch {
@@ -95,14 +109,11 @@ class TransactionsScreenViewModel(
 
     private fun getCounterPartyFilterData() = viewModelScope.launch {
         counterPartyQuery.asFlow().collectLatest { changes ->
-            val counterPartyUuids =
-                changes.list.map { counterParty -> counterParty.uuid }.toMutableList()
-            counterPartyUuids.add("")
             _state.update {
                 it.copy(
                     filters = it.filters.copy(
                         counterParties = changes.list,
-                        selectedCounterParties = it.filters.selectedCounterParties.ifEmpty { counterPartyUuids }
+                        selectedCounterParties = it.filters.selectedCounterParties.ifEmpty { changes.list.map { counterParty -> counterParty.uuid } }
                     ),
                 )
             }
@@ -184,11 +195,17 @@ class TransactionsScreenViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTransactions() = viewModelScope.launch {
         state.flatMapLatest {
-            var queryString = "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
-            queryString += if (it.filters.selectedCounterParties.contains("")) {
+            var queryString =
+                "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+            queryString += if (it.filters.includeNoCounterPartyTransactions) {
                 " && (counterParty == nil || counterParty.uuid IN $9)"
             } else {
                 " && counterParty.uuid IN $9"
+            }
+            queryString += if (it.filters.includeNoItemTransactions) {
+                " && (items.@count == 0 || items.item.uuid IN $10)"
+            } else {
+                " && items.item.uuid IN $10"
             }
             realm.query<Transaction>(
                 queryString,
@@ -202,6 +219,7 @@ class TransactionsScreenViewModel(
                 it.filters.selectedMethods,
                 it.filters.selectedSources,
                 it.filters.selectedCounterParties,
+                it.filters.selectedItems
             ).sort("time", Sort.DESCENDING).asFlow()
         }.collectLatest { changes ->
             val transactions = changes.list
