@@ -176,7 +176,7 @@ fun UpsertSourceScreen(
                 key = { currency -> "currency-${currency.currencyCode}" }
             ) {
                 ToggleRow(
-                    currencyCode = it.currencyCode,
+                    identifier = it.currencyCode,
                     label = "${it.displayName} (${it.currencyCode})",
                     selected = it.currencyCode == selectedCurrencyFieldValue.text,
                     onClick = { currencyCode ->

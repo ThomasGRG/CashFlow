@@ -241,7 +241,7 @@ fun TransactionsScreen(
                     key = { currency -> "currency-${currency.currencyCode}" }
                 ) { currency ->
                     ToggleRow(
-                        currencyCode = currency.currencyCode,
+                        identifier = currency.currencyCode,
                         label = "${currency.displayName} (${currency.currencyCode})",
                         selected = currency.currencyCode == selectedCurrency,
                         onClick = { currencyCode ->
