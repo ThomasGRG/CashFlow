@@ -42,6 +42,7 @@ import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.FilterTabs
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
+import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import kotlinx.coroutines.launch
 
@@ -93,6 +94,10 @@ fun FilterSheet(
         mutableStateOf(filters.selectedCounterParties)
     }
 
+    var includeNoCounterPartyTransactions by remember(filters.includeNoCounterPartyTransactions) {
+        mutableStateOf(filters.includeNoCounterPartyTransactions)
+    }
+
     val methods by remember(filters.methods) {
         mutableStateOf(filters.methods)
     }
@@ -107,6 +112,18 @@ fun FilterSheet(
 
     var selectedSources by remember(filters.selectedSources) {
         mutableStateOf(filters.selectedSources)
+    }
+
+    val items by remember(filters.items) {
+        mutableStateOf(filters.items)
+    }
+
+    var selectedItems by remember(filters.selectedItems) {
+        mutableStateOf(filters.selectedItems)
+    }
+
+    var includeNoItemTransactions by remember(filters.includeNoItemTransactions) {
+        mutableStateOf(filters.includeNoItemTransactions)
     }
 
     var fromAmount by remember {
@@ -165,7 +182,9 @@ fun FilterSheet(
                 when (pageIndex) {
                     0 -> {
                         Column(
-                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 20.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, top = 20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -190,7 +209,7 @@ fun FilterSheet(
                                 onValueChange = {
                                     displayToAmount = it
                                     val newToAmount = it.toDoubleOrNull()
-                                    toAmount = newToAmount ?: Double.MAX_VALUE
+                                    toAmount = newToAmount ?: 0.0
                                 },
                                 enabled = true,
                                 label = "Maximum amount",
@@ -205,7 +224,9 @@ fun FilterSheet(
 
                     1 -> {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 20.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, top = 20.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
@@ -274,18 +295,14 @@ fun FilterSheet(
                                 key = "noCounterPartyChip"
                             ) {
                                 IconToggleRow(
-                                    selected = selectedCounterParties.contains(""),
+                                    selected = includeNoCounterPartyTransactions,
                                     onClick = {
-                                        val counterPartyList =
-                                            selectedCounterParties.toMutableList()
-                                        if (selectedCounterParties.contains("")) {
-                                            if (selectedCounterParties.size > 1) {
-                                                counterPartyList.remove("")
+                                        includeNoCounterPartyTransactions =
+                                            if (selectedCounterParties.isNotEmpty()) {
+                                                !includeNoCounterPartyTransactions
+                                            } else {
+                                                true
                                             }
-                                        } else {
-                                            counterPartyList.add("")
-                                        }
-                                        selectedCounterParties = counterPartyList
                                     },
                                     label = "No counter party",
                                     icon = TablerIcons.Users
@@ -303,7 +320,9 @@ fun FilterSheet(
                                         val counterPartyList =
                                             selectedCounterParties.toMutableList()
                                         if (selectedCounterParties.contains(counterParty.uuid)) {
-                                            if (selectedCounterParties.size > 1) {
+                                            if (includeNoCounterPartyTransactions) {
+                                                counterPartyList.remove(counterParty.uuid)
+                                            } else if (selectedCounterParties.size > 1) {
                                                 counterPartyList.remove(counterParty.uuid)
                                             }
                                         } else {
@@ -385,24 +404,42 @@ fun FilterSheet(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 20.dp)
                         ) {
-                            items(
-                                items = categories,
-                                key = { category -> category.uuid }
-                            ) { category ->
-                                IconToggleRow(
-                                    label = category.name,
-                                    icon = category.icon,
-                                    selected = selectedCategories.contains(category.uuid),
+                            item(
+                                key = "noItemChip"
+                            ) {
+                                ToggleRow(
+                                    selected = includeNoItemTransactions,
                                     onClick = {
-                                        val categoryList = selectedCategories.toMutableList()
-                                        if (selectedCategories.contains(category.uuid)) {
-                                            if (selectedCategories.size > 1) {
-                                                categoryList.remove(category.uuid)
+                                        includeNoItemTransactions = if (selectedItems.isNotEmpty()) {
+                                            !includeNoItemTransactions
+                                        } else {
+                                            true
+                                        }
+                                    },
+                                    label = "No items",
+                                    identifier = ""
+                                )
+                            }
+                            items(
+                                items = items,
+                                key = { item -> item.uuid }
+                            ) { item ->
+                                ToggleRow(
+                                    identifier = item.uuid,
+                                    label = item.name,
+                                    selected = selectedItems.contains(item.uuid),
+                                    onClick = { uuid ->
+                                        val itemList = selectedItems.toMutableList()
+                                        if (selectedItems.contains(uuid)) {
+                                            if (includeNoItemTransactions) {
+                                                itemList.remove(uuid)
+                                            } else if (selectedItems.size > 1) {
+                                                itemList.remove(uuid)
                                             }
                                         } else {
-                                            categoryList.add(category.uuid)
+                                            itemList.add(uuid)
                                         }
-                                        selectedCategories = categoryList
+                                        selectedItems = itemList
                                     }
                                 )
                             }
@@ -432,8 +469,11 @@ fun FilterSheet(
                         filters.copy(
                             selectedCategories = selectedCategories,
                             selectedCounterParties = selectedCounterParties,
+                            includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
                             selectedMethods = selectedMethods,
                             selectedSources = selectedSources,
+                            selectedItems = selectedItems,
+                            includeNoItemTransactions = includeNoItemTransactions,
                             selectedTransactionTypes = selectedTransactionTypes,
                             filterAmountMin = fromAmount,
                             filterAmountMax = toAmount,
