@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ToggleRow(
-    currencyCode: String,
+    identifier: String,
     label: String,
     selected: Boolean,
     onClick: (String) -> Unit
@@ -36,7 +36,7 @@ fun ToggleRow(
                 enabled = true,
                 selected = selected,
                 onClick = {
-                    onClick(currencyCode)
+                    onClick(identifier)
                 }
             )
             .background(color = color)
@@ -55,7 +55,7 @@ fun ToggleRow(
 @Composable
 fun ToggleRowPreview() {
     Column {
-        ToggleRow(currencyCode = "", label = "INR", selected = true, onClick = {})
-        ToggleRow(currencyCode = "", label = "INR", selected = false, onClick = {})
+        ToggleRow(identifier = "", label = "INR", selected = true, onClick = {})
+        ToggleRow(identifier = "", label = "INR", selected = false, onClick = {})
     }
 }
