@@ -1,4 +1,4 @@
-package jp.ikigai.cash.flow.data.screenStates.listing
+package jp.ikigai.cash.flow.ui.screenStates.listing
 
 import jp.ikigai.cash.flow.data.entity.Source
 

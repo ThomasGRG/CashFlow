@@ -7,7 +7,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.screenStates.listing.SourceScreenState
+import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

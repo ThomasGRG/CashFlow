@@ -47,7 +47,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.screenStates.common.ChooseIconScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.ChooseIconScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer

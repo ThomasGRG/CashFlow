@@ -1,4 +1,4 @@
-package jp.ikigai.cash.flow.data.screenStates.common
+package jp.ikigai.cash.flow.ui.screenStates.common
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

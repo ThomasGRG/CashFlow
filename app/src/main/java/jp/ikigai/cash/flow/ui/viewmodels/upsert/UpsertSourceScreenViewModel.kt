@@ -10,7 +10,7 @@ import io.realm.kotlin.ext.query
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.screenStates.upsert.UpsertSourceScreenState
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

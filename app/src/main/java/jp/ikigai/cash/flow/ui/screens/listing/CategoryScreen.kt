@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.screenStates.listing.CategoryScreenState
+import jp.ikigai.cash.flow.ui.screenStates.listing.CategoryScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.InfoCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold

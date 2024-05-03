@@ -1,4 +1,4 @@
-package jp.ikigai.cash.flow.data.screenStates.upsert
+package jp.ikigai.cash.flow.ui.screenStates.upsert
 
 import android.icu.util.Currency
 import jp.ikigai.cash.flow.data.Constants

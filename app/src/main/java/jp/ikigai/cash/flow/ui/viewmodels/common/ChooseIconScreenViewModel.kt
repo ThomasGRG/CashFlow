@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.AllIcons
 import compose.icons.TablerIcons
-import jp.ikigai.cash.flow.data.screenStates.common.ChooseIconScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.ChooseIconScreenState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

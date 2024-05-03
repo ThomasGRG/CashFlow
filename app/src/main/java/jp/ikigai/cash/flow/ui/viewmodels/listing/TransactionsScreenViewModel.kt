@@ -20,7 +20,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.screenStates.listing.TransactionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
