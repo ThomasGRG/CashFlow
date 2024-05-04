@@ -71,7 +71,6 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
@@ -84,6 +83,7 @@ import jp.ikigai.cash.flow.ui.components.sheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.sheets.DatePickerBottomSheet
 import jp.ikigai.cash.flow.ui.components.sheets.SelectItemSheet
 import jp.ikigai.cash.flow.ui.components.sheets.TimePickerBottomSheet
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -852,7 +852,7 @@ fun UpsertTransactionScreen(
                         expanded = false,
                         enabled = enabled,
                         value = "${transactionItem.item!!.name}\nQuantity: ${transactionItem.quantity}, Price: ${transactionItem.price}, Unit: ${transactionItem.unit.code}",
-                        label = "Item #$index",
+                        label = "Item #${index + 1}",
                         icon = TablerIcons.Stack,
                         iconDescription = "item icon",
                         onClick = {
