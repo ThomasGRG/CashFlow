@@ -18,7 +18,7 @@ fun AnimatedTextFieldErrorLabel(
 ) {
     AnimatedVisibility(
         visible = visible,
-        modifier = Modifier.fillMaxWidth().padding(start = 15.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 10.dp),
         enter = expandVertically(),
         exit = shrinkVertically(),
     ) {
