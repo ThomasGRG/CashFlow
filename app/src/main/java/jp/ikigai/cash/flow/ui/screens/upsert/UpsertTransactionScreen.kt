@@ -275,10 +275,8 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.transaction.uuid)
     }
 
-    var titleFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.transaction.title)
-        )
+    var title by rememberSaveable(state.transaction) {
+        mutableStateOf(state.transaction.title)
     }
 
     var descriptionFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
@@ -547,13 +545,13 @@ fun UpsertTransactionScreen(
 
         SheetType.AUTO_COMPLETE -> {
             AutoCompleteTextFieldBottomSheet(
-                fieldValue = titleFieldValue,
-                setFieldValue = {
+                value = title,
+                setValue = {
                     scope.launch {
                         keyboardController?.hide()
                         sheetState.hide()
                         sheetType = SheetType.NONE
-                        titleFieldValue = it
+                        title = it
                     }
                 },
                 enabled = enabled,
@@ -626,7 +624,7 @@ fun UpsertTransactionScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        upsertTransaction(titleFieldValue.text, descriptionFieldValue.text)
+                        upsertTransaction(title, descriptionFieldValue.text)
                     }
                 },
                 extraButtonIcon = if (transactionUuid.isNotBlank()) {
@@ -660,13 +658,21 @@ fun UpsertTransactionScreen(
                 key = "title",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.AUTO_COMPLETE,
+                CustomOutlinedButton(
                     enabled = enabled,
-                    value = titleFieldValue,
+                    value = title,
                     label = "Title",
-                    icon = TablerIcons.Typography,
-                    iconDescription = "title icon",
+                    placeHolder = "Enter transaction title",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = TablerIcons.Typography,
+                            contentDescription = "title icon",
+                        )
+                    },
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        title = ""
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.AUTO_COMPLETE
