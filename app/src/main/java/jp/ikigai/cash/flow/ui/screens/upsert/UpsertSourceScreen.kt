@@ -56,14 +56,15 @@ import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
 import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -151,17 +152,15 @@ fun UpsertSourceScreen(
         mutableStateOf(state.currencies)
     }
 
-    var selectedCurrencyFieldValue by rememberSaveable(state.source, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.source.currency)
-        )
+    var selectedCurrency by rememberSaveable(state.source) {
+        mutableStateOf(state.source.currency)
     }
 
     var currencyExpanded by remember { mutableStateOf(false) }
 
     if (currencyExpanded) {
         CommonSelectionSheet(
-            index = currencies.indexOfFirst { it.currencyCode == selectedCurrencyFieldValue.text },
+            index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
             sheetState = currencySheetState,
             dismiss = {
                 scope.launch {
@@ -178,13 +177,12 @@ fun UpsertSourceScreen(
                 ToggleRow(
                     identifier = it.currencyCode,
                     label = "${it.displayName} (${it.currencyCode})",
-                    selected = it.currencyCode == selectedCurrencyFieldValue.text,
+                    selected = it.currencyCode == selectedCurrency,
                     onClick = { currencyCode ->
                         scope.launch {
                             currencySheetState.hide()
                             currencyExpanded = false
-                            selectedCurrencyFieldValue =
-                                selectedCurrencyFieldValue.copy(text = currencyCode)
+                            selectedCurrency = currencyCode
                         }
                     }
                 )
@@ -287,7 +285,7 @@ fun UpsertSourceScreen(
                         upsertTransactionSource(
                             icon,
                             nameFieldValue.text,
-                            selectedCurrencyFieldValue.text,
+                            selectedCurrency,
                             balanceFieldValue.text.toDoubleOrNull() ?: 0.0
                         )
                     }
@@ -370,13 +368,17 @@ fun UpsertSourceScreen(
                     keyboardController?.hide()
                 }
             )
-            RoundedCornerOutlinedTextField(
-                expanded = currencyExpanded,
+            CustomOutlinedButton(
                 enabled = enabled,
-                value = selectedCurrencyFieldValue,
+                value = selectedCurrency,
                 label = "Currency",
-                icon = TablerIcons.CurrencyDollar,
-                iconDescription = "currency icon",
+                placeHolder = "",
+                leadingIcon = {
+                    Icon(
+                        imageVector = TablerIcons.CurrencyDollar,
+                        contentDescription = "currency icon",
+                    )
+                },
                 onClick = {
                     resetOneHandMode()
                     currencyExpanded = true
