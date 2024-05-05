@@ -52,7 +52,6 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.SheetType
-import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
@@ -63,6 +62,7 @@ import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
 import jp.ikigai.cash.flow.ui.components.sheets.DateRangePickerBottomSheet
 import jp.ikigai.cash.flow.ui.components.sheets.FilterSheet
 import jp.ikigai.cash.flow.ui.components.sheets.MoreBottomSheet
+import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.delay
@@ -83,6 +83,7 @@ fun TransactionsScreen(
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
+    navigateToTemplatesScreen: () -> Unit,
     navigateToItemsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
     openGithubPage: () -> Unit,
@@ -277,6 +278,7 @@ fun TransactionsScreen(
                 navigateToCounterPartyScreen = navigateToCounterPartyScreen,
                 navigateToMethodsScreen = navigateToMethodsScreen,
                 navigateToSourcesScreen = navigateToSourcesScreen,
+                navigateToTemplatesScreen = navigateToTemplatesScreen,
                 navigateToItemsScreen = navigateToItemsScreen,
                 openGithubReleasesPage = openGithubPage,
                 dismiss = {
@@ -490,6 +492,11 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             },
             navigateToCounterPartyScreen = {
                 navController.navigate(Routes.CounterParties.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToTemplatesScreen = {
+                navController.navigate(Routes.Templates.route) {
                     launchSingleTop = true
                 }
             },
