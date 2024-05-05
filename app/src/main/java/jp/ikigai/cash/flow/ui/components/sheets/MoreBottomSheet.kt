@@ -36,6 +36,7 @@ fun MoreBottomSheet(
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
+    navigateToTemplatesScreen: () -> Unit,
     navigateToItemsScreen: () -> Unit,
     openGithubReleasesPage: () -> Unit,
     dismiss: () -> Unit,
@@ -153,7 +154,7 @@ fun MoreBottomSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 20.dp),
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -177,6 +178,34 @@ fun MoreBottomSheet(
                 )
                 Text(text = "Items", style = MaterialTheme.typography.titleMedium)
             }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    scope.launch {
+                        sheetState.hide()
+                        dismiss()
+                        navigateToTemplatesScreen()
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.CreditCard,
+                    contentDescription = TablerIcons.CreditCard.name
+                )
+                Text(text = "Templates", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
