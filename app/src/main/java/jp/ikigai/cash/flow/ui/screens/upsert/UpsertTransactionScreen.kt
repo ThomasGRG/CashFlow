@@ -1,7 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
@@ -882,35 +880,30 @@ fun UpsertTransactionScreen(
                 items = transactionItems,
                 key = { _, transactionItem -> transactionItem.item!!.uuid }
             ) { index, transactionItem ->
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    RoundedCornerOutlinedTextField(
-                        expanded = false,
-                        enabled = enabled,
-                        value = "${transactionItem.item!!.name}\nQuantity: ${transactionItem.quantity}, Price: ${transactionItem.price}, Unit: ${transactionItem.unit.code}",
-                        label = "Item #${index + 1}",
-                        icon = TablerIcons.Stack,
-                        iconDescription = "item icon",
-                        onClick = {
-                            resetOneHandMode()
-                            selectedTransactionItem = transactionItem
-                            sheetType = SheetType.ITEMS
-                        }
-                    )
-                    IconButton(
-                        onClick = {
-                            if (enabled) {
-                                resetOneHandMode()
-                                removeItem(transactionItem)
-                            }
-                        },
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    ) {
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = "${transactionItem.item!!.name}\nQuantity: ${transactionItem.quantity}, Price: ${transactionItem.price}, Unit: ${transactionItem.unit.code}",
+                    label = "Item #${index + 1}",
+                    placeHolder = "",
+                    isError = transactionItem.price == 0.0,
+                    errorHint = "Price cannot be 0",
+                    leadingIcon = {
                         Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = "remove item",
+                            imageVector = TablerIcons.Stack,
+                            contentDescription = "item icon",
                         )
+                    },
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        resetOneHandMode()
+                        removeItem(transactionItem)
+                    },
+                    onClick = {
+                        resetOneHandMode()
+                        selectedTransactionItem = transactionItem
+                        sheetType = SheetType.ITEMS
                     }
-                }
+                )
             }
             if (itemHeaderVisible) {
                 item(
