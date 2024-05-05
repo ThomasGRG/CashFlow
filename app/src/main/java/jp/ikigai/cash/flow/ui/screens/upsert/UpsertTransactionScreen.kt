@@ -72,6 +72,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -714,13 +715,17 @@ fun UpsertTransactionScreen(
                 key = "date",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.DATE,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = date,
                     label = "Date",
-                    icon = TablerIcons.CalendarEvent,
-                    iconDescription = "date icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = TablerIcons.CalendarEvent,
+                            contentDescription = "date icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.DATE
@@ -731,13 +736,17 @@ fun UpsertTransactionScreen(
                 key = "time",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.TIME,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = time,
                     label = "Time",
-                    icon = TablerIcons.Alarm,
-                    iconDescription = "time icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = TablerIcons.Alarm,
+                            contentDescription = "time icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.TIME
@@ -748,13 +757,17 @@ fun UpsertTransactionScreen(
                 key = "category",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.CATEGORY,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCategory.name,
                     label = "Category",
-                    icon = selectedCategory.icon,
-                    iconDescription = "category icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = selectedCategory.icon,
+                            contentDescription = "category icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.CATEGORY
@@ -765,13 +778,17 @@ fun UpsertTransactionScreen(
                 key = "counterParty",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.COUNTERPARTY,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCounterParty.name,
                     label = "Counter party",
-                    icon = selectedCounterParty.icon,
-                    iconDescription = "counter party icon",
+                    placeHolder = "Select a counter party",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = selectedCounterParty.icon,
+                            contentDescription = "counter party icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.COUNTERPARTY
@@ -782,13 +799,17 @@ fun UpsertTransactionScreen(
                 key = "method",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.METHOD,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedMethod.name,
                     label = "Method",
-                    icon = selectedMethod.icon,
-                    iconDescription = "method icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = selectedMethod.icon,
+                            contentDescription = "method icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.METHOD
@@ -799,13 +820,17 @@ fun UpsertTransactionScreen(
                 key = "source",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.SOURCE,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedSource.name,
                     label = "Source",
-                    icon = selectedSource.icon,
-                    iconDescription = "source icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = selectedSource.icon,
+                            contentDescription = "source icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.SOURCE
@@ -816,13 +841,17 @@ fun UpsertTransactionScreen(
                 key = "transactionType",
                 contentType = "dropDown"
             ) {
-                RoundedCornerOutlinedTextField(
-                    expanded = sheetType == SheetType.TYPE,
+                CustomOutlinedButton(
                     enabled = enabled,
                     value = if (isDebit) "Debit" else "Credit",
                     label = "Transaction type",
-                    icon = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
-                    iconDescription = "type icon",
+                    placeHolder = "",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
+                            contentDescription = "type icon",
+                        )
+                    },
                     onClick = {
                         resetOneHandMode()
                         sheetType = SheetType.TYPE
