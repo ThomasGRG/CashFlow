@@ -6,12 +6,14 @@ import jp.ikigai.cash.flow.ui.viewmodels.listing.CounterPartyScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.ItemsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.MethodScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.SourceScreenViewModel
+import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
+import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -33,4 +35,7 @@ val appModule = module {
 
     viewModel() { ChooseIconScreenViewModel(get()) }
     viewModel() { ItemsScreenViewModel() }
+
+    viewModel() { TransactionTemplateScreenViewModel() }
+    viewModel() { UpsertTransactionTemplateScreenViewModel(get()) }
 }
