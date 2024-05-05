@@ -24,6 +24,7 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
 import compose.icons.tablericons.BrandGithub
 import compose.icons.tablericons.BuildingBank
+import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.CreditCard
 import compose.icons.tablericons.TriangleSquareCircle
 import compose.icons.tablericons.Users
@@ -193,8 +194,8 @@ fun MoreBottomSheet(
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
-                    imageVector = TablerIcons.CreditCard,
-                    contentDescription = TablerIcons.CreditCard.name
+                    imageVector = TablerIcons.ClipboardList,
+                    contentDescription = TablerIcons.ClipboardList.name
                 )
                 Text(text = "Templates", style = MaterialTheme.typography.titleMedium)
             }
