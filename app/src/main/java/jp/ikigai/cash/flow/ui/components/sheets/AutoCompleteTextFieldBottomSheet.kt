@@ -37,8 +37,8 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutoCompleteTextFieldBottomSheet(
-    fieldValue: TextFieldValue,
-    setFieldValue: (TextFieldValue) -> Unit,
+    value: String,
+    setValue: (String) -> Unit,
     enabled: Boolean,
     icon: ImageVector,
     iconDescription: String,
@@ -59,7 +59,7 @@ fun AutoCompleteTextFieldBottomSheet(
 
     var textFieldValue by remember {
         mutableStateOf(
-            fieldValue
+            TextFieldValue(value)
         )
     }
 
@@ -129,7 +129,7 @@ fun AutoCompleteTextFieldBottomSheet(
             }
             TextButton(
                 onClick = {
-                    setFieldValue(textFieldValue)
+                    setValue(textFieldValue.text)
                 },
                 modifier = Modifier.weight(1f)
             ) {
