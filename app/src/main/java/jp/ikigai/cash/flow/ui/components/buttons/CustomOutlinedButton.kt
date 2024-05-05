@@ -27,14 +27,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
 
 @Composable
 fun CustomOutlinedButton(
-    enabled: Boolean = false,
+    enabled: Boolean,
     value: String,
     label: String,
     placeHolder: String,
+    isError: Boolean = false,
+    errorHint: String = "",
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: ImageVector? = null,
     onTrailingIconClick: (() -> Unit)? = null,
@@ -56,12 +60,26 @@ fun CustomOutlinedButton(
         }
     }
 
+    val borderColor = if (enabled) {
+        if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+    } else MaterialTheme.colorScheme.outline.copy(alpha = alpha)
+
+    val textColor = if (value.isBlank()) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        if (isError) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        }
+    }
+
     Box {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = alpha)),
+                border = BorderStroke(1.dp, borderColor),
                 modifier = Modifier
                     .heightIn(min = 56.dp)
                     .fillMaxWidth()
@@ -76,7 +94,7 @@ fun CustomOutlinedButton(
                     leadingIcon?.invoke()
                     Text(
                         text = text,
-                        color = if (value.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onBackground,
+                        color = textColor,
                         modifier = Modifier
                             .alpha(alpha = alpha)
                             .clickable(
@@ -109,6 +127,10 @@ fun CustomOutlinedButton(
                     }
                 }
             }
+            AnimatedTextFieldErrorLabel(
+                visible = isError,
+                errorLabel = errorHint
+            )
         }
         Row(
             modifier = Modifier
@@ -118,10 +140,46 @@ fun CustomOutlinedButton(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
+                color = borderColor,
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
                     .alpha(alpha = alpha)
                     .padding(start = 3.dp, end = 3.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CustomOutlinedButtonPreview() {
+    Column {
+        Column(
+            Modifier
+                .heightIn(max = 80.dp)
+                .padding(5.dp)
+        ) {
+            CustomOutlinedButton(
+                enabled = true,
+                value = "Text",
+                label = "Category",
+                placeHolder = "Select a category",
+                onClick = {}
+            )
+        }
+        Column(
+            Modifier
+                .heightIn(max = 80.dp)
+                .padding(5.dp)
+        ) {
+            CustomOutlinedButton(
+                enabled = true,
+                value = "Text",
+                label = "Category",
+                placeHolder = "Select a category",
+                isError = true,
+                errorHint = "Cannot be",
+                onClick = {}
             )
         }
     }
