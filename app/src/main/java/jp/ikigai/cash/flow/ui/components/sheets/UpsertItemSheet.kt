@@ -50,6 +50,7 @@ fun UpsertItemSheet(
                 value = nameFieldValue,
                 onValueChange = setName,
                 label = "Name",
+                placeHolder = "Enter item name",
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,

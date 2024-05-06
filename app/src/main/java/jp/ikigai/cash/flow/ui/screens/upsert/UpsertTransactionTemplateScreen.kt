@@ -581,6 +581,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     enabled = enabled,
                     label = "Template name",
+                    placeHolder = "Enter template name",
                     isError = !nameValid,
                     errorHint = "Name cannot be empty",
                     icon = TablerIcons.Typography,
@@ -599,6 +600,7 @@ fun UpsertTransactionTemplateScreen(
                     onValueChange = { titleFieldValue = it },
                     enabled = enabled,
                     label = "Transaction title",
+                    placeHolder = "Enter transaction title",
                     icon = TablerIcons.LetterCase,
                     iconDescription = "title icon",
                     onDone = {
@@ -615,6 +617,7 @@ fun UpsertTransactionTemplateScreen(
                     onValueChange = { descriptionFieldValue = it },
                     enabled = enabled,
                     label = "Description",
+                    placeHolder = "Enter description",
                     icon = TablerIcons.FileText,
                     iconDescription = "description icon",
                     keyboardOptions = KeyboardOptions(
@@ -635,6 +638,7 @@ fun UpsertTransactionTemplateScreen(
                     onValueChange = setAmount,
                     enabled = enabled && !itemHeaderVisible,
                     label = "Amount",
+                    placeHolder = "Enter transaction amount",
                     icon = TablerIcons.CashBanknote,
                     iconDescription = "amount icon",
                     onDone = {
@@ -815,6 +819,7 @@ fun UpsertTransactionTemplateScreen(
                         onValueChange = setTaxAmount,
                         enabled = enabled,
                         label = "Tax",
+                        placeHolder = "Enter tax amount",
                         icon = TablerIcons.CashBanknote,
                         iconDescription = "tax amount icon",
                         onDone = {

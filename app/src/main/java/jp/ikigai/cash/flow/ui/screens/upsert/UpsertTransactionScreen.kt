@@ -686,6 +686,7 @@ fun UpsertTransactionScreen(
                     onValueChange = { descriptionFieldValue = it },
                     enabled = enabled,
                     label = "Description",
+                    placeHolder = "Enter description",
                     icon = TablerIcons.FileText,
                     iconDescription = "description icon",
                     keyboardOptions = KeyboardOptions(
@@ -706,6 +707,7 @@ fun UpsertTransactionScreen(
                     onValueChange = setAmount,
                     enabled = enabled && !itemHeaderVisible,
                     label = "Amount",
+                    placeHolder = "Enter transaction amount",
                     icon = TablerIcons.CashBanknote,
                     iconDescription = "amount icon",
                     isError = !amountValid,
@@ -915,6 +917,7 @@ fun UpsertTransactionScreen(
                         onValueChange = setTaxAmount,
                         enabled = enabled,
                         label = "Tax",
+                        placeHolder = "Enter tax amount",
                         icon = TablerIcons.CashBanknote,
                         iconDescription = "tax amount icon",
                         onDone = {

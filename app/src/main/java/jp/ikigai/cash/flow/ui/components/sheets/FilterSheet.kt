@@ -197,6 +197,7 @@ fun FilterSheet(
                                 },
                                 enabled = true,
                                 label = "Minimum amount",
+                                placeHolder = "Enter minimum amount",
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "minimum amount icon",
                                 onDone = {
@@ -213,6 +214,7 @@ fun FilterSheet(
                                 },
                                 enabled = true,
                                 label = "Maximum amount",
+                                placeHolder = "Enter maximum amount",
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "maximum amount icon",
                                 onDone = {

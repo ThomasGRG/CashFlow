@@ -44,12 +44,12 @@ import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -245,6 +245,7 @@ fun UpsertCategoryScreen(
                 },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = "Name",
+                placeHolder = "Enter category name",
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
