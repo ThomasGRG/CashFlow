@@ -2,8 +2,9 @@ package jp.ikigai.cash.flow.ui.screens.common
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +35,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -47,11 +51,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.screenStates.common.ChooseIconScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.dialogs.IconDetailsDialog
+import jp.ikigai.cash.flow.ui.screenStates.common.ChooseIconScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.common.ChooseIconScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -71,6 +75,16 @@ fun ChooseIconScreen(
     val numberFormatter by remember {
         mutableStateOf(getNumberFormatter())
     }
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
 
     val icons by remember(key1 = state.icons) {
         mutableStateOf(state.icons)
@@ -147,84 +161,100 @@ fun ChooseIconScreen(
                 navigateBack = {
                     navigateBackWithResult(defaultIcon)
                 },
+                floatingButtonIcon = {
+                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search icons")
+                },
+                floatingButtonAction = {
+                    if (!loading) {
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
+                        }
+                    }
+                }
             )
         }
     ) { oneHandModeBoxHeight, resetOneHandMode ->
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(58.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            item(
-                key = "one-hand-mode-expand-row",
-                contentType = "row",
-                span = StaggeredGridItemSpan.FullLine
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 5.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-            }
-            itemsIndexed(
-                items = icons,
-                key = { _, icon -> "icon-${icon.name}" }
-            ) { _, icon ->
-                Icon(
-                    imageVector = icon,
-                    contentDescription = icon.name,
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = setSearchText,
+                    enabled = !loading,
                     modifier = Modifier
-                        .size(52.dp)
-                        .padding(6.dp)
-                        .combinedClickable(
-                            enabled = !loading,
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                navigateBackWithResult(icon.name)
-                            },
-                            onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                resetOneHandMode()
-                                iconToPreview = icon.name
-                                showDialog = true
-                            },
-                            onLongClickLabel = icon.name,
-                            role = Role.Button,
-                        )
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester = focusRequester),
+                    label = {
+                        Text(text = "Search")
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardController?.hide()
+                        }
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    interactionSource = interactionSource
                 )
             }
-            item(
-                key = "bottomPadding",
-                span = StaggeredGridItemSpan.FullLine
-            ) {
-                Spacer(modifier = Modifier.height(75.dp))
-            }
-        }
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 5.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = setSearchText,
-                enabled = !loading,
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Adaptive(58.dp),
                 modifier = Modifier
-                    .fillMaxWidth(),
-                label = {
-                    Text(text = "Search")
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
-            )
+                    .fillMaxSize()
+                    .padding(start = 10.dp, end = 10.dp)
+            ) {
+                item(
+                    key = "one-hand-mode-expand-row",
+                    contentType = "row",
+                    span = StaggeredGridItemSpan.FullLine
+                ) {
+                    OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
+                }
+                itemsIndexed(
+                    items = icons,
+                    key = { _, icon -> "icon-${icon.name}" }
+                ) { _, icon ->
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = icon.name,
+                        modifier = Modifier
+                            .size(52.dp)
+                            .padding(6.dp)
+                            .combinedClickable(
+                                enabled = !loading,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    navigateBackWithResult(icon.name)
+                                },
+                                onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    resetOneHandMode()
+                                    iconToPreview = icon.name
+                                    showDialog = true
+                                },
+                                onLongClickLabel = icon.name,
+                                role = Role.Button,
+                            )
+                    )
+                }
+                item(
+                    key = "bottomPadding",
+                    span = StaggeredGridItemSpan.FullLine
+                ) {
+                    Spacer(modifier = Modifier.height(75.dp))
+                }
+            }
         }
     }
 }
