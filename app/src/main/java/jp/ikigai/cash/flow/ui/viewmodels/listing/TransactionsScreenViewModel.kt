@@ -7,11 +7,13 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
+import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
@@ -19,8 +21,10 @@ import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
+import jp.ikigai.cash.flow.utils.combineEightFlows
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
@@ -50,6 +54,9 @@ class TransactionsScreenViewModel(
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
+    private val templateQuery =
+        realm.query<TransactionTemplate>().sort("frequency", Sort.DESCENDING)
+
     private val sourceQuery = realm.query<Source>().sort("frequency", Sort.DESCENDING)
 
     private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
@@ -67,13 +74,7 @@ class TransactionsScreenViewModel(
                 endDateString = it.endDate.getDateString()
             )
         }
-        getCategoryFilterData()
-        getCounterPartyFilterData()
-        getMethodFilterData()
-        getSourceFilterData()
-        getItemFilterData()
-        updateBalance()
-        getTransactions()
+        loadData()
     }
 
     override fun onCleared() {
@@ -81,79 +82,59 @@ class TransactionsScreenViewModel(
         realm.close()
     }
 
-    private fun getItemFilterData() = viewModelScope.launch {
-        itemsQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    filters = it.filters.copy(
-                        items = changes.list,
-                        selectedItems = it.filters.selectedItems.ifEmpty { changes.list.map { item -> item.uuid } }
-                    )
-                )
-            }
-        }
-    }
-
-    private fun getCategoryFilterData() = viewModelScope.launch {
-        categoryQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    filters = it.filters.copy(
-                        categories = changes.list,
-                        selectedCategories = it.filters.selectedCategories.ifEmpty { changes.list.map { category -> category.uuid } }
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun getCounterPartyFilterData() = viewModelScope.launch {
-        counterPartyQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    filters = it.filters.copy(
-                        counterParties = changes.list,
-                        selectedCounterParties = it.filters.selectedCounterParties.ifEmpty { changes.list.map { counterParty -> counterParty.uuid } }
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun getMethodFilterData() = viewModelScope.launch {
-        methodQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    filters = it.filters.copy(
-                        methods = changes.list,
-                        selectedMethods = it.filters.selectedMethods.ifEmpty { changes.list.map { method -> method.uuid } }
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun getSourceFilterData() = viewModelScope.launch {
-        sourceQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    filters = it.filters.copy(
-                        sources = changes.list,
-                        selectedSources = it.filters.selectedSources.ifEmpty { changes.list.map { source -> source.uuid } }
-                    ),
-                )
-            }
-        }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun updateBalance() = viewModelScope.launch {
-        state.flatMapLatest {
-            realm.query<Source>("currency==$0", it.selectedCurrency).asFlow()
-        }.collectLatest { changes ->
+    private fun loadData() = viewModelScope.launch {
+        combineEightFlows(
+            categoryQuery.asFlow(),
+            counterPartyQuery.asFlow(),
+            itemsQuery.asFlow(),
+            methodQuery.asFlow(),
+            sourceQuery.asFlow(),
+            templateQuery.asFlow(),
+            state.flatMapLatest {
+                realm.query<Source>("currency==$0", it.selectedCurrency).asFlow()
+            },
+            getTransactionQuery()
+        ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, templateChanges, balanceChanges, transactionChanges ->
+            TransactionScreenFlows(
+                categories = categoryChanges.list,
+                counterParties = counterPartyChanges.list,
+                methods = methodChanges.list,
+                sources = sourceChanges.list,
+                items = itemChanges.list,
+                templates = templateChanges.list,
+                balance = balanceChanges.list.sumOf { source -> source.balance },
+                transactions = transactionChanges.list,
+            )
+        }.collectLatest { transactionScreenFlows ->
+            val incomeTransactions =
+                transactionScreenFlows.transactions.filter { it.type == TransactionType.CREDIT }
+            val income = incomeTransactions.sumOf { it.amount }
+
+            val expenseTransactions =
+                transactionScreenFlows.transactions.filter { it.type == TransactionType.DEBIT }
+            val expense = expenseTransactions.sumOf { it.amount }
             _state.update {
                 it.copy(
-                    balance = changes.list.sumOf { source -> source.balance }
+                    transactions = getTransactionsMap(transactionScreenFlows.transactions),
+                    expenseTransactionsCount = expenseTransactions.size,
+                    expense = expense,
+                    incomeTransactionsCount = incomeTransactions.size,
+                    income = income,
+                    loading = false,
+                    balance = transactionScreenFlows.balance,
+                    filters = it.filters.copy(
+                        categories = transactionScreenFlows.categories,
+                        selectedCategories = it.filters.selectedCategories.ifEmpty { transactionScreenFlows.categories.map { category -> category.uuid } },
+                        counterParties = transactionScreenFlows.counterParties,
+                        selectedCounterParties = it.filters.selectedCounterParties.ifEmpty { transactionScreenFlows.counterParties.map { counterParty -> counterParty.uuid } },
+                        items = transactionScreenFlows.items,
+                        selectedItems = it.filters.selectedItems.ifEmpty { transactionScreenFlows.items.map { item -> item.uuid } },
+                        methods = transactionScreenFlows.methods,
+                        selectedMethods = it.filters.selectedMethods.ifEmpty { transactionScreenFlows.methods.map { method -> method.uuid } },
+                        sources = transactionScreenFlows.sources,
+                        selectedSources = it.filters.selectedSources.ifEmpty { transactionScreenFlows.sources.map { source -> source.uuid } }
+                    )
                 )
             }
         }
@@ -193,8 +174,8 @@ class TransactionsScreenViewModel(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTransactions() = viewModelScope.launch {
-        state.flatMapLatest {
+    private fun getTransactionQuery(): Flow<ResultsChange<Transaction>> {
+        return state.flatMapLatest {
             var queryString =
                 "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
             queryString += if (it.filters.includeNoCounterPartyTransactions) {
@@ -221,39 +202,26 @@ class TransactionsScreenViewModel(
                 it.filters.selectedCounterParties,
                 it.filters.selectedItems
             ).sort("time", Sort.DESCENDING).asFlow()
-        }.collectLatest { changes ->
-            val transactions = changes.list
-            val transactionsMap = transactions.groupBy { it.time.toLocalDate() }
-            val transactionDetailsMap = mutableMapOf<LocalDate, TransactionDetailsByDay>()
-            transactionsMap.forEach { (localDate, transactionsList) ->
-                val creditTransactions =
-                    transactionsList.filter { it.type == TransactionType.CREDIT }
-                val credit = creditTransactions.sumOf { it.amount }
-
-                val debitTransactions = transactionsList.filter { it.type == TransactionType.DEBIT }
-                val debit = debitTransactions.sumOf { it.amount }
-
-                transactionDetailsMap[localDate] = TransactionDetailsByDay(
-                    transactions = transactionsList.map { getTransactionWithIcons(it) },
-                    totalAmount = credit - debit,
-                )
-            }
-            val incomeTransactions = transactions.filter { it.type == TransactionType.CREDIT }
-            val income = incomeTransactions.sumOf { it.amount }
-
-            val expenseTransactions = transactions.filter { it.type == TransactionType.DEBIT }
-            val expense = expenseTransactions.sumOf { it.amount }
-            _state.update {
-                it.copy(
-                    transactions = transactionDetailsMap,
-                    expenseTransactionsCount = expenseTransactions.size,
-                    expense = expense,
-                    incomeTransactionsCount = incomeTransactions.size,
-                    income = income,
-                    loading = false,
-                )
-            }
         }
+    }
+
+    private fun getTransactionsMap(transactions: List<Transaction>): Map<LocalDate, TransactionDetailsByDay> {
+        val transactionsMap = transactions.groupBy { it.time.toLocalDate() }
+        val transactionDetailsMap = mutableMapOf<LocalDate, TransactionDetailsByDay>()
+        transactionsMap.forEach { (localDate, transactionsList) ->
+            val creditTransactions =
+                transactionsList.filter { it.type == TransactionType.CREDIT }
+            val credit = creditTransactions.sumOf { it.amount }
+
+            val debitTransactions = transactionsList.filter { it.type == TransactionType.DEBIT }
+            val debit = debitTransactions.sumOf { it.amount }
+
+            transactionDetailsMap[localDate] = TransactionDetailsByDay(
+                transactions = transactionsList.map { getTransactionWithIcons(it) },
+                totalAmount = credit - debit,
+            )
+        }
+        return transactionDetailsMap
     }
 
     private fun getTransactionWithIcons(transaction: Transaction): TransactionWithIcons {
