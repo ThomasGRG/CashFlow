@@ -11,16 +11,19 @@ import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 
 object Database {
-    val config = RealmConfiguration.create(
-        schema = setOf(
-            Category::class,
-            CounterParty::class,
-            Item::class,
-            Method::class,
-            Source::class,
-            TransactionItem::class,
-            Transaction::class,
-            TransactionTemplate::class
+    val config = RealmConfiguration
+        .Builder(
+            schema = setOf(
+                Category::class,
+                CounterParty::class,
+                Item::class,
+                Method::class,
+                Source::class,
+                TransactionItem::class,
+                Transaction::class,
+                TransactionTemplate::class
+            )
         )
-    )
+        .schemaVersion(1)
+        .build()
 }
