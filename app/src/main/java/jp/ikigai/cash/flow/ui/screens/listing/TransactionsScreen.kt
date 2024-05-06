@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -396,7 +396,7 @@ fun TransactionsScreen(
                 }
             }
             if (loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter))
             } else if (state.transactions.isEmpty()) {
                 Text(
                     text = "You have not added any transactions.", modifier = Modifier.align(
