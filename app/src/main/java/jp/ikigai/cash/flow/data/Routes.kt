@@ -5,9 +5,9 @@ sealed class Routes(val route: String) {
     object Items: Routes("items")
 
     object Transactions: Routes("transactions")
-    object UpsertTransaction: Routes("upsertTransaction?id={id}") {
-        fun getRoute(id: String = ""): String {
-            return "upsertTransaction?id=${id}"
+    object UpsertTransaction: Routes("upsertTransaction?id={id}&templateId={templateId}") {
+        fun getRoute(id: String = "", templateId: String = ""): String {
+            return "upsertTransaction?id=${id}&templateId=${templateId}"
         }
     }
 
