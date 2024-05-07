@@ -62,6 +62,7 @@ import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
 import jp.ikigai.cash.flow.ui.components.sheets.DateRangePickerBottomSheet
 import jp.ikigai.cash.flow.ui.components.sheets.FilterSheet
 import jp.ikigai.cash.flow.ui.components.sheets.MoreBottomSheet
+import jp.ikigai.cash.flow.ui.components.sheets.SelectTemplateSheet
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -75,7 +76,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(
-    addTransaction: () -> Unit,
+    addTransaction: (String) -> Unit,
     editTransaction: (String) -> Unit,
     setFilters: (Filters) -> Unit,
     setCurrency: (String) -> Unit,
@@ -155,6 +156,10 @@ fun TransactionsScreen(
         mutableStateOf(state.loading)
     }
 
+    val templates by remember(key1 = state.templates) {
+        mutableStateOf(state.templates)
+    }
+
     val currencies by remember(key1 = state.currencies) {
         mutableStateOf(state.currencies)
     }
@@ -208,7 +213,19 @@ fun TransactionsScreen(
     }
 
     when (sheetType) {
-        SheetType.TEMPLATES -> {}
+        SheetType.TEMPLATES -> {
+            SelectTemplateSheet(
+                templates = templates,
+                addNewTransaction = { templateId ->
+                    addTransaction(templateId)
+                },
+                dismiss = {
+                    sheetType = SheetType.NONE
+                },
+                maxHeight = sheetMaxHeight,
+                sheetState = sheetState
+            )
+        }
 
         SheetType.FILTER -> {
             FilterSheet(
@@ -321,7 +338,9 @@ fun TransactionsScreen(
                 onCalendarClick = {
                     sheetType = SheetType.DATE_RANGE
                 },
-                addTransaction = addTransaction,
+                addTransaction = {
+                    sheetType = SheetType.TEMPLATES
+                },
                 onFilterClick = {
                     sheetType = SheetType.FILTER
                 },
@@ -396,7 +415,11 @@ fun TransactionsScreen(
                 }
             }
             if (loading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter))
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                )
             } else if (state.transactions.isEmpty()) {
                 Text(
                     text = "You have not added any transactions.", modifier = Modifier.align(
@@ -460,9 +483,9 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         val state by viewModel.state.collectAsState()
 
         TransactionsScreen(
-            addTransaction = {
+            addTransaction = { templateId ->
                 if (viewModel.canAddTransaction()) {
-                    navController.navigate(Routes.UpsertTransaction.getRoute()) {
+                    navController.navigate(Routes.UpsertTransaction.getRoute(templateId = templateId)) {
                         launchSingleTop = true
                     }
                 }
