@@ -12,6 +12,10 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -24,15 +28,24 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertItemSheet(
-    nameFieldValue: TextFieldValue,
-    setName: (TextFieldValue) -> Unit,
-    nameValid: Boolean,
+    name: String,
+    items: List<String>,
     enabled: Boolean,
-    save: () -> Unit,
+    save: (String) -> Unit,
     dismiss: () -> Unit,
     sheetState: SheetState,
     keyboardController: SoftwareKeyboardController?
 ) {
+    var nameFieldValue by remember {
+        mutableStateOf(
+            TextFieldValue(name)
+        )
+    }
+
+    var nameValid by remember {
+        mutableStateOf(true)
+    }
+
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
@@ -41,20 +54,25 @@ fun UpsertItemSheet(
         shape = RoundedCornerShape(10),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             RoundedCornerOutlinedTextField(
                 enabled = enabled,
                 value = nameFieldValue,
-                onValueChange = setName,
+                onValueChange = {
+                    nameFieldValue = it
+                    nameValid = true
+                },
                 label = "Name",
                 placeHolder = "Enter item name",
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = "Name cannot be empty",
+                errorHint = "Name already in use",
                 onDone = {
                     keyboardController?.hide()
                 }
@@ -77,8 +95,12 @@ fun UpsertItemSheet(
             }
             TextButton(
                 onClick = {
-                    dismiss()
-                    save()
+                    if (nameFieldValue.text != name && items.contains(nameFieldValue.text)) {
+                        nameValid = false
+                    } else {
+                        dismiss()
+                        save(nameFieldValue.text)
+                    }
                 },
                 modifier = Modifier.weight(1f),
                 enabled = nameFieldValue.text.isNotBlank()

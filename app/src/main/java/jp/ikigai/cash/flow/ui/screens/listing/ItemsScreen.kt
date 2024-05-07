@@ -20,13 +20,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -34,14 +32,13 @@ import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.enums.ItemUnit
-import jp.ikigai.cash.flow.ui.screenStates.listing.ItemsScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.ItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.sheets.UpsertItemSheet
+import jp.ikigai.cash.flow.ui.screenStates.listing.ItemsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.ItemsScreenViewModel
-import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.launch
@@ -71,12 +68,20 @@ fun ItemsScreen(
         mutableStateOf(state.items.isEmpty())
     }
 
+    val items by remember(key1 = state.items) {
+        mutableStateOf(state.items.map { it.name })
+    }
+
     val itemCount by remember(key1 = state.items) {
         mutableStateOf(
             numberFormatter
                 .format(state.items.size)
                 .toString()
         )
+    }
+
+    val selectedItem by remember(key1 = state.selectedItem) {
+        mutableStateOf(state.selectedItem)
     }
 
     val enabled by remember(key1 = state.enabled) {
@@ -87,27 +92,13 @@ fun ItemsScreen(
         mutableStateOf(false)
     }
 
-    var nameFieldValue by rememberSaveable(state.item, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.item.name)
-        )
-    }
-
-    var nameValid by remember {
-        mutableStateOf(true)
-    }
-
     if (showAddItemSheet) {
         UpsertItemSheet(
-            nameFieldValue = nameFieldValue,
-            setName = {
-                nameFieldValue = it
-                nameValid = it.text.isNotBlank()
-            },
-            nameValid = nameValid,
+            name = selectedItem.name,
+            items = items,
             enabled = enabled,
             save = {
-                upsertItem(nameFieldValue.text)
+                upsertItem(it)
             },
             dismiss = {
                 scope.launch {
@@ -146,7 +137,10 @@ fun ItemsScreen(
         bottomBar = {
             ThreeSlotRoundedBottomBar(
                 navigateBack = navigateBack,
-                floatingButtonAction = { showAddItemSheet = true },
+                floatingButtonAction = {
+                    editItem(Item())
+                    showAddItemSheet = true
+                },
                 floatingButtonIcon = {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
                 },
