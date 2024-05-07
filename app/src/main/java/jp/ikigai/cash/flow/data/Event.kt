@@ -5,6 +5,7 @@ sealed class Event {
     object SaveSuccess : Event()
     object DeleteSuccess : Event()
     object NotEnoughBalance : Event()
+    object NameAlreadyTaken: Event()
     object MinimumTwoFieldsRequired : Event()
     object SourceCategoryMethodRequired : Event()
     object CategoryMethodRequired : Event()
