@@ -988,6 +988,10 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             navArgument("id") {
                 defaultValue = ""
                 type = NavType.StringType
+            },
+            navArgument("templateId") {
+                defaultValue = ""
+                type = NavType.StringType
             }
         )
     ) {
