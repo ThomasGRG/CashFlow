@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -44,6 +45,7 @@ fun RoundedCornerOutlinedTextField(
     enabled: Boolean,
     label: String,
     placeHolder: String,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
     icon: ImageVector,
     iconDescription: String,
     isError: Boolean = false,
@@ -145,7 +147,7 @@ fun RoundedCornerOutlinedTextField(
                 style = MaterialTheme.typography.bodySmall,
                 color = animatedLabelColor,
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(backgroundColor)
                     .alpha(alpha = alpha)
                     .padding(start = 3.dp, end = 3.dp)
             )
@@ -161,6 +163,7 @@ fun RoundedCornerOutlinedTextField(
     enabled: Boolean,
     label: String,
     placeHolder: String,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
     icon: ImageVector,
     iconDescription: String,
     isError: Boolean = false,
@@ -264,7 +267,7 @@ fun RoundedCornerOutlinedTextField(
                 style = MaterialTheme.typography.bodySmall,
                 color = animatedLabelColor,
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(backgroundColor)
                     .alpha(alpha = alpha)
                     .padding(start = 3.dp, end = 3.dp)
             )
