@@ -72,6 +72,10 @@ class UpsertCounterPartyScreenViewModel(
     fun upsertCounterParty(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val counterParty = state.value.counterParty
         if (newName.isNotBlank()) {
+            if (newName != counterParty.name && realm.query<CounterParty>("name == [c]$0", newName).count().find() > 0) {
+                _event.send(Event.NameAlreadyTaken)
+                return@launch
+            }
             getCounterPartyJob?.cancel()
             _state.update {
                 it.copy(

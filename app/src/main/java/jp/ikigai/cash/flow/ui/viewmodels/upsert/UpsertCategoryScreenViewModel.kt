@@ -71,6 +71,10 @@ class UpsertCategoryScreenViewModel(
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val category = state.value.category
         if (newName.isNotBlank()) {
+            if (newName != category.name && realm.query<Category>("name == [c]$0", newName).count().find() > 0) {
+                _event.send(Event.NameAlreadyTaken)
+                return@launch
+            }
             // otherwise enabled will be set to true after saving and the flow updates
             getCategoryJob?.cancel()
             _state.update {

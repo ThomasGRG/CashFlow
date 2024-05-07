@@ -71,6 +71,10 @@ class UpsertMethodScreenViewModel(
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val method = state.value.method
         if (newName.isNotBlank()) {
+            if (newName != method.name && realm.query<Method>("name == [c]$0", newName).count().find() > 0) {
+                _event.send(Event.NameAlreadyTaken)
+                return@launch
+            }
             getMethodJob?.cancel()
             _state.update {
                 it.copy(

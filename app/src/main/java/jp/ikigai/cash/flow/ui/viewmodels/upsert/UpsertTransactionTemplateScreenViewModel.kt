@@ -156,6 +156,10 @@ class UpsertTransactionTemplateScreenViewModel(
                 _event.send(Event.MinimumTwoFieldsRequired)
                 return@launch
             }
+            if (newName != state.value.transactionTemplate.name && realm.query<TransactionTemplate>("name == [c]$0", newName).count().find() > 0) {
+                _event.send(Event.NameAlreadyTaken)
+                return@launch
+            }
             loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(

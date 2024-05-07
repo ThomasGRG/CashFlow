@@ -77,6 +77,10 @@ class UpsertSourceScreenViewModel(
     ) = viewModelScope.launch {
         val source = state.value.source
         if (newName.isNotBlank()) {
+            if (newName != source.name && realm.query<Source>("name == [c]$0", newName).count().find() > 0) {
+                _event.send(Event.NameAlreadyTaken)
+                return@launch
+            }
             getSourceJob?.cancel()
             _state.update {
                 it.copy(

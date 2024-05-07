@@ -219,6 +219,7 @@ fun UpsertSourceScreen(
             toastBarString = when (event) {
                 Event.SaveSuccess -> "Saved successfully"
                 Event.InternalError -> "Internal error"
+                Event.NameAlreadyTaken -> "Name already in use"
                 else -> ""
             }
             showToastBar = true

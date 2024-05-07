@@ -168,6 +168,7 @@ fun UpsertTransactionTemplateScreen(
                 Event.DeleteSuccess -> "Deleted successfully"
                 Event.InternalError -> "Internal error"
                 Event.MinimumTwoFieldsRequired -> "Minimum two fields are required"
+                Event.NameAlreadyTaken -> "Name already in use"
                 else -> ""
             }
             showToastBar = true
