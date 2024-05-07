@@ -123,6 +123,7 @@ class TransactionsScreenViewModel(
                     income = income,
                     loading = false,
                     balance = transactionScreenFlows.balance,
+                    templates = transactionScreenFlows.templates,
                     filters = it.filters.copy(
                         categories = transactionScreenFlows.categories,
                         selectedCategories = it.filters.selectedCategories.ifEmpty { transactionScreenFlows.categories.map { category -> category.uuid } },
