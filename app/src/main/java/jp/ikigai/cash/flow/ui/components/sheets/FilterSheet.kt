@@ -19,11 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LeadingIconTab
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -198,6 +200,7 @@ fun FilterSheet(
                                 enabled = true,
                                 label = "Minimum amount",
                                 placeHolder = "Enter minimum amount",
+                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "minimum amount icon",
                                 onDone = {
@@ -215,6 +218,7 @@ fun FilterSheet(
                                 enabled = true,
                                 label = "Maximum amount",
                                 placeHolder = "Enter maximum amount",
+                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "maximum amount icon",
                                 onDone = {
