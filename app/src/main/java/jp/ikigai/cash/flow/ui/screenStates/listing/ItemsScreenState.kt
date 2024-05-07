@@ -6,5 +6,5 @@ data class ItemsScreenState(
     val items: List<Item> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = true,
-    val item: Item = Item(),
+    val selectedItem: Item = Item(),
 )

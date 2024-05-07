@@ -56,13 +56,13 @@ class ItemsScreenViewModel(
     fun editItem(item: Item) {
         _state.update {
             it.copy(
-                item = item
+                selectedItem = item
             )
         }
     }
 
     fun upsertItem(newName: String) = viewModelScope.launch {
-        val item = state.value.item
+        val item = state.value.selectedItem
         if (newName.isNotBlank()) {
             _state.update {
                 it.copy(
