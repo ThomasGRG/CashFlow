@@ -10,6 +10,7 @@ import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
+import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Item
@@ -17,8 +18,11 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
+import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
+import jp.ikigai.cash.flow.utils.combineSevenFlows
+import jp.ikigai.cash.flow.utils.combineSixFlows
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
 import jp.ikigai.cash.flow.utils.toEpochMilli
@@ -44,14 +48,9 @@ class UpsertTransactionScreenViewModel(
 ) : ViewModel() {
 
     private val transactionUuid: String = checkNotNull(savedStateHandle["id"])
+    private val templateUuid: String = checkNotNull(savedStateHandle["templateId"])
 
-    private var getTransactionJob: Job? = null
-    private var getTransactionTitleJob: Job? = null
-    private var getCategoryJob: Job? = null
-    private var getCounterPartyJob: Job? = null
-    private var getMethodJob: Job? = null
-    private var getSourceJob: Job? = null
-    private var getItemJob: Job? = null
+    private var loadDataJob: Job? = null
 
     private var previousBalance = 0.0
 
@@ -71,26 +70,11 @@ class UpsertTransactionScreenViewModel(
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
 
-    private val transactionTitleQuery = realm.query<Transaction>("title != $0", "").distinct("title")
+    private val transactionTitleQuery =
+        realm.query<Transaction>("title != $0", "").distinct("title")
 
     init {
-        getTransactionTitleJob = getTransactionTitles()
-        getCategoryJob = getCategories()
-        getCounterPartyJob = getCounterParties()
-        getItemJob = getItems()
-        getMethodJob = getMethods()
-        getSourceJob = getSources()
-        if (transactionUuid.isNotBlank()) {
-            getTransactionJob = getTransaction()
-        }
-        _state.update {
-            it.copy(
-                dateString = it.dateTime.getDateString(),
-                timeString = it.dateTime.getTimeString(),
-                loading = false,
-                enabled = true
-            )
-        }
+        loadDataJob = loadData()
     }
 
     override fun onCleared() {
@@ -98,99 +82,170 @@ class UpsertTransactionScreenViewModel(
         realm.close()
     }
 
-    private fun getTransactionTitles() = viewModelScope.launch {
-        transactionTitleQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    titles = changes.list.map { transaction -> transaction.title }
+    private fun loadData() = viewModelScope.launch {
+        val flows = if (transactionUuid.isNotBlank()) {
+            combineSevenFlows(
+                categoryQuery.asFlow(),
+                counterPartyQuery.asFlow(),
+                itemsQuery.asFlow(),
+                methodQuery.asFlow(),
+                sourceQuery.asFlow(),
+                transactionTitleQuery.asFlow(),
+                realm.query<Transaction>("uuid==$0", transactionUuid).asFlow()
+            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges, transactionChanges ->
+                UpsertTransactionFlows(
+                    categories = categoryChanges.list,
+                    counterParties = counterPartyChanges.list,
+                    methods = methodChanges.list,
+                    sources = sourceChanges.list,
+                    items = itemChanges.list,
+                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transaction = transactionChanges.list.first(),
+                    transactionTemplate = null,
+                )
+            }
+        } else if (templateUuid.isNotBlank()) {
+            combineSevenFlows(
+                categoryQuery.asFlow(),
+                counterPartyQuery.asFlow(),
+                itemsQuery.asFlow(),
+                methodQuery.asFlow(),
+                sourceQuery.asFlow(),
+                transactionTitleQuery.asFlow(),
+                realm.query<TransactionTemplate>("uuid==$0", templateUuid).asFlow()
+            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges, templateChanges ->
+                UpsertTransactionFlows(
+                    categories = categoryChanges.list,
+                    counterParties = counterPartyChanges.list,
+                    methods = methodChanges.list,
+                    sources = sourceChanges.list,
+                    items = itemChanges.list,
+                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transaction = null,
+                    transactionTemplate = templateChanges.list.first(),
+                )
+            }
+        } else {
+            combineSixFlows(
+                categoryQuery.asFlow(),
+                counterPartyQuery.asFlow(),
+                itemsQuery.asFlow(),
+                methodQuery.asFlow(),
+                sourceQuery.asFlow(),
+                transactionTitleQuery.asFlow()
+            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges ->
+                UpsertTransactionFlows(
+                    categories = categoryChanges.list,
+                    counterParties = counterPartyChanges.list,
+                    methods = methodChanges.list,
+                    sources = sourceChanges.list,
+                    items = itemChanges.list,
+                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transaction = null,
+                    transactionTemplate = null,
+                )
+            }
+        }
+        flows.collectLatest { upsertTransactionFlows ->
+            if (upsertTransactionFlows.transaction == null && upsertTransactionFlows.transactionTemplate == null) {
+                _state.update {
+                    it.copy(
+                        titles = upsertTransactionFlows.transactionTitles,
+                        categories = upsertTransactionFlows.categories,
+                        selectedCategory = upsertTransactionFlows.categories.first(),
+                        counterParties = upsertTransactionFlows.counterParties,
+                        methods = upsertTransactionFlows.methods,
+                        selectedMethod = upsertTransactionFlows.methods.first(),
+                        sources = upsertTransactionFlows.sources,
+                        selectedSource = upsertTransactionFlows.sources.first(),
+                        items = upsertTransactionFlows.items,
+                        dateString = it.dateTime.getDateString(),
+                        timeString = it.dateTime.getTimeString(),
+                        loading = false,
+                        enabled = true
+                    )
+                }
+            } else if (upsertTransactionFlows.transaction != null) {
+                loadDataFromTransaction(upsertTransactionFlows.transaction, upsertTransactionFlows)
+            } else if (upsertTransactionFlows.transactionTemplate != null) {
+                loadDataFromTemplate(
+                    upsertTransactionFlows.transactionTemplate,
+                    upsertTransactionFlows
                 )
             }
         }
     }
 
-    private fun getCategories() = viewModelScope.launch {
-        categoryQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    categories = changes.list,
-                    selectedCategory = if (transactionUuid.isBlank()) changes.list.first() else it.selectedCategory
-                )
-            }
+    private fun loadDataFromTransaction(
+        transaction: Transaction,
+        upsertTransactionFlows: UpsertTransactionFlows
+    ) {
+        val dateTime = transaction.time.toZonedDateTime()
+        val source = transaction.source!!
+        previousBalance = if (transaction.type == TransactionType.DEBIT) {
+            source.balance + transaction.amount
+        } else {
+            source.balance - transaction.amount
+        }
+        _state.update {
+            it.copy(
+                titles = upsertTransactionFlows.transactionTitles,
+                categories = upsertTransactionFlows.categories,
+                selectedCategory = transaction.category!!,
+                counterParties = upsertTransactionFlows.counterParties,
+                selectedCounterParty = transaction.counterParty ?: it.selectedCounterParty,
+                methods = upsertTransactionFlows.methods,
+                selectedMethod = transaction.method!!,
+                sources = upsertTransactionFlows.sources,
+                selectedSource = source,
+                items = upsertTransactionFlows.items,
+                transaction = transaction,
+                dateTime = dateTime,
+                dateString = dateTime.getDateString(),
+                timeString = dateTime.getTimeString(),
+                amount = transaction.amount,
+                taxAmount = transaction.taxAmount,
+                displayAmount = transaction.amount.toString(),
+                displayTaxAmount = transaction.taxAmount.toString(),
+                type = transaction.type,
+                transactionItems = transaction.items.associateBy { transactionItem -> transactionItem.item!! },
+                loading = false,
+                enabled = true
+            )
         }
     }
 
-    private fun getCounterParties() = viewModelScope.launch {
-        counterPartyQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    counterParties = changes.list
-                )
-            }
-        }
-    }
-
-    private fun getMethods() = viewModelScope.launch {
-        methodQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    methods = changes.list,
-                    selectedMethod = if (transactionUuid.isBlank()) changes.list.first() else it.selectedMethod
-                )
-            }
-        }
-    }
-
-    private fun getSources() = viewModelScope.launch {
-        sourceQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    sources = changes.list,
-                    selectedSource = if (transactionUuid.isBlank()) changes.list.first() else it.selectedSource
-                )
-            }
-        }
-    }
-
-    private fun getItems() = viewModelScope.launch {
-        itemsQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    items = changes.list
-                )
-            }
-        }
-    }
-
-    private fun getTransaction() = viewModelScope.launch {
-        realm.query<Transaction>("uuid==$0", transactionUuid).asFlow().collectLatest { changes ->
-            val transaction = changes.list.first()
-            val category = transaction.category!!
-            val counterParty = transaction.counterParty ?: CounterParty()
-            val method = transaction.method!!
-            val source = transaction.source!!
-            val dateTime = transaction.time.toZonedDateTime()
-            previousBalance =
-                if (transaction.type == TransactionType.DEBIT) source.balance + transaction.amount else source.balance - transaction.amount
-            _state.update {
-                it.copy(
-                    transaction = transaction,
-                    dateTime = dateTime,
-                    dateString = dateTime.getDateString(),
-                    timeString = dateTime.getTimeString(),
-                    amount = transaction.amount,
-                    taxAmount = transaction.taxAmount,
-                    displayAmount = transaction.amount.toString(),
-                    displayTaxAmount = transaction.taxAmount.toString(),
-                    type = transaction.type,
-                    selectedCategory = category,
-                    selectedCounterParty = counterParty,
-                    selectedMethod = method,
-                    selectedSource = source,
-                    transactionItems = transaction.items.associateBy { transactionItem -> transactionItem.item!! },
-                    enabled = true,
-                    loading = false
-                )
-            }
+    private fun loadDataFromTemplate(
+        transactionTemplate: TransactionTemplate,
+        upsertTransactionFlows: UpsertTransactionFlows
+    ) {
+        _state.update {
+            it.copy(
+                titles = upsertTransactionFlows.transactionTitles,
+                categories = upsertTransactionFlows.categories,
+                selectedCategory = transactionTemplate.category ?: it.selectedCategory,
+                counterParties = upsertTransactionFlows.counterParties,
+                selectedCounterParty = transactionTemplate.counterParty ?: it.selectedCounterParty,
+                methods = upsertTransactionFlows.methods,
+                selectedMethod = transactionTemplate.method ?: it.selectedMethod,
+                sources = upsertTransactionFlows.sources,
+                selectedSource = transactionTemplate.source ?: it.selectedSource,
+                items = upsertTransactionFlows.items,
+                transaction = Transaction(
+                    transactionTemplate.title,
+                    transactionTemplate.description
+                ),
+                dateString = it.dateTime.getDateString(),
+                timeString = it.dateTime.getTimeString(),
+                amount = transactionTemplate.amount,
+                taxAmount = transactionTemplate.taxAmount,
+                displayAmount = transactionTemplate.amount.toString(),
+                displayTaxAmount = transactionTemplate.taxAmount.toString(),
+                type = transactionTemplate.type,
+                transactionItems = transactionTemplate.items.associateBy { transactionItem -> transactionItem.item!! },
+                loading = false,
+                enabled = true
+            )
         }
     }
 
@@ -204,6 +259,8 @@ class UpsertTransactionScreenViewModel(
             )
         }
 
+        val itemsValid = !state.value.transactionItems.values.map { it.price }.contains(0.0)
+
         val selectedSource = state.value.selectedSource
 
         if (amountValid && selectedSource.uuid.isNotBlank() && state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
@@ -212,7 +269,7 @@ class UpsertTransactionScreenViewModel(
             }
             return false
         }
-        return amountValid
+        return amountValid && itemsValid
     }
 
     private fun hasSufficientBalance() {
@@ -228,13 +285,7 @@ class UpsertTransactionScreenViewModel(
     fun upsertTransaction(newTitle: String, newDescription: String) = viewModelScope.launch {
         val formValid = isFormValid()
         if (formValid) {
-            getSourceJob?.cancelAndJoin()
-            getTransactionTitleJob?.cancelAndJoin()
-            getMethodJob?.cancelAndJoin()
-            getItemJob?.cancelAndJoin()
-            getCounterPartyJob?.cancelAndJoin()
-            getCategoryJob?.cancelAndJoin()
-            getTransactionJob?.cancelAndJoin()
+            loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(
                     loading = true,
@@ -254,6 +305,10 @@ class UpsertTransactionScreenViewModel(
                 state.value.transactionItems.values.toList()
 
             updateItems(state.value.transactionItems, time, transaction.currency)
+
+            if (templateUuid.isNotBlank()) {
+                updateTemplate(time)
+            }
 
             if (transactionUuid.isNotBlank()) {
                 updateSource(
@@ -302,13 +357,7 @@ class UpsertTransactionScreenViewModel(
 
     fun deleteTransaction() = viewModelScope.launch {
         if (transactionUuid.isNotBlank()) {
-            getSourceJob?.cancelAndJoin()
-            getMethodJob?.cancelAndJoin()
-            getItemJob?.cancelAndJoin()
-            getTransactionTitleJob?.cancelAndJoin()
-            getCounterPartyJob?.cancelAndJoin()
-            getCategoryJob?.cancelAndJoin()
-            getTransactionJob?.cancelAndJoin()
+            loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(
                     loading = true,
@@ -368,7 +417,8 @@ class UpsertTransactionScreenViewModel(
     ) {
         val result = realm.write {
             val latestCategory = findLatest(category)
-            val latestCounterParty = if (counterParty.uuid.isNotBlank()) findLatest(counterParty) else null
+            val latestCounterParty =
+                if (counterParty.uuid.isNotBlank()) findLatest(counterParty) else null
             val latestMethod = findLatest(method)
             val latestSource = findLatest(source)
             val latestTransactionItems = transactionItems.map {
@@ -423,6 +473,14 @@ class UpsertTransactionScreenViewModel(
             it.copy(
                 loading = false
             )
+        }
+    }
+
+    private suspend fun updateTemplate(time: Long) {
+        realm.write {
+            val template = query<TransactionTemplate>("uuid==$0", templateUuid).find().first()
+            template.frequency += 1
+            template.lastUsed = time
         }
     }
 
