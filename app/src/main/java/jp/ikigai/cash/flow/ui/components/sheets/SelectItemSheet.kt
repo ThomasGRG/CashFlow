@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun SelectItemSheet(
+    templateMode: Boolean = false,
     selectedTransactionItem: TransactionItem,
     items: List<Item>,
     addItem: (TransactionItem) -> Unit,
@@ -179,8 +180,10 @@ fun SelectItemSheet(
                             }
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(0.45f)
-                                .padding(start = 4.dp, end = 4.dp)
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, end = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             OutlinedTextField(
                                 value = displayQuantity,
@@ -208,42 +211,38 @@ fun SelectItemSheet(
                                 },
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .weight(1f)
                             )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(0.45f)
-                                .padding(start = 4.dp, end = 4.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = displayPrice,
-                                onValueChange = { value ->
-                                    displayPrice = value
-                                    val newPrice = value.toDoubleOrNull()
-                                    price = newPrice ?: 0.0
-                                },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.None,
-                                    autoCorrect = false,
-                                    keyboardType = KeyboardType.Number,
-                                ),
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = TablerIcons.CurrencyDollar,
-                                        contentDescription = "price icon",
-                                    )
-                                },
-                                label = {
-                                    Text(
-                                        text = "Price"
-                                    )
-                                },
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            )
+                            if (!templateMode) {
+                                OutlinedTextField(
+                                    value = displayPrice,
+                                    onValueChange = { value ->
+                                        displayPrice = value
+                                        val newPrice = value.toDoubleOrNull()
+                                        price = newPrice ?: 0.0
+                                    },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        autoCorrect = false,
+                                        keyboardType = KeyboardType.Number,
+                                    ),
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = TablerIcons.CurrencyDollar,
+                                            contentDescription = "price icon",
+                                        )
+                                    },
+                                    label = {
+                                        Text(
+                                            text = "Price"
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                )
+                            }
                         }
                         Row(
                             modifier = Modifier
@@ -275,7 +274,7 @@ fun SelectItemSheet(
                                     dismiss()
                                 },
                                 modifier = Modifier.weight(1f),
-                                enabled = quantity > 0 && price > 0
+                                enabled = templateMode || (quantity > 0 && price > 0)
                             ) {
                                 Text(text = "Add")
                             }
