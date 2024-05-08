@@ -37,4 +37,9 @@ class Transaction() : RealmObject {
     var method: Method? = null
     var source: Source? = null
     var items: RealmList<TransactionItem> = realmListOf()
+    
+    constructor(title: String, description: String): this() {
+        this.title = title
+        this.description = description
+    }
 }
