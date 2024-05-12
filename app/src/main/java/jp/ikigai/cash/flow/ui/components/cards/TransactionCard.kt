@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.components.cards
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -136,21 +137,43 @@ fun TransactionCard(
 @Preview
 @Composable
 fun TransactionCardPreview() {
-    TransactionCard(
-        transactionWithIcons = TransactionWithIcons(
-            title = "Test",
-            description = "Desc",
-            amount = 423.09,
-            chips = listOf(
-                Pair("Category", TablerIcons.Archive),
-                Pair("Category", TablerIcons.Archive),
-                Pair("Category", TablerIcons.Archive),
-                Pair("Category", TablerIcons.Archive),
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        TransactionCard(
+            transactionWithIcons = TransactionWithIcons(
+                title = "Test",
+                description = "Desc",
+                amount = 423.09,
+                chips = listOf(
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                ),
             ),
-        ),
-        amount = "423.09",
-        onClick = {},
-        onLongClick = {},
-        modifier = Modifier.fillMaxWidth()
-    )
+            amount = "423.09",
+            onClick = {},
+            onLongClick = {},
+            modifier = Modifier.fillMaxWidth()
+        )
+        TransactionCard(
+            transactionWithIcons = TransactionWithIcons(
+                title = "Test",
+                description = "Desc",
+                amount = 423.09,
+                chips = listOf(
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                    Pair("Category", TablerIcons.Archive),
+                ),
+                itemCount = 2
+            ),
+            amount = "423.09",
+            onClick = {},
+            onLongClick = {},
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
