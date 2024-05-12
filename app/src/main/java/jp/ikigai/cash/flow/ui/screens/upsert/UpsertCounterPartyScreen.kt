@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,8 +118,6 @@ fun UpsertCounterPartyScreen(
         )
     }
 
-    var toastBarString by remember { mutableStateOf("") }
-
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -129,12 +128,6 @@ fun UpsertCounterPartyScreen(
         events.collectLatest { event ->
             showToastBar = false
             currentEvent = event
-            toastBarString = when (event) {
-                Event.SaveSuccess -> "Saved successfully"
-                Event.InternalError -> "Internal error"
-                Event.NameAlreadyTaken -> "Name already in use"
-                else -> ""
-            }
             showToastBar = true
         }
     }
@@ -162,7 +155,9 @@ fun UpsertCounterPartyScreen(
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
-        toastBarText = toastBarString,
+        toastBarText = currentEvent?.let {
+            stringResource(id = it.message)
+        } ?: "",
         onDismissToastBar = {
             showToastBar = false
             if (currentEvent == Event.SaveSuccess) {
@@ -294,7 +289,8 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon") ?: Constants.DEFAULT_COUNTERPARTY_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon")
+                ?: Constants.DEFAULT_COUNTERPARTY_ICON.name,
             upsertCounterParty = viewModel::upsertCounterParty,
             events = viewModel.event,
             state = state

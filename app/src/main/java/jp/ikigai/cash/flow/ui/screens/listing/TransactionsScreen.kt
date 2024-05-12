@@ -120,9 +120,9 @@ fun TransactionsScreen(
             showToastBar = false
             currentEvent = event
             toastBarString = when (event) {
-                Event.SourceCategoryMethodRequired -> "At least one category, method and source are required to proceed."
-                Event.SourceCategoryRequired -> "At least one category and source are required to proceed."
-                Event.SourceMethodRequired -> "At least one method and source are required to proceed."
+                Event.CategoryMethodSourceRequired -> "At least one category, method and source are required to proceed."
+                Event.CategorySourceRequired -> "At least one category and source are required to proceed."
+                Event.MethodSourceRequired -> "At least one method and source are required to proceed."
                 Event.CategoryMethodRequired -> "At least one category and method are required to proceed."
                 Event.CategoryRequired -> "At least one category is required to proceed."
                 Event.MethodRequired -> "At least one method is required to proceed."

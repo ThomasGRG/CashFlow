@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -180,8 +181,6 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.enabled)
     }
 
-    var toastBarString by remember { mutableStateOf("") }
-
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -192,13 +191,6 @@ fun UpsertTransactionScreen(
         events.collectLatest { event ->
             showToastBar = false
             currentEvent = event
-            toastBarString = when (event) {
-                Event.SaveSuccess -> "Saved successfully"
-                Event.DeleteSuccess -> "Deleted successfully"
-                Event.InternalError -> "Internal error"
-                Event.NotEnoughBalance -> "Insufficient balance to save this transaction"
-                else -> ""
-            }
             showToastBar = true
         }
     }
@@ -588,7 +580,9 @@ fun UpsertTransactionScreen(
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
-        toastBarText = toastBarString,
+        toastBarText = currentEvent?.let {
+            stringResource(id = it.message)
+        } ?: "",
         onDismissToastBar = {
             showToastBar = false
             if (currentEvent == Event.SaveSuccess) {

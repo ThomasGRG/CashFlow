@@ -58,6 +58,18 @@
 
     <!--  Error Strings  -->
     <string name="name_in_use_label">Name already in use</string>
+    <string name="internal_error_label">Internal error</string>
+    <string name="save_success_label">Saved successfully</string>
+    <string name="delete_success_label">Deleted successfully</string>
+    <string name="not_enough_balance_error_label">Insufficient balance to save this transaction</string>
+    <string name="minimum_two_fields_required_error_label">Minimum two fields are required</string>
+    <string name="category_method_source_required_error_label">At least one category, method and source are required to proceed</string>
+    <string name="category_method_required_error_label">At least one category and method are required to proceed</string>
+    <string name="category_source_required_error_label">At least one category and source are required to proceed</string>
+    <string name="method_source_required_error_label">At least one method and source are required to proceed</string>
+    <string name="category_required_error_label">At least one category is required to proceed</string>
+    <string name="method_required_error_label">At least one method is required to proceed</string>
+    <string name="source_required_error_label">At least one source is required to proceed</string>
     <!--  Error Strings  -->
 
     <!--  TextField Strings  -->

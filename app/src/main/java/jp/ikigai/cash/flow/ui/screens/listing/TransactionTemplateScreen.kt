@@ -59,8 +59,6 @@ fun TransactionTemplateScreen(
         mutableStateOf(getNumberFormatter())
     }
 
-    var toastBarString by remember { mutableStateOf("") }
-
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -71,16 +69,6 @@ fun TransactionTemplateScreen(
         events.collectLatest { event ->
             showToastBar = false
             currentEvent = event
-            toastBarString = when (event) {
-                Event.SourceCategoryMethodRequired -> "At least one category, method and source are required to proceed."
-                Event.SourceCategoryRequired -> "At least one category and source are required to proceed."
-                Event.SourceMethodRequired -> "At least one method and source are required to proceed."
-                Event.CategoryMethodRequired -> "At least one category and method are required to proceed."
-                Event.CategoryRequired -> "At least one category is required to proceed."
-                Event.MethodRequired -> "At least one method is required to proceed."
-                Event.SourceRequired -> "At least one source is required to proceed."
-                else -> ""
-            }
             showToastBar = true
         }
     }
@@ -115,7 +103,9 @@ fun TransactionTemplateScreen(
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
-        toastBarText = toastBarString,
+        toastBarText = currentEvent?.let {
+            stringResource(id = it.message)
+        } ?: "",
         onDismissToastBar = {
             showToastBar = false
         },

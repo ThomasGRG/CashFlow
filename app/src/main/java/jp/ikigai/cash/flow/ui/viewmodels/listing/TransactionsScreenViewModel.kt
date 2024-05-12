@@ -158,13 +158,13 @@ class TransactionsScreenViewModel(
         categoryEmpty: Boolean
     ) = viewModelScope.launch {
         if (sourceEmpty && methodEmpty && categoryEmpty) {
-            _event.send(Event.SourceCategoryMethodRequired)
+            _event.send(Event.CategoryMethodSourceRequired)
         } else if (sourceEmpty && methodEmpty) {
-            _event.send(Event.SourceMethodRequired)
+            _event.send(Event.MethodSourceRequired)
         } else if (categoryEmpty && methodEmpty) {
             _event.send(Event.CategoryMethodRequired)
         } else if (categoryEmpty && sourceEmpty) {
-            _event.send(Event.SourceCategoryRequired)
+            _event.send(Event.CategorySourceRequired)
         } else if (categoryEmpty) {
             _event.send(Event.CategoryRequired)
         } else if (sourceEmpty) {
