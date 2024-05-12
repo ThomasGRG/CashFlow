@@ -11,18 +11,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import compose.icons.AllIcons
 import compose.icons.TablerIcons
-import compose.icons.tablericons.AlertOctagon
+import compose.icons.tablericons.CalendarTime
 
 @Composable
 fun IconDetailsDialog(
     dismiss: () -> Unit,
-    iconName: String
+    icon: ImageVector?
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -42,23 +42,26 @@ fun IconDetailsDialog(
             }
         },
         text = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = iconName
-                )
+            icon?.let {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = icon.name
+                    )
+                }
             }
         },
         icon = {
-            Icon(
-                imageVector = TablerIcons.AllIcons.find { it.name == iconName }
-                    ?: TablerIcons.AlertOctagon,
-                contentDescription = iconName,
-                modifier = Modifier.size(120.dp),
-                tint = MaterialTheme.colorScheme.onSurface
-            )
+            icon?.let {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = icon.name,
+                    modifier = Modifier.size(120.dp),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     )
 }
@@ -68,6 +71,6 @@ fun IconDetailsDialog(
 fun IconDetailsDialogPreview() {
     IconDetailsDialog(
         dismiss = {},
-        iconName = "CalendarTime"
+        icon = TablerIcons.CalendarTime
     )
 }

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -116,14 +117,14 @@ fun ChooseIconScreen(
         mutableStateOf(false)
     }
 
-    var iconToPreview by remember {
-        mutableStateOf("")
+    var iconToPreview: ImageVector? by remember {
+        mutableStateOf(null)
     }
 
     if (showDialog) {
         IconDetailsDialog(
             dismiss = { showDialog = false },
-            iconName = iconToPreview
+            icon = iconToPreview
         )
     }
 
@@ -240,7 +241,7 @@ fun ChooseIconScreen(
                                 onLongClick = {
                                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     resetOneHandMode()
-                                    iconToPreview = icon.name
+                                    iconToPreview = icon
                                     showDialog = true
                                 },
                                 onLongClickLabel = icon.name,
