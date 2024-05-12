@@ -1,12 +1,12 @@
 package jp.ikigai.cash.flow.ui.components.sheets
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -104,6 +104,7 @@ fun SelectItemSheet(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
+                .animateContentSize()
                 .fillMaxWidth()
                 .heightIn(0.dp, maxHeight.dp),
             userScrollEnabled = false,
@@ -113,7 +114,7 @@ fun SelectItemSheet(
                 0 -> {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .padding(start = 10.dp, end = 10.dp),
                     ) {
                         LazyColumn(
@@ -132,7 +133,7 @@ fun SelectItemSheet(
                                     onClick = {
                                         scope.launch {
                                             selectedItem = item
-                                            pagerState.animateScrollToPage(1)
+                                            pagerState.scrollToPage(1)
                                         }
                                     }
                                 )
@@ -162,7 +163,7 @@ fun SelectItemSheet(
                 1 -> {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .padding(start = 10.dp, end = 10.dp),
                     ) {
                         Column(
@@ -239,7 +240,7 @@ fun SelectItemSheet(
                             TextButton(
                                 onClick = {
                                     scope.launch {
-                                        pagerState.animateScrollToPage(0)
+                                        pagerState.scrollToPage(0)
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
