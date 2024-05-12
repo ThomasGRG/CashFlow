@@ -3,5 +3,7 @@
 
     <!--  Card Strings  -->
     <string name="frequency_of_use_label">Frequency of use : %1$s</string>
+    <string name="transaction_count_label">Transactions : %1$s</string>
+    <string name="item_count_label">Items : %1$s</string>
     <!--  Card Strings  -->
 </resources>
