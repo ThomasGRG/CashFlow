@@ -172,7 +172,7 @@ fun FilterSheet(
                             }
                         },
                         text = {
-                            Text(text = tab.text)
+                            Text(text = stringResource(id = tab.text))
                         },
                         icon = {
                             Icon(imageVector = tab.icon, contentDescription = tab.icon.name)
@@ -182,7 +182,9 @@ fun FilterSheet(
             }
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.animateContentSize().fillMaxWidth(),
+                modifier = Modifier
+                    .animateContentSize()
+                    .fillMaxWidth(),
             ) { pageIndex ->
                 when (pageIndex) {
                     0 -> {

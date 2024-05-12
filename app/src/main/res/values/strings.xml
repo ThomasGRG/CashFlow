@@ -8,6 +8,8 @@
     <string name="methods_label">Methods</string>
     <string name="sources_label">Sources</string>
     <string name="items_label">Items</string>
+    <string name="types_label">Transaction types</string>
+    <string name="amount_label">Amount</string>
     <string name="templates_label">Templates</string>
     <string name="updates_label">Updates</string>
     <string name="no_counter_party_label">No counter party</string>
