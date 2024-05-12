@@ -268,8 +268,8 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(TransactionItem())
     }
 
-    val isDebit by remember(key1 = state.type) {
-        mutableStateOf(state.type == TransactionType.DEBIT)
+    val transactionType by remember(key1 = state.type) {
+        mutableStateOf(state.type)
     }
 
     var sheetType by remember {
@@ -422,7 +422,7 @@ fun UpsertTransactionTemplateScreen(
 
         SheetType.TYPE -> {
             CommonSelectionSheet(
-                index = if (isDebit) 0 else 1,
+                index = if (transactionType == TransactionType.DEBIT) 0 else 1,
                 dismiss = {
                     scope.launch {
                         sheetState.hide()
@@ -437,9 +437,9 @@ fun UpsertTransactionTemplateScreen(
                     contentType = "row"
                 ) {
                     IconToggleRow(
-                        label = "Debit",
+                        label = stringResource(id = TransactionType.DEBIT.label),
                         icon = TablerIcons.ArrowUpCircle,
-                        selected = isDebit,
+                        selected = transactionType == TransactionType.DEBIT,
                         onClick = {
                             scope.launch {
                                 sheetState.hide()
@@ -454,9 +454,9 @@ fun UpsertTransactionTemplateScreen(
                     contentType = "row"
                 ) {
                     IconToggleRow(
-                        label = "Credit",
+                        label = stringResource(id = TransactionType.CREDIT.label),
                         icon = TablerIcons.ArrowDownCircle,
-                        selected = !isDebit,
+                        selected = transactionType == TransactionType.CREDIT,
                         onClick = {
                             scope.launch {
                                 sheetState.hide()
@@ -747,12 +747,12 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = if (isDebit) "Debit" else "Credit",
+                    value = stringResource(id = transactionType.label),
                     label = stringResource(id = R.string.transaction_type_field_label),
                     placeHolder = "",
                     leadingIcon = {
                         Icon(
-                            imageVector = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
+                            imageVector = if (transactionType == TransactionType.DEBIT) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
                             contentDescription = "transaction type icon",
                         )
                     },

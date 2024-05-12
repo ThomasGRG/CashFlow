@@ -6,6 +6,8 @@
     <string name="delete_template_confirmation_label">Are you sure you want to delete this template?</string>
 
     <!--  Common Strings  -->
+    <string name="debit_label">Debit</string>
+    <string name="credit_label">Credit</string>
     <string name="choose_icon_label">Choose icon</string>
     <string name="currency_label">Currency</string>
     <string name="categories_label">Categories</string>
