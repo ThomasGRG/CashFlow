@@ -21,16 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionSourceCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
+import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.SourceScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -70,16 +72,16 @@ fun SourceScreen(
         toastBarText = "",
         onDismissToastBar = {},
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = "You have not added any sources.",
+        emptyPlaceholderText = stringResource(id = R.string.sources_screen_empty_placeholder_label),
         topBar = {
             TopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.padding(5.dp)
                     ) {
-                        Text(text = "Sources")
+                        Text(text = stringResource(id = R.string.sources_label))
                         Text(
-                            text = "$sourceCount sources",
+                            text = stringResource(id = R.string.source_count_label, sourceCount),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )

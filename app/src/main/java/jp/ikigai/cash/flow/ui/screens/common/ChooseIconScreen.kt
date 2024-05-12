@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +52,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -140,16 +142,19 @@ fun ChooseIconScreen(
         toastBarText = "",
         onDismissToastBar = {},
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = "No results found for \"${searchText}\"",
+        emptyPlaceholderText = stringResource(
+            id = R.string.choose_icon_screen_empty_placeholder_label,
+            searchText
+        ),
         topBar = {
             TopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.padding(5.dp)
                     ) {
-                        Text(text = "Choose icon")
+                        Text(text = stringResource(id = R.string.choose_icon_label))
                         Text(
-                            text = "$iconCount icons",
+                            text = stringResource(id = R.string.icon_count_label, iconCount),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )
@@ -194,7 +199,7 @@ fun ChooseIconScreen(
                         .fillMaxWidth()
                         .focusRequester(focusRequester = focusRequester),
                     label = {
-                        Text(text = "Search")
+                        Text(text = stringResource(id = R.string.search_field_label))
                     },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(

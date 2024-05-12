@@ -2,6 +2,7 @@
     <string name="app_name">CashFlow</string>
 
     <!--  Common Strings  -->
+    <string name="choose_icon_label">Choose icon</string>
     <string name="categories_label">Categories</string>
     <string name="counter_parties_label">Counter parties</string>
     <string name="methods_label">Methods</string>
@@ -12,6 +13,16 @@
     <string name="no_counter_party_label">No counter party</string>
     <string name="no_item_label">No items</string>
     <!--  Common Strings  -->
+
+    <!--  TopAppBar SubText Strings  -->
+    <string name="icon_count_label">Icon count : %1$s</string>
+    <string name="category_count_label">Category count : %1$s</string>
+    <string name="counter_party_count_label">Counter party count : %1$s</string>
+    <string name="method_count_label">Method count : %1$s</string>
+    <string name="source_count_label">Source count : %1$s</string>
+    <string name="items_count_label">Item count : %1$s</string>
+    <string name="templates_count_label">Template count : %1$s</string>
+    <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
     <string name="cancel_button_label">Cancel</string>
@@ -26,6 +37,13 @@
     <!--  Button Strings  -->
 
     <!--  Empty Placeholder Strings  -->
+    <string name="choose_icon_screen_empty_placeholder_label">No results found for \"%1$s\"</string>
+    <string name="categories_screen_empty_placeholder_label">You have not added any categories.</string>
+    <string name="counter_parties_screen_empty_placeholder_label">You have not added any counter parties.</string>
+    <string name="methods_screen_empty_placeholder_label">You have not added any methods.</string>
+    <string name="sources_screen_empty_placeholder_label">You have not added any sources.</string>
+    <string name="items_screen_empty_placeholder_label">You have not added any items.</string>
+    <string name="templates_screen_empty_placeholder_label">You have not added any templates.</string>
     <!--  Empty Placeholder Strings  -->
 
     <!--  Placeholder Strings  -->
@@ -41,6 +59,7 @@
     <!--  Error Strings  -->
 
     <!--  TextField Strings  -->
+    <string name="search_field_label">Search</string>
     <string name="price_field_label">Price</string>
     <string name="quantity_field_label">Quantity</string>
     <string name="name_field_label">Name</string>

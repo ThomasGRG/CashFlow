@@ -24,10 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
@@ -118,16 +120,19 @@ fun TransactionTemplateScreen(
             showToastBar = false
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = "You have not added any templates.",
+        emptyPlaceholderText = stringResource(id = R.string.templates_screen_empty_placeholder_label),
         topBar = {
             TopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.padding(5.dp)
                     ) {
-                        Text(text = "Templates")
+                        Text(text = stringResource(id = R.string.templates_label))
                         Text(
-                            text = "$templateCount templates",
+                            text = stringResource(
+                                id = R.string.templates_count_label,
+                                templateCount
+                            ),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )

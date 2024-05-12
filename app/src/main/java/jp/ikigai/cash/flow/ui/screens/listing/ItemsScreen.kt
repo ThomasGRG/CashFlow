@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.enums.ItemUnit
@@ -117,16 +119,16 @@ fun ItemsScreen(
         toastBarText = "",
         onDismissToastBar = {},
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = "You have not added any items.",
+        emptyPlaceholderText = stringResource(id = R.string.items_screen_empty_placeholder_label),
         topBar = {
             TopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.padding(5.dp)
                     ) {
-                        Text(text = "Items")
+                        Text(text = stringResource(id = R.string.items_label))
                         Text(
-                            text = "$itemCount items",
+                            text = stringResource(id = R.string.items_count_label, itemCount),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )
