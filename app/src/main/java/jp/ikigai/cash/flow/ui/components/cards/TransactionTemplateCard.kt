@@ -25,12 +25,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
 import compose.icons.tablericons.Stack
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
 import jp.ikigai.cash.flow.data.enums.TransactionType
 
@@ -68,7 +70,6 @@ fun TransactionTemplateCard(
             Text(
                 text = transactionTemplateWithIcons.title,
                 style = MaterialTheme.typography.titleLarge,
-//                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp),
@@ -133,7 +134,10 @@ fun TransactionTemplateCard(
                         contentDescription = TablerIcons.Stack.name,
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "$itemCount items", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(id = R.string.item_count_label, itemCount),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }

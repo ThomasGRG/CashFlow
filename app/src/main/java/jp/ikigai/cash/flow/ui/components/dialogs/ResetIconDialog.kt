@@ -9,7 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.ikigai.cash.flow.R
 
 @Composable
 fun ResetIconDialog(
@@ -30,7 +32,7 @@ fun ResetIconDialog(
                     reset()
                 }
             ) {
-                Text(text = "Reset")
+                Text(text = stringResource(id = R.string.reset_button_label))
             }
         },
         dismissButton = {
@@ -40,11 +42,11 @@ fun ResetIconDialog(
                     dismiss()
                 }
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
         },
         text = {
-            Text(text = "Are you sure you want to reset the icon to default?")
+            Text(text = stringResource(id = R.string.reset_icon_dialog_label))
         },
         icon = {
             Icon(imageVector = Icons.Outlined.Info, contentDescription = "reset")

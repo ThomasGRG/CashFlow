@@ -23,7 +23,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.flow.collectLatest
@@ -82,7 +84,7 @@ fun DateRangePickerBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
                 enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null,
@@ -95,7 +97,7 @@ fun DateRangePickerBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Filter")
+                Text(text = stringResource(id = R.string.filter_button_label))
             }
         }
     }

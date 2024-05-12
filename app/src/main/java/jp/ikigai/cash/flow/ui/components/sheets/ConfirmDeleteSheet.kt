@@ -17,8 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +63,7 @@ fun ConfirmDeleteSheet(
                 modifier = Modifier.weight(1f).height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             FilledTonalButton(
                 onClick = {
@@ -72,7 +74,7 @@ fun ConfirmDeleteSheet(
                 modifier = Modifier.weight(1f).height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Text(text = "Delete")
+                Text(text = stringResource(id = R.string.delete_button_label))
             }
         }
     }

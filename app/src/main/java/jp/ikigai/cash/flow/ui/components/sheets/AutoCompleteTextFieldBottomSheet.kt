@@ -28,10 +28,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.R
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,7 +127,7 @@ fun AutoCompleteTextFieldBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
                 onClick = {
@@ -133,7 +135,7 @@ fun AutoCompleteTextFieldBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Set")
+                Text(text = stringResource(id = R.string.set_button_label))
             }
         }
     }
