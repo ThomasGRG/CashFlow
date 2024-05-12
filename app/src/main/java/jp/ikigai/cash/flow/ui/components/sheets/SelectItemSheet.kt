@@ -208,6 +208,9 @@ fun SelectItemSheet(
                                 enabled = true,
                                 label = stringResource(id = R.string.quantity_field_label),
                                 placeHolder = stringResource(id = R.string.quantity_placeholder_label),
+                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    1.0.dp
+                                ),
                                 icon = TablerIcons.BoxMultiple9,
                                 iconDescription = "quantity icon",
                                 onDone = {}
@@ -222,6 +225,9 @@ fun SelectItemSheet(
                                     enabled = true,
                                     label = stringResource(id = R.string.price_field_label),
                                     placeHolder = stringResource(id = R.string.price_placeholder_label),
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                        1.0.dp
+                                    ),
                                     icon = TablerIcons.CurrencyDollar,
                                     iconDescription = "price icon",
                                     onDone = {}
