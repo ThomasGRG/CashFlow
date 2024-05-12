@@ -42,6 +42,7 @@ import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -170,9 +171,9 @@ fun UpsertCategoryScreen(
             TopAppBar(
                 title = {
                     if (categoryUuid.isBlank()) {
-                        Text(text = "Create category")
+                        Text(text = stringResource(id = R.string.create_category_label))
                     } else {
-                        Text(text = "Update category")
+                        Text(text = stringResource(id = R.string.update_category_label))
                     }
                 }
             )
@@ -240,12 +241,12 @@ fun UpsertCategoryScreen(
                     nameValid = value.text.isNotBlank()
                 },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
-                label = "Name",
-                placeHolder = "Enter category name",
+                label = stringResource(id = R.string.name_field_label),
+                placeHolder = stringResource(id = R.string.category_name_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = "Name cannot be empty",
+                errorHint = stringResource(id = R.string.name_empty_error_label),
                 onDone = {
                     keyboardController?.hide()
                 }

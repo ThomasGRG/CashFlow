@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">CashFlow</string>
 
+    <string name="item_value_label">%1$s\nQuantity: %2$s, Price: %3$s, Unit: %4$s</string>
+    <string name="delete_transaction_confirmation_label">Are you sure you want to delete this transaction?</string>
+    <string name="delete_template_confirmation_label">Are you sure you want to delete this template?</string>
+
     <!--  Common Strings  -->
     <string name="choose_icon_label">Choose icon</string>
+    <string name="currency_label">Currency</string>
     <string name="categories_label">Categories</string>
     <string name="counter_parties_label">Counter parties</string>
     <string name="methods_label">Methods</string>
@@ -16,6 +21,21 @@
     <string name="no_item_label">No items</string>
     <!--  Common Strings  -->
 
+    <!--  TopAppBar Strings  -->
+    <string name="create_category_label">Create category</string>
+    <string name="update_category_label">Update category</string>
+    <string name="create_counter_party_label">Create counter party</string>
+    <string name="update_counter_party_label">Update counter party</string>
+    <string name="create_method_label">Create method</string>
+    <string name="update_method_label">Update method</string>
+    <string name="create_source_label">Create source</string>
+    <string name="update_source_label">Update source</string>
+    <string name="create_template_label">Create template</string>
+    <string name="update_template_label">Update template</string>
+    <string name="create_transaction_label">Create transaction</string>
+    <string name="update_transaction_label">Update transaction</string>
+    <!--  TopAppBar Strings  -->
+
     <!--  TopAppBar SubText Strings  -->
     <string name="icon_count_label">Icon count : %1$s</string>
     <string name="category_count_label">Category count : %1$s</string>
@@ -28,6 +48,7 @@
 
     <!--  Button Strings  -->
     <string name="cancel_button_label">Cancel</string>
+    <string name="add_item_button_label">Add item</string>
     <string name="reset_button_label">Reset</string>
     <string name="set_button_label">Set</string>
     <string name="delete_button_label">Delete</string>
@@ -49,7 +70,21 @@
     <!--  Empty Placeholder Strings  -->
 
     <!--  Placeholder Strings  -->
+    <string name="counter_party_placeholder_label">Select a counter party</string>
+    <string name="select_category_placeholder_label">Select a category</string>
+    <string name="select_method_placeholder_label">Select a method</string>
+    <string name="select_source_placeholder_label">Select a source</string>
+    <string name="template_name_placeholder_label">Enter template name</string>
+    <string name="title_placeholder_label">Enter transaction title</string>
+    <string name="description_placeholder_label">Enter description</string>
+    <string name="transaction_amount_placeholder_label">Enter transaction amount</string>
+    <string name="tax_amount_placeholder_label">Enter tax amount</string>
+    <string name="balance_placeholder_label">Enter source balance</string>
     <string name="name_placeholder_label">Enter item name</string>
+    <string name="counter_party_name_placeholder_label">Enter counter party name</string>
+    <string name="category_name_placeholder_label">Enter category name</string>
+    <string name="method_name_placeholder_label">Enter method name</string>
+    <string name="source_name_placeholder_label">Enter source name</string>
     <string name="quantity_placeholder_label">Enter quantity</string>
     <string name="price_placeholder_label">Enter price</string>
     <string name="minimum_amount_placeholder_label">Enter minimum amount</string>
@@ -57,6 +92,10 @@
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
+    <string name="invalid_price_error_label">Price cannot be 0</string>
+    <string name="invalid_amount_error_label">Enter a number > 0</string>
+    <string name="invalid_balance_error_label">Enter a number >= 0</string>
+    <string name="name_empty_error_label">Name cannot be empty</string>
     <string name="name_in_use_label">Name already in use</string>
     <string name="internal_error_label">Internal error</string>
     <string name="save_success_label">Saved successfully</string>
@@ -74,6 +113,19 @@
 
     <!--  TextField Strings  -->
     <string name="search_field_label">Search</string>
+    <string name="item_field_label">Item #%1$d</string>
+    <string name="template_name_field_label">Template name</string>
+    <string name="title_field_label">Title</string>
+    <string name="description_field_label">Description</string>
+    <string name="date_field_label">Date</string>
+    <string name="time_field_label">Time</string>
+    <string name="tax_field_label">Tax</string>
+    <string name="category_field_label">Category</string>
+    <string name="counter_party_field_label">Counter party</string>
+    <string name="method_field_label">Method</string>
+    <string name="source_field_label">Source</string>
+    <string name="transaction_type_field_label">Transaction type</string>
+    <string name="balance_field_label">Balance</string>
     <string name="price_field_label">Price</string>
     <string name="quantity_field_label">Quantity</string>
     <string name="name_field_label">Name</string>

@@ -58,6 +58,7 @@ import compose.icons.tablericons.FileText
 import compose.icons.tablericons.LetterCase
 import compose.icons.tablericons.Stack
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
@@ -132,7 +133,7 @@ fun UpsertTransactionTemplateScreen(
 
     if (showConfirmDeleteSheet) {
         ConfirmDeleteSheet(
-            message = "Are you sure you want to delete this template?",
+            message = stringResource(id = R.string.delete_template_confirmation_label),
             dismiss = {
                 scope.launch {
                     sheetState.hide()
@@ -502,9 +503,9 @@ fun UpsertTransactionTemplateScreen(
             TopAppBar(
                 title = {
                     if (transactionTemplateUuid.isBlank()) {
-                        Text(text = "Create template")
+                        Text(text = stringResource(id = R.string.create_template_label))
                     } else {
-                        Text(text = "Update template")
+                        Text(text = stringResource(id = R.string.update_template_label))
                     }
                 }
             )
@@ -574,10 +575,10 @@ fun UpsertTransactionTemplateScreen(
                         nameValid = it.text.isNotBlank()
                     },
                     enabled = enabled,
-                    label = "Template name",
-                    placeHolder = "Enter template name",
+                    label = stringResource(id = R.string.template_name_field_label),
+                    placeHolder = stringResource(id = R.string.template_name_placeholder_label),
                     isError = !nameValid,
-                    errorHint = "Name cannot be empty",
+                    errorHint = stringResource(id = R.string.name_empty_error_label),
                     icon = TablerIcons.Typography,
                     iconDescription = "name icon",
                     onDone = {
@@ -593,8 +594,8 @@ fun UpsertTransactionTemplateScreen(
                     value = titleFieldValue,
                     onValueChange = { titleFieldValue = it },
                     enabled = enabled,
-                    label = "Transaction title",
-                    placeHolder = "Enter transaction title",
+                    label = stringResource(id = R.string.title_field_label),
+                    placeHolder = stringResource(id = R.string.title_placeholder_label),
                     icon = TablerIcons.LetterCase,
                     iconDescription = "title icon",
                     onDone = {
@@ -610,8 +611,8 @@ fun UpsertTransactionTemplateScreen(
                     value = descriptionFieldValue,
                     onValueChange = { descriptionFieldValue = it },
                     enabled = enabled,
-                    label = "Description",
-                    placeHolder = "Enter description",
+                    label = stringResource(id = R.string.description_field_label),
+                    placeHolder = stringResource(id = R.string.description_placeholder_label),
                     icon = TablerIcons.FileText,
                     iconDescription = "description icon",
                     keyboardOptions = KeyboardOptions(
@@ -631,8 +632,8 @@ fun UpsertTransactionTemplateScreen(
                     value = amount,
                     onValueChange = setAmount,
                     enabled = enabled && !itemHeaderVisible,
-                    label = "Amount",
-                    placeHolder = "Enter transaction amount",
+                    label = stringResource(id = R.string.amount_label),
+                    placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
                     icon = TablerIcons.CashBanknote,
                     iconDescription = "amount icon",
                     onDone = {
@@ -647,8 +648,8 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCategory.name,
-                    label = "Category",
-                    placeHolder = "Select a category",
+                    label = stringResource(id = R.string.category_field_label),
+                    placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                     leadingIcon = {
                         Icon(
                             imageVector = selectedCategory.icon,
@@ -672,8 +673,8 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCounterParty.name,
-                    label = "Counter party",
-                    placeHolder = "Select a counter party",
+                    label = stringResource(id = R.string.counter_party_field_label),
+                    placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                     leadingIcon = {
                         Icon(
                             imageVector = selectedCounterParty.icon,
@@ -697,8 +698,8 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedMethod.name,
-                    label = "Method",
-                    placeHolder = "Select a method",
+                    label = stringResource(id = R.string.method_field_label),
+                    placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                     leadingIcon = {
                         Icon(
                             imageVector = selectedMethod.icon,
@@ -722,8 +723,8 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedSource.name,
-                    label = "Source",
-                    placeHolder = "Select a source",
+                    label = stringResource(id = R.string.source_field_label),
+                    placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                     leadingIcon = {
                         Icon(
                             imageVector = selectedSource.icon,
@@ -747,8 +748,8 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = if (isDebit) "Debit" else "Credit",
-                    label = "Transaction type",
-                    placeHolder = "Select a transaction type",
+                    label = stringResource(id = R.string.transaction_type_field_label),
+                    placeHolder = "",
                     leadingIcon = {
                         Icon(
                             imageVector = if (isDebit) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
@@ -767,7 +768,7 @@ fun UpsertTransactionTemplateScreen(
                     contentType = "header"
                 ) {
                     Text(
-                        text = "Items",
+                        text = stringResource(id = R.string.items_label),
                         modifier = Modifier
                             .animateItemPlacement()
                             .fillMaxWidth()
@@ -782,8 +783,14 @@ fun UpsertTransactionTemplateScreen(
             ) { index, transactionItem ->
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = "${transactionItem.item!!.name}\nQuantity: ${transactionItem.quantity}, Price: ${transactionItem.price}, Unit: ${transactionItem.unit.code}",
-                    label = "Item #${index + 1}",
+                    value = stringResource(
+                        id = R.string.item_value_label,
+                        transactionItem.item!!.name,
+                        transactionItem.quantity.toString(),
+                        transactionItem.price.toString(),
+                        transactionItem.unit.code
+                    ),
+                    label = stringResource(id = R.string.item_field_label, index + 1),
                     placeHolder = "",
                     leadingIcon = {
                         Icon(
@@ -812,8 +819,8 @@ fun UpsertTransactionTemplateScreen(
                         value = taxAmount,
                         onValueChange = setTaxAmount,
                         enabled = enabled,
-                        label = "Tax",
-                        placeHolder = "Enter tax amount",
+                        label = stringResource(id = R.string.tax_field_label),
+                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
                         icon = TablerIcons.CashBanknote,
                         iconDescription = "tax amount icon",
                         onDone = {
@@ -836,7 +843,7 @@ fun UpsertTransactionTemplateScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = "Add item",
+                        value = stringResource(id = R.string.add_item_button_label),
                         onValueChange = {},
                         enabled = enabled,
                         readOnly = true,

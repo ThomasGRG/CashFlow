@@ -54,6 +54,7 @@ import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.CurrencyDollar
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -257,9 +258,9 @@ fun UpsertSourceScreen(
             TopAppBar(
                 title = {
                     if (sourceUuid.isBlank()) {
-                        Text(text = "Create source")
+                        Text(text = stringResource(id = R.string.create_source_label))
                     } else {
-                        Text(text = "Update source")
+                        Text(text = stringResource(id = R.string.update_source_label))
                     }
                 }
             )
@@ -332,12 +333,12 @@ fun UpsertSourceScreen(
                     nameValid = value.text.isNotBlank()
                 },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
-                label = "Name",
-                placeHolder = "Enter source name",
+                label = stringResource(id = R.string.name_field_label),
+                placeHolder = stringResource(id = R.string.source_name_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = "Name cannot be empty",
+                errorHint = stringResource(id = R.string.name_empty_error_label),
                 onDone = {
                     keyboardController?.hide()
                 }
@@ -350,12 +351,12 @@ fun UpsertSourceScreen(
                     balanceValid = newBalance != null
                 },
                 enabled = enabled,
-                label = "Balance",
-                placeHolder = "Enter source balance",
+                label = stringResource(id = R.string.balance_field_label),
+                placeHolder = stringResource(id = R.string.balance_placeholder_label),
                 icon = TablerIcons.CashBanknote,
                 iconDescription = "balance icon",
                 isError = !balanceValid,
-                errorHint = "Enter a number >= 0",
+                errorHint = stringResource(id = R.string.invalid_balance_error_label),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
                     autoCorrect = false,
@@ -369,7 +370,7 @@ fun UpsertSourceScreen(
             CustomOutlinedButton(
                 enabled = enabled,
                 value = selectedCurrency,
-                label = "Currency",
+                label = stringResource(id = R.string.currency_label),
                 placeHolder = "",
                 leadingIcon = {
                     Icon(
