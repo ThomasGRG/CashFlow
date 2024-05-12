@@ -21,10 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,13 +71,13 @@ fun UpsertItemSheet(
                     nameFieldValue = it
                     nameValid = true
                 },
-                label = "Name",
-                placeHolder = "Enter item name",
+                label = stringResource(id = R.string.name_field_label),
+                placeHolder = stringResource(id = R.string.name_placeholder_label),
                 backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = "Name already in use",
+                errorHint = stringResource(id = R.string.name_in_use_label),
                 onDone = {
                     keyboardController?.hide()
                 }
@@ -94,7 +96,7 @@ fun UpsertItemSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
                 onClick = {
@@ -108,7 +110,7 @@ fun UpsertItemSheet(
                 modifier = Modifier.weight(1f),
                 enabled = nameFieldValue.text.isNotBlank()
             ) {
-                Text(text = "Save")
+                Text(text = stringResource(id = R.string.save_button_label))
             }
         }
     }

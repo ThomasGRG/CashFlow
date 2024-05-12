@@ -17,7 +17,25 @@
     <string name="set_button_label">Set</string>
     <string name="delete_button_label">Delete</string>
     <string name="filter_button_label">Filter</string>
+    <string name="back_button_label">Back</string>
+    <string name="add_button_label">Add</string>
+    <string name="new_transaction_button_label">New transaction</string>
+    <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
+
+    <!--  Placeholder Strings  -->
+    <string name="name_placeholder_label">Enter item name</string>
+    <!--  Placeholder Strings  -->
+
+    <!--  Error Strings  -->
+    <string name="name_in_use_label">Name already in use</string>
+    <!--  Error Strings  -->
+
+    <!--  TextField Strings  -->
+    <string name="price_field_label">Price</string>
+    <string name="quantity_field_label">Quantity</string>
+    <string name="name_field_label">Name</string>
+    <!--  TextField Strings  -->
 
     <!--  Dialog Strings  -->
     <string name="reset_icon_dialog_label">Are you sure you want to reset the icon to default?</string>
@@ -25,6 +43,7 @@
 
     <!--  Card Strings  -->
     <string name="frequency_of_use_label">Frequency of use : %1$s</string>
+    <string name="last_known_price_label">Last known price : %1$s</string>
     <string name="transaction_count_label">Transactions : %1$s</string>
     <string name="item_count_label">Items : %1$s</string>
     <!--  Card Strings  -->

@@ -30,12 +30,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.BoxMultiple9
 import compose.icons.tablericons.CurrencyDollar
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.enums.ItemUnit
@@ -143,7 +145,7 @@ fun SelectItemSheet(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = "Cancel")
+                                Text(text = stringResource(id = R.string.cancel_button_label))
                             }
                         }
                     }
@@ -205,9 +207,7 @@ fun SelectItemSheet(
                                     )
                                 },
                                 label = {
-                                    Text(
-                                        text = "Quantity"
-                                    )
+                                    Text(text = stringResource(id = R.string.quantity_field_label))
                                 },
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
@@ -234,9 +234,7 @@ fun SelectItemSheet(
                                         )
                                     },
                                     label = {
-                                        Text(
-                                            text = "Price"
-                                        )
+                                        Text(text = stringResource(id = R.string.price_field_label))
                                     },
                                     shape = RoundedCornerShape(14.dp),
                                     modifier = Modifier
@@ -259,7 +257,7 @@ fun SelectItemSheet(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = "Back")
+                                Text(text = stringResource(id = R.string.back_button_label))
                             }
                             TextButton(
                                 onClick = {
@@ -276,7 +274,7 @@ fun SelectItemSheet(
                                 modifier = Modifier.weight(1f),
                                 enabled = templateMode || (quantity > 0 && price > 0)
                             ) {
-                                Text(text = "Add")
+                                Text(text = stringResource(id = R.string.add_button_label))
                             }
                         }
                     }

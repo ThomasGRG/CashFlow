@@ -17,8 +17,10 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.R
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +67,7 @@ fun TimePickerBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
                 onClick = {
@@ -74,7 +76,7 @@ fun TimePickerBottomSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Set")
+                Text(text = stringResource(id = R.string.set_button_label))
             }
         }
     }

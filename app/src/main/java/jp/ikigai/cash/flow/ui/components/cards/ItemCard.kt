@@ -64,7 +64,7 @@ fun ItemCard(
                 ) {
                     FilledTonalButton(onClick = onClick) {
                         Text(
-                            text = "Last known price: $pricePerUnit",
+                            text = stringResource(id = R.string.last_known_price_label, pricePerUnit),
                         )
                     }
                 }
