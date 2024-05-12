@@ -1,27 +1,32 @@
 package jp.ikigai.cash.flow.ui.components.sheets
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,8 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.BoxMultiple9
@@ -42,10 +45,12 @@ import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
+import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
 @Composable
@@ -101,29 +106,30 @@ fun SelectItemSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(0.dp, maxHeight.dp),
-            contentPadding = PaddingValues(10.dp),
             userScrollEnabled = false,
             verticalAlignment = Alignment.Bottom
         ) {
             when (it) {
                 0 -> {
-                    FlowRow(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(
-                                state = scrollState
-                            ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.Center
+                            .fillMaxSize()
+                            .padding(start = 10.dp, end = 10.dp),
                     ) {
-                        items.forEach { item ->
-                            Row(
-                                modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                            ) {
-                                ToggleButton(
+                        LazyColumn(
+                            modifier = Modifier.padding(bottom = 80.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            items(
+                                items = items,
+                                key = { item -> item.uuid }
+                            ) { item ->
+                                ToggleRow(
+                                    identifier = item.uuid,
                                     label = item.name,
                                     selected = selectedItem?.uuid == item.uuid,
-                                    toggle = {
+                                    onClick = {
                                         scope.launch {
                                             selectedItem = item
                                             pagerState.animateScrollToPage(1)
@@ -134,6 +140,8 @@ fun SelectItemSheet(
                         }
                         Row(
                             modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
                                 .fillMaxWidth()
                                 .padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -152,98 +160,77 @@ fun SelectItemSheet(
                 }
 
                 1 -> {
-                    FlowRow(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(0.dp, maxHeight.dp)
-                            .verticalScroll(
-                                state = scrollState
-                            ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.Center
+                            .fillMaxSize()
+                            .padding(start = 10.dp, end = 10.dp),
                     ) {
-                        ItemUnit.values().filter { itemUnit -> itemUnit.id < 8 }
-                            .forEach { itemUnit ->
-                                Row(
-                                    modifier = Modifier.padding(start = 4.dp, end = 4.dp)
-                                ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, end = 4.dp, bottom = 80.dp)
+                                .verticalScroll(scrollState),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            LazyHorizontalGrid(
+                                rows = GridCells.Fixed(1),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.heightIn(max = 50.dp)
+                            ) {
+                                items(
+                                    items = ItemUnit.values()
+                                        .filter { itemUnit -> itemUnit.id < 8 },
+                                    key = { itemUnit -> "${itemUnit.id}" }
+                                ) { itemUnit ->
                                     ToggleButton(
                                         label = itemUnit.code,
                                         selected = selectedItemUnit.id == itemUnit.id,
                                         toggle = {
-                                            selectedItemUnit = if (selectedItemUnit != itemUnit) {
-                                                itemUnit
-                                            } else {
-                                                ItemUnit.PIECE
-                                            }
+                                            selectedItemUnit =
+                                                if (selectedItemUnit != itemUnit) {
+                                                    itemUnit
+                                                } else {
+                                                    ItemUnit.PIECE
+                                                }
                                         }
                                     )
                                 }
                             }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 4.dp, end = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            OutlinedTextField(
+                            RoundedCornerOutlinedTextField(
                                 value = displayQuantity,
                                 onValueChange = { value ->
                                     displayQuantity = value
-                                    val newQuantity = value.toDoubleOrNull()
-                                    quantity = newQuantity ?: 0.0
+                                    quantity = value.toDoubleOrNull() ?: 0.0
                                 },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = KeyboardCapitalization.None,
-                                    autoCorrect = false,
-                                    keyboardType = KeyboardType.Number,
-                                ),
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = TablerIcons.BoxMultiple9,
-                                        contentDescription = "quantity icon",
-                                    )
-                                },
-                                label = {
-                                    Text(text = stringResource(id = R.string.quantity_field_label))
-                                },
-                                shape = RoundedCornerShape(14.dp),
-                                modifier = Modifier
-                                    .weight(1f)
+                                enabled = true,
+                                label = stringResource(id = R.string.quantity_field_label),
+                                placeHolder = stringResource(id = R.string.quantity_placeholder_label),
+                                icon = TablerIcons.BoxMultiple9,
+                                iconDescription = "quantity icon",
+                                onDone = {}
                             )
                             if (!templateMode) {
-                                OutlinedTextField(
+                                RoundedCornerOutlinedTextField(
                                     value = displayPrice,
                                     onValueChange = { value ->
                                         displayPrice = value
-                                        val newPrice = value.toDoubleOrNull()
-                                        price = newPrice ?: 0.0
+                                        price = value.toDoubleOrNull() ?: 0.0
                                     },
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        autoCorrect = false,
-                                        keyboardType = KeyboardType.Number,
-                                    ),
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = TablerIcons.CurrencyDollar,
-                                            contentDescription = "price icon",
-                                        )
-                                    },
-                                    label = {
-                                        Text(text = stringResource(id = R.string.price_field_label))
-                                    },
-                                    shape = RoundedCornerShape(14.dp),
-                                    modifier = Modifier
-                                        .weight(1f)
+                                    enabled = true,
+                                    label = stringResource(id = R.string.price_field_label),
+                                    placeHolder = stringResource(id = R.string.price_placeholder_label),
+                                    icon = TablerIcons.CurrencyDollar,
+                                    iconDescription = "price icon",
+                                    onDone = {}
                                 )
                             }
                         }
                         Row(
                             modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
                                 .fillMaxWidth()
                                 .padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically,

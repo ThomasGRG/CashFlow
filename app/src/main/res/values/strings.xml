@@ -25,6 +25,8 @@
 
     <!--  Placeholder Strings  -->
     <string name="name_placeholder_label">Enter item name</string>
+    <string name="quantity_placeholder_label">Enter quantity</string>
+    <string name="price_placeholder_label">Enter price</string>
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
