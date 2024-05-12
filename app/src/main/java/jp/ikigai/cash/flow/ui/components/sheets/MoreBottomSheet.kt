@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
@@ -28,6 +29,7 @@ import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.CreditCard
 import compose.icons.tablericons.TriangleSquareCircle
 import compose.icons.tablericons.Users
+import jp.ikigai.cash.flow.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,36 +83,11 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.Archive,
                     contentDescription = TablerIcons.Archive.name
                 )
-                Text(text = "Categories", style = MaterialTheme.typography.titleMedium)
-            }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    scope.launch {
-                        sheetState.hide()
-                        dismiss()
-                        navigateToCounterPartyScreen()
-                    }
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 58.dp),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Icon(
-                    imageVector = TablerIcons.Users,
-                    contentDescription = TablerIcons.Users.name
+                Text(
+                    text = stringResource(id = R.string.categories_label),
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Text(text = "Counter party", style = MaterialTheme.typography.titleMedium)
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -129,8 +106,50 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.CreditCard,
                     contentDescription = TablerIcons.CreditCard.name
                 )
-                Text(text = "Methods", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.methods_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    scope.launch {
+                        sheetState.hide()
+                        dismiss()
+                        navigateToCounterPartyScreen()
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Users,
+                    contentDescription = TablerIcons.Users.name
+                )
+                Text(
+                    text = stringResource(id = R.string.counter_parties_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -149,16 +168,11 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.BuildingBank,
                     contentDescription = TablerIcons.BuildingBank.name
                 )
-                Text(text = "Sources", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.sources_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -177,8 +191,19 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.TriangleSquareCircle,
                     contentDescription = TablerIcons.TriangleSquareCircle.name
                 )
-                Text(text = "Items", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.items_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -197,16 +222,11 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.ClipboardList,
                     contentDescription = TablerIcons.ClipboardList.name
                 )
-                Text(text = "Templates", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.templates_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -225,7 +245,10 @@ fun MoreBottomSheet(
                     imageVector = TablerIcons.BrandGithub,
                     contentDescription = TablerIcons.BrandGithub.name
                 )
-                Text(text = "Updates", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.updates_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     }

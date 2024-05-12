@@ -1,6 +1,16 @@
 <resources>
     <string name="app_name">CashFlow</string>
 
+    <!--  Common Strings  -->
+    <string name="categories_label">Categories</string>
+    <string name="counter_parties_label">Counter parties</string>
+    <string name="methods_label">Methods</string>
+    <string name="sources_label">Sources</string>
+    <string name="items_label">Items</string>
+    <string name="templates_label">Templates</string>
+    <string name="updates_label">Updates</string>
+    <!--  Common Strings  -->
+
     <!--  Button Strings  -->
     <string name="cancel_button_label">Cancel</string>
     <string name="reset_button_label">Reset</string>
