@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.ui.components.sheets
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,10 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.Users
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.FilterTabs
 import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
@@ -165,7 +168,7 @@ fun FilterSheet(
                         selected = selectedTabIndex == tab.index,
                         onClick = {
                             scope.launch {
-                                pagerState.animateScrollToPage(tab.index)
+                                pagerState.scrollToPage(tab.index)
                             }
                         },
                         text = {
@@ -179,7 +182,7 @@ fun FilterSheet(
             }
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.animateContentSize().fillMaxWidth(),
             ) { pageIndex ->
                 when (pageIndex) {
                     0 -> {
@@ -198,9 +201,11 @@ fun FilterSheet(
                                     fromAmount = newFromAmount ?: 0.0
                                 },
                                 enabled = true,
-                                label = "Minimum amount",
-                                placeHolder = "Enter minimum amount",
-                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
+                                label = stringResource(id = R.string.minimum_amount_field_label),
+                                placeHolder = stringResource(id = R.string.minimum_amount_placeholder_label),
+                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    1.0.dp
+                                ),
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "minimum amount icon",
                                 onDone = {
@@ -216,9 +221,11 @@ fun FilterSheet(
                                     toAmount = newToAmount ?: 0.0
                                 },
                                 enabled = true,
-                                label = "Maximum amount",
-                                placeHolder = "Enter maximum amount",
-                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
+                                label = stringResource(id = R.string.maximum_amount_field_label),
+                                placeHolder = stringResource(id = R.string.maximum_amount_placeholder_label),
+                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    1.0.dp
+                                ),
                                 icon = TablerIcons.CashBanknote,
                                 iconDescription = "maximum amount icon",
                                 onDone = {
@@ -310,7 +317,7 @@ fun FilterSheet(
                                                 true
                                             }
                                     },
-                                    label = "No counter party",
+                                    label = stringResource(id = R.string.no_counter_party_label),
                                     icon = TablerIcons.Users
                                 )
                             }
@@ -416,13 +423,14 @@ fun FilterSheet(
                                 ToggleRow(
                                     selected = includeNoItemTransactions,
                                     onClick = {
-                                        includeNoItemTransactions = if (selectedItems.isNotEmpty()) {
-                                            !includeNoItemTransactions
-                                        } else {
-                                            true
-                                        }
+                                        includeNoItemTransactions =
+                                            if (selectedItems.isNotEmpty()) {
+                                                !includeNoItemTransactions
+                                            } else {
+                                                true
+                                            }
                                     },
-                                    label = "No items",
+                                    label = stringResource(id = R.string.no_item_label),
                                     identifier = ""
                                 )
                             }
@@ -467,7 +475,7 @@ fun FilterSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
                 onClick = {
@@ -489,7 +497,7 @@ fun FilterSheet(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Filter")
+                Text(text = stringResource(id = R.string.filter_button_label))
             }
         }
     }

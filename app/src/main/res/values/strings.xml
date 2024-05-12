@@ -9,6 +9,8 @@
     <string name="items_label">Items</string>
     <string name="templates_label">Templates</string>
     <string name="updates_label">Updates</string>
+    <string name="no_counter_party_label">No counter party</string>
+    <string name="no_item_label">No items</string>
     <!--  Common Strings  -->
 
     <!--  Button Strings  -->
@@ -23,10 +25,15 @@
     <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
 
+    <!--  Empty Placeholder Strings  -->
+    <!--  Empty Placeholder Strings  -->
+
     <!--  Placeholder Strings  -->
     <string name="name_placeholder_label">Enter item name</string>
     <string name="quantity_placeholder_label">Enter quantity</string>
     <string name="price_placeholder_label">Enter price</string>
+    <string name="minimum_amount_placeholder_label">Enter minimum amount</string>
+    <string name="maximum_amount_placeholder_label">Enter maximum amount</string>
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
@@ -37,6 +44,8 @@
     <string name="price_field_label">Price</string>
     <string name="quantity_field_label">Quantity</string>
     <string name="name_field_label">Name</string>
+    <string name="minimum_amount_field_label">Minimum amount</string>
+    <string name="maximum_amount_field_label">Maximum amount</string>
     <!--  TextField Strings  -->
 
     <!--  Dialog Strings  -->
