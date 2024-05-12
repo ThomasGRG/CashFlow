@@ -529,7 +529,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                 }
             },
             openGithubPage = {
-                uriHandler.openUri("https://github.com/ThomasGRG/Expense-Tracker/releases")
+                uriHandler.openUri("https://github.com/ThomasGRG/CashFlow/releases")
             },
             events = viewModel.event,
             state = state
