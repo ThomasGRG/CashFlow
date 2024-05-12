@@ -55,11 +55,13 @@ fun ThreeSlotRoundedBottomBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (floatingButtonAction != null && floatingButtonIcon != null) {
+                floatingButtonIcon?.let {
                     FloatingActionButton(
                         onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            floatingButtonAction()
+                            floatingButtonAction?.let {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                floatingButtonAction()
+                            }
                         }
                     ) {
                         floatingButtonIcon()
@@ -71,11 +73,13 @@ fun ThreeSlotRoundedBottomBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (extraButtonAction != null && extraButtonIcon != null) {
+                extraButtonIcon?.let {
                     IconButton(
                         onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            extraButtonAction()
+                            extraButtonAction?.let {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                extraButtonAction()
+                            }
                         }
                     ) {
                         extraButtonIcon()
@@ -97,7 +101,10 @@ fun ThreeSlotRoundedBottomBarPreview() {
             },
             floatingButtonAction = {},
             extraButtonIcon = {
-                Icon(imageVector = Icons.Filled.Delete, contentDescription = Icons.Filled.Delete.name)
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = Icons.Filled.Delete.name
+                )
             },
             extraButtonAction = {}
         )
