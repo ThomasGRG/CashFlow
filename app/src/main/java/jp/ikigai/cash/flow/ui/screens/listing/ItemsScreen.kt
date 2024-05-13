@@ -171,7 +171,7 @@ fun ItemsScreen(
                     pricePerUnit = if (itemDetails.lastKnownPrice > 0) {
                         stringResource(
                             id = R.string.price_per_unit_label,
-                            itemDetails.lastKnownPrice,
+                            numberFormatter.format(itemDetails.lastKnownPrice).toString(),
                             itemDetails.lastUsedCurrency,
                             stringResource(id = itemDetails.lastUsedUnit.code)
                         )
