@@ -133,6 +133,8 @@ fun SelectItemSheet(
                                     onClick = {
                                         scope.launch {
                                             selectedItem = item
+                                            price = item.lastKnownPrice
+                                            displayPrice = item.lastKnownPrice.toString()
                                             pagerState.scrollToPage(1)
                                         }
                                     }
