@@ -191,7 +191,7 @@ class UpsertTransactionTemplateScreenViewModel(
                     TransactionItem(
                         item = latestItem,
                         price = it.price,
-                        quantity = if (it.quantity > 0) it.quantity else 1.0,
+                        quantity = it.quantity,
                         unit = it.unit
                     )
                 }.toRealmList()

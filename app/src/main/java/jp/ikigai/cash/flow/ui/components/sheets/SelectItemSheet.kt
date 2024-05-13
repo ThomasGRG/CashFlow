@@ -203,7 +203,7 @@ fun SelectItemSheet(
                                 value = displayQuantity,
                                 onValueChange = { value ->
                                     displayQuantity = value
-                                    quantity = value.toDoubleOrNull() ?: 0.0
+                                    quantity = value.toDoubleOrNull() ?: if (templateMode) 1.0 else 0.0
                                 },
                                 enabled = true,
                                 label = stringResource(id = R.string.quantity_field_label),
@@ -259,7 +259,7 @@ fun SelectItemSheet(
                                         TransactionItem(
                                             item = selectedItem,
                                             unit = selectedItemUnit,
-                                            quantity = quantity,
+                                            quantity = if (templateMode) quantity.coerceAtLeast(1.0) else 0.0,
                                             price = price
                                         )
                                     )
