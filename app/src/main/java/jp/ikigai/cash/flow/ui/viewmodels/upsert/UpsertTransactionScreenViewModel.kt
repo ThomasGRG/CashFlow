@@ -490,11 +490,16 @@ class UpsertTransactionScreenViewModel(
         currency: String
     ) {
         itemsMap.entries.forEach {
+            val price = if (it.value.quantity >= 1) {
+                it.value.price / it.value.quantity
+            } else {
+                it.value.price * (1 / it.value.quantity)
+            }
             realm.write {
                 findLatest(it.key)?.also { item ->
                     item.lastUsed = time
                     item.lastUsedUnit = it.value.unit
-                    item.lastKnownPrice = it.value.price
+                    item.lastKnownPrice = price
                     item.lastUsedCurrency = currency
                     item.frequency += 1
                 }
