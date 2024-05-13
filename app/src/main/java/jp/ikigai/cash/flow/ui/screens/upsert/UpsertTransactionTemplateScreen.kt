@@ -205,7 +205,7 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.sources)
     }
 
-    val transactionTemplateUuid by remember(key1 = state.transactionTemplate.uuid) {
+    val transactionTemplateUuid by remember(key1 = state.transactionTemplate) {
         mutableStateOf(state.transactionTemplate.uuid)
     }
 

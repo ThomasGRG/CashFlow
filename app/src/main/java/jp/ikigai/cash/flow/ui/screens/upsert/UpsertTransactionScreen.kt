@@ -262,7 +262,7 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.type)
     }
 
-    val transactionUuid by remember(key1 = state.transaction.uuid) {
+    val transactionUuid by remember(key1 = state.transaction) {
         mutableStateOf(state.transaction.uuid)
     }
 

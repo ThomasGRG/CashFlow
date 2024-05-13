@@ -146,7 +146,7 @@ fun UpsertSourceScreen(
         mutableStateOf(true)
     }
 
-    val sourceUuid by remember(key1 = state.source.uuid) {
+    val sourceUuid by remember(key1 = state.source) {
         mutableStateOf(state.source.uuid)
     }
 

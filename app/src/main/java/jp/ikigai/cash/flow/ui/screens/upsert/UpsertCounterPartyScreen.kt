@@ -101,7 +101,7 @@ fun UpsertCounterPartyScreen(
         mutableStateOf(true)
     }
 
-    val counterPartyUuid by remember(key1 = state.counterParty.uuid) {
+    val counterPartyUuid by remember(key1 = state.counterParty) {
         mutableStateOf(state.counterParty.uuid)
     }
 

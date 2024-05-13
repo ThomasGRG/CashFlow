@@ -101,7 +101,7 @@ fun UpsertMethodScreen(
         mutableStateOf(true)
     }
 
-    val methodUuid by remember(key1 = state.method.uuid) {
+    val methodUuid by remember(key1 = state.method) {
         mutableStateOf(state.method.uuid)
     }
 
