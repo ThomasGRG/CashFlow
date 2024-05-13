@@ -1,12 +1,15 @@
 package jp.ikigai.cash.flow.data.enums
 
-enum class ItemUnit(val id: Int, val code: String) {
-    GRAM(1, "g"),
-    KILOGRAM(2, "kg"),
-    LITER(3, "L"),
-    MILLILITER(4, "mL"),
-    POUND(5, "lb"),
-    OUNCE(6, "oz"),
-    FLUID_OUNCE(7, "fl oz"),
-    PIECE(8, ""),
+import androidx.annotation.StringRes
+import jp.ikigai.cash.flow.R
+
+enum class ItemUnit(val id: Int, @StringRes val code: Int) {
+    GRAM(1, R.string.gram_label),
+    KILOGRAM(2, R.string.kilogram_label),
+    LITER(3, R.string.Liter_label),
+    MILLILITER(4, R.string.milliLiter_label),
+    POUND(5, R.string.pound_label),
+    OUNCE(6, R.string.ounce_label),
+    FLUID_OUNCE(7, R.string.fluid_ounce_label),
+    PIECE(8, R.string.piece_label),
 }

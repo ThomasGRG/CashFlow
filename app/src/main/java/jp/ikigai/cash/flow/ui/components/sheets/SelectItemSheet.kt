@@ -186,7 +186,7 @@ fun SelectItemSheet(
                                     key = { itemUnit -> "${itemUnit.id}" }
                                 ) { itemUnit ->
                                     ToggleButton(
-                                        label = itemUnit.code,
+                                        label = stringResource(id = itemUnit.code),
                                         selected = selectedItemUnit.id == itemUnit.id,
                                         toggle = {
                                             selectedItemUnit =

@@ -884,7 +884,7 @@ fun UpsertTransactionScreen(
                         transactionItem.item!!.name,
                         transactionItem.quantity.toString(),
                         transactionItem.price.toString(),
-                        transactionItem.unit.code
+                        stringResource(id = transactionItem.unit.code)
                     ),
                     label = stringResource(id = R.string.item_field_label, index + 1),
                     placeHolder = "",

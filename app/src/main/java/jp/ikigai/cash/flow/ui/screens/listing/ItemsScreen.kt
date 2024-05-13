@@ -33,7 +33,6 @@ import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Item
-import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.ItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -170,11 +169,12 @@ fun ItemsScreen(
                     title = itemDetails.name,
                     frequency = numberFormatter.format(itemDetails.frequency).toString(),
                     pricePerUnit = if (itemDetails.lastKnownPrice > 0) {
-                        if (itemDetails.lastUsedUnit != ItemUnit.PIECE) {
-                            "${numberFormatter.format(itemDetails.lastKnownPrice)} ${itemDetails.lastUsedCurrency}/${itemDetails.lastUsedUnit.code}"
-                        } else {
-                            "${numberFormatter.format(itemDetails.lastKnownPrice)} ${itemDetails.lastUsedCurrency}"
-                        }
+                        stringResource(
+                            id = R.string.price_per_unit_label,
+                            itemDetails.lastKnownPrice,
+                            itemDetails.lastUsedCurrency,
+                            stringResource(id = itemDetails.lastUsedUnit.code)
+                        )
                     } else "",
                     onClick = {
                         resetOneHandMode()
