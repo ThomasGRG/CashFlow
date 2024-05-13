@@ -880,7 +880,7 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = stringResource(
-                        id = R.string.item_value_label,
+                        id = R.string.item_quantity_price_unit_label,
                         transactionItem.item!!.name,
                         transactionItem.quantity.toString(),
                         transactionItem.price.toString(),

@@ -784,10 +784,9 @@ fun UpsertTransactionTemplateScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = stringResource(
-                        id = R.string.item_value_label,
+                        id = R.string.item_quantity_unit_label,
                         transactionItem.item!!.name,
                         transactionItem.quantity.toString(),
-                        transactionItem.price.toString(),
                         stringResource(id = transactionItem.unit.code)
                     ),
                     label = stringResource(id = R.string.item_field_label, index + 1),
