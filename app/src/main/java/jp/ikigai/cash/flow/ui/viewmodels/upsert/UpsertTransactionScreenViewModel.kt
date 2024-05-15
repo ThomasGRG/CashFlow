@@ -53,6 +53,7 @@ class UpsertTransactionScreenViewModel(
     private var loadDataJob: Job? = null
 
     private var previousBalance = 0.0
+    private var previousSource: Source? = null
 
     private val _state = MutableStateFlow(UpsertTransactionScreenState())
     val state: StateFlow<UpsertTransactionScreenState> = _state.asStateFlow()
@@ -182,6 +183,7 @@ class UpsertTransactionScreenViewModel(
     ) {
         val dateTime = transaction.time.toZonedDateTime()
         val source = transaction.source!!
+        previousSource = transaction.source
         previousBalance = if (transaction.type == TransactionType.DEBIT) {
             source.balance + transaction.amount
         } else {
@@ -545,21 +547,36 @@ class UpsertTransactionScreenViewModel(
         time: Long? = null,
         type: TransactionType
     ) {
-        val currentBalance = if (transactionUuid.isNotBlank()) {
-            previousBalance
-        } else {
-            source.balance
-        }
-        val newBalance = if (type == TransactionType.DEBIT) {
-            currentBalance - amount
-        } else {
-            currentBalance + amount
-        }
         realm.write {
+            val currentSourceBalance: Double
+            if (transactionUuid.isNotBlank()) {
+                if (previousSource!!.uuid != source.uuid) {
+                    findLatest(previousSource!!)?.also {
+                        it.balance = previousBalance
+                    }
+                    currentSourceBalance = if (type == TransactionType.DEBIT) {
+                        source.balance - amount
+                    } else {
+                        source.balance + amount
+                    }
+                } else {
+                    currentSourceBalance = if (type == TransactionType.DEBIT) {
+                        previousBalance - amount
+                    } else {
+                        previousBalance + amount
+                    }
+                }
+            } else {
+                currentSourceBalance = if (type == TransactionType.DEBIT) {
+                    source.balance - amount
+                } else {
+                    source.balance + amount
+                }
+            }
             findLatest(source)?.also {
                 it.frequency = frequency
                 it.lastUsed = time ?: it.lastUsed
-                it.balance = newBalance
+                it.balance = currentSourceBalance
             }
         }
     }
