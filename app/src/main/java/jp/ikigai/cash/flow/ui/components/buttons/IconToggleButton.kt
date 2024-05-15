@@ -1,19 +1,24 @@
 package jp.ikigai.cash.flow.ui.components.buttons
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,32 +32,33 @@ fun IconToggleButton(
     selected: Boolean,
     toggle: () -> Unit
 ) {
-    val colors =
-        if (selected) ButtonDefaults.filledTonalButtonColors() else ButtonDefaults.outlinedButtonColors()
-    val border = if (!selected) ButtonDefaults.outlinedButtonBorder else null
+    val color by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+        label = "toggle_button_color"
+    )
 
-    FilledTonalButton(
-        onClick = toggle,
-        colors = colors,
-        border = border
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .selectable(
+                enabled = true,
+                selected = selected,
+                onClick = toggle
+            )
+            .background(color = color)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(6.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = icon.name
-            )
-            Spacer(
-                modifier = Modifier.width(6.dp)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = icon.name
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium
+        )
     }
 }
 
@@ -61,6 +67,10 @@ fun IconToggleButton(
 fun IconToggleButtonPreview() {
     Column {
         IconToggleButton(label = "INR", icon = TablerIcons.ArrowsSort, selected = true, toggle = {})
-        IconToggleButton(label = "INR", icon = TablerIcons.ArrowsSort, selected = false, toggle = {})
+        IconToggleButton(
+            label = "INR",
+            icon = TablerIcons.ArrowsSort,
+            selected = false,
+            toggle = {})
     }
 }
