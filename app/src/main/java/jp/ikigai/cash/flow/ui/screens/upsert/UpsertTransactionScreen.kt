@@ -548,8 +548,8 @@ fun UpsertTransactionScreen(
                 enabled = enabled,
                 icon = TablerIcons.Typography,
                 iconDescription = "title icon",
-                iconTint = MaterialTheme.colorScheme.onBackground,
-                label = "Title",
+                label = stringResource(id = R.string.title_field_label),
+                placeholder = stringResource(id = R.string.title_placeholder_label),
                 dismiss = {
                     scope.launch {
                         keyboardController?.hide()
