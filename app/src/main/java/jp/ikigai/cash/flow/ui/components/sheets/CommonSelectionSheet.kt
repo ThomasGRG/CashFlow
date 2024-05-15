@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -16,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,15 +30,19 @@ import jp.ikigai.cash.flow.R
 @Composable
 fun CommonSelectionSheet(
     index: Int,
-    maxHeight: Double,
+    rowCount: Int,
     sheetState: SheetState,
     dismiss: () -> Unit,
-    items: LazyListScope.() -> Unit,
+    items: LazyStaggeredGridScope.() -> Unit,
 ) {
-    val listState = rememberLazyListState()
+    val gridState = rememberLazyStaggeredGridState()
 
     LaunchedEffect(Unit) {
-        listState.animateScrollToItem(index)
+        gridState.scrollToItem(index)
+    }
+
+    val maxHeight by remember(key1 = rowCount) {
+        mutableStateOf(rowCount * 50.0)
     }
 
     ModalBottomSheet(
@@ -44,14 +52,12 @@ fun CommonSelectionSheet(
         },
         shape = RoundedCornerShape(10)
     ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = maxHeight.dp)
-                .padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        LazyHorizontalStaggeredGrid(
+            state = gridState,
+            rows = StaggeredGridCells.Fixed(rowCount),
+            horizontalItemSpacing = 6.dp,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.heightIn(max = maxHeight.dp).padding(start = 10.dp, end = 10.dp)
         ) {
             items()
         }
