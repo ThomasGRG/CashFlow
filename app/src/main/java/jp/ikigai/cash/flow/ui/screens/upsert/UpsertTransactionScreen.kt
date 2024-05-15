@@ -86,6 +86,7 @@ import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
+import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -157,6 +158,10 @@ fun UpsertTransactionScreen(
             delete = deleteTransaction,
             sheetState = sheetState
         )
+    }
+
+    val numberFormatter by remember {
+        mutableStateOf(getNumberFormatter())
     }
 
     val loading by remember(key1 = state.loading) {
@@ -438,7 +443,7 @@ fun UpsertTransactionScreen(
                     key = { source -> source.uuid }
                 ) { source ->
                     IconToggleButton(
-                        label = "${source.name} (${source.balance} ${source.currency})",
+                        label = "${source.name} (${numberFormatter.format(source.balance).toString()} ${source.currency})",
                         icon = source.icon,
                         selected = source.uuid == selectedSource.uuid,
                         toggle = {
