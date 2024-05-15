@@ -8,11 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,14 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,8 +40,8 @@ fun AutoCompleteTextFieldBottomSheet(
     enabled: Boolean,
     icon: ImageVector,
     iconDescription: String,
-    iconTint: Color,
     label: String,
+    placeholder: String,
     dismiss: () -> Unit,
     sheetState: SheetState,
     items: LazyListScope.((String) -> Unit) -> Unit,
@@ -61,7 +57,7 @@ fun AutoCompleteTextFieldBottomSheet(
 
     var textFieldValue by remember {
         mutableStateOf(
-            TextFieldValue(value)
+            TextFieldValue(value, selection = TextRange(value.length))
         )
     }
 
@@ -75,32 +71,18 @@ fun AutoCompleteTextFieldBottomSheet(
         Row(
             modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
         ) {
-            OutlinedTextField(
+            RoundedCornerOutlinedTextField(
                 value = textFieldValue,
                 onValueChange = {
                     textFieldValue = it
                 },
-                singleLine = true,
                 enabled = enabled,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = iconDescription,
-                        tint = iconTint
-                    )
-                },
-                label = {
-                    Text(
-                        text = label
-                    )
-                },
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester)
+                label = label,
+                placeHolder = placeholder,
+                modifier = Modifier.focusRequester(focusRequester),
+                icon = icon,
+                iconDescription = iconDescription,
+                onDone = {}
             )
         }
         LazyRow(
