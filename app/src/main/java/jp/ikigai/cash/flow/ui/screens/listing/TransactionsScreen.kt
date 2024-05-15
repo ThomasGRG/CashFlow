@@ -165,7 +165,7 @@ fun TransactionsScreen(
     }
 
     val balance by remember(key1 = state.balance) {
-        mutableStateOf(state.balance)
+        mutableStateOf(numberFormatter.format(state.balance).toString())
     }
 
     val selectedCurrency by remember(key1 = state.selectedCurrency) {
