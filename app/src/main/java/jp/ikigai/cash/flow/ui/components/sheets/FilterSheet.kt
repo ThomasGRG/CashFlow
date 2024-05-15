@@ -147,6 +147,22 @@ fun FilterSheet(
         mutableStateOf(filters.filterAmountMax.toString())
     }
 
+    val filterEnabled by remember(
+        selectedCategories,
+        selectedCounterParties,
+        selectedItems,
+        selectedMethods,
+        selectedSources
+    ) {
+        derivedStateOf {
+            selectedCategories.containsValue(true) &&
+                    (selectedCounterParties.containsValue(true) || includeNoCounterPartyTransactions) &&
+                    (selectedItems.containsValue(true) || includeNoItemTransactions) &&
+                    selectedMethods.containsValue(true) &&
+                    selectedSources.containsValue(true)
+        }
+    }
+
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = {
@@ -282,16 +298,14 @@ fun FilterSheet(
                                 IconToggleRow(
                                     label = category.name,
                                     icon = category.icon,
-                                    selected = selectedCategories.contains(category.uuid),
+                                    selected = selectedCategories.getOrDefault(
+                                        category.uuid,
+                                        false
+                                    ),
                                     onClick = {
-                                        val categoryList = selectedCategories.toMutableList()
-                                        if (selectedCategories.contains(category.uuid)) {
-                                            if (selectedCategories.size > 1) {
-                                                categoryList.remove(category.uuid)
-                                            }
-                                        } else {
-                                            categoryList.add(category.uuid)
-                                        }
+                                        val categoryList = selectedCategories.toMutableMap()
+                                        categoryList[category.uuid] =
+                                            !categoryList.getOrDefault(category.uuid, true)
                                         selectedCategories = categoryList
                                     }
                                 )
@@ -313,7 +327,7 @@ fun FilterSheet(
                                     selected = includeNoCounterPartyTransactions,
                                     onClick = {
                                         includeNoCounterPartyTransactions =
-                                            if (selectedCounterParties.isNotEmpty()) {
+                                            if (selectedCounterParties.containsValue(true)) {
                                                 !includeNoCounterPartyTransactions
                                             } else {
                                                 true
@@ -330,19 +344,15 @@ fun FilterSheet(
                                 IconToggleRow(
                                     label = counterParty.name,
                                     icon = counterParty.icon,
-                                    selected = selectedCounterParties.contains(counterParty.uuid),
+                                    selected = selectedCounterParties.getOrDefault(
+                                        counterParty.uuid,
+                                        false
+                                    ),
                                     onClick = {
                                         val counterPartyList =
-                                            selectedCounterParties.toMutableList()
-                                        if (selectedCounterParties.contains(counterParty.uuid)) {
-                                            if (includeNoCounterPartyTransactions) {
-                                                counterPartyList.remove(counterParty.uuid)
-                                            } else if (selectedCounterParties.size > 1) {
-                                                counterPartyList.remove(counterParty.uuid)
-                                            }
-                                        } else {
-                                            counterPartyList.add(counterParty.uuid)
-                                        }
+                                            selectedCounterParties.toMutableMap()
+                                        counterPartyList[counterParty.uuid] =
+                                            !counterPartyList.getOrDefault(counterParty.uuid, true)
                                         selectedCounterParties = counterPartyList
                                     }
                                 )
@@ -364,16 +374,11 @@ fun FilterSheet(
                                 IconToggleRow(
                                     label = method.name,
                                     icon = method.icon,
-                                    selected = selectedMethods.contains(method.uuid),
+                                    selected = selectedMethods.getOrDefault(method.uuid, false),
                                     onClick = {
-                                        val methodList = selectedMethods.toMutableList()
-                                        if (selectedMethods.contains(method.uuid)) {
-                                            if (selectedMethods.size > 1) {
-                                                methodList.remove(method.uuid)
-                                            }
-                                        } else {
-                                            methodList.add(method.uuid)
-                                        }
+                                        val methodList = selectedMethods.toMutableMap()
+                                        methodList[method.uuid] =
+                                            !methodList.getOrDefault(method.uuid, true)
                                         selectedMethods = methodList
                                     }
                                 )
@@ -395,16 +400,11 @@ fun FilterSheet(
                                 IconToggleRow(
                                     label = source.name,
                                     icon = source.icon,
-                                    selected = selectedSources.contains(source.uuid),
+                                    selected = selectedSources.getOrDefault(source.uuid, false),
                                     onClick = {
-                                        val sourceList = selectedSources.toMutableList()
-                                        if (selectedSources.contains(source.uuid)) {
-                                            if (selectedSources.size > 1) {
-                                                sourceList.remove(source.uuid)
-                                            }
-                                        } else {
-                                            sourceList.add(source.uuid)
-                                        }
+                                        val sourceList = selectedSources.toMutableMap()
+                                        sourceList[source.uuid] =
+                                            !sourceList.getOrDefault(source.uuid, true)
                                         selectedSources = sourceList
                                     }
                                 )
@@ -426,7 +426,7 @@ fun FilterSheet(
                                     selected = includeNoItemTransactions,
                                     onClick = {
                                         includeNoItemTransactions =
-                                            if (selectedItems.isNotEmpty()) {
+                                            if (selectedItems.containsValue(true)) {
                                                 !includeNoItemTransactions
                                             } else {
                                                 true
@@ -443,18 +443,10 @@ fun FilterSheet(
                                 ToggleRow(
                                     identifier = item.uuid,
                                     label = item.name,
-                                    selected = selectedItems.contains(item.uuid),
+                                    selected = selectedItems.getOrDefault(item.uuid, false),
                                     onClick = { uuid ->
-                                        val itemList = selectedItems.toMutableList()
-                                        if (selectedItems.contains(uuid)) {
-                                            if (includeNoItemTransactions) {
-                                                itemList.remove(uuid)
-                                            } else if (selectedItems.size > 1) {
-                                                itemList.remove(uuid)
-                                            }
-                                        } else {
-                                            itemList.add(uuid)
-                                        }
+                                        val itemList = selectedItems.toMutableMap()
+                                        itemList[uuid] = !itemList.getOrDefault(uuid, true)
                                         selectedItems = itemList
                                     }
                                 )
@@ -480,6 +472,7 @@ fun FilterSheet(
                 Text(text = stringResource(id = R.string.cancel_button_label))
             }
             TextButton(
+                enabled = filterEnabled,
                 onClick = {
                     setFilters(
                         filters.copy(

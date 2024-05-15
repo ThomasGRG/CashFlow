@@ -126,19 +126,104 @@ class TransactionsScreenViewModel(
                     templates = transactionScreenFlows.templates,
                     filters = it.filters.copy(
                         categories = transactionScreenFlows.categories,
-                        selectedCategories = it.filters.selectedCategories.ifEmpty { transactionScreenFlows.categories.map { category -> category.uuid } },
+                        selectedCategories = getSelectedCategories(
+                            transactionScreenFlows.categories,
+                            it.filters.selectedCategories
+                        ),
                         counterParties = transactionScreenFlows.counterParties,
-                        selectedCounterParties = it.filters.selectedCounterParties.ifEmpty { transactionScreenFlows.counterParties.map { counterParty -> counterParty.uuid } },
+                        selectedCounterParties = getSelectedCounterParties(
+                            transactionScreenFlows.counterParties,
+                            it.filters.selectedCounterParties
+                        ),
                         items = transactionScreenFlows.items,
-                        selectedItems = it.filters.selectedItems.ifEmpty { transactionScreenFlows.items.map { item -> item.uuid } },
+                        selectedItems = getSelectedItems(
+                            transactionScreenFlows.items,
+                            it.filters.selectedItems
+                        ),
                         methods = transactionScreenFlows.methods,
-                        selectedMethods = it.filters.selectedMethods.ifEmpty { transactionScreenFlows.methods.map { method -> method.uuid } },
+                        selectedMethods = getSelectedMethods(
+                            transactionScreenFlows.methods,
+                            it.filters.selectedMethods
+                        ),
                         sources = transactionScreenFlows.sources,
-                        selectedSources = it.filters.selectedSources.ifEmpty { transactionScreenFlows.sources.map { source -> source.uuid } }
+                        selectedSources = getSelectedSources(
+                            transactionScreenFlows.sources,
+                            it.filters.selectedSources
+                        )
                     )
                 )
             }
         }
+    }
+
+    private fun getSelectedCategories(
+        categories: List<Category>,
+        selectedCategories: Map<String, Boolean>
+    ): Map<String, Boolean> {
+        return categories.associateBy(
+            {
+                it.uuid
+            },
+            {
+                selectedCategories.getOrDefault(it.uuid, true)
+            }
+        )
+    }
+
+    private fun getSelectedCounterParties(
+        counterParties: List<CounterParty>,
+        selectedCounterParties: Map<String, Boolean>
+    ): Map<String, Boolean> {
+        return counterParties.associateBy(
+            {
+                it.uuid
+            },
+            {
+                selectedCounterParties.getOrDefault(it.uuid, true)
+            }
+        )
+    }
+
+    private fun getSelectedMethods(
+        methods: List<Method>,
+        selectedMethods: Map<String, Boolean>
+    ): Map<String, Boolean> {
+        return methods.associateBy(
+            {
+                it.uuid
+            },
+            {
+                selectedMethods.getOrDefault(it.uuid, true)
+            }
+        )
+    }
+
+    private fun getSelectedItems(
+        items: List<Item>,
+        selectedItems: Map<String, Boolean>
+    ): Map<String, Boolean> {
+        return items.associateBy(
+            {
+                it.uuid
+            },
+            {
+                selectedItems.getOrDefault(it.uuid, true)
+            }
+        )
+    }
+
+    private fun getSelectedSources(
+        sources: List<Source>,
+        selectedSources: Map<String, Boolean>
+    ): Map<String, Boolean> {
+        return sources.associateBy(
+            {
+                it.uuid
+            },
+            {
+                selectedSources.getOrDefault(it.uuid, true)
+            }
+        )
     }
 
     fun canAddTransaction(): Boolean {
@@ -197,11 +282,11 @@ class TransactionsScreenViewModel(
                 it.filters.filterAmountMin,
                 if (it.filters.filterAmountMax <= it.filters.filterAmountMin) Double.MAX_VALUE else it.filters.filterAmountMax,
                 it.filters.selectedTransactionTypes,
-                it.filters.selectedCategories,
-                it.filters.selectedMethods,
-                it.filters.selectedSources,
-                it.filters.selectedCounterParties,
-                it.filters.selectedItems
+                it.filters.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
+                it.filters.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
+                it.filters.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
+                it.filters.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys,
+                it.filters.selectedItems.filter { selectedItems -> selectedItems.value }.keys
             ).sort("time", Sort.DESCENDING).asFlow()
         }
     }
