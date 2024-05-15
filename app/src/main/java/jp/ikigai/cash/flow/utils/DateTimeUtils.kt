@@ -44,7 +44,7 @@ fun LocalDate.getStartOfDayInEpochMilli(): Long {
 }
 
 fun LocalDate.getEndOfDayInEpochMilli(): Long {
-    return ((this.toEpochDay() * 86400) - 1) * 1000
+    return ((this.toEpochDay() + 1) * 86400000) - 1
 }
 
 fun ZonedDateTime.getTimeString(): String {
