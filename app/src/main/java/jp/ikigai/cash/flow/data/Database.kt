@@ -9,6 +9,7 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.entity.TransactionTitle
 
 object Database {
     val config = RealmConfiguration
@@ -21,9 +22,10 @@ object Database {
                 Source::class,
                 TransactionItem::class,
                 Transaction::class,
-                TransactionTemplate::class
+                TransactionTemplate::class,
+                TransactionTitle::class
             )
         )
-        .schemaVersion(1)
+        .schemaVersion(2)
         .build()
 }
