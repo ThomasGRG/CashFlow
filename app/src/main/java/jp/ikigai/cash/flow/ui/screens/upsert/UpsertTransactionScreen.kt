@@ -244,8 +244,8 @@ fun UpsertTransactionScreen(
         mutableStateOf(TransactionItem())
     }
 
-    val titles by remember(key1 = state.titles) {
-        mutableStateOf(state.titles)
+    val transactionTitles by remember(key1 = state.transactionTitles) {
+        mutableStateOf(state.transactionTitles)
     }
 
     val transactionType by remember(key1 = state.type) {
@@ -443,7 +443,7 @@ fun UpsertTransactionScreen(
                     key = { source -> source.uuid }
                 ) { source ->
                     IconToggleButton(
-                        label = "${source.name} (${numberFormatter.format(source.balance).toString()} ${source.currency})",
+                        label = "${source.name} (${numberFormatter.format(source.balance)} ${source.currency})",
                         icon = source.icon,
                         selected = source.uuid == selectedSource.uuid,
                         toggle = {
@@ -550,14 +550,14 @@ fun UpsertTransactionScreen(
                 sheetState = sheetState
             ) { setTitleFromAutoComplete ->
                 items(
-                    items = titles,
-                    key = { title -> title }
-                ) { title ->
+                    items = transactionTitles,
+                    key = { transactionTitle -> transactionTitle.uuid }
+                ) { transactionTitle ->
                     ToggleButton(
-                        label = title,
+                        label = transactionTitle.title,
                         selected = false,
                         toggle = {
-                            setTitleFromAutoComplete(title)
+                            setTitleFromAutoComplete(transactionTitle.title)
                         }
                     )
                     Spacer(modifier = Modifier.width(6.dp))

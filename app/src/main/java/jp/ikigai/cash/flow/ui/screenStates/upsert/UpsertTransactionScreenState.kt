@@ -7,6 +7,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
+import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -31,7 +32,7 @@ data class UpsertTransactionScreenState(
     val methods: List<Method> = emptyList(),
     val sources: List<Source> = emptyList(),
     val items: List<Item> = emptyList(),
-    val titles: List<String> = emptyList(),
+    val transactionTitles: List<TransactionTitle> = emptyList(),
     val transactionItems: Map<Item, TransactionItem> = emptyMap(),
     val loading: Boolean = true,
     val enabled: Boolean = false,

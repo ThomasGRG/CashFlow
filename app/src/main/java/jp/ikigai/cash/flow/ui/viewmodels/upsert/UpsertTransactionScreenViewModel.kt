@@ -19,6 +19,7 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.utils.combineSevenFlows
@@ -72,7 +73,7 @@ class UpsertTransactionScreenViewModel(
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
 
     private val transactionTitleQuery =
-        realm.query<Transaction>("title != $0", "").distinct("title")
+        realm.query<TransactionTitle>().sort("frequency", Sort.DESCENDING)
 
     init {
         loadDataJob = loadData()
@@ -100,7 +101,7 @@ class UpsertTransactionScreenViewModel(
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
                     items = itemChanges.list,
-                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transactionTitles = transactionTitleChanges.list,
                     transaction = transactionChanges.list.first(),
                     transactionTemplate = null,
                 )
@@ -121,7 +122,7 @@ class UpsertTransactionScreenViewModel(
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
                     items = itemChanges.list,
-                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transactionTitles = transactionTitleChanges.list,
                     transaction = null,
                     transactionTemplate = templateChanges.list.first(),
                 )
@@ -141,7 +142,7 @@ class UpsertTransactionScreenViewModel(
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
                     items = itemChanges.list,
-                    transactionTitles = transactionTitleChanges.list.map { transaction -> transaction.title },
+                    transactionTitles = transactionTitleChanges.list,
                     transaction = null,
                     transactionTemplate = null,
                 )
@@ -151,7 +152,7 @@ class UpsertTransactionScreenViewModel(
             if (upsertTransactionFlows.transaction == null && upsertTransactionFlows.transactionTemplate == null) {
                 _state.update {
                     it.copy(
-                        titles = upsertTransactionFlows.transactionTitles,
+                        transactionTitles = upsertTransactionFlows.transactionTitles,
                         categories = upsertTransactionFlows.categories,
                         selectedCategory = upsertTransactionFlows.categories.first(),
                         counterParties = upsertTransactionFlows.counterParties,
@@ -191,7 +192,7 @@ class UpsertTransactionScreenViewModel(
         }
         _state.update {
             it.copy(
-                titles = upsertTransactionFlows.transactionTitles,
+                transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
                 selectedCategory = transaction.category!!,
                 counterParties = upsertTransactionFlows.counterParties,
@@ -223,7 +224,7 @@ class UpsertTransactionScreenViewModel(
     ) {
         _state.update {
             it.copy(
-                titles = upsertTransactionFlows.transactionTitles,
+                transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
                 selectedCategory = transactionTemplate.category ?: it.selectedCategory,
                 counterParties = upsertTransactionFlows.counterParties,
@@ -307,6 +308,10 @@ class UpsertTransactionScreenViewModel(
                 state.value.transactionItems.values.toList()
 
             updateItems(state.value.transactionItems, time, transaction.currency)
+
+            if (newTitle.isNotBlank()) {
+                updateTransactionTitle(newTitle, time)
+            }
 
             if (templateUuid.isNotBlank()) {
                 updateTemplate(time)
@@ -483,6 +488,27 @@ class UpsertTransactionScreenViewModel(
             val template = query<TransactionTemplate>("uuid==$0", templateUuid).find().first()
             template.frequency += 1
             template.lastUsed = time
+        }
+    }
+
+    private suspend fun updateTransactionTitle(title: String, time: Long) {
+        realm.write {
+            val transactionTitle = query<TransactionTitle>("title == [c]$0", title.trim()).find()
+            if (transactionTitle.isEmpty()) {
+                copyToRealm(
+                    instance = TransactionTitle().apply {
+                        uuid = UUID.randomUUID().toString()
+                        this.title = title
+                        frequency = 1
+                        lastUsed = time
+                    }
+                )
+            } else {
+                findLatest(transactionTitle.first())?.also {
+                    it.frequency += 1
+                    it.lastUsed
+                }
+            }
         }
     }
 
