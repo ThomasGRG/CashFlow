@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.data
 
 import io.realm.kotlin.RealmConfiguration
+import io.realm.kotlin.dynamic.DynamicMutableRealmObject
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Item
@@ -10,6 +11,7 @@ import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
+import java.util.UUID
 
 object Database {
     val config = RealmConfiguration
@@ -27,5 +29,36 @@ object Database {
             )
         )
         .schemaVersion(2)
+        .migration(
+            { migrationContext ->
+                val oldRealm = migrationContext.oldRealm
+                val newRealm = migrationContext.newRealm
+
+                if (oldRealm.schemaVersion() <= 1L && newRealm.schemaVersion() >= 2L) {
+                    val transactions = oldRealm.query("Transaction").find()
+                    val titles = mutableMapOf<String, Pair<Long, Long>>()
+                    for (transaction in transactions) {
+                        val title: String = transaction.getValue("title", String::class)
+                        val dateTime: Long = transaction.getValue("time", Long::class)
+                        val titleMeta = titles.getOrDefault(title, Pair(0L, 0L))
+                        titles[title] =
+                            titleMeta.copy(titleMeta.first + 1, maxOf(dateTime, titleMeta.second))
+                    }
+                    for (entry in titles) {
+                        newRealm.copyToRealm(
+                            DynamicMutableRealmObject.create(
+                                type = "TransactionTitle",
+                                mapOf(
+                                    "uuid" to UUID.randomUUID().toString(),
+                                    "title" to entry.key,
+                                    "frequency" to entry.value.first,
+                                    "lastUsed" to entry.value.second
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        )
         .build()
 }
