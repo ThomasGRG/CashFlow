@@ -42,6 +42,9 @@ fun OneHandModeScaffold(
     showToastBar: Boolean,
     toastBarText: String,
     onDismissToastBar: () -> Unit,
+    showBottomPopup: Boolean = false,
+    bottomPopupContent: @Composable (() -> Unit) -> Unit = {},
+    onDismissPopup: () -> Unit = {},
     showEmptyPlaceholder: Boolean,
     emptyPlaceholderText: String,
     topBar: @Composable () -> Unit = {},
@@ -80,56 +83,77 @@ fun OneHandModeScaffold(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .animateContentSize()
-            .navigationBarsPadding()
-            .imePadding()
-            .fillMaxSize()
-            .nestedScroll(oneHandModeState.nestedScrollConnection),
-        topBar = topBar,
-        bottomBar = bottomBar
-    ) { contentPadding ->
-        Box(
+    LaunchedEffect(key1 = showBottomPopup) {
+        keyboardController?.hide()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
             modifier = Modifier
+                .animateContentSize()
+                .navigationBarsPadding()
+                .imePadding()
                 .fillMaxSize()
-                .padding(contentPadding)
-        ) {
-            content(
-                oneHandModeBoxHeight
+                .nestedScroll(oneHandModeState.nestedScrollConnection),
+            topBar = topBar,
+            bottomBar = bottomBar
+        ) { contentPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
             ) {
-                oneHandModeBoxHeight = 0.0
-                oneHandModeState.endRefresh()
-            }
-            if (loading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter))
-            } else {
-                if (showEmptyPlaceholder) {
-                    Text(
-                        text = emptyPlaceholderText, modifier = Modifier.align(
-                            Alignment.Center
-                        )
+                content(
+                    oneHandModeBoxHeight
+                ) {
+                    oneHandModeBoxHeight = 0.0
+                    oneHandModeState.endRefresh()
+                }
+                if (loading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopCenter)
                     )
                 } else {
-                    PullToRefreshContainer(
-                        state = oneHandModeState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        indicator = { state ->
-                            OneHandModeIndicator(state = state)
-                        }
+                    if (showEmptyPlaceholder) {
+                        Text(
+                            text = emptyPlaceholderText, modifier = Modifier.align(
+                                Alignment.Center
+                            )
+                        )
+                    } else {
+                        PullToRefreshContainer(
+                            state = oneHandModeState,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            indicator = { state ->
+                                OneHandModeIndicator(state = state)
+                            }
+                        )
+                    }
+                }
+                AnimatedVisibility(
+                    visible = showToastBar,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    ToastBar(
+                        message = toastBarText,
+                        onDismiss = onDismissToastBar
                     )
                 }
             }
-            AnimatedVisibility(
-                visible = showToastBar,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-                modifier = Modifier.align(Alignment.BottomCenter)
+        }
+        AnimatedVisibility(
+            visible = showBottomPopup,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            BottomPopup(
+                dismiss = onDismissPopup
             ) {
-                ToastBar(
-                    message = toastBarText,
-                    onDismiss = onDismissToastBar
-                )
+                bottomPopupContent(it)
             }
         }
     }
