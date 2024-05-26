@@ -57,7 +57,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
-import jp.ikigai.cash.flow.ui.components.dialogs.IconDetailsDialog
+import jp.ikigai.cash.flow.ui.components.popups.IconDetailsPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.ChooseIconScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.common.ChooseIconScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -123,17 +123,14 @@ fun ChooseIconScreen(
         mutableStateOf(null)
     }
 
-    if (showDialog) {
-        IconDetailsDialog(
-            dismiss = { showDialog = false },
-            icon = iconToPreview
-        )
-    }
-
     BackHandler(
-        enabled = !showDialog
+        enabled = true
     ) {
-        navigateBackWithResult(defaultIcon)
+        if (showDialog) {
+            showDialog = false
+        } else {
+            navigateBackWithResult(defaultIcon)
+        }
     }
 
     OneHandModeScaffold(
@@ -141,6 +138,19 @@ fun ChooseIconScreen(
         showToastBar = false,
         toastBarText = "",
         onDismissToastBar = {},
+        showBottomPopup = showDialog,
+        bottomPopupContent = { hidePopup ->
+            IconDetailsPopup(
+                dismiss = {
+                    hidePopup()
+                    showDialog = false
+                },
+                icon = iconToPreview
+            )
+        },
+        onDismissPopup = {
+            showDialog = false
+        },
         showEmptyPlaceholder = showEmptyPlaceholder,
         emptyPlaceholderText = stringResource(
             id = R.string.choose_icon_screen_empty_placeholder_label,
@@ -168,7 +178,10 @@ fun ChooseIconScreen(
                     navigateBackWithResult(defaultIcon)
                 },
                 floatingButtonIcon = {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search icons")
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = "search icons"
+                    )
                 },
                 floatingButtonAction = {
                     if (!loading) {

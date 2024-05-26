@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -16,14 +15,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,12 +54,11 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
-import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
-import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
+import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
+import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -72,7 +68,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -87,12 +82,6 @@ fun UpsertSourceScreen(
 ) {
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    val scope = rememberCoroutineScope()
-
-    val currencySheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
 
     var icon by remember(key1 = selectedIcon) {
         mutableStateOf(selectedIcon.getIconForSource())
@@ -142,52 +131,9 @@ fun UpsertSourceScreen(
         mutableStateOf(state.source.currency)
     }
 
-    var currencyExpanded by remember { mutableStateOf(false) }
+    var showCurrencyPopup by remember { mutableStateOf(false) }
 
-    if (currencyExpanded) {
-        CommonSelectionSheet(
-            index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
-            sheetState = currencySheetState,
-            dismiss = {
-                scope.launch {
-                    currencySheetState.hide()
-                    currencyExpanded = false
-                }
-            },
-            rowCount = 4,
-        ) {
-            items(
-                items = currencies,
-                key = { currency -> "currency-${currency.currencyCode}" }
-            ) { currency ->
-                ToggleButton(
-                    label = "${currency.displayName} (${currency.currencyCode})",
-                    selected = currency.currencyCode == selectedCurrency,
-                    toggle = {
-                        scope.launch {
-                            currencySheetState.hide()
-                            currencyExpanded = false
-                            selectedCurrency = currency.currencyCode
-                        }
-                    }
-                )
-            }
-        }
-    }
-
-    var showResetDialog by remember { mutableStateOf(false) }
-
-    if (showResetDialog) {
-        ResetIconDialog(
-            dismiss = {
-                showResetDialog = false
-            },
-            reset = {
-                icon = Constants.DEFAULT_SOURCE_ICON
-                showResetDialog = false
-            }
-        )
-    }
+    var showResetPopup by remember { mutableStateOf(false) }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -234,6 +180,38 @@ fun UpsertSourceScreen(
             if (currentEvent == Event.SaveSuccess) {
                 navigateBack()
             }
+        },
+        showBottomPopup = showCurrencyPopup || showResetPopup,
+        bottomPopupContent = { hidePopup ->
+            if (showCurrencyPopup) {
+                CurrencyPopup(
+                    index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
+                    selectedCurrency = selectedCurrency,
+                    setSelectedCurrency = { currency ->
+                        selectedCurrency = currency
+                    },
+                    currencies = currencies,
+                    dismiss = {
+                        hidePopup()
+                        showCurrencyPopup = false
+                    }
+                )
+            } else {
+                ResetIconPopup(
+                    dismiss = {
+                        hidePopup()
+                        showResetPopup = false
+                    },
+                    reset = {
+                        icon = Constants.DEFAULT_SOURCE_ICON
+                        showResetPopup = false
+                    }
+                )
+            }
+        },
+        onDismissPopup = {
+            showCurrencyPopup = false
+            showResetPopup = false
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -299,7 +277,7 @@ fun UpsertSourceScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showResetDialog = true
+                            showResetPopup = true
                         }
                     ),
                 tint = if (enabled) {
@@ -363,7 +341,7 @@ fun UpsertSourceScreen(
                 },
                 onClick = {
                     resetOneHandMode()
-                    currencyExpanded = true
+                    showCurrencyPopup = true
                 }
             )
         }

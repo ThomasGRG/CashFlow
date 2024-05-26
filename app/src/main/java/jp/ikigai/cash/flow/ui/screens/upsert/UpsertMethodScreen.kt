@@ -50,7 +50,7 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
+import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -105,19 +105,7 @@ fun UpsertMethodScreen(
         mutableStateOf(state.method.uuid)
     }
 
-    var showResetDialog by remember { mutableStateOf(false) }
-
-    if (showResetDialog) {
-        ResetIconDialog(
-            dismiss = {
-                showResetDialog = false
-            },
-            reset = {
-                icon = Constants.DEFAULT_METHOD_ICON
-                showResetDialog = false
-            }
-        )
-    }
+    var showResetPopup by remember { mutableStateOf(false) }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -165,6 +153,22 @@ fun UpsertMethodScreen(
                 navigateBack()
             }
         },
+        showBottomPopup = showResetPopup,
+        bottomPopupContent = { hidePopup ->
+            ResetIconPopup(
+                dismiss = {
+                    hidePopup()
+                    showResetPopup = false
+                },
+                reset = {
+                    icon = Constants.DEFAULT_METHOD_ICON
+                    showResetPopup = false
+                }
+            )
+        },
+        onDismissPopup = {
+            showResetPopup = false
+        },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
         topBar = {
@@ -185,7 +189,10 @@ fun UpsertMethodScreen(
                     navigateBack()
                 },
                 floatingButtonIcon = {
-                    Icon(imageVector = TablerIcons.DeviceFloppy, contentDescription = TablerIcons.DeviceFloppy.name)
+                    Icon(
+                        imageVector = TablerIcons.DeviceFloppy,
+                        contentDescription = TablerIcons.DeviceFloppy.name
+                    )
                 },
                 floatingButtonAction = {
                     if (enabled) {
@@ -221,7 +228,7 @@ fun UpsertMethodScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showResetDialog = true
+                            showResetPopup = true
                         }
                     ),
                 tint = if (enabled) {
@@ -287,7 +294,8 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon") ?: Constants.DEFAULT_METHOD_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon")
+                ?: Constants.DEFAULT_METHOD_ICON.name,
             upsertMethod = viewModel::upsertCategory,
             events = viewModel.event,
             state = state

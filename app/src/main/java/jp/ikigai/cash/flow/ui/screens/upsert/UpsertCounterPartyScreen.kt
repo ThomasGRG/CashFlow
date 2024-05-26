@@ -50,7 +50,7 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.dialogs.ResetIconDialog
+import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCounterPartyScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -105,19 +105,7 @@ fun UpsertCounterPartyScreen(
         mutableStateOf(state.counterParty.uuid)
     }
 
-    var showResetDialog by remember { mutableStateOf(false) }
-
-    if (showResetDialog) {
-        ResetIconDialog(
-            dismiss = {
-                showResetDialog = false
-            },
-            reset = {
-                icon = Constants.DEFAULT_COUNTERPARTY_ICON
-                showResetDialog = false
-            }
-        )
-    }
+    var showResetPopup by remember { mutableStateOf(false) }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -164,6 +152,22 @@ fun UpsertCounterPartyScreen(
             if (currentEvent == Event.SaveSuccess) {
                 navigateBack()
             }
+        },
+        showBottomPopup = showResetPopup,
+        bottomPopupContent = { hidePopup ->
+            ResetIconPopup(
+                dismiss = {
+                    hidePopup()
+                    showResetPopup = false
+                },
+                reset = {
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON
+                    showResetPopup = false
+                }
+            )
+        },
+        onDismissPopup = {
+            showResetPopup = false
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -224,7 +228,7 @@ fun UpsertCounterPartyScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showResetDialog = true
+                            showResetPopup = true
                         }
                     ),
                 tint = if (enabled) {
