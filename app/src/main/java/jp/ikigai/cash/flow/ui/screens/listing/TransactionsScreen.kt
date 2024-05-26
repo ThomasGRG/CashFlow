@@ -77,6 +77,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(
+    canAddTransaction: () -> Boolean,
     addTransaction: (String) -> Unit,
     editTransaction: (String) -> Unit,
     setFilters: (Filters) -> Unit,
@@ -335,7 +336,9 @@ fun TransactionsScreen(
                     sheetType = SheetType.DATE_RANGE
                 },
                 addTransaction = {
-                    sheetType = SheetType.TEMPLATES
+                    if (canAddTransaction()) {
+                        sheetType = SheetType.TEMPLATES
+                    }
                 },
                 onFilterClick = {
                     sheetType = SheetType.FILTER
@@ -479,11 +482,10 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         val state by viewModel.state.collectAsState()
 
         TransactionsScreen(
+            canAddTransaction = viewModel::canAddTransaction,
             addTransaction = { templateId ->
-                if (viewModel.canAddTransaction()) {
-                    navController.navigate(Routes.UpsertTransaction.getRoute(templateId = templateId)) {
-                        launchSingleTop = true
-                    }
+                navController.navigate(Routes.UpsertTransaction.getRoute(templateId = templateId)) {
+                    launchSingleTop = true
                 }
             },
             editTransaction = { id ->
