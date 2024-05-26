@@ -47,6 +47,7 @@ fun ToggleRow(
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
