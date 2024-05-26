@@ -148,7 +148,8 @@ fun OneHandModeScaffold(
         AnimatedVisibility(
             visible = showBottomPopup,
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
+            modifier = Modifier.imePadding()
         ) {
             BottomPopup(
                 dismiss = onDismissPopup
