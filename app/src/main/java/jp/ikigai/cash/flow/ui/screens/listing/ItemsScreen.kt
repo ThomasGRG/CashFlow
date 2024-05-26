@@ -13,13 +13,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,12 +35,11 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.ItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
-import jp.ikigai.cash.flow.ui.components.sheets.UpsertItemSheet
+import jp.ikigai.cash.flow.ui.components.popups.UpsertItemPopup
 import jp.ikigai.cash.flow.ui.screenStates.listing.ItemsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.ItemsScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,8 +51,6 @@ fun ItemsScreen(
     state: ItemsScreenState
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
 
     val numberFormatter by remember {
         mutableStateOf(getNumberFormatter())
@@ -89,27 +84,8 @@ fun ItemsScreen(
         mutableStateOf(state.enabled)
     }
 
-    var showAddItemSheet by remember {
+    var showAddItemPopup by remember {
         mutableStateOf(false)
-    }
-
-    if (showAddItemSheet) {
-        UpsertItemSheet(
-            name = selectedItem.name,
-            items = items,
-            enabled = enabled,
-            save = {
-                upsertItem(it)
-            },
-            dismiss = {
-                scope.launch {
-                    sheetState.hide()
-                    showAddItemSheet = false
-                }
-            },
-            sheetState = sheetState,
-            keyboardController = keyboardController
-        )
     }
 
     OneHandModeScaffold(
@@ -117,6 +93,25 @@ fun ItemsScreen(
         showToastBar = false,
         toastBarText = "",
         onDismissToastBar = {},
+        showBottomPopup = showAddItemPopup,
+        bottomPopupContent = { hidePopup ->
+            UpsertItemPopup(
+                name = selectedItem.name,
+                items = items,
+                enabled = enabled,
+                save = {
+                    upsertItem(it)
+                },
+                dismiss = {
+                    hidePopup()
+                    showAddItemPopup = false
+                },
+                keyboardController = keyboardController
+            )
+        },
+        onDismissPopup = {
+            showAddItemPopup = false
+        },
         showEmptyPlaceholder = showEmptyPlaceholder,
         emptyPlaceholderText = stringResource(id = R.string.items_screen_empty_placeholder_label),
         topBar = {
@@ -140,7 +135,7 @@ fun ItemsScreen(
                 navigateBack = navigateBack,
                 floatingButtonAction = {
                     editItem(Item())
-                    showAddItemSheet = true
+                    showAddItemPopup = true
                 },
                 floatingButtonIcon = {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
@@ -179,7 +174,7 @@ fun ItemsScreen(
                     onClick = {
                         resetOneHandMode()
                         editItem(itemDetails)
-                        showAddItemSheet = true
+                        showAddItemPopup = true
                     },
                 )
             }
