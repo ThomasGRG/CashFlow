@@ -5,13 +5,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -56,21 +58,23 @@ fun ResetIconPopup(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
+            OutlinedButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
             }
-            Button(
+            FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     reset()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).height(50.dp),
+                shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.reset_button_label))
             }

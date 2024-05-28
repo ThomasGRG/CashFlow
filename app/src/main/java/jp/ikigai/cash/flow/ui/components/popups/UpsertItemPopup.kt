@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -24,9 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Typography
@@ -62,7 +66,7 @@ fun UpsertItemPopup(
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         RoundedCornerOutlinedTextField(
             enabled = enabled,
@@ -96,16 +100,19 @@ fun UpsertItemPopup(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(
+            OutlinedButton(
                 onClick = {
                     dismiss()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Button(
+            FilledTonalButton(
                 onClick = {
                     if (nameFieldValue.text != name && items.contains(nameFieldValue.text)) {
                         nameValid = false
@@ -114,11 +121,27 @@ fun UpsertItemPopup(
                         save(nameFieldValue.text)
                     }
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
                 enabled = nameFieldValue.text.isNotBlank()
             ) {
                 Text(text = stringResource(id = R.string.save_button_label))
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun UpsertItemPopupPreview() {
+    UpsertItemPopup(
+        name = "Pizza",
+        items = emptyList(),
+        enabled = true,
+        save = {},
+        dismiss = {},
+        keyboardController = LocalSoftwareKeyboardController.current
+    )
 }
