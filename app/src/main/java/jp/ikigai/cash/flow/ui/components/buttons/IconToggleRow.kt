@@ -58,7 +58,8 @@ fun IconToggleRow(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = icon.name
+            contentDescription = icon.name,
+            tint = MaterialTheme.colorScheme.onBackground
         )
         Spacer(
             modifier = Modifier.width(6.dp)
@@ -66,6 +67,7 @@ fun IconToggleRow(
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
