@@ -21,28 +21,22 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,16 +51,16 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
+import jp.ikigai.cash.flow.ui.components.common.BottomPopup
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
-import jp.ikigai.cash.flow.ui.components.sheets.DateRangePickerBottomSheet
-import jp.ikigai.cash.flow.ui.components.sheets.FilterSheet
-import jp.ikigai.cash.flow.ui.components.sheets.MoreBottomSheet
-import jp.ikigai.cash.flow.ui.components.sheets.SelectTemplateSheet
+import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
+import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterPopup
+import jp.ikigai.cash.flow.ui.components.popups.MoreOptionsPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectTemplatePopup
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -74,7 +68,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 
@@ -97,19 +90,6 @@ fun TransactionsScreen(
     events: Flow<Event>,
     state: TransactionsScreenState,
 ) {
-    val configuration = LocalConfiguration.current
-
-    var screenHeight by remember {
-        mutableIntStateOf(configuration.screenHeightDp)
-    }
-
-    LaunchedEffect(configuration) {
-        snapshotFlow { configuration.screenHeightDp }
-            .collectLatest { screenHeight = it }
-    }
-
-    val scope = rememberCoroutineScope()
-
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -130,10 +110,6 @@ fun TransactionsScreen(
             showToastBar = false
         }
     }
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
 
     var sheetType by remember {
         mutableStateOf(SheetType.NONE)
@@ -207,234 +183,230 @@ fun TransactionsScreen(
         mutableStateOf(state.filters)
     }
 
-    when (sheetType) {
-        SheetType.TEMPLATES -> {
-            SelectTemplateSheet(
-                templates = templates,
-                addNewTransaction = { templateId ->
-                    addTransaction(templateId)
-                },
-                dismiss = {
-                    sheetType = SheetType.NONE
-                },
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.FILTER -> {
-            FilterSheet(
-                filters = filters,
-                setFilters = setFilters,
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier
+                .animateContentSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column(
+                            modifier = Modifier.padding(5.dp)
+                        ) {
+                            Text(text = stringResource(id = R.string.transactions_label))
+                            Text(
+                                text = "$startDateString to $endDateString",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
                     }
-                },
-                maxHeight = screenHeight * 0.4,
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.CURRENCY -> {
-            CommonSelectionSheet(
-                index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = 4,
-                sheetState = sheetState
-            ) {
-                items(
-                    items = currencies,
-                    key = { currency -> "currency-${currency.currencyCode}" }
-                ) { currency ->
-                    ToggleButton(
-                        label = "${currency.displayName} (${currency.currencyCode})",
-                        selected = currency.currencyCode == selectedCurrency,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setCurrency(currency.currencyCode)
+                )
+            },
+            bottomBar = {
+                TransactionScreenRoundedBottomBar(
+                    selectedCurrencySymbol = selectedCurrencySymbol,
+                    onCurrencyClick = {
+                        sheetType = SheetType.CURRENCY
+                    },
+                    onCalendarClick = {
+                        sheetType = SheetType.DATE_RANGE
+                    },
+                    addTransaction = {
+                        if (canAddTransaction()) {
+                            if (templates.isEmpty()) {
+                                addTransaction("")
+                            } else {
+                                sheetType = SheetType.TEMPLATES
                             }
+                        }
+                    },
+                    onFilterClick = {
+                        sheetType = SheetType.FILTER
+                    },
+                    onMoreClick = {
+                        sheetType = SheetType.MORE_OPTIONS
+                    },
+                )
+            }
+        ) { contentPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item(
+                        key = "totalBalance"
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = "$balance $selectedCurrency",
+                                style = MaterialTheme.typography.displaySmall
+                            )
+                        }
+                    }
+
+                    item(
+                        key = "infoRow"
+                    ) {
+                        TotalTransactionInfo(
+                            currency = selectedCurrency,
+                            expenses = numberFormatter.format(totalExpense).toString(),
+                            expensesCount = numberFormatter.format(expenseTransactionsCount)
+                                .toString(),
+                            income = numberFormatter.format(totalIncome).toString(),
+                            incomeCount = numberFormatter.format(incomeTransactionsCount).toString()
+                        )
+                    }
+                    transactions.forEach {
+                        stickyHeader {
+                            TransactionGroupHeader(
+                                date = it.key,
+                                amount = numberFormatter.format(it.value.totalAmount).toString(),
+                                currency = selectedCurrency
+                            )
+                        }
+                        items(
+                            items = it.value.transactions,
+                            key = { transactionWithIcons -> transactionWithIcons.uuid }
+                        ) { transactionWithIcons ->
+                            TransactionCard(
+                                transactionWithIcons = transactionWithIcons,
+                                amount = numberFormatter.format(transactionWithIcons.amount)
+                                    .toString(),
+                                onClick = {
+                                    editTransaction(transactionWithIcons.uuid)
+                                },
+                                onLongClick = {},
+                                modifier = Modifier.animateItemPlacement()
+                            )
+                        }
+                    }
+                }
+                if (loading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopCenter)
+                    )
+                } else if (transactions.isEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
+                    )
+                }
+                AnimatedVisibility(
+                    visible = showToastBar,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    ToastBar(
+                        message = currentEvent?.let { stringResource(id = it.message) } ?: "",
+                        onDismiss = {
+                            showToastBar = false
                         }
                     )
                 }
             }
         }
-
-        SheetType.DATE_RANGE -> {
-            DateRangePickerBottomSheet(
-                startDate = startDate,
-                endDate = endDate,
-                filter = setStartDateAndEndDate,
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.MORE_OPTIONS -> {
-            MoreBottomSheet(
-                navigateToCategoriesScreen = navigateToCategoriesScreen,
-                navigateToCounterPartyScreen = navigateToCounterPartyScreen,
-                navigateToMethodsScreen = navigateToMethodsScreen,
-                navigateToSourcesScreen = navigateToSourcesScreen,
-                navigateToTemplatesScreen = navigateToTemplatesScreen,
-                navigateToItemsScreen = navigateToItemsScreen,
-                openGithubReleasesPage = openGithubPage,
+        AnimatedVisibility(
+            visible = sheetType != SheetType.NONE,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.imePadding()
+        ) {
+            BottomPopup(
                 dismiss = {
                     sheetType = SheetType.NONE
-                },
-                sheetState = sheetState
-            )
-        }
-
-        else -> {}
-    }
-
-    Scaffold(
-        modifier = Modifier
-            .animateContentSize()
-            .navigationBarsPadding()
-            .imePadding()
-            .fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.padding(5.dp)
-                    ) {
-                        Text(text = stringResource(id = R.string.transactions_label))
-                        Text(
-                            text = "$startDateString to $endDateString",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
                 }
-            )
-        },
-        bottomBar = {
-            TransactionScreenRoundedBottomBar(
-                selectedCurrencySymbol = selectedCurrencySymbol,
-                onCurrencyClick = {
-                    sheetType = SheetType.CURRENCY
-                },
-                onCalendarClick = {
-                    sheetType = SheetType.DATE_RANGE
-                },
-                addTransaction = {
-                    if (canAddTransaction()) {
-                        sheetType = SheetType.TEMPLATES
-                    }
-                },
-                onFilterClick = {
-                    sheetType = SheetType.FILTER
-                },
-                onMoreClick = {
-                    sheetType = SheetType.MORE_OPTIONS
-                },
-            )
-        }
-    ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, end = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                item(
-                    key = "totalBalance"
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp)
-                    ) {
-                        Text(
-                            text = "$balance $selectedCurrency",
-                            style = MaterialTheme.typography.displaySmall
-                        )
-                    }
-                }
-
-                item(
-                    key = "infoRow"
-                ) {
-                    TotalTransactionInfo(
-                        currency = selectedCurrency,
-                        expenses = numberFormatter.format(totalExpense).toString(),
-                        expensesCount = numberFormatter.format(expenseTransactionsCount).toString(),
-                        income = numberFormatter.format(totalIncome).toString(),
-                        incomeCount = numberFormatter.format(incomeTransactionsCount).toString()
-                    )
-                }
-                transactions.forEach {
-                    stickyHeader {
-                        TransactionGroupHeader(
-                            date = it.key,
-                            amount = numberFormatter.format(it.value.totalAmount).toString(),
-                            currency = selectedCurrency
-                        )
-                    }
-                    items(
-                        items = it.value.transactions,
-                        key = { transactionWithIcons -> transactionWithIcons.uuid }
-                    ) { transactionWithIcons ->
-                        TransactionCard(
-                            transactionWithIcons = transactionWithIcons,
-                            amount = numberFormatter.format(transactionWithIcons.amount).toString(),
-                            onClick = {
-                                editTransaction(transactionWithIcons.uuid)
+            ) { hidePopup ->
+                when (sheetType) {
+                    SheetType.CURRENCY -> {
+                        CurrencyPopup(
+                            index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
+                            selectedCurrency = selectedCurrency,
+                            setSelectedCurrency = { currency ->
+                                setCurrency(currency)
                             },
-                            onLongClick = {},
-                            modifier = Modifier.animateItemPlacement()
+                            currencies = currencies,
+                            dismiss = {
+                                hidePopup()
+                                sheetType = SheetType.NONE
+                            }
                         )
                     }
-                }
-            }
-            if (loading) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter)
-                )
-            } else if (transactions.isEmpty()) {
-                Text(
-                    text = stringResource(id = R.string.transactions_screen_empty_placeholder_label), modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
-            }
-            AnimatedVisibility(
-                visible = showToastBar,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                ToastBar(
-                    message = currentEvent?.let { stringResource(id = it.message) } ?: "",
-                    onDismiss = {
-                        showToastBar = false
+
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerPopup(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            dismiss = {
+                                hidePopup()
+                                sheetType = SheetType.NONE
+                            }
+                        )
                     }
-                )
+
+                    SheetType.MORE_OPTIONS -> {
+                        MoreOptionsPopup(
+                            navigateToCategoriesScreen = navigateToCategoriesScreen,
+                            navigateToCounterPartyScreen = navigateToCounterPartyScreen,
+                            navigateToMethodsScreen = navigateToMethodsScreen,
+                            navigateToSourcesScreen = navigateToSourcesScreen,
+                            navigateToTemplatesScreen = navigateToTemplatesScreen,
+                            navigateToItemsScreen = navigateToItemsScreen,
+                            openGithubReleasesPage = openGithubPage,
+                            dismiss = {
+                                hidePopup()
+                                sheetType = SheetType.NONE
+                            }
+                        )
+                    }
+
+                    SheetType.FILTER -> {
+                        FilterPopup(
+                            filters = filters,
+                            setFilters = setFilters,
+                            dismiss = {
+                                hidePopup()
+                                sheetType = SheetType.NONE
+                            }
+                        )
+                    }
+
+                    SheetType.TEMPLATES -> {
+                        SelectTemplatePopup(
+                            templates = templates,
+                            addNewTransaction = addTransaction,
+                            dismiss = {
+                                hidePopup()
+                                sheetType = SheetType.NONE
+                            }
+                        )
+                    }
+
+                    else -> {}
+                }
             }
         }
     }
