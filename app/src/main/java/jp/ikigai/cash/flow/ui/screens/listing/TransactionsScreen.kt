@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.screens.listing
 import android.icu.util.Currency
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,11 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -69,6 +72,7 @@ import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -106,8 +110,6 @@ fun TransactionsScreen(
 
     val scope = rememberCoroutineScope()
 
-    var toastBarString by remember { mutableStateOf("") }
-
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -118,16 +120,6 @@ fun TransactionsScreen(
         events.collectLatest { event ->
             showToastBar = false
             currentEvent = event
-            toastBarString = when (event) {
-                Event.CategoryMethodSourceRequired -> "At least one category, method and source are required to proceed."
-                Event.CategorySourceRequired -> "At least one category and source are required to proceed."
-                Event.MethodSourceRequired -> "At least one method and source are required to proceed."
-                Event.CategoryMethodRequired -> "At least one category and method are required to proceed."
-                Event.CategoryRequired -> "At least one category is required to proceed."
-                Event.MethodRequired -> "At least one method is required to proceed."
-                Event.SourceRequired -> "At least one source is required to proceed."
-                else -> ""
-            }
             showToastBar = true
         }
     }
@@ -153,6 +145,10 @@ fun TransactionsScreen(
 
     val loading by remember(key1 = state.loading) {
         mutableStateOf(state.loading)
+    }
+
+    val transactions by remember(key1 = state.transactions) {
+        mutableStateOf(state.transactions)
     }
 
     val templates by remember(key1 = state.templates) {
@@ -307,6 +303,7 @@ fun TransactionsScreen(
 
     Scaffold(
         modifier = Modifier
+            .animateContentSize()
             .navigationBarsPadding()
             .imePadding()
             .fillMaxSize(),
@@ -316,7 +313,7 @@ fun TransactionsScreen(
                     Column(
                         modifier = Modifier.padding(5.dp)
                     ) {
-                        Text(text = "Transactions")
+                        Text(text = stringResource(id = R.string.transactions_label))
                         Text(
                             text = "$startDateString to $endDateString",
                             style = MaterialTheme.typography.titleSmall,
@@ -389,7 +386,7 @@ fun TransactionsScreen(
                         incomeCount = numberFormatter.format(incomeTransactionsCount).toString()
                     )
                 }
-                state.transactions.forEach {
+                transactions.forEach {
                     stickyHeader {
                         TransactionGroupHeader(
                             date = it.key,
@@ -419,9 +416,9 @@ fun TransactionsScreen(
                         .fillMaxWidth()
                         .align(Alignment.TopCenter)
                 )
-            } else if (state.transactions.isEmpty()) {
+            } else if (transactions.isEmpty()) {
                 Text(
-                    text = "You have not added any transactions.", modifier = Modifier.align(
+                    text = stringResource(id = R.string.transactions_screen_empty_placeholder_label), modifier = Modifier.align(
                         Alignment.Center
                     )
                 )
@@ -433,7 +430,7 @@ fun TransactionsScreen(
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 ToastBar(
-                    message = toastBarString,
+                    message = currentEvent?.let { stringResource(id = it.message) } ?: "",
                     onDismiss = {
                         showToastBar = false
                     }
@@ -446,7 +443,23 @@ fun TransactionsScreen(
 @Preview
 @Composable
 fun TransactionsScreenPreview() {
-
+    TransactionsScreen(
+        canAddTransaction = { true },
+        addTransaction = {},
+        editTransaction = {},
+        setFilters = {},
+        setCurrency = {},
+        setStartDateAndEndDate = { _, _ -> },
+        navigateToCategoriesScreen = {},
+        navigateToCounterPartyScreen = {},
+        navigateToMethodsScreen = {},
+        navigateToTemplatesScreen = {},
+        navigateToItemsScreen = {},
+        navigateToSourcesScreen = {},
+        openGithubPage = {},
+        events = emptyList<Event>().asFlow(),
+        state = TransactionsScreenState()
+    )
 }
 
 fun NavGraphBuilder.transactionsScreen(navController: NavController) {
