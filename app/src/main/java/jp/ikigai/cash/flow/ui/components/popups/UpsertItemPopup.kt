@@ -77,7 +77,7 @@ fun UpsertItemPopup(
             },
             label = stringResource(id = R.string.name_field_label),
             placeHolder = stringResource(id = R.string.name_placeholder_label),
-            backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.0.dp),
+            backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             icon = TablerIcons.Typography,
             iconDescription = "name icon",
             isError = !nameValid,
