@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -47,11 +48,20 @@ fun ConfirmDeletePopup(
         Icon(
             imageVector = TablerIcons.InfoCircle,
             contentDescription = "caution icon",
-            tint = MaterialTheme.colorScheme.error
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(40.dp)
         )
-        Text(text = message, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Text(
+            text = message,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -60,7 +70,9 @@ fun ConfirmDeletePopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
-                modifier = Modifier.weight(1f).height(50.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
@@ -71,7 +83,9 @@ fun ConfirmDeletePopup(
                     dismiss()
                     delete()
                 },
-                modifier = Modifier.weight(1f).height(50.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.delete_button_label))
