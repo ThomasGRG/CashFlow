@@ -60,7 +60,7 @@ import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionItem
-import jp.ikigai.cash.flow.data.enums.SheetType
+import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
@@ -231,8 +231,8 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.type)
     }
 
-    var sheetType by remember {
-        mutableStateOf(SheetType.NONE)
+    var popupType by remember {
+        mutableStateOf(PopupType.NONE)
     }
 
     OneHandModeScaffold(
@@ -242,10 +242,10 @@ fun UpsertTransactionTemplateScreen(
             stringResource(id = it.message)
         } ?: "",
         onDismissToastBar = {},
-        showBottomPopup = sheetType != SheetType.NONE,
+        showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
-            when (sheetType) {
-                SheetType.CATEGORY -> {
+            when (popupType) {
+                PopupType.CATEGORY -> {
                     SelectCategoryPopup(
                         index = categories.indexOfFirst { it.uuid == selectedCategory.uuid }
                             .coerceAtLeast(0),
@@ -260,12 +260,12 @@ fun UpsertTransactionTemplateScreen(
                         categories = categories,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.COUNTERPARTY -> {
+                PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
                         index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
                             .coerceAtLeast(0),
@@ -280,12 +280,12 @@ fun UpsertTransactionTemplateScreen(
                         counterParties = counterParties,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.METHOD -> {
+                PopupType.METHOD -> {
                     SelectMethodPopup(
                         index = methods.indexOfFirst { it.uuid == selectedMethod.uuid }
                             .coerceAtLeast(0),
@@ -300,12 +300,12 @@ fun UpsertTransactionTemplateScreen(
                         methods = methods,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.SOURCE -> {
+                PopupType.SOURCE -> {
                     SelectSourcePopup(
                         index = sources.indexOfFirst { it.uuid == selectedSource.uuid }
                             .coerceAtLeast(0),
@@ -320,12 +320,12 @@ fun UpsertTransactionTemplateScreen(
                         sources = sources,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.TYPE -> {
+                PopupType.TYPE -> {
                     SelectTransactionTypePopup(
                         selectedTransactionType = transactionType,
                         setSelectedTransactionType = { selectedTransactionType ->
@@ -333,12 +333,12 @@ fun UpsertTransactionTemplateScreen(
                         },
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.ITEMS -> {
+                PopupType.ITEMS -> {
                     SelectItemPopup(
                         index = items.indexOfFirst { it.uuid == selectedTransactionItem.item?.uuid }
                             .coerceAtLeast(0),
@@ -348,18 +348,18 @@ fun UpsertTransactionTemplateScreen(
                         addItem = addItem,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.CONFIRM_DELETE -> {
+                PopupType.CONFIRM_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_template_confirmation_label),
                         delete = deleteTransactionTemplate,
                         dismiss = {
                             hidePopup()
-                            sheetType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
@@ -368,7 +368,7 @@ fun UpsertTransactionTemplateScreen(
             }
         },
         onDismissPopup = {
-            sheetType = SheetType.NONE
+            popupType = PopupType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -418,7 +418,7 @@ fun UpsertTransactionTemplateScreen(
                 } else null,
                 extraButtonAction = if (transactionTemplateUuid.isNotBlank() && enabled) {
                     {
-                        sheetType = SheetType.CONFIRM_DELETE
+                        popupType = PopupType.CONFIRM_DELETE
                     }
                 } else null
             )
@@ -535,7 +535,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.CATEGORY
+                        popupType = PopupType.CATEGORY
                     }
                 )
             }
@@ -560,7 +560,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.COUNTERPARTY
+                        popupType = PopupType.COUNTERPARTY
                     }
                 )
             }
@@ -585,7 +585,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.METHOD
+                        popupType = PopupType.METHOD
                     }
                 )
             }
@@ -610,7 +610,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.SOURCE
+                        popupType = PopupType.SOURCE
                     }
                 )
             }
@@ -631,7 +631,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.TYPE
+                        popupType = PopupType.TYPE
                     }
                 )
             }
@@ -678,7 +678,7 @@ fun UpsertTransactionTemplateScreen(
                     onClick = {
                         resetOneHandMode()
                         selectedTransactionItem = transactionItem
-                        sheetType = SheetType.ITEMS
+                        popupType = PopupType.ITEMS
                     }
                 )
             }
@@ -709,7 +709,7 @@ fun UpsertTransactionTemplateScreen(
                     expanded = false,
                     onExpandedChange = {
                         if (enabled) {
-                            sheetType = SheetType.ITEMS
+                            popupType = PopupType.ITEMS
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

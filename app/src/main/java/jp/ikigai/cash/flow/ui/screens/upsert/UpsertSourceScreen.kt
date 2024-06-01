@@ -52,7 +52,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.SheetType
+import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -133,7 +133,7 @@ fun UpsertSourceScreen(
     }
 
     var popupType by remember {
-        mutableStateOf(SheetType.NONE)
+        mutableStateOf(PopupType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -182,10 +182,10 @@ fun UpsertSourceScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType != SheetType.NONE,
+        showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when(popupType) {
-                SheetType.CURRENCY -> {
+                PopupType.CURRENCY -> {
                     CurrencyPopup(
                         index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
                         selectedCurrency = selectedCurrency,
@@ -195,20 +195,20 @@ fun UpsertSourceScreen(
                         currencies = currencies,
                         dismiss = {
                             hidePopup()
-                            popupType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
 
-                SheetType.RESET_ICON -> {
+                PopupType.RESET_ICON -> {
                     ResetIconPopup(
                         dismiss = {
                             hidePopup()
-                            popupType = SheetType.NONE
+                            popupType = PopupType.NONE
                         },
                         reset = {
                             icon = Constants.DEFAULT_SOURCE_ICON
-                            popupType = SheetType.NONE
+                            popupType = PopupType.NONE
                         }
                     )
                 }
@@ -217,7 +217,7 @@ fun UpsertSourceScreen(
             }
         },
         onDismissPopup = {
-            popupType = SheetType.NONE
+            popupType = PopupType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -283,7 +283,7 @@ fun UpsertSourceScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = SheetType.RESET_ICON
+                            popupType = PopupType.RESET_ICON
                         }
                     ),
                 tint = if (enabled) {
@@ -347,7 +347,7 @@ fun UpsertSourceScreen(
                 },
                 onClick = {
                     resetOneHandMode()
-                    popupType = SheetType.CURRENCY
+                    popupType = PopupType.CURRENCY
                 }
             )
         }

@@ -46,7 +46,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.SheetType
+import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
@@ -107,7 +107,7 @@ fun UpsertCategoryScreen(
     }
 
     var popupType by remember {
-        mutableStateOf(SheetType.NONE)
+        mutableStateOf(PopupType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -156,21 +156,21 @@ fun UpsertCategoryScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType == SheetType.RESET_ICON,
+        showBottomPopup = popupType == PopupType.RESET_ICON,
         bottomPopupContent = { hidePopup ->
             ResetIconPopup(
                 dismiss = {
                     hidePopup()
-                    popupType = SheetType.NONE
+                    popupType = PopupType.NONE
                 },
                 reset = {
                     icon = Constants.DEFAULT_CATEGORY_ICON
-                    popupType = SheetType.NONE
+                    popupType = PopupType.NONE
                 }
             )
         },
         onDismissPopup = {
-            popupType = SheetType.NONE
+            popupType = PopupType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -231,7 +231,7 @@ fun UpsertCategoryScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = SheetType.RESET_ICON
+                            popupType = PopupType.RESET_ICON
                         }
                     ),
                 tint = if (enabled) {

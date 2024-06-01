@@ -49,7 +49,7 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.Filters
-import jp.ikigai.cash.flow.data.enums.SheetType
+import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.BottomPopup
@@ -111,8 +111,8 @@ fun TransactionsScreen(
         }
     }
 
-    var sheetType by remember {
-        mutableStateOf(SheetType.NONE)
+    var popupType by remember {
+        mutableStateOf(PopupType.NONE)
     }
 
     val numberFormatter by remember {
@@ -210,25 +210,25 @@ fun TransactionsScreen(
                 TransactionScreenRoundedBottomBar(
                     selectedCurrencySymbol = selectedCurrencySymbol,
                     onCurrencyClick = {
-                        sheetType = SheetType.CURRENCY
+                        popupType = PopupType.CURRENCY
                     },
                     onCalendarClick = {
-                        sheetType = SheetType.DATE_RANGE
+                        popupType = PopupType.DATE_RANGE
                     },
                     addTransaction = {
                         if (canAddTransaction()) {
                             if (templates.isEmpty()) {
                                 addTransaction("")
                             } else {
-                                sheetType = SheetType.TEMPLATES
+                                popupType = PopupType.TEMPLATES
                             }
                         }
                     },
                     onFilterClick = {
-                        sheetType = SheetType.FILTER
+                        popupType = PopupType.FILTER
                     },
                     onMoreClick = {
-                        sheetType = SheetType.MORE_OPTIONS
+                        popupType = PopupType.MORE_OPTIONS
                     },
                 )
             }
@@ -329,18 +329,18 @@ fun TransactionsScreen(
             }
         }
         AnimatedVisibility(
-            visible = sheetType != SheetType.NONE,
+            visible = popupType != PopupType.NONE,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.imePadding()
         ) {
             BottomPopup(
                 dismiss = {
-                    sheetType = SheetType.NONE
+                    popupType = PopupType.NONE
                 }
             ) { hidePopup ->
-                when (sheetType) {
-                    SheetType.CURRENCY -> {
+                when (popupType) {
+                    PopupType.CURRENCY -> {
                         CurrencyPopup(
                             index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
                             selectedCurrency = selectedCurrency,
@@ -350,24 +350,24 @@ fun TransactionsScreen(
                             currencies = currencies,
                             dismiss = {
                                 hidePopup()
-                                sheetType = SheetType.NONE
+                                popupType = PopupType.NONE
                             }
                         )
                     }
 
-                    SheetType.DATE_RANGE -> {
+                    PopupType.DATE_RANGE -> {
                         DateRangePickerPopup(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
                             dismiss = {
                                 hidePopup()
-                                sheetType = SheetType.NONE
+                                popupType = PopupType.NONE
                             }
                         )
                     }
 
-                    SheetType.MORE_OPTIONS -> {
+                    PopupType.MORE_OPTIONS -> {
                         MoreOptionsPopup(
                             navigateToCategoriesScreen = navigateToCategoriesScreen,
                             navigateToCounterPartyScreen = navigateToCounterPartyScreen,
@@ -378,29 +378,29 @@ fun TransactionsScreen(
                             openGithubReleasesPage = openGithubPage,
                             dismiss = {
                                 hidePopup()
-                                sheetType = SheetType.NONE
+                                popupType = PopupType.NONE
                             }
                         )
                     }
 
-                    SheetType.FILTER -> {
+                    PopupType.FILTER -> {
                         FilterPopup(
                             filters = filters,
                             setFilters = setFilters,
                             dismiss = {
                                 hidePopup()
-                                sheetType = SheetType.NONE
+                                popupType = PopupType.NONE
                             }
                         )
                     }
 
-                    SheetType.TEMPLATES -> {
+                    PopupType.TEMPLATES -> {
                         SelectTemplatePopup(
                             templates = templates,
                             addNewTransaction = addTransaction,
                             dismiss = {
                                 hidePopup()
-                                sheetType = SheetType.NONE
+                                popupType = PopupType.NONE
                             }
                         )
                     }
