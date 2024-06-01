@@ -5,8 +5,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -31,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,9 +49,10 @@ import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleRow
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SelectItemPopup(
     index: Int,
@@ -66,6 +67,8 @@ fun SelectItemPopup(
     val scope = rememberCoroutineScope()
 
     val listState = rememberLazyListState()
+
+    val lazyRowState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
         listState.scrollToItem(index)
@@ -98,6 +101,23 @@ fun SelectItemPopup(
 
     var displayQuantity by remember {
         mutableStateOf(selectedTransactionItem.quantity.toString())
+    }
+
+    val itemUnits by remember {
+        mutableStateOf(
+            ItemUnit.values()
+                .filter { itemUnit -> itemUnit.id != 8 }
+        )
+    }
+
+    LaunchedEffect(key1 = pagerState) {
+        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
+            if (page == 1) {
+                lazyRowState.animateScrollToItem(
+                    itemUnits.indexOfFirst { it.id == selectedItemUnit.id }.coerceAtLeast(0)
+                )
+            }
+        }
     }
 
     Column(
@@ -177,31 +197,34 @@ fun SelectItemPopup(
                         verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        FlowRow(
+                        LazyRow(
+                            state = lazyRowState,
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
-                            verticalArrangement = Arrangement.Center
+                            verticalAlignment = Alignment.CenterVertically,
+                            userScrollEnabled = true,
                         ) {
-                            ItemUnit.values()
-                                .filter { itemUnit -> itemUnit.id < 8 }
-                                .forEach { itemUnit ->
-                                    Row(
-                                        modifier = Modifier.padding(start = 3.dp, end = 3.dp)
-                                    ) {
-                                        ToggleButton(
-                                            label = stringResource(id = itemUnit.code),
-                                            selected = selectedItemUnit.id == itemUnit.id,
-                                            toggle = {
-                                                selectedItemUnit =
-                                                    if (selectedItemUnit != itemUnit) {
-                                                        itemUnit
-                                                    } else {
-                                                        ItemUnit.PIECE
-                                                    }
-                                            }
-                                        )
-                                    }
+                            items(
+                                items = itemUnits,
+                                key = { itemUnit -> "${itemUnit.id}" }
+                            ) { itemUnit ->
+                                Row(
+                                    modifier = Modifier.padding(start = 3.dp, end = 3.dp)
+                                ) {
+                                    ToggleButton(
+                                        label = stringResource(id = itemUnit.code),
+                                        selected = selectedItemUnit.id == itemUnit.id,
+                                        toggle = {
+                                            selectedItemUnit =
+                                                if (selectedItemUnit != itemUnit) {
+                                                    itemUnit
+                                                } else {
+                                                    ItemUnit.PIECE
+                                                }
+                                        }
+                                    )
                                 }
+                            }
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         RoundedCornerOutlinedTextField(
