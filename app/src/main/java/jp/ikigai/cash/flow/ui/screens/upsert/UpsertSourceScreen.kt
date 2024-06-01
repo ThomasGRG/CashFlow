@@ -52,6 +52,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -131,9 +132,9 @@ fun UpsertSourceScreen(
         mutableStateOf(state.source.currency)
     }
 
-    var showCurrencyPopup by remember { mutableStateOf(false) }
-
-    var showResetPopup by remember { mutableStateOf(false) }
+    var popupType by remember {
+        mutableStateOf(SheetType.NONE)
+    }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -181,37 +182,42 @@ fun UpsertSourceScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = showCurrencyPopup || showResetPopup,
+        showBottomPopup = popupType != SheetType.NONE,
         bottomPopupContent = { hidePopup ->
-            if (showCurrencyPopup) {
-                CurrencyPopup(
-                    index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
-                    selectedCurrency = selectedCurrency,
-                    setSelectedCurrency = { currency ->
-                        selectedCurrency = currency
-                    },
-                    currencies = currencies,
-                    dismiss = {
-                        hidePopup()
-                        showCurrencyPopup = false
-                    }
-                )
-            } else {
-                ResetIconPopup(
-                    dismiss = {
-                        hidePopup()
-                        showResetPopup = false
-                    },
-                    reset = {
-                        icon = Constants.DEFAULT_SOURCE_ICON
-                        showResetPopup = false
-                    }
-                )
+            when(popupType) {
+                SheetType.CURRENCY -> {
+                    CurrencyPopup(
+                        index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
+                        selectedCurrency = selectedCurrency,
+                        setSelectedCurrency = { currency ->
+                            selectedCurrency = currency
+                        },
+                        currencies = currencies,
+                        dismiss = {
+                            hidePopup()
+                            popupType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.RESET_ICON -> {
+                    ResetIconPopup(
+                        dismiss = {
+                            hidePopup()
+                            popupType = SheetType.NONE
+                        },
+                        reset = {
+                            icon = Constants.DEFAULT_SOURCE_ICON
+                            popupType = SheetType.NONE
+                        }
+                    )
+                }
+
+                else -> {}
             }
         },
         onDismissPopup = {
-            showCurrencyPopup = false
-            showResetPopup = false
+            popupType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -277,7 +283,7 @@ fun UpsertSourceScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showResetPopup = true
+                            popupType = SheetType.RESET_ICON
                         }
                     ),
                 tint = if (enabled) {
@@ -341,7 +347,7 @@ fun UpsertSourceScreen(
                 },
                 onClick = {
                     resetOneHandMode()
-                    showCurrencyPopup = true
+                    popupType = SheetType.CURRENCY
                 }
             )
         }
