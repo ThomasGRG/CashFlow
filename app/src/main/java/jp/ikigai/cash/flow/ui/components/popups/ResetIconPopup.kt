@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
@@ -46,12 +47,14 @@ fun ResetIconPopup(
         Icon(
             imageVector = Icons.Outlined.Info,
             contentDescription = "reset",
-            tint = MaterialTheme.colorScheme.onBackground
+            tint = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.size(40.dp)
         )
         Text(
             text = stringResource(id = R.string.reset_icon_dialog_label),
             color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
