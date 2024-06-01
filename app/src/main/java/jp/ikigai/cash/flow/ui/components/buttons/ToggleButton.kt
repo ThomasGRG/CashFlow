@@ -1,23 +1,12 @@
 package jp.ikigai.cash.flow.ui.components.buttons
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun ToggleButton(
@@ -25,23 +14,14 @@ fun ToggleButton(
     selected: Boolean,
     toggle: () -> Unit
 ) {
-    val color by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-        label = "toggle_button_color"
-    )
+    val colors =
+        if (selected) ButtonDefaults.filledTonalButtonColors() else ButtonDefaults.outlinedButtonColors()
+    val border = if (!selected) ButtonDefaults.outlinedButtonBorder else null
 
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .selectable(
-                enabled = true,
-                selected = selected,
-                onClick = toggle
-            )
-            .background(color = color)
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+    FilledTonalButton(
+        onClick = toggle,
+        colors = colors,
+        border = border
     ) {
         Text(
             text = label,
