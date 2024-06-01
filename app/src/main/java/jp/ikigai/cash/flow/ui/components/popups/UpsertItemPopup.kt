@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,8 +43,9 @@ fun UpsertItemPopup(
     enabled: Boolean,
     save: (String) -> Unit,
     dismiss: () -> Unit,
-    keyboardController: SoftwareKeyboardController?
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     val focusRequester = remember {
         FocusRequester()
     }
@@ -142,6 +142,5 @@ fun UpsertItemPopupPreview() {
         enabled = true,
         save = {},
         dismiss = {},
-        keyboardController = LocalSoftwareKeyboardController.current
     )
 }
