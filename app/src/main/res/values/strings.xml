@@ -31,6 +31,7 @@
     <string name="types_label">Transaction types</string>
     <string name="amount_label">Amount</string>
     <string name="templates_label">Templates</string>
+    <string name="transactions_label">Transactions</string>
     <string name="updates_label">Updates</string>
     <string name="no_counter_party_label">No counter party</string>
     <string name="no_item_label">No items</string>
@@ -76,6 +77,7 @@
 
     <!--  Empty Placeholder Strings  -->
     <string name="choose_icon_screen_empty_placeholder_label">No results found for \"%1$s\"</string>
+    <string name="transactions_screen_empty_placeholder_label">You have not added any transactions.</string>
     <string name="categories_screen_empty_placeholder_label">You have not added any categories.</string>
     <string name="counter_parties_screen_empty_placeholder_label">You have not added any counter parties.</string>
     <string name="methods_screen_empty_placeholder_label">You have not added any methods.</string>
