@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,6 +64,7 @@ fun SelectItemPopup(
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val scope = rememberCoroutineScope()
 
@@ -241,7 +243,9 @@ fun SelectItemPopup(
                             ),
                             icon = TablerIcons.BoxMultiple9,
                             iconDescription = "quantity icon",
-                            onDone = {}
+                            onDone = {
+                                keyboardController?.hide()
+                            }
                         )
                         if (!templateMode) {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -259,7 +263,9 @@ fun SelectItemPopup(
                                 ),
                                 icon = TablerIcons.CurrencyDollar,
                                 iconDescription = "price icon",
-                                onDone = {}
+                                onDone = {
+                                    keyboardController?.hide()
+                                }
                             )
                         }
                         Row(
