@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -53,6 +56,10 @@ fun SearchTextFieldPopup(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
     var textFieldValue by remember {
         mutableStateOf(
             TextFieldValue(value, selection = TextRange(value.length))
@@ -73,13 +80,22 @@ fun SearchTextFieldPopup(
                 textFieldValue = it
             },
             enabled = enabled,
+            backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             label = label,
             placeHolder = placeholder,
             icon = icon,
             iconDescription = iconDescription,
             onDone = {
                 keyboardController?.hide()
-            }
+            },
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .clickable(
+                    enabled = enabled,
+                    onClick = {
+                        focusRequester.requestFocus()
+                    }
+                )
         )
         LazyRow(
             modifier = Modifier
