@@ -49,7 +49,8 @@ fun IconDetailsPopup(
             )
             Text(
                 text = icon.name,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium,
             )
         }
         OutlinedButton(
