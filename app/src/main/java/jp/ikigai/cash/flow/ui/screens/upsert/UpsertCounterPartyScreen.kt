@@ -46,6 +46,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
@@ -105,7 +106,9 @@ fun UpsertCounterPartyScreen(
         mutableStateOf(state.counterParty.uuid)
     }
 
-    var showResetPopup by remember { mutableStateOf(false) }
+    var popupType by remember {
+        mutableStateOf(SheetType.NONE)
+    }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -153,21 +156,21 @@ fun UpsertCounterPartyScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = showResetPopup,
+        showBottomPopup = popupType == SheetType.RESET_ICON,
         bottomPopupContent = { hidePopup ->
             ResetIconPopup(
                 dismiss = {
                     hidePopup()
-                    showResetPopup = false
+                    popupType = SheetType.NONE
                 },
                 reset = {
                     icon = Constants.DEFAULT_COUNTERPARTY_ICON
-                    showResetPopup = false
+                    popupType = SheetType.NONE
                 }
             )
         },
         onDismissPopup = {
-            showResetPopup = false
+            popupType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -228,7 +231,7 @@ fun UpsertCounterPartyScreen(
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showResetPopup = true
+                            popupType = SheetType.RESET_ICON
                         }
                     ),
                 tint = if (enabled) {
