@@ -16,5 +16,6 @@ enum class SheetType {
     TEMPLATES,
     ITEMS,
     AUTO_COMPLETE,
-    CONFIRM_DELETE
+    CONFIRM_DELETE,
+    RESET_ICON
 }
