@@ -1,15 +1,11 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -23,7 +19,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,7 +26,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,27 +65,27 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
-import jp.ikigai.cash.flow.ui.components.buttons.IconToggleButton
-import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.sheets.AutoCompleteTextFieldBottomSheet
-import jp.ikigai.cash.flow.ui.components.sheets.CommonSelectionSheet
-import jp.ikigai.cash.flow.ui.components.sheets.ConfirmDeleteSheet
-import jp.ikigai.cash.flow.ui.components.sheets.DatePickerBottomSheet
-import jp.ikigai.cash.flow.ui.components.sheets.SelectItemSheet
-import jp.ikigai.cash.flow.ui.components.sheets.TimePickerBottomSheet
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
+import jp.ikigai.cash.flow.ui.components.popups.DatePickerPopup
+import jp.ikigai.cash.flow.ui.components.popups.SearchTextFieldPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectItemPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
+import jp.ikigai.cash.flow.ui.components.popups.TimePickerPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.YearMonth
@@ -120,12 +114,6 @@ fun UpsertTransactionScreen(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val scope = rememberCoroutineScope()
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
     val selectableDates by remember {
         mutableStateOf(
             object : SelectableDates {
@@ -140,28 +128,6 @@ fun UpsertTransactionScreen(
                 }
             }
         )
-    }
-
-    var showConfirmDeleteSheet by remember {
-        mutableStateOf(false)
-    }
-
-    if (showConfirmDeleteSheet) {
-        ConfirmDeleteSheet(
-            message = stringResource(id = R.string.delete_transaction_confirmation_label),
-            dismiss = {
-                scope.launch {
-                    sheetState.hide()
-                    showConfirmDeleteSheet = false
-                }
-            },
-            delete = deleteTransaction,
-            sheetState = sheetState
-        )
-    }
-
-    val numberFormatter by remember {
-        mutableStateOf(getNumberFormatter())
     }
 
     val loading by remember(key1 = state.loading) {
@@ -294,280 +260,6 @@ fun UpsertTransactionScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    when (sheetType) {
-        SheetType.DATE -> {
-            DatePickerBottomSheet(
-                date = dateTime,
-                selectableDates = selectableDates,
-                setDate = setDate,
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.TIME -> {
-            TimePickerBottomSheet(
-                time = dateTime,
-                updateTime = setTime,
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.CATEGORY -> {
-            CommonSelectionSheet(
-                index = categories.indexOfFirst { it.uuid == selectedCategory.uuid },
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = (categories.size / 2).coerceIn(minimumValue = 1, maximumValue = 4),
-                sheetState = sheetState
-            ) {
-                items(
-                    items = categories,
-                    key = { category -> category.uuid }
-                ) { category ->
-                    IconToggleButton(
-                        label = category.name,
-                        icon = category.icon,
-                        selected = category.uuid == selectedCategory.uuid,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setSelectedCategory(category)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        SheetType.COUNTERPARTY -> {
-            CommonSelectionSheet(
-                index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
-                    .coerceAtLeast(0),
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = (counterParties.size / 2).coerceIn(minimumValue = 1, maximumValue = 4),
-                sheetState = sheetState
-            ) {
-                items(
-                    items = counterParties,
-                    key = { counterParty -> counterParty.uuid }
-                ) { counterParty ->
-                    IconToggleButton(
-                        label = counterParty.name,
-                        icon = counterParty.icon,
-                        selected = counterParty.uuid == selectedCounterParty.uuid,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                if (counterParty.uuid == selectedCounterParty.uuid) {
-                                    setSelectedCounterParty(CounterParty())
-                                } else {
-                                    setSelectedCounterParty(counterParty)
-                                }
-                            }
-                        }
-                    )
-
-                }
-            }
-        }
-
-        SheetType.METHOD -> {
-            CommonSelectionSheet(
-                index = methods.indexOfFirst { it.uuid == selectedMethod.uuid },
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = (methods.size / 2).coerceIn(minimumValue = 1, maximumValue = 4),
-                sheetState = sheetState
-            ) {
-                items(
-                    items = methods,
-                    key = { method -> method.uuid }
-                ) { method ->
-                    IconToggleButton(
-                        label = method.name,
-                        icon = method.icon,
-                        selected = method.uuid == selectedMethod.uuid,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setSelectedMethod(method)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        SheetType.SOURCE -> {
-            CommonSelectionSheet(
-                index = sources.indexOfFirst { it.uuid == selectedSource.uuid },
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = (sources.size / 2).coerceIn(minimumValue = 1, maximumValue = 4),
-                sheetState = sheetState
-            ) {
-                items(
-                    items = sources,
-                    key = { source -> source.uuid }
-                ) { source ->
-                    IconToggleButton(
-                        label = "${source.name} (${numberFormatter.format(source.balance)} ${source.currency})",
-                        icon = source.icon,
-                        selected = source.uuid == selectedSource.uuid,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setSelectedSource(source)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        SheetType.TYPE -> {
-            CommonSelectionSheet(
-                index = if (transactionType == TransactionType.DEBIT) 0 else 1,
-                dismiss = {
-                    scope.launch {
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                rowCount = 1,
-                sheetState = sheetState
-            ) {
-                item(
-                    key = "debit",
-                    contentType = "row"
-                ) {
-                    IconToggleButton(
-                        label = stringResource(id = TransactionType.DEBIT.label),
-                        icon = TablerIcons.ArrowUpCircle,
-                        selected = transactionType == TransactionType.DEBIT,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setTransactionType(TransactionType.DEBIT)
-                            }
-                        }
-                    )
-                }
-                item(
-                    key = "credit",
-                    contentType = "row"
-                ) {
-                    IconToggleButton(
-                        label = stringResource(id = TransactionType.CREDIT.label),
-                        icon = TablerIcons.ArrowDownCircle,
-                        selected = transactionType == TransactionType.CREDIT,
-                        toggle = {
-                            scope.launch {
-                                sheetState.hide()
-                                sheetType = SheetType.NONE
-                                setTransactionType(TransactionType.CREDIT)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        SheetType.ITEMS -> {
-            SelectItemSheet(
-                selectedTransactionItem = selectedTransactionItem,
-                items = items,
-                addItem = addItem,
-                dismiss = {
-                    scope.launch {
-                        keyboardController?.hide()
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                maxHeight = 300.0,
-                sheetState = sheetState
-            )
-        }
-
-        SheetType.AUTO_COMPLETE -> {
-            AutoCompleteTextFieldBottomSheet(
-                value = title,
-                setValue = {
-                    scope.launch {
-                        keyboardController?.hide()
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                        title = it
-                    }
-                },
-                enabled = enabled,
-                icon = TablerIcons.Typography,
-                iconDescription = "title icon",
-                label = stringResource(id = R.string.title_field_label),
-                placeholder = stringResource(id = R.string.title_placeholder_label),
-                dismiss = {
-                    scope.launch {
-                        keyboardController?.hide()
-                        sheetState.hide()
-                        sheetType = SheetType.NONE
-                    }
-                },
-                sheetState = sheetState
-            ) { setTitleFromAutoComplete ->
-                items(
-                    items = transactionTitles,
-                    key = { transactionTitle -> transactionTitle.uuid }
-                ) { transactionTitle ->
-                    ToggleButton(
-                        label = transactionTitle.title,
-                        selected = false,
-                        toggle = {
-                            setTitleFromAutoComplete(transactionTitle.title)
-                        }
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-            }
-        }
-
-        else -> {}
-    }
-
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
@@ -579,6 +271,146 @@ fun UpsertTransactionScreen(
             if (currentEvent == Event.SaveSuccess) {
                 navigateBack()
             }
+        },
+        showBottomPopup = sheetType != SheetType.NONE,
+        bottomPopupContent = { hidePopup ->
+            when (sheetType) {
+                SheetType.DATE -> {
+                    DatePickerPopup(
+                        date = dateTime,
+                        setDate = setDate,
+                        selectableDates = selectableDates,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.TIME -> {
+                    TimePickerPopup(
+                        time = dateTime,
+                        updateTime = setTime,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.CATEGORY -> {
+                    SelectCategoryPopup(
+                        index = categories.indexOfFirst { it.uuid == selectedCategory.uuid },
+                        selectedCategoryUUID = selectedCategory.uuid,
+                        setSelectedCategory = setSelectedCategory,
+                        categories = categories,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.COUNTERPARTY -> {
+                    SelectCounterPartyPopup(
+                        index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
+                            .coerceAtLeast(0),
+                        selectedCounterPartyUUID = selectedCounterParty.uuid,
+                        setSelectedCounterParty = setSelectedCounterParty,
+                        counterParties = counterParties,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.METHOD -> {
+                    SelectMethodPopup(
+                        index = methods.indexOfFirst { it.uuid == selectedMethod.uuid },
+                        selectedMethodUUID = selectedMethod.uuid,
+                        setSelectedMethod = setSelectedMethod,
+                        methods = methods,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.SOURCE -> {
+                    SelectSourcePopup(
+                        index = sources.indexOfFirst { it.uuid == selectedSource.uuid },
+                        selectedSourceUUID = selectedSource.uuid,
+                        setSelectedSource = setSelectedSource,
+                        sources = sources,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.TYPE -> {
+                    SelectTransactionTypePopup(
+                        selectedTransactionType = transactionType,
+                        setSelectedTransactionType = setTransactionType,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.ITEMS -> {
+                    SelectItemPopup(
+                        index = items.indexOfFirst { it.uuid == selectedTransactionItem.item?.uuid }
+                            .coerceAtLeast(0),
+                        selectedTransactionItem = selectedTransactionItem,
+                        items = items,
+                        addItem = addItem,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.SEARCH_TEXT_FIELD -> {
+                    SearchTextFieldPopup(
+                        value = title,
+                        setValue = { value ->
+                            title = value
+                        },
+                        enabled = enabled,
+                        icon = TablerIcons.Typography,
+                        iconDescription = "title icon",
+                        label = stringResource(id = R.string.title_field_label),
+                        placeholder = stringResource(id = R.string.title_placeholder_label),
+                        titles = transactionTitles,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                SheetType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.delete_transaction_confirmation_label),
+                        delete = deleteTransaction,
+                        dismiss = {
+                            hidePopup()
+                            sheetType = SheetType.NONE
+                        }
+                    )
+                }
+
+                else -> {}
+            }
+        },
+        onDismissPopup = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -619,7 +451,7 @@ fun UpsertTransactionScreen(
                     }
                 } else null,
                 extraButtonAction = if (transactionUuid.isNotBlank() && enabled) {
-                    { showConfirmDeleteSheet = true }
+                    { sheetType = SheetType.CONFIRM_DELETE }
                 } else null
             )
         }
@@ -658,7 +490,7 @@ fun UpsertTransactionScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        sheetType = SheetType.AUTO_COMPLETE
+                        sheetType = SheetType.SEARCH_TEXT_FIELD
                     }
                 )
             }
