@@ -15,7 +15,7 @@ enum class SheetType {
     FILTER,
     TEMPLATES,
     ITEMS,
-    AUTO_COMPLETE,
+    SEARCH_TEXT_FIELD,
     CONFIRM_DELETE,
     RESET_ICON
 }
