@@ -109,6 +109,7 @@ fun UpsertTransactionScreen(
     setTransactionType: (TransactionType) -> Unit,
     upsertTransaction: (String, String) -> Unit,
     deleteTransaction: () -> Unit,
+    filterTransactionTitles: (String) -> List<String>,
     events: Flow<Event>,
     state: UpsertTransactionScreenState
 ) {
@@ -208,10 +209,6 @@ fun UpsertTransactionScreen(
 
     var selectedTransactionItem by remember {
         mutableStateOf(TransactionItem())
-    }
-
-    val transactionTitles by remember(key1 = state.transactionTitles) {
-        mutableStateOf(state.transactionTitles)
     }
 
     val transactionType by remember(key1 = state.type) {
@@ -387,7 +384,7 @@ fun UpsertTransactionScreen(
                         iconDescription = "title icon",
                         label = stringResource(id = R.string.title_field_label),
                         placeholder = stringResource(id = R.string.title_placeholder_label),
-                        titles = transactionTitles,
+                        getSearchResults = filterTransactionTitles,
                         dismiss = {
                             hidePopup()
                             popupType = PopupType.NONE
@@ -799,6 +796,7 @@ fun UpsertTransactionScreenPreview() {
         setTransactionType = {},
         upsertTransaction = { _, _ -> },
         deleteTransaction = {},
+        filterTransactionTitles = { emptyList() },
         events = emptyList<Event>().asFlow(),
         state = UpsertTransactionScreenState()
     )
@@ -838,6 +836,7 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             setTransactionType = viewModel::setTransactionType,
             upsertTransaction = viewModel::upsertTransaction,
             deleteTransaction = viewModel::deleteTransaction,
+            filterTransactionTitles = viewModel::filterTransactionTitles,
             events = viewModel.event,
             state = state
         )

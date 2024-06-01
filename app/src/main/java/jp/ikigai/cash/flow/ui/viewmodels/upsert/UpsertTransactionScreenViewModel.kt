@@ -226,13 +226,16 @@ class UpsertTransactionScreenViewModel(
             it.copy(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
-                selectedCategory = transactionTemplate.category ?: upsertTransactionFlows.categories.first(),
+                selectedCategory = transactionTemplate.category
+                    ?: upsertTransactionFlows.categories.first(),
                 counterParties = upsertTransactionFlows.counterParties,
                 selectedCounterParty = transactionTemplate.counterParty ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
-                selectedMethod = transactionTemplate.method ?: upsertTransactionFlows.methods.first(),
+                selectedMethod = transactionTemplate.method
+                    ?: upsertTransactionFlows.methods.first(),
                 sources = upsertTransactionFlows.sources,
-                selectedSource = transactionTemplate.source ?: upsertTransactionFlows.sources.first(),
+                selectedSource = transactionTemplate.source
+                    ?: upsertTransactionFlows.sources.first(),
                 items = upsertTransactionFlows.items,
                 transaction = Transaction(
                     transactionTemplate.title,
@@ -756,6 +759,14 @@ class UpsertTransactionScreenViewModel(
         }
         if (transactionType == TransactionType.DEBIT) {
             hasSufficientBalance()
+        }
+    }
+
+    fun filterTransactionTitles(searchString: String): List<String> {
+        return if (searchString.isBlank()) {
+            state.value.transactionTitles.map { it.title }
+        } else {
+            state.value.transactionTitles.map { it.title }.filter { it.startsWith(searchString, ignoreCase = true) }
         }
     }
 }

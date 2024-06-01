@@ -1,5 +1,7 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,10 +41,11 @@ import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.ui.components.buttons.ToggleButton
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchTextFieldPopup(
     value: String,
@@ -51,7 +55,7 @@ fun SearchTextFieldPopup(
     iconDescription: String,
     label: String,
     placeholder: String,
-    titles: List<TransactionTitle>,
+    getSearchResults: (String) -> List<String>,
     dismiss: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -64,6 +68,17 @@ fun SearchTextFieldPopup(
         mutableStateOf(
             TextFieldValue(value, selection = TextRange(value.length))
         )
+    }
+
+    var searchResults by remember {
+        mutableStateOf(
+            getSearchResults("")
+        )
+    }
+
+    LaunchedEffect(key1 = textFieldValue) {
+        delay(500)
+        searchResults = getSearchResults(textFieldValue.text)
     }
 
     Column(
@@ -99,25 +114,28 @@ fun SearchTextFieldPopup(
         )
         LazyRow(
             modifier = Modifier
+                .animateContentSize()
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             userScrollEnabled = true
         ) {
             items(
-                items = titles,
-                key = { title -> title.uuid }
-            ) { transactionTitle ->
+                items = searchResults,
+                key = { result -> result }
+            ) { result ->
                 Row(
-                    modifier = Modifier.padding(start = 3.dp, end = 3.dp)
+                    modifier = Modifier
+                        .animateItemPlacement()
+                        .padding(start = 3.dp, end = 3.dp)
                 ) {
                     ToggleButton(
-                        label = transactionTitle.title,
+                        label = result,
                         selected = false,
                         toggle = {
                             textFieldValue = TextFieldValue(
-                                text = transactionTitle.title,
-                                selection = TextRange(transactionTitle.title.length)
+                                text = result,
+                                selection = TextRange(result.length)
                             )
                         }
                     )
@@ -169,32 +187,13 @@ fun SearchTextFieldPopupPreview() {
         iconDescription = "title icon",
         label = stringResource(id = R.string.title_field_label),
         placeholder = stringResource(id = R.string.title_placeholder_label),
-        titles = listOf(
-            TransactionTitle().apply {
-                uuid = "asd"
-                title = "Grand Hotel"
-            },
-            TransactionTitle().apply {
-                uuid = "iuewf"
-                title = "Grand Hotel"
-            },
-            TransactionTitle().apply {
-                uuid = "asdaed"
-                title = "Grand Hotel"
-            },
-            TransactionTitle().apply {
-                uuid = "asdwqfg"
-                title = "Grand Hotel"
-            },
-            TransactionTitle().apply {
-                uuid = "asdqwe"
-                title = "Grand Hotel"
-            },
-            TransactionTitle().apply {
-                uuid = "asdrfdwa"
-                title = "Grand Hotel"
-            },
-        ),
+        getSearchResults =  {
+            listOf(
+                "Grand Hotel",
+                "EMC",
+                "Hell's Kitchen",
+            )
+        },
         dismiss = {}
     )
 }
