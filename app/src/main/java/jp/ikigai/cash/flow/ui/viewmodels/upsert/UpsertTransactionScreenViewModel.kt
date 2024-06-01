@@ -226,13 +226,13 @@ class UpsertTransactionScreenViewModel(
             it.copy(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
-                selectedCategory = transactionTemplate.category ?: it.selectedCategory,
+                selectedCategory = transactionTemplate.category ?: upsertTransactionFlows.categories.first(),
                 counterParties = upsertTransactionFlows.counterParties,
                 selectedCounterParty = transactionTemplate.counterParty ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
-                selectedMethod = transactionTemplate.method ?: it.selectedMethod,
+                selectedMethod = transactionTemplate.method ?: upsertTransactionFlows.methods.first(),
                 sources = upsertTransactionFlows.sources,
-                selectedSource = transactionTemplate.source ?: it.selectedSource,
+                selectedSource = transactionTemplate.source ?: upsertTransactionFlows.sources.first(),
                 items = upsertTransactionFlows.items,
                 transaction = Transaction(
                     transactionTemplate.title,
