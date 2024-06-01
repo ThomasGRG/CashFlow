@@ -30,6 +30,7 @@ import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Item
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.ItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -81,8 +82,8 @@ fun ItemsScreen(
         mutableStateOf(state.enabled)
     }
 
-    var showAddItemPopup by remember {
-        mutableStateOf(false)
+    var popupType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     OneHandModeScaffold(
@@ -90,7 +91,7 @@ fun ItemsScreen(
         showToastBar = false,
         toastBarText = "",
         onDismissToastBar = {},
-        showBottomPopup = showAddItemPopup,
+        showBottomPopup = popupType == SheetType.ITEMS,
         bottomPopupContent = { hidePopup ->
             UpsertItemPopup(
                 name = selectedItem.name,
@@ -101,12 +102,12 @@ fun ItemsScreen(
                 },
                 dismiss = {
                     hidePopup()
-                    showAddItemPopup = false
+                    popupType = SheetType.NONE
                 }
             )
         },
         onDismissPopup = {
-            showAddItemPopup = false
+            popupType = SheetType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
         emptyPlaceholderText = stringResource(id = R.string.items_screen_empty_placeholder_label),
@@ -131,7 +132,7 @@ fun ItemsScreen(
                 navigateBack = navigateBack,
                 floatingButtonAction = {
                     editItem(Item())
-                    showAddItemPopup = true
+                    popupType = SheetType.ITEMS
                 },
                 floatingButtonIcon = {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
@@ -170,7 +171,7 @@ fun ItemsScreen(
                     onClick = {
                         resetOneHandMode()
                         editItem(itemDetails)
-                        showAddItemPopup = true
+                        popupType = SheetType.ITEMS
                     },
                 )
             }
