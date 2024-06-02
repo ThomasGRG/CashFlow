@@ -56,6 +56,7 @@ import jp.ikigai.cash.flow.ui.components.common.BottomPopup
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
+import jp.ikigai.cash.flow.ui.components.popups.CloneTransactionPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterPopup
@@ -80,6 +81,7 @@ fun TransactionsScreen(
     setFilters: (Filters) -> Unit,
     setCurrency: (String) -> Unit,
     setStartDateAndEndDate: (LocalDate, LocalDate) -> Unit,
+    cloneTransaction: (String, Boolean) -> Unit,
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
@@ -181,6 +183,10 @@ fun TransactionsScreen(
 
     val filters by remember(key1 = state.filters) {
         mutableStateOf(state.filters)
+    }
+
+    var selectedTransactionUUID by remember {
+        mutableStateOf("")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -293,7 +299,10 @@ fun TransactionsScreen(
                                 onClick = {
                                     editTransaction(transactionWithIcons.uuid)
                                 },
-                                onLongClick = {},
+                                onLongClick = {
+                                    selectedTransactionUUID = transactionWithIcons.uuid
+                                    popupType = PopupType.CLONE_TRANSACTION
+                                },
                                 modifier = Modifier.animateItemPlacement()
                             )
                         }
@@ -405,6 +414,18 @@ fun TransactionsScreen(
                         )
                     }
 
+                    PopupType.CLONE_TRANSACTION -> {
+                        CloneTransactionPopup(
+                            cloneTransaction = { setCurrentDateTime ->
+                                cloneTransaction(selectedTransactionUUID, setCurrentDateTime)
+                            },
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
                     else -> {}
                 }
             }
@@ -422,6 +443,7 @@ fun TransactionsScreenPreview() {
         setFilters = {},
         setCurrency = {},
         setStartDateAndEndDate = { _, _ -> },
+        cloneTransaction = { _, _ -> },
         navigateToCategoriesScreen = {},
         navigateToCounterPartyScreen = {},
         navigateToMethodsScreen = {},
@@ -481,6 +503,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             setFilters = viewModel::setFilters,
             setCurrency = viewModel::setCurrency,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
+            cloneTransaction = viewModel::cloneTransaction,
             navigateToMethodsScreen = {
                 navController.navigate(Routes.Methods.route) {
                     launchSingleTop = true

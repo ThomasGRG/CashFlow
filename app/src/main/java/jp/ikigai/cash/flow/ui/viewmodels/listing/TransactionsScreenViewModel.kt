@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
 import io.realm.kotlin.Realm
+import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
+import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
@@ -21,6 +23,7 @@ import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
@@ -43,6 +46,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 class TransactionsScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
@@ -368,6 +372,43 @@ class TransactionsScreenViewModel(
             it.copy(
                 filters = filters
             )
+        }
+    }
+
+    fun cloneTransaction(transactionUUID: String, setCurrentDateTime: Boolean) = viewModelScope.launch {
+        realm.write {
+            val latestTransaction = query<Transaction>("uuid==$0", transactionUUID).first().find()
+            latestTransaction?.let {
+                val latestCategory = findLatest(latestTransaction.category!!)
+                val latestCounterParty = if (latestTransaction.counterParty != null) findLatest(latestTransaction.counterParty!!) else null
+                val latestMethod = findLatest(latestTransaction.method!!)
+                val latestSource = findLatest(latestTransaction.source!!)
+                val itemsCopy = latestTransaction.items.map { transactionItem ->
+                    val latestItem = findLatest(transactionItem.item!!)
+                    TransactionItem(latestItem, transactionItem.unit, transactionItem.price, transactionItem.quantity)
+                }.toRealmList()
+                val clone = Transaction().apply {
+                    uuid = UUID.randomUUID().toString()
+                    title = latestTransaction.title
+                    description = latestTransaction.description
+                    amount = latestTransaction.amount
+                    taxAmount = latestTransaction.taxAmount
+                    type = latestTransaction.type
+                    currency = latestTransaction.currency
+                    if (!setCurrentDateTime) {
+                        time = latestTransaction.time
+                    }
+                    category = latestCategory
+                    counterParty = latestCounterParty
+                    method = latestMethod
+                    source = latestSource
+                    items = itemsCopy
+                }
+                copyToRealm(
+                    instance = clone,
+                    updatePolicy = UpdatePolicy.ALL
+                )
+            }
         }
     }
 }
