@@ -58,6 +58,13 @@ object Database {
                         )
                     }
                 }
+
+                if (oldRealm.schemaVersion() <= 2L && newRealm.schemaVersion() >= 3L) {
+                    val emptyTransactionTitle = newRealm.query("TransactionTitle", "title==$0", "").find()
+                    if (emptyTransactionTitle.isNotEmpty()) {
+                        newRealm.delete(emptyTransactionTitle)
+                    }
+                }
             }
         )
         .build()
