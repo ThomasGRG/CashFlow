@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,8 @@ fun DatePickerPopup(
     setDate: (ZonedDateTime) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = date.toLocalMilli(),
         selectableDates = selectableDates
@@ -66,6 +70,7 @@ fun DatePickerPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -78,6 +83,7 @@ fun DatePickerPopup(
             Spacer(modifier = Modifier.width(10.dp))
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     setDate(datePickerState.selectedDateMillis!!.toUTCZonedDateTime())
                 },

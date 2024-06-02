@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,8 @@ fun TimePickerPopup(
     updateTime: (ZonedDateTime) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val timePickerState = rememberTimePickerState(
         is24Hour = false,
         initialHour = time.hour,
@@ -61,6 +65,7 @@ fun TimePickerPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -73,6 +78,7 @@ fun TimePickerPopup(
             Spacer(modifier = Modifier.width(10.dp))
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     updateTime(time.withHour(timePickerState.hour).withMinute(timePickerState.minute))
                 },

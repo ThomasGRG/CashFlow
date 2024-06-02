@@ -23,6 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,8 @@ fun DateRangePickerPopup(
     filter: (LocalDate, LocalDate) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val dateRangePickerState = rememberDateRangePickerState(
         initialSelectedStartDateMillis = startDate.getStartOfDayInEpochMilli(),
         initialSelectedEndDateMillis = endDate.getStartOfDayInEpochMilli()
@@ -67,6 +71,7 @@ fun DateRangePickerPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -80,6 +85,7 @@ fun DateRangePickerPopup(
             FilledTonalButton(
                 enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null,
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     filter(
                         (dateRangePickerState.selectedStartDateMillis!!).toZonedDateTime()

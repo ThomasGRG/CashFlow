@@ -21,6 +21,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +40,8 @@ fun SelectCategoryPopup(
     categories: List<Category>,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -68,6 +72,7 @@ fun SelectCategoryPopup(
                     icon = category.icon,
                     selected = category.uuid == selectedCategoryUUID,
                     onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
                         setSelectedCategory(category)
                     }
@@ -82,6 +87,7 @@ fun SelectCategoryPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier

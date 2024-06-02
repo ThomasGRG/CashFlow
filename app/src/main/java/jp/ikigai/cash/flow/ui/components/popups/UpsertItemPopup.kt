@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -44,6 +46,7 @@ fun UpsertItemPopup(
     save: (String) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val focusRequester = remember {
@@ -102,6 +105,7 @@ fun UpsertItemPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -114,6 +118,7 @@ fun UpsertItemPopup(
             Spacer(modifier = Modifier.width(10.dp))
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (nameFieldValue.text != name && items.contains(nameFieldValue.text)) {
                         nameValid = false
                     } else {

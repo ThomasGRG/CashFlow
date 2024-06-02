@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -92,6 +94,8 @@ fun TransactionsScreen(
     events: Flow<Event>,
     state: TransactionsScreenState,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     var showToastBar by remember { mutableStateOf(false) }
 
     var currentEvent: Event? by remember {
@@ -297,9 +301,11 @@ fun TransactionsScreen(
                                 amount = numberFormatter.format(transactionWithIcons.amount)
                                     .toString(),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     editTransaction(transactionWithIcons.uuid)
                                 },
                                 onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     selectedTransactionUUID = transactionWithIcons.uuid
                                     popupType = PopupType.CLONE_TRANSACTION
                                 },

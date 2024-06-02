@@ -19,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,8 @@ fun SelectTemplatePopup(
     addNewTransaction: (String) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
@@ -55,6 +59,7 @@ fun SelectTemplatePopup(
                     label = template.name,
                     selected = false,
                     onClick = { templateUUID ->
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
                         addNewTransaction(templateUUID)
                     }
@@ -69,6 +74,7 @@ fun SelectTemplatePopup(
         ) {
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     addNewTransaction("")
                 },

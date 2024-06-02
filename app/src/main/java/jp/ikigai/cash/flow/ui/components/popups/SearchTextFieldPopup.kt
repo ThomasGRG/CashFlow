@@ -32,6 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -58,6 +60,7 @@ fun SearchTextFieldPopup(
     getSearchResults: (String) -> List<String>,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val focusRequester = remember {
@@ -133,6 +136,7 @@ fun SearchTextFieldPopup(
                         label = result,
                         selected = false,
                         toggle = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             textFieldValue = TextFieldValue(
                                 text = result,
                                 selection = TextRange(result.length)
@@ -150,6 +154,7 @@ fun SearchTextFieldPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -162,6 +167,7 @@ fun SearchTextFieldPopup(
             Spacer(modifier = Modifier.width(10.dp))
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     setValue(textFieldValue.text)
                 },

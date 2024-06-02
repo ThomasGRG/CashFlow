@@ -36,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,6 +60,7 @@ fun FilterPopup(
     setFilters: (Filters) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val scope = rememberCoroutineScope()
@@ -176,6 +179,7 @@ fun FilterPopup(
                     selected = selectedTabIndex == tab.index,
                     onClick = {
                         scope.launch {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             pagerState.scrollToPage(tab.index)
                         }
                     },
@@ -260,6 +264,7 @@ fun FilterPopup(
                                 icon = transactionType.icon,
                                 selected = selectedTransactionTypes.contains(transactionType.id),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val types = selectedTransactionTypes.toMutableList()
                                     if (selectedTransactionTypes.contains(transactionType.id)) {
                                         if (selectedTransactionTypes.size > 1) {
@@ -294,6 +299,7 @@ fun FilterPopup(
                                     false
                                 ),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val categoryList = selectedCategories.toMutableMap()
                                     categoryList[category.uuid] =
                                         !categoryList.getOrDefault(category.uuid, true)
@@ -317,6 +323,7 @@ fun FilterPopup(
                             IconToggleRow(
                                 selected = includeNoCounterPartyTransactions,
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     includeNoCounterPartyTransactions =
                                         if (selectedCounterParties.containsValue(true)) {
                                             !includeNoCounterPartyTransactions
@@ -340,6 +347,7 @@ fun FilterPopup(
                                     false
                                 ),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val counterPartyList =
                                         selectedCounterParties.toMutableMap()
                                     counterPartyList[counterParty.uuid] =
@@ -367,6 +375,7 @@ fun FilterPopup(
                                 icon = method.icon,
                                 selected = selectedMethods.getOrDefault(method.uuid, false),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val methodList = selectedMethods.toMutableMap()
                                     methodList[method.uuid] =
                                         !methodList.getOrDefault(method.uuid, true)
@@ -393,6 +402,7 @@ fun FilterPopup(
                                 icon = source.icon,
                                 selected = selectedSources.getOrDefault(source.uuid, false),
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val sourceList = selectedSources.toMutableMap()
                                     sourceList[source.uuid] =
                                         !sourceList.getOrDefault(source.uuid, true)
@@ -416,6 +426,7 @@ fun FilterPopup(
                             ToggleRow(
                                 selected = includeNoItemTransactions,
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     includeNoItemTransactions =
                                         if (selectedItems.containsValue(true)) {
                                             !includeNoItemTransactions
@@ -436,6 +447,7 @@ fun FilterPopup(
                                 label = item.name,
                                 selected = selectedItems.getOrDefault(item.uuid, false),
                                 onClick = { uuid ->
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     val itemList = selectedItems.toMutableMap()
                                     itemList[uuid] = !itemList.getOrDefault(uuid, true)
                                     selectedItems = itemList
@@ -455,6 +467,7 @@ fun FilterPopup(
         ) {
             OutlinedButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier
@@ -467,6 +480,7 @@ fun FilterPopup(
             FilledTonalButton(
                 enabled = filterEnabled,
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     setFilters(
                         filters.copy(
                             selectedCategories = selectedCategories,
