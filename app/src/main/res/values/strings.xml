@@ -72,6 +72,8 @@
     <string name="back_button_label">Back</string>
     <string name="add_button_label">Add</string>
     <string name="new_transaction_button_label">New transaction</string>
+    <string name="clone_transaction_button_label">Clone transaction</string>
+    <string name="clone_transaction_current_date_button_label">Clone transaction with today\'s time</string>
     <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
 
