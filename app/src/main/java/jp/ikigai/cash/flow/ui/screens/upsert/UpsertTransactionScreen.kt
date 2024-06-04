@@ -265,7 +265,7 @@ fun UpsertTransactionScreen(
         } ?: "",
         onDismissToastBar = {
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         },
