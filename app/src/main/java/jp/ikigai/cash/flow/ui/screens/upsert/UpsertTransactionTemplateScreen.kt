@@ -241,7 +241,12 @@ fun UpsertTransactionTemplateScreen(
         toastBarText = currentEvent?.let {
             stringResource(id = it.message)
         } ?: "",
-        onDismissToastBar = {},
+        onDismissToastBar = {
+            showToastBar = false
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
+                navigateBack()
+            }
+        },
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when (popupType) {
