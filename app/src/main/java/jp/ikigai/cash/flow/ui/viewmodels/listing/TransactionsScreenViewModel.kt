@@ -31,6 +31,7 @@ import jp.ikigai.cash.flow.utils.combineEightFlows
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
+import jp.ikigai.cash.flow.utils.toEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,6 +46,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -375,40 +378,70 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun cloneTransaction(transactionUUID: String, setCurrentDateTime: Boolean) = viewModelScope.launch {
-        realm.write {
-            val latestTransaction = query<Transaction>("uuid==$0", transactionUUID).first().find()
-            latestTransaction?.let {
-                val latestCategory = findLatest(latestTransaction.category!!)
-                val latestCounterParty = if (latestTransaction.counterParty != null) findLatest(latestTransaction.counterParty!!) else null
-                val latestMethod = findLatest(latestTransaction.method!!)
-                val latestSource = findLatest(latestTransaction.source!!)
-                val itemsCopy = latestTransaction.items.map { transactionItem ->
-                    val latestItem = findLatest(transactionItem.item!!)
-                    TransactionItem(latestItem, transactionItem.unit, transactionItem.price, transactionItem.quantity)
-                }.toRealmList()
-                val clone = Transaction().apply {
-                    uuid = UUID.randomUUID().toString()
-                    title = latestTransaction.title
-                    description = latestTransaction.description
-                    amount = latestTransaction.amount
-                    taxAmount = latestTransaction.taxAmount
-                    type = latestTransaction.type
-                    currency = latestTransaction.currency
-                    if (!setCurrentDateTime) {
-                        time = latestTransaction.time
+    fun cloneTransaction(transactionUUID: String, setCurrentDateTime: Boolean) =
+        viewModelScope.launch {
+            realm.write {
+                val latestTransaction =
+                    query<Transaction>("uuid==$0", transactionUUID).first().find()
+                latestTransaction?.let {
+                    val currentTime = ZonedDateTime.now(ZoneId.of("UTC")).toEpochMilli()
+                    val latestCategory = findLatest(latestTransaction.category!!)?.also {
+                        it.frequency += 1
+                        it.lastUsed = currentTime
                     }
-                    category = latestCategory
-                    counterParty = latestCounterParty
-                    method = latestMethod
-                    source = latestSource
-                    items = itemsCopy
+                    val latestCounterParty = if (latestTransaction.counterParty != null) {
+                        findLatest(latestTransaction.counterParty!!)?.also {
+                            it.frequency += 1
+                            it.lastUsed = currentTime
+                        }
+                    } else null
+                    val latestMethod = findLatest(latestTransaction.method!!)?.also {
+                        it.frequency += 1
+                        it.lastUsed = currentTime
+                    }
+                    val latestSource = findLatest(latestTransaction.source!!)?.also {
+                        it.frequency += 1
+                        it.lastUsed = currentTime
+                        if (latestTransaction.type == TransactionType.DEBIT) {
+                            it.balance -= latestTransaction.amount
+                        } else {
+                            it.balance += latestTransaction.amount
+                        }
+                    }
+                    val itemsCopy = latestTransaction.items.map { transactionItem ->
+                        val latestItem = findLatest(transactionItem.item!!)?.also {
+                            it.frequency += 1
+                            it.lastUsed = currentTime
+                        }
+                        TransactionItem(
+                            latestItem,
+                            transactionItem.unit,
+                            transactionItem.price,
+                            transactionItem.quantity
+                        )
+                    }.toRealmList()
+                    val clone = Transaction().apply {
+                        uuid = UUID.randomUUID().toString()
+                        title = latestTransaction.title
+                        description = latestTransaction.description
+                        amount = latestTransaction.amount
+                        taxAmount = latestTransaction.taxAmount
+                        type = latestTransaction.type
+                        currency = latestTransaction.currency
+                        if (!setCurrentDateTime) {
+                            time = latestTransaction.time
+                        }
+                        category = latestCategory
+                        counterParty = latestCounterParty
+                        method = latestMethod
+                        source = latestSource
+                        items = itemsCopy
+                    }
+                    copyToRealm(
+                        instance = clone,
+                        updatePolicy = UpdatePolicy.ALL
+                    )
                 }
-                copyToRealm(
-                    instance = clone,
-                    updatePolicy = UpdatePolicy.ALL
-                )
             }
         }
-    }
 }
