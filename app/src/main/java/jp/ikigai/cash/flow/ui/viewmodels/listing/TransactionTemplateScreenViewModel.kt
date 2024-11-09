@@ -1,32 +1,51 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import compose.icons.TablerIcons
+import compose.icons.tablericons.ChartLine
+import compose.icons.tablericons.FileText
+import compose.icons.tablericons.History
+import compose.icons.tablericons.Stack
+import compose.icons.tablericons.Typography
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
+import io.realm.kotlin.query.TRUE_PREDICATE
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
+import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
+import jp.ikigai.cash.flow.utils.getNumberFormatter
+import jp.ikigai.cash.flow.utils.toZonedDateTime
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class TransactionTemplateScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private var formatter = getNumberFormatter()
 
     private val _state = MutableStateFlow(TransactionTemplateScreenState())
     val state: StateFlow<TransactionTemplateScreenState> = _state.asStateFlow()
@@ -34,15 +53,25 @@ class TransactionTemplateScreenViewModel(
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
-    private val templateQuery = realm.query<TransactionTemplate>().sort("frequency", Sort.DESCENDING)
-
     init {
         getTemplates()
+        getCount()
     }
 
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun getCount() = viewModelScope.launch {
+        realm.query<TransactionTemplate>().count().asFlow().collectLatest { count ->
+            _state.update {
+                it.copy(
+                    count = count,
+                    countString = formatter.format(count).toString()
+                )
+            }
+        }
     }
 
     fun canAddTransaction(): Boolean {
@@ -78,40 +107,171 @@ class TransactionTemplateScreenViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTemplates() = viewModelScope.launch {
-        templateQuery.asFlow().collectLatest { changes ->
-            _state.update {
-                it.copy(
-                    templates = getTemplateWithIcons(changes.list),
-                    loading = false
+        state.flatMapLatest {
+            realm.query<TransactionTemplate>(
+                if (it.searchText.isBlank()) {
+                    TRUE_PREDICATE
+                } else {
+                    "name CONTAINS[c] '${it.searchText.trim()}'"
+                }
+            )
+                .sort(it.sortField, it.sortDirection)
+                .asFlow()
+        }.collectLatest { changes ->
+            _state.update { screenState ->
+                screenState.copy(
+                    templates = getTemplateWithIcons(changes.list, screenState.searchText),
+                    loading = false,
+                    countString = formatter.format(screenState.count).toString()
                 )
             }
         }
     }
 
-    private fun getTemplateWithIcons(templates: List<TransactionTemplate>): List<TransactionTemplateWithIcons> {
+    private fun getTemplateWithIcons(
+        templates: List<TransactionTemplate>,
+        searchText: String
+    ): List<TransactionTemplateWithIcons> {
         return templates.map { template ->
             val category = template.category
             val counterParty = template.counterParty
             val method = template.method
             val source = template.source
-            val chips: MutableList<Pair<String, ImageVector>> = mutableListOf()
-            if (category != null) chips.add(Pair(category.name, category.icon))
-            if (counterParty != null) chips.add(Pair(counterParty.name, counterParty.icon))
-            if (method != null) chips.add(Pair(method.name, method.icon))
-            if (source != null) chips.add(Pair(source.name, source.icon))
+            val chips: MutableList<ChipInfo> = mutableListOf()
+            if (template.title.isNotEmpty()) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = template.title,
+                        icon = TablerIcons.Typography
+                    )
+                )
+            }
+            if (template.description.isNotEmpty()) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = template.description,
+                        icon = TablerIcons.FileText
+                    )
+                )
+            }
+            if (category != null) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = category.name,
+                        icon = category.icon
+                    )
+                )
+            }
+            if (counterParty != null) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = counterParty.name,
+                        icon = counterParty.icon
+                    )
+                )
+            }
+            if (method != null) {
+                chips.add(
+                    ChipInfo(resId = R.string.placeholder, value = method.name, icon = method.icon)
+                )
+            }
+            if (source != null) {
+                chips.add(
+                    ChipInfo(resId = R.string.placeholder, value = source.name, icon = source.icon)
+                )
+            }
+            if (template.items.size > 0) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.item_count_label,
+                        value = formatter.format(template.items.size).toString(),
+                        icon = TablerIcons.Stack
+                    )
+                )
+            }
+            chips.add(
+                ChipInfo(
+                    resId = R.string.frequency_of_use_label,
+                    value = formatter.format(template.frequency).toString(),
+                    icon = TablerIcons.ChartLine
+                )
+            )
+            if (template.lastUsed > 0) {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.last_used_datetime_label,
+                        value = template.lastUsed.toZonedDateTime()
+                            .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
+                        icon = TablerIcons.History
+                    )
+                )
+            } else {
+                chips.add(
+                    ChipInfo(
+                        resId = R.string.last_used_never_label,
+                        value = "",
+                        icon = TablerIcons.History
+                    )
+                )
+            }
             TransactionTemplateWithIcons(
                 uuid = template.uuid,
-                name = template.name,
-                title = template.title,
-                description = template.description,
-                amount = template.amount,
+                annotatedName = buildAnnotatedString {
+                    val startIndex = template.name.indexOf(
+                        searchText,
+                        startIndex = 0,
+                        ignoreCase = true
+                    )
+                    val endIndex = startIndex + searchText.length
+                    append(template.name)
+                    addStyle(
+                        style = SpanStyle(background = Color.Gray.copy(alpha = 0.7f)),
+                        start = startIndex,
+                        end = endIndex
+                    )
+                },
+                amount = if (template.amount > 0) {
+                    formatter.format(template.amount).toString()
+                } else {
+                    ""
+                },
                 typeIcon = template.type.icon,
                 typeIconColor = template.type.color,
-                frequency = template.frequency,
                 currency = source?.currency ?: "",
-                itemCount = template.items.size,
                 chips = chips
+            )
+        }
+    }
+
+    fun setSearchText(searchText: String) {
+        _state.update {
+            it.copy(
+                loading = true,
+                searchText = searchText,
+            )
+        }
+    }
+
+    fun setSortInfo(field: String, direction: Sort) {
+        _state.update {
+            it.copy(
+                sortDirection = direction,
+                sortField = field
+            )
+        }
+    }
+
+    fun setLocale(locale: Locale?) {
+        formatter = getNumberFormatter(locale)
+        _state.update {
+            it.copy(
+                locale = locale
             )
         }
     }

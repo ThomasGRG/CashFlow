@@ -6,9 +6,9 @@ import android.icu.number.NumberFormatter
 import android.icu.number.Precision
 import java.util.Locale
 
-fun getNumberFormatter(): LocalizedNumberFormatter {
+fun getNumberFormatter(locale: Locale? = null): LocalizedNumberFormatter {
     return NumberFormatter
-        .withLocale(Locale.getDefault())
+        .withLocale(locale ?: Locale.getDefault())
         .notation(Notation.simple())
         .precision(Precision.maxFraction(2))
 }

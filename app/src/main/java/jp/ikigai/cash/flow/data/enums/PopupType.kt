@@ -2,6 +2,7 @@ package jp.ikigai.cash.flow.data.enums
 
 enum class PopupType {
     NONE,
+    SORT,
     DATE,
     TIME,
     CATEGORY,
