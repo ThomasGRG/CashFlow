@@ -63,7 +63,7 @@ fun RoundedCornerOutlinedTextField(
     onDone: KeyboardActionScope.() -> Unit,
 ) {
     val alpha by remember(key1 = enabled) {
-        mutableStateOf(if (enabled) 1f else 0.38f)
+        mutableFloatStateOf(if (enabled) 1f else 0.38f)
     }
 
     var focused by remember {
@@ -182,7 +182,7 @@ fun RoundedCornerOutlinedTextField(
     errorHint: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         capitalization = KeyboardCapitalization.None,
-        autoCorrect = false,
+        autoCorrectEnabled = false,
         keyboardType = KeyboardType.Number,
         imeAction = ImeAction.Done
     ),
