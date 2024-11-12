@@ -1,8 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
@@ -25,6 +22,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
+import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -222,20 +220,7 @@ class TransactionTemplateScreenViewModel(
             }
             TransactionTemplateWithIcons(
                 uuid = template.uuid,
-                annotatedName = buildAnnotatedString {
-                    val startIndex = template.name.indexOf(
-                        searchText,
-                        startIndex = 0,
-                        ignoreCase = true
-                    )
-                    val endIndex = startIndex + searchText.length
-                    append(template.name)
-                    addStyle(
-                        style = SpanStyle(background = Color.Gray.copy(alpha = 0.7f)),
-                        start = startIndex,
-                        end = endIndex
-                    )
-                },
+                annotatedName = getHighlightedString(template.name, searchText),
                 amount = if (template.amount > 0) {
                     formatter.format(template.amount).toString()
                 } else {

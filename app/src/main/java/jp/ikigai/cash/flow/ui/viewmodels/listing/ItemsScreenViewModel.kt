@@ -1,8 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
@@ -20,6 +17,7 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.ItemListingDTO
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.ui.screenStates.listing.ItemsScreenState
+import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -104,20 +102,6 @@ class ItemsScreenViewModel(
 
     private fun mapToDTO(items: List<Item>, searchText: String): List<ItemListingDTO> {
         return items.map { item ->
-            val annotatedName = buildAnnotatedString {
-                val startIndex = item.name.indexOf(
-                    searchText,
-                    startIndex = 0,
-                    ignoreCase = true
-                )
-                val endIndex = startIndex + searchText.length
-                append(item.name)
-                addStyle(
-                    style = SpanStyle(background = Color.Gray.copy(alpha = 0.7f)),
-                    start = startIndex,
-                    end = endIndex
-                )
-            }
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
                 ChipInfo(
@@ -146,7 +130,7 @@ class ItemsScreenViewModel(
             }
             ItemListingDTO(
                 uuid = item.uuid,
-                annotatedName = annotatedName,
+                annotatedName = getHighlightedString(item.name, searchText),
                 price = if (item.lastKnownPrice > 0) {
                     "${formatter.format(item.lastKnownPrice)} ${item.lastUsedCurrency}"
                 } else "",

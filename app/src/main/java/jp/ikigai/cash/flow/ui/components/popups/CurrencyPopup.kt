@@ -33,13 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +44,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
+import jp.ikigai.cash.flow.utils.getHighlightedString
 
 @Composable
 fun CurrencyPopup(
@@ -96,21 +94,7 @@ fun CurrencyPopup(
                 }
                 .map {
                     it.copy(
-                        annotatedString = buildAnnotatedString {
-                            val startIndex = it.annotatedString.text.indexOf(
-                                searchText,
-                                startIndex = 0,
-                                ignoreCase = true
-                            )
-                            val endIndex = startIndex + searchText.length
-                            append(it.annotatedString.text)
-                            addStyle(
-                                style = SpanStyle(background = Color.Gray.copy(alpha = 0.7f)),
-                                start = startIndex,
-                                end = endIndex
-                            )
-                        },
-                        currency = it.currency
+                        annotatedString = getHighlightedString(it.annotatedString.text, searchText)
                     )
                 }
         }

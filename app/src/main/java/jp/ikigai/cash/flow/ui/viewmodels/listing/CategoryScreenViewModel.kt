@@ -1,8 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
@@ -18,6 +15,7 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.ui.screenStates.listing.CategoryScreenState
+import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,20 +84,6 @@ class CategoryScreenViewModel(
 
     private fun mapToDTO(categories: List<Category>, searchText: String): List<CommonListingDTO> {
         return categories.map { category ->
-            val annotatedName = buildAnnotatedString {
-                val startIndex = category.name.indexOf(
-                    searchText,
-                    startIndex = 0,
-                    ignoreCase = true
-                )
-                val endIndex = startIndex + searchText.length
-                append(category.name)
-                addStyle(
-                    style = SpanStyle(background = Color.Gray.copy(alpha = 0.7f)),
-                    start = startIndex,
-                    end = endIndex
-                )
-            }
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
                 ChipInfo(
@@ -128,7 +112,7 @@ class CategoryScreenViewModel(
             }
             CommonListingDTO(
                 uuid = category.uuid,
-                annotatedName = annotatedName,
+                annotatedName = getHighlightedString(category.name, searchText),
                 icon = category.icon,
                 chips = chips
             )
