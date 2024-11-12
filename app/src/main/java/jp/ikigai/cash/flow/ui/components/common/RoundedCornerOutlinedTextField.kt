@@ -1,6 +1,11 @@
 package jp.ikigai.cash.flow.ui.components.common
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -113,17 +119,23 @@ fun RoundedCornerOutlinedTextField(
                     )
                 },
                 trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = "clear field",
-                        modifier = Modifier
-                            .clickable(
-                                enabled = enabled,
-                                onClick = {
-                                    onValueChange(TextFieldValue(""))
-                                }
-                            )
-                    )
+                    AnimatedVisibility(
+                        visible = value.text.isNotEmpty(),
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "clear field",
+                            modifier = Modifier
+                                .clickable(
+                                    enabled = enabled,
+                                    onClick = {
+                                        onValueChange(TextFieldValue(""))
+                                    }
+                                )
+                        )
+                    }
                 },
                 isError = isError,
                 keyboardOptions = keyboardOptions,
@@ -177,7 +189,7 @@ fun RoundedCornerOutlinedTextField(
     onDone: KeyboardActionScope.() -> Unit,
 ) {
     val alpha by remember(key1 = enabled) {
-        mutableStateOf(if (enabled) 1f else 0.38f)
+        mutableFloatStateOf(if (enabled) 1f else 0.38f)
     }
 
     var focused by remember {
@@ -233,17 +245,23 @@ fun RoundedCornerOutlinedTextField(
                     )
                 },
                 trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Clear,
-                        contentDescription = "clear field",
-                        modifier = Modifier
-                            .clickable(
-                                enabled = enabled,
-                                onClick = {
-                                    onValueChange("")
-                                }
-                            )
-                    )
+                    AnimatedVisibility(
+                        visible = value.isNotEmpty(),
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "clear field",
+                            modifier = Modifier
+                                .clickable(
+                                    enabled = enabled,
+                                    onClick = {
+                                        onValueChange("")
+                                    }
+                                )
+                        )
+                    }
                 },
                 isError = isError,
                 keyboardOptions = keyboardOptions,
