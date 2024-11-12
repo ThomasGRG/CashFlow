@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
@@ -14,6 +15,7 @@ import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.Filters
+import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
 import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
@@ -130,7 +132,7 @@ class TransactionsScreenViewModel(
                     income = income,
                     loading = false,
                     balance = transactionScreenFlows.balance,
-                    templates = transactionScreenFlows.templates,
+                    templates = mapToTemplateDTO(transactionScreenFlows.templates),
                     filters = it.filters.copy(
                         categories = transactionScreenFlows.categories,
                         selectedCategories = getSelectedCategories(
@@ -231,6 +233,16 @@ class TransactionsScreenViewModel(
                 selectedSources.getOrDefault(it.uuid, true)
             }
         )
+    }
+
+    private fun mapToTemplateDTO(templates: List<TransactionTemplate>): List<SelectTemplateInfoDTO> {
+        return templates.map { template ->
+            SelectTemplateInfoDTO(
+                uuid = template.uuid,
+                annotatedName = AnnotatedString(template.name),
+                frequency = template.frequency.toString()
+            )
+        }
     }
 
     fun canAddTransaction(): Boolean {
