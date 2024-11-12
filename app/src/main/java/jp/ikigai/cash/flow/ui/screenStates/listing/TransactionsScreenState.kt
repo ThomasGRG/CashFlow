@@ -2,6 +2,7 @@ package jp.ikigai.cash.flow.ui.screenStates.listing
 
 import android.icu.util.Currency
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
@@ -16,7 +17,7 @@ data class TransactionsScreenState(
     val expenseTransactionsCount: Int = 0,
     val filters: Filters = Filters(),
     val templates: List<TransactionTemplate> = emptyList(),
-    val currencies: List<Currency> = Constants.currencyList,
+    val currencies: List<CurrencyInfo> = Constants.currencyList,
     val selectedCurrency: String = Currency.getInstance("INR").currencyCode,
     val startDate: LocalDate = YearMonth.now().atDay(1),
     val endDate: LocalDate = YearMonth.now().atEndOfMonth(),

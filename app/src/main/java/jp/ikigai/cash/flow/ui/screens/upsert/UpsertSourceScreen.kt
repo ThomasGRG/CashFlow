@@ -187,7 +187,7 @@ fun UpsertSourceScreen(
             when(popupType) {
                 PopupType.CURRENCY -> {
                     CurrencyPopup(
-                        index = currencies.indexOfFirst { it.currencyCode == selectedCurrency },
+                        index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
                         selectedCurrency = selectedCurrency,
                         setSelectedCurrency = { currency ->
                             selectedCurrency = currency

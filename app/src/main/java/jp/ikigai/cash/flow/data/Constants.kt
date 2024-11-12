@@ -1,12 +1,14 @@
 package jp.ikigai.cash.flow.data
 
 import android.icu.util.Currency
+import androidx.compose.ui.text.buildAnnotatedString
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
 import compose.icons.tablericons.ArrowUpCircle
 import compose.icons.tablericons.BuildingBank
 import compose.icons.tablericons.CreditCard
 import compose.icons.tablericons.Users
+import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 
 object Constants {
 
@@ -23,7 +25,14 @@ object Constants {
         Currency.getInstance("AUD"),
         Currency.getInstance("CNY"),
         Currency.getInstance("BRL"),
-    )
+    ).map {
+        CurrencyInfo(
+            annotatedString = buildAnnotatedString {
+                append("${it.displayName} (${it.currencyCode})")
+            },
+            currency = it
+        )
+    }
 
     val DEFAULT_TYPE_ICON = TablerIcons.ArrowUpCircle
     val DEFAULT_CATEGORY_ICON = TablerIcons.Archive
