@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -21,11 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.buttons.IconToggleRow
+import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 
 @Composable
 fun SelectTransactionTypePopup(
@@ -50,33 +51,37 @@ fun SelectTransactionTypePopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item(
-                key = "debit",
-                contentType = "row"
-            ) {
-                IconToggleRow(
-                    label = stringResource(id = TransactionType.DEBIT.label),
-                    icon = TransactionType.DEBIT.icon,
-                    selected = selectedTransactionType == TransactionType.DEBIT,
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        dismiss()
-                        setSelectedTransactionType(TransactionType.DEBIT)
-                    }
-                )
-            }
-            item(
                 key = "credit",
                 contentType = "row"
             ) {
-                IconToggleRow(
-                    label = stringResource(id = TransactionType.CREDIT.label),
+                SelectableCard(
+                    checked = { selectedTransactionType == TransactionType.CREDIT },
+                    label = AnnotatedString(stringResource(id = TransactionType.CREDIT.label)),
                     icon = TransactionType.CREDIT.icon,
-                    selected = selectedTransactionType == TransactionType.CREDIT,
+                    iconTint = TransactionType.CREDIT.color,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
                         setSelectedTransactionType(TransactionType.CREDIT)
-                    }
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            item(
+                key = "debit",
+                contentType = "row"
+            ) {
+                SelectableCard(
+                    checked = { selectedTransactionType == TransactionType.DEBIT },
+                    label = AnnotatedString(stringResource(id = TransactionType.DEBIT.label)),
+                    icon = TransactionType.DEBIT.icon,
+                    iconTint = TransactionType.DEBIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        dismiss()
+                        setSelectedTransactionType(TransactionType.DEBIT)
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -86,7 +91,7 @@ fun SelectTransactionTypePopup(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = {
                     dismiss()
                 },
