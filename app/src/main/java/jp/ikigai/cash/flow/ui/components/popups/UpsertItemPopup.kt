@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -76,7 +75,7 @@ fun UpsertItemPopup(
             value = nameFieldValue,
             onValueChange = {
                 nameFieldValue = it
-                nameValid = true
+                nameValid = !(nameFieldValue.text != name && items.contains(nameFieldValue.text))
             },
             label = stringResource(id = R.string.name_field_label),
             placeHolder = stringResource(id = R.string.name_placeholder_label),
@@ -103,7 +102,7 @@ fun UpsertItemPopup(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
@@ -119,18 +118,14 @@ fun UpsertItemPopup(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (nameFieldValue.text != name && items.contains(nameFieldValue.text)) {
-                        nameValid = false
-                    } else {
-                        dismiss()
-                        save(nameFieldValue.text)
-                    }
+                    dismiss()
+                    save(nameFieldValue.text)
                 },
                 modifier = Modifier
                     .weight(1f)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = nameFieldValue.text.isNotBlank()
+                enabled = nameFieldValue.text.isNotBlank() && nameValid
             ) {
                 Text(text = stringResource(id = R.string.save_button_label))
             }
