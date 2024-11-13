@@ -1,5 +1,11 @@
 package jp.ikigai.cash.flow.ui.components.buttons
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -110,10 +116,15 @@ fun CustomOutlinedButton(
                                 bottom = 15.dp
                             )
                             .weight(1f)
+                            .animateContentSize()
                     )
-                    trailingIcon?.let {
+                    AnimatedVisibility(
+                        visible = trailingIcon != null && value.isNotEmpty(),
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
                         Icon(
-                            imageVector = it,
+                            imageVector = trailingIcon!!,
                             contentDescription = "trailing icon",
                             modifier = Modifier
                                 .alpha(alpha = alpha)
