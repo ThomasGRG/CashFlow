@@ -609,6 +609,10 @@ fun UpsertTransactionScreen(
                             contentDescription = "counter party icon",
                         )
                     },
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        setSelectedCounterParty(CounterParty())
+                    },
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.COUNTERPARTY

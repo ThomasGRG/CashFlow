@@ -275,13 +275,7 @@ fun UpsertTransactionTemplateScreen(
                         index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
                             .coerceAtLeast(0),
                         selectedCounterPartyUUID = selectedCounterParty.uuid,
-                        setSelectedCounterParty = { counterParty ->
-                            if (counterParty.uuid == selectedCounterParty.uuid) {
-                                setSelectedCounterParty(CounterParty())
-                            } else {
-                                setSelectedCounterParty(counterParty)
-                            }
-                        },
+                        setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
                         dismiss = {
                             hidePopup()
