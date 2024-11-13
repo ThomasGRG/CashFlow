@@ -18,14 +18,15 @@ fun AnimatedTextFieldErrorLabel(
 ) {
     AnimatedVisibility(
         visible = visible,
-        modifier = Modifier.fillMaxWidth().padding(start = 15.dp, top = 10.dp),
+        modifier = Modifier.fillMaxWidth(),
         enter = expandVertically(),
         exit = shrinkVertically(),
     ) {
         Text(
             text = errorLabel,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(start = 15.dp, top = 10.dp)
         )
     }
 }
