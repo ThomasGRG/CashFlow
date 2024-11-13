@@ -766,7 +766,8 @@ class UpsertTransactionScreenViewModel(
         return if (searchString.isBlank()) {
             state.value.transactionTitles.map { it.title }
         } else {
-            state.value.transactionTitles.map { it.title }.filter { it.startsWith(searchString, ignoreCase = true) }
+            state.value.transactionTitles.map { it.title }
+                .filter { it.startsWith(searchString.trim(), ignoreCase = true) }
         }
     }
 }

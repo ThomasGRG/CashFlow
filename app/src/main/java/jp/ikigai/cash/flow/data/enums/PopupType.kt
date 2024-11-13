@@ -16,7 +16,6 @@ enum class PopupType {
     FILTER,
     TEMPLATES,
     ITEMS,
-    SEARCH_TEXT_FIELD,
     CONFIRM_DELETE,
     RESET_ICON,
     CLONE_TRANSACTION

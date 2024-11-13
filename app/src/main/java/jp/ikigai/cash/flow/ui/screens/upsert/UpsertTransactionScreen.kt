@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -32,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -70,7 +75,6 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.DatePickerPopup
-import jp.ikigai.cash.flow.ui.components.popups.SearchTextFieldPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectItemPopup
@@ -219,8 +223,17 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.transaction.uuid)
     }
 
-    var title by rememberSaveable(state.transaction) {
-        mutableStateOf(state.transaction.title)
+    var titleFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
+        mutableStateOf(
+            TextFieldValue(state.transaction.title)
+        )
+    }
+
+    val filteredTransactionTitles by remember(
+        key1 = titleFieldValue,
+        key2 = state.transactionTitles
+    ) {
+        mutableStateOf(filterTransactionTitles(titleFieldValue.text))
     }
 
     var descriptionFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
@@ -373,25 +386,6 @@ fun UpsertTransactionScreen(
                     )
                 }
 
-                PopupType.SEARCH_TEXT_FIELD -> {
-                    SearchTextFieldPopup(
-                        value = title,
-                        setValue = { value ->
-                            title = value
-                        },
-                        enabled = enabled,
-                        icon = TablerIcons.Typography,
-                        iconDescription = "title icon",
-                        label = stringResource(id = R.string.title_field_label),
-                        placeholder = stringResource(id = R.string.title_placeholder_label),
-                        getSearchResults = filterTransactionTitles,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
                 PopupType.CONFIRM_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_transaction_confirmation_label),
@@ -436,7 +430,7 @@ fun UpsertTransactionScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        upsertTransaction(title, descriptionFieldValue.text)
+                        upsertTransaction(titleFieldValue.text, descriptionFieldValue.text)
                     }
                 },
                 extraButtonIcon = if (transactionUuid.isNotBlank()) {
@@ -468,28 +462,61 @@ fun UpsertTransactionScreen(
             }
             item(
                 key = "title",
-                contentType = "dropDown"
+                contentType = "textField"
             ) {
-                CustomOutlinedButton(
+                RoundedCornerOutlinedTextField(
+                    value = titleFieldValue,
+                    onValueChange = { titleFieldValue = it },
                     enabled = enabled,
-                    value = title,
                     label = stringResource(id = R.string.title_field_label),
                     placeHolder = stringResource(id = R.string.title_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.Typography,
-                            contentDescription = "title icon",
-                        )
-                    },
-                    trailingIcon = Icons.Filled.Clear,
-                    onTrailingIconClick = {
-                        title = ""
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.SEARCH_TEXT_FIELD
+                    icon = TablerIcons.Typography,
+                    iconDescription = "title icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
+                    onDone = {
+                        keyboardController?.hide()
                     }
                 )
+            }
+            item(
+                key = "titleAutoComplete",
+                contentType = "lazyRow"
+            ) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(
+                        8.dp,
+                        alignment = Alignment.CenterHorizontally
+                    )
+                ) {
+                    items(
+                        items = filteredTransactionTitles,
+                        key = { title -> title }
+                    ) { title ->
+                        OutlinedButton(
+                            onClick = {
+                                titleFieldValue = TextFieldValue(
+                                    text = title,
+                                    selection = TextRange(title.length)
+                                )
+                            },
+                            shape = MaterialTheme.shapes.small,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onBackground
+                            ),
+                            modifier = Modifier.animateItem()
+                        ) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                }
             }
             item(
                 key = "description",
