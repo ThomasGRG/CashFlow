@@ -75,11 +75,7 @@ fun RoundedCornerOutlinedTextField(
         targetValue = if (isError) {
             MaterialTheme.colorScheme.error
         } else {
-            if (enabled) {
-                MaterialTheme.colorScheme.onBackground
-            } else {
-                MaterialTheme.colorScheme.onBackground.copy(alpha)
-            }
+            MaterialTheme.colorScheme.onBackground
         },
         label = "animated icon color"
     )
@@ -120,6 +116,7 @@ fun RoundedCornerOutlinedTextField(
                     Icon(
                         imageVector = icon,
                         contentDescription = iconDescription,
+                        modifier = Modifier.alpha(alpha),
                         tint = animatedIconColor
                     )
                 },
@@ -201,11 +198,7 @@ fun RoundedCornerOutlinedTextField(
         targetValue = if (isError) {
             MaterialTheme.colorScheme.error
         } else {
-            if (enabled) {
-                MaterialTheme.colorScheme.onBackground
-            } else {
-                MaterialTheme.colorScheme.onBackground.copy(alpha)
-            }
+            MaterialTheme.colorScheme.onBackground
         },
         label = "animated icon color"
     )
@@ -243,6 +236,7 @@ fun RoundedCornerOutlinedTextField(
                     Icon(
                         imageVector = icon,
                         contentDescription = iconDescription,
+                        modifier = Modifier.alpha(alpha),
                         tint = animatedIconColor
                     )
                 },
@@ -329,11 +323,7 @@ fun RoundedCornerOutlinedTextField(
         targetValue = if (isError) {
             MaterialTheme.colorScheme.error
         } else {
-            if (enabled) {
-                MaterialTheme.colorScheme.onBackground
-            } else {
-                MaterialTheme.colorScheme.onBackground.copy(alpha)
-            }
+            MaterialTheme.colorScheme.onBackground
         },
         label = "animated icon color"
     )
@@ -374,6 +364,7 @@ fun RoundedCornerOutlinedTextField(
                     Icon(
                         imageVector = icon,
                         contentDescription = iconDescription,
+                        modifier = Modifier.alpha(alpha),
                         tint = animatedIconColor
                     )
                 },

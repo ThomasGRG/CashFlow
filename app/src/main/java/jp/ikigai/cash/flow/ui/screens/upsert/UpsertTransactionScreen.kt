@@ -20,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -569,12 +568,7 @@ fun UpsertTransactionScreen(
                 value = stringResource(id = transactionType.label),
                 label = stringResource(id = R.string.transaction_type_field_label),
                 placeHolder = "",
-                leadingIcon = {
-                    Icon(
-                        imageVector = transactionType.icon,
-                        contentDescription = "type icon"
-                    )
-                },
+                leadingIcon = transactionType.icon,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.TYPE
@@ -585,12 +579,7 @@ fun UpsertTransactionScreen(
                 value = date,
                 label = stringResource(id = R.string.date_field_label),
                 placeHolder = "",
-                leadingIcon = {
-                    Icon(
-                        imageVector = TablerIcons.CalendarEvent,
-                        contentDescription = "date icon",
-                    )
-                },
+                leadingIcon = TablerIcons.CalendarEvent,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.DATE
@@ -601,12 +590,7 @@ fun UpsertTransactionScreen(
                 value = time,
                 label = stringResource(id = R.string.time_field_label),
                 placeHolder = "",
-                leadingIcon = {
-                    Icon(
-                        imageVector = TablerIcons.Alarm,
-                        contentDescription = "time icon",
-                    )
-                },
+                leadingIcon = TablerIcons.Alarm,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.TIME
@@ -619,17 +603,7 @@ fun UpsertTransactionScreen(
                 placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                 isError = !categoryValid,
                 errorHint = stringResource(id = R.string.field_required_error_label),
-                leadingIcon = {
-                    Icon(
-                        imageVector = selectedCategory.icon,
-                        contentDescription = "category icon",
-                        tint = if (categoryValid) {
-                            LocalContentColor.current
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        }
-                    )
-                },
+                leadingIcon = selectedCategory.icon,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.CATEGORY
@@ -640,12 +614,7 @@ fun UpsertTransactionScreen(
                 value = selectedCounterParty.name,
                 label = stringResource(id = R.string.counter_party_field_label),
                 placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                leadingIcon = {
-                    Icon(
-                        imageVector = selectedCounterParty.icon,
-                        contentDescription = "counter party icon",
-                    )
-                },
+                leadingIcon = selectedCounterParty.icon,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = {
                     setSelectedCounterParty(CounterParty())
@@ -662,17 +631,7 @@ fun UpsertTransactionScreen(
                 placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                 isError = !methodValid,
                 errorHint = stringResource(id = R.string.field_required_error_label),
-                leadingIcon = {
-                    Icon(
-                        imageVector = selectedMethod.icon,
-                        contentDescription = "method icon",
-                        tint = if (methodValid) {
-                            LocalContentColor.current
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        }
-                    )
-                },
+                leadingIcon = selectedMethod.icon,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.METHOD
@@ -685,17 +644,7 @@ fun UpsertTransactionScreen(
                 placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                 isError = !sourceValid,
                 errorHint = stringResource(id = R.string.field_required_error_label),
-                leadingIcon = {
-                    Icon(
-                        imageVector = selectedSource.icon,
-                        contentDescription = "source icon",
-                        tint = if (sourceValid) {
-                            LocalContentColor.current
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        }
-                    )
-                },
+                leadingIcon = selectedSource.icon,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.SOURCE
@@ -724,12 +673,7 @@ fun UpsertTransactionScreen(
                     placeHolder = "",
                     isError = transactionItem.price == 0.0,
                     errorHint = stringResource(id = R.string.invalid_price_error_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.Stack,
-                            contentDescription = "item icon",
-                        )
-                    },
+                    leadingIcon = TablerIcons.Stack,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         resetOneHandMode()

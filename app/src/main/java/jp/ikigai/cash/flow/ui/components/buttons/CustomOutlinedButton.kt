@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.ui.components.buttons
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,7 +46,7 @@ fun CustomOutlinedButton(
     placeHolder: String,
     isError: Boolean = false,
     errorHint: String = "",
-    leadingIcon: @Composable (() -> Unit)? = null,
+    leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
     onTrailingIconClick: (() -> Unit)? = null,
     onClick: () -> Unit
@@ -80,6 +81,15 @@ fun CustomOutlinedButton(
         }
     }
 
+    val animatedIconColor by animateColorAsState(
+        targetValue = if (isError) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        },
+        label = "animated icon color"
+    )
+
     Box {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
@@ -97,7 +107,14 @@ fun CustomOutlinedButton(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    leadingIcon?.invoke()
+                    leadingIcon?.let {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = it.name,
+                            modifier = Modifier.alpha(alpha = alpha),
+                            tint = animatedIconColor
+                        )
+                    }
                     Text(
                         text = text,
                         color = textColor,

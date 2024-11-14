@@ -44,8 +44,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
-import compose.icons.tablericons.ArrowDownCircle
-import compose.icons.tablericons.ArrowUpCircle
 import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
@@ -522,12 +520,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedCategory.name,
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedCategory.icon,
-                            contentDescription = "category icon",
-                        )
-                    },
+                    leadingIcon = selectedCategory.icon,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedCategory(Category())
@@ -547,12 +540,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedCounterParty.name,
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedCounterParty.icon,
-                            contentDescription = "counter party icon",
-                        )
-                    },
+                    leadingIcon = selectedCounterParty.icon,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedCounterParty(CounterParty())
@@ -572,12 +560,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedMethod.name,
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedMethod.icon,
-                            contentDescription = "method icon",
-                        )
-                    },
+                    leadingIcon = selectedMethod.icon,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedMethod(Method())
@@ -597,12 +580,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedSource.name,
                     label = stringResource(id = R.string.source_field_label),
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedSource.icon,
-                            contentDescription = "source icon",
-                        )
-                    },
+                    leadingIcon = selectedSource.icon,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedSource(Source())
@@ -622,12 +600,7 @@ fun UpsertTransactionTemplateScreen(
                     value = stringResource(id = transactionType.label),
                     label = stringResource(id = R.string.transaction_type_field_label),
                     placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (transactionType == TransactionType.DEBIT) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
-                            contentDescription = "transaction type icon",
-                        )
-                    },
+                    leadingIcon = transactionType.icon,
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.TYPE
@@ -663,12 +636,7 @@ fun UpsertTransactionTemplateScreen(
                     ),
                     label = stringResource(id = R.string.item_field_label, index + 1),
                     placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.Stack,
-                            contentDescription = "item icon",
-                        )
-                    },
+                    leadingIcon = TablerIcons.Stack,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         resetOneHandMode()

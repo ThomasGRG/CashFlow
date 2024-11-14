@@ -339,12 +339,7 @@ fun UpsertSourceScreen(
                 value = selectedCurrency,
                 label = stringResource(id = R.string.currency_label),
                 placeHolder = "",
-                leadingIcon = {
-                    Icon(
-                        imageVector = TablerIcons.CurrencyDollar,
-                        contentDescription = "currency icon",
-                    )
-                },
+                leadingIcon = TablerIcons.CurrencyDollar,
                 onClick = {
                     resetOneHandMode()
                     popupType = PopupType.CURRENCY
