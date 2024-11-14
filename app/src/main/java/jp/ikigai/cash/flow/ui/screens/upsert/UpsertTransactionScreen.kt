@@ -101,6 +101,7 @@ import java.time.ZonedDateTime
 @Composable
 fun UpsertTransactionScreen(
     navigateBack: () -> Unit,
+    setTitle: (String) -> Unit,
     setAmount: (String) -> Unit,
     setTaxAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
@@ -242,10 +243,17 @@ fun UpsertTransactionScreen(
 
     val isTitleFieldFocused by titleFieldInteractionSource.collectIsFocusedAsState()
 
-    var titleFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
+    val titleFieldValue by rememberSaveable(state.title, saver = TextFieldValueSaver) {
         mutableStateOf(
-            TextFieldValue(state.transaction.title)
+            TextFieldValue(
+                text = state.title,
+                selection = TextRange(state.title.length)
+            )
         )
+    }
+
+    val titleValid by remember(key1 = state.titleValid) {
+        mutableStateOf(state.titleValid)
     }
 
     val filteredTransactionTitles by remember(
@@ -481,13 +489,17 @@ fun UpsertTransactionScreen(
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             RoundedCornerOutlinedTextField(
                 value = titleFieldValue,
-                onValueChange = { titleFieldValue = it },
+                onValueChange = {
+                    setTitle(it.text)
+                },
                 enabled = enabled,
                 isFocused = isTitleFieldFocused,
                 label = stringResource(id = R.string.title_field_label),
                 placeHolder = stringResource(id = R.string.title_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "title icon",
+                isError = !titleValid,
+                errorHint = stringResource(id = R.string.field_required_error_label),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Done
@@ -514,10 +526,7 @@ fun UpsertTransactionScreen(
                     ) { title ->
                         OutlinedButton(
                             onClick = {
-                                titleFieldValue = TextFieldValue(
-                                    text = title,
-                                    selection = TextRange(title.length)
-                                )
+                                setTitle(title)
                             },
                             shape = MaterialTheme.shapes.small,
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -732,6 +741,7 @@ fun UpsertTransactionScreen(
 fun UpsertTransactionScreenPreview() {
     UpsertTransactionScreen(
         navigateBack = {},
+        setTitle = {},
         setAmount = {},
         setTaxAmount = {},
         setDate = {},
@@ -772,6 +782,7 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
+            setTitle = viewModel::setTitle,
             setAmount = viewModel::setAmount,
             setTaxAmount = viewModel::setTaxAmount,
             setDate = viewModel::setDate,

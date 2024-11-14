@@ -200,6 +200,7 @@ class UpsertTransactionScreenViewModel(
                 selectedSource = source,
                 items = upsertTransactionFlows.items,
                 transaction = transaction,
+                title = transaction.title,
                 dateTime = dateTime,
                 dateString = dateTime.getDateString(),
                 timeString = dateTime.getTimeString(),
@@ -240,6 +241,7 @@ class UpsertTransactionScreenViewModel(
                 ),
                 dateString = it.dateTime.getDateString(),
                 timeString = it.dateTime.getTimeString(),
+                title = transactionTemplate.title,
                 amount = transactionTemplate.amount,
                 taxAmount = transactionTemplate.taxAmount,
                 displayAmount = transactionTemplate.amount.toString(),
@@ -256,12 +258,14 @@ class UpsertTransactionScreenViewModel(
         val amount = state.value.amount
         val amountValid = amount > 0.0
 
+        val titleValid = state.value.title.isNotBlank()
         val categoryValid = state.value.selectedCategory.uuid.isNotEmpty()
         val methodValid = state.value.selectedMethod.uuid.isNotEmpty()
         val sourceValid = state.value.selectedSource.uuid.isNotEmpty()
 
         _state.update {
             it.copy(
+                titleValid = titleValid,
                 amountValid = amountValid,
                 categoryValid = categoryValid,
                 methodValid = methodValid,
@@ -279,7 +283,7 @@ class UpsertTransactionScreenViewModel(
             }
             return false
         }
-        return amountValid && itemsValid && categoryValid && methodValid && sourceValid
+        return amountValid && itemsValid && categoryValid && methodValid && sourceValid && titleValid
     }
 
     private fun hasSufficientBalance() {
@@ -316,9 +320,7 @@ class UpsertTransactionScreenViewModel(
 
             updateItems(state.value.transactionItems, time, transaction.currency)
 
-            if (newTitle.isNotBlank()) {
-                updateTransactionTitle(newTitle, time)
-            }
+            updateTransactionTitle(newTitle, time)
 
             if (templateUuid.isNotBlank()) {
                 updateTemplate(time)
@@ -662,6 +664,15 @@ class UpsertTransactionScreenViewModel(
         return (totalItemPrice
             ?: state.value.transactionItems.values.sumOf { it.price }) + (tax
             ?: state.value.taxAmount)
+    }
+
+    fun setTitle(title: String) {
+        _state.update {
+            it.copy(
+                title = title,
+                titleValid = title.isNotBlank()
+            )
+        }
     }
 
     fun setDate(date: ZonedDateTime) {

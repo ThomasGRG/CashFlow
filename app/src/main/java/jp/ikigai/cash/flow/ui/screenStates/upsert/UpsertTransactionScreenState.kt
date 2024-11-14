@@ -14,6 +14,8 @@ import java.time.ZonedDateTime
 
 data class UpsertTransactionScreenState(
     val transaction: Transaction = Transaction(),
+    val title: String = "",
+    val titleValid: Boolean = true,
     val amount: Double = 0.0,
     val displayAmount: String = "",
     val amountValid: Boolean = true,
