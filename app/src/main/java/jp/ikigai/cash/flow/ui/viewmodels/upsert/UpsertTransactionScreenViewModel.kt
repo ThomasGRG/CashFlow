@@ -154,12 +154,9 @@ class UpsertTransactionScreenViewModel(
                     it.copy(
                         transactionTitles = upsertTransactionFlows.transactionTitles,
                         categories = upsertTransactionFlows.categories,
-                        selectedCategory = upsertTransactionFlows.categories.first(),
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
-                        selectedMethod = upsertTransactionFlows.methods.first(),
                         sources = upsertTransactionFlows.sources,
-                        selectedSource = upsertTransactionFlows.sources.first(),
                         items = upsertTransactionFlows.items,
                         dateString = it.dateTime.getDateString(),
                         timeString = it.dateTime.getTimeString(),
@@ -259,9 +256,16 @@ class UpsertTransactionScreenViewModel(
         val amount = state.value.amount
         val amountValid = amount > 0.0
 
+        val categoryValid = state.value.selectedCategory.uuid.isNotEmpty()
+        val methodValid = state.value.selectedMethod.uuid.isNotEmpty()
+        val sourceValid = state.value.selectedSource.uuid.isNotEmpty()
+
         _state.update {
             it.copy(
                 amountValid = amountValid,
+                categoryValid = categoryValid,
+                methodValid = methodValid,
+                sourceValid = sourceValid
             )
         }
 
@@ -275,7 +279,7 @@ class UpsertTransactionScreenViewModel(
             }
             return false
         }
-        return amountValid && itemsValid
+        return amountValid && itemsValid && categoryValid && methodValid && sourceValid
     }
 
     private fun hasSufficientBalance() {
@@ -719,6 +723,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedCategory = category,
+                categoryValid = true
             )
         }
     }
@@ -735,6 +740,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedMethod = method,
+                methodValid = true
             )
         }
     }
@@ -743,6 +749,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedSource = source,
+                sourceValid = true,
                 transaction = it.transaction.apply {
                     currency = source.currency
                 }

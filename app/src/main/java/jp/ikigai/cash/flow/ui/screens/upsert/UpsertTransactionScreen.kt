@@ -1,15 +1,18 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
@@ -17,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -50,8 +54,6 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
-import compose.icons.tablericons.ArrowDownCircle
-import compose.icons.tablericons.ArrowUpCircle
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
@@ -183,6 +185,10 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.selectedCategory)
     }
 
+    val categoryValid by remember(key1 = state.categoryValid) {
+        mutableStateOf(state.categoryValid)
+    }
+
     val counterParties by remember(key1 = state.counterParties) {
         mutableStateOf(state.counterParties)
     }
@@ -199,12 +205,20 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.selectedMethod)
     }
 
+    val methodValid by remember(key1 = state.methodValid) {
+        mutableStateOf(state.methodValid)
+    }
+
     val sources by remember(key1 = state.sources) {
         mutableStateOf(state.sources)
     }
 
     val selectedSource by remember(key1 = state.selectedSource) {
         mutableStateOf(state.selectedSource)
+    }
+
+    val sourceValid by remember(key1 = state.sourceValid) {
+        mutableStateOf(state.sourceValid)
     }
 
     val items by remember(key1 = state.items) {
@@ -222,6 +236,12 @@ fun UpsertTransactionScreen(
     val transactionUuid by remember(key1 = state.transaction) {
         mutableStateOf(state.transaction.uuid)
     }
+
+    val titleFieldInteractionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isTitleFieldFocused by titleFieldInteractionSource.collectIsFocusedAsState()
 
     var titleFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
         mutableStateOf(
@@ -310,7 +330,8 @@ fun UpsertTransactionScreen(
 
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
-                        index = categories.indexOfFirst { it.uuid == selectedCategory.uuid },
+                        index = categories.indexOfFirst { it.uuid == selectedCategory.uuid }
+                            .coerceAtLeast(0),
                         selectedCategoryUUID = selectedCategory.uuid,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
@@ -337,7 +358,8 @@ fun UpsertTransactionScreen(
 
                 PopupType.METHOD -> {
                     SelectMethodPopup(
-                        index = methods.indexOfFirst { it.uuid == selectedMethod.uuid },
+                        index = methods.indexOfFirst { it.uuid == selectedMethod.uuid }
+                            .coerceAtLeast(0),
                         selectedMethodUUID = selectedMethod.uuid,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
@@ -350,7 +372,8 @@ fun UpsertTransactionScreen(
 
                 PopupType.SOURCE -> {
                     SelectSourcePopup(
-                        index = sources.indexOfFirst { it.uuid == selectedSource.uuid },
+                        index = sources.indexOfFirst { it.uuid == selectedSource.uuid }
+                            .coerceAtLeast(0),
                         selectedSourceUUID = selectedSource.uuid,
                         setSelectedSource = setSelectedSource,
                         sources = sources,
@@ -447,43 +470,36 @@ fun UpsertTransactionScreen(
             )
         }
     ) { oneHandModeBoxHeight, resetOneHandMode ->
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp),
+                .padding(start = 10.dp, end = 10.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            item(
-                key = "one-hand-mode-expand-row",
-                contentType = "row"
-            ) {
-                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-            }
-            item(
-                key = "title",
-                contentType = "textField"
-            ) {
-                RoundedCornerOutlinedTextField(
-                    value = titleFieldValue,
-                    onValueChange = { titleFieldValue = it },
-                    enabled = enabled,
-                    label = stringResource(id = R.string.title_field_label),
-                    placeHolder = stringResource(id = R.string.title_placeholder_label),
-                    icon = TablerIcons.Typography,
-                    iconDescription = "title icon",
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Done
-                    ),
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                )
-            }
-            item(
-                key = "titleAutoComplete",
-                contentType = "lazyRow"
+            OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
+            RoundedCornerOutlinedTextField(
+                value = titleFieldValue,
+                onValueChange = { titleFieldValue = it },
+                enabled = enabled,
+                isFocused = isTitleFieldFocused,
+                label = stringResource(id = R.string.title_field_label),
+                placeHolder = stringResource(id = R.string.title_placeholder_label),
+                icon = TablerIcons.Typography,
+                iconDescription = "title icon",
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
+                onDone = {
+                    keyboardController?.hide()
+                },
+                interactionSource = titleFieldInteractionSource
+            )
+            AnimatedVisibility(
+                visible = isTitleFieldFocused && filteredTransactionTitles.isNotEmpty()
             ) {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -518,215 +534,183 @@ fun UpsertTransactionScreen(
                     }
                 }
             }
-            item(
-                key = "description",
-                contentType = "textField"
-            ) {
-                RoundedCornerOutlinedTextField(
-                    value = descriptionFieldValue,
-                    onValueChange = { descriptionFieldValue = it },
-                    enabled = enabled,
-                    label = stringResource(id = R.string.description_field_label),
-                    placeHolder = stringResource(id = R.string.description_placeholder_label),
-                    icon = TablerIcons.FileText,
-                    iconDescription = "description icon",
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Done
-                    ),
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                )
-            }
-            item(
-                key = "amount",
-                contentType = "textField"
-            ) {
-                RoundedCornerOutlinedTextField(
-                    value = amount,
-                    onValueChange = setAmount,
-                    enabled = enabled && !itemHeaderVisible,
-                    label = stringResource(id = R.string.amount_label),
-                    placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
-                    icon = TablerIcons.CashBanknote,
-                    iconDescription = "amount icon",
-                    isError = !amountValid,
-                    errorHint = stringResource(id = R.string.invalid_amount_error_label),
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                )
-            }
-            item(
-                key = "date",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = date,
-                    label = stringResource(id = R.string.date_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.CalendarEvent,
-                            contentDescription = "date icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.DATE
-                    }
-                )
-            }
-            item(
-                key = "time",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = time,
-                    label = stringResource(id = R.string.time_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = TablerIcons.Alarm,
-                            contentDescription = "time icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.TIME
-                    }
-                )
-            }
-            item(
-                key = "category",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = selectedCategory.name,
-                    label = stringResource(id = R.string.category_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedCategory.icon,
-                            contentDescription = "category icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.CATEGORY
-                    }
-                )
-            }
-            item(
-                key = "counterParty",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = selectedCounterParty.name,
-                    label = stringResource(id = R.string.counter_party_field_label),
-                    placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedCounterParty.icon,
-                            contentDescription = "counter party icon",
-                        )
-                    },
-                    trailingIcon = Icons.Filled.Clear,
-                    onTrailingIconClick = {
-                        setSelectedCounterParty(CounterParty())
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.COUNTERPARTY
-                    }
-                )
-            }
-            item(
-                key = "method",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = selectedMethod.name,
-                    label = stringResource(id = R.string.method_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedMethod.icon,
-                            contentDescription = "method icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.METHOD
-                    }
-                )
-            }
-            item(
-                key = "source",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = selectedSource.name,
-                    label = stringResource(id = R.string.source_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = selectedSource.icon,
-                            contentDescription = "source icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.SOURCE
-                    }
-                )
-            }
-            item(
-                key = "transactionType",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = stringResource(id = transactionType.label),
-                    label = stringResource(id = R.string.transaction_type_field_label),
-                    placeHolder = "",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (transactionType == TransactionType.DEBIT) TablerIcons.ArrowUpCircle else TablerIcons.ArrowDownCircle,
-                            contentDescription = "type icon",
-                        )
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.TYPE
-                    }
-                )
-            }
-            if (itemHeaderVisible) {
-                item(
-                    key = "itemHeader",
-                    contentType = "header"
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.items_label),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
+            RoundedCornerOutlinedTextField(
+                value = descriptionFieldValue,
+                onValueChange = { descriptionFieldValue = it },
+                enabled = enabled,
+                label = stringResource(id = R.string.description_field_label),
+                placeHolder = stringResource(id = R.string.description_placeholder_label),
+                icon = TablerIcons.FileText,
+                iconDescription = "description icon",
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Done
+                ),
+                onDone = {
+                    keyboardController?.hide()
                 }
+            )
+            RoundedCornerOutlinedTextField(
+                value = amount,
+                onValueChange = setAmount,
+                enabled = enabled && !itemHeaderVisible,
+                label = stringResource(id = R.string.amount_label),
+                placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
+                icon = TablerIcons.CashBanknote,
+                iconDescription = "amount icon",
+                isError = !amountValid,
+                errorHint = stringResource(id = R.string.invalid_amount_error_label),
+                onDone = {
+                    keyboardController?.hide()
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = stringResource(id = transactionType.label),
+                label = stringResource(id = R.string.transaction_type_field_label),
+                placeHolder = "",
+                leadingIcon = {
+                    Icon(
+                        imageVector = transactionType.icon,
+                        contentDescription = "type icon"
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.TYPE
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = date,
+                label = stringResource(id = R.string.date_field_label),
+                placeHolder = "",
+                leadingIcon = {
+                    Icon(
+                        imageVector = TablerIcons.CalendarEvent,
+                        contentDescription = "date icon",
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.DATE
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = time,
+                label = stringResource(id = R.string.time_field_label),
+                placeHolder = "",
+                leadingIcon = {
+                    Icon(
+                        imageVector = TablerIcons.Alarm,
+                        contentDescription = "time icon",
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.TIME
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = selectedCategory.name,
+                label = stringResource(id = R.string.category_field_label),
+                placeHolder = stringResource(id = R.string.select_category_placeholder_label),
+                isError = !categoryValid,
+                errorHint = stringResource(id = R.string.field_required_error_label),
+                leadingIcon = {
+                    Icon(
+                        imageVector = selectedCategory.icon,
+                        contentDescription = "category icon",
+                        tint = if (categoryValid) {
+                            LocalContentColor.current
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.CATEGORY
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = selectedCounterParty.name,
+                label = stringResource(id = R.string.counter_party_field_label),
+                placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
+                leadingIcon = {
+                    Icon(
+                        imageVector = selectedCounterParty.icon,
+                        contentDescription = "counter party icon",
+                    )
+                },
+                trailingIcon = Icons.Filled.Clear,
+                onTrailingIconClick = {
+                    setSelectedCounterParty(CounterParty())
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.COUNTERPARTY
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = selectedMethod.name,
+                label = stringResource(id = R.string.method_field_label),
+                placeHolder = stringResource(id = R.string.select_method_placeholder_label),
+                isError = !methodValid,
+                errorHint = stringResource(id = R.string.field_required_error_label),
+                leadingIcon = {
+                    Icon(
+                        imageVector = selectedMethod.icon,
+                        contentDescription = "method icon",
+                        tint = if (methodValid) {
+                            LocalContentColor.current
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.METHOD
+                }
+            )
+            CustomOutlinedButton(
+                enabled = enabled,
+                value = selectedSource.name,
+                label = stringResource(id = R.string.source_field_label),
+                placeHolder = stringResource(id = R.string.select_source_placeholder_label),
+                isError = !sourceValid,
+                errorHint = stringResource(id = R.string.field_required_error_label),
+                leadingIcon = {
+                    Icon(
+                        imageVector = selectedSource.icon,
+                        contentDescription = "source icon",
+                        tint = if (sourceValid) {
+                            LocalContentColor.current
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+                },
+                onClick = {
+                    resetOneHandMode()
+                    popupType = PopupType.SOURCE
+                }
+            )
+            if (itemHeaderVisible) {
+                Text(
+                    text = stringResource(id = R.string.items_label),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
-            itemsIndexed(
-                items = transactionItems,
-                key = { _, transactionItem -> transactionItem.item!!.uuid }
-            ) { index, transactionItem ->
+            transactionItems.forEachIndexed { index, transactionItem ->
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = stringResource(
@@ -759,51 +743,41 @@ fun UpsertTransactionScreen(
                 )
             }
             if (itemHeaderVisible) {
-                item(
-                    key = "taxAmount",
-                    contentType = "textField"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = taxAmount,
-                        onValueChange = setTaxAmount,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.tax_field_label),
-                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
-                        icon = TablerIcons.CashBanknote,
-                        iconDescription = "tax amount icon",
-                        onDone = {
-                            keyboardController?.hide()
-                        }
-                    )
-                }
+                RoundedCornerOutlinedTextField(
+                    value = taxAmount,
+                    onValueChange = setTaxAmount,
+                    enabled = enabled,
+                    label = stringResource(id = R.string.tax_field_label),
+                    placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
+                    icon = TablerIcons.CashBanknote,
+                    iconDescription = "tax amount icon",
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
             }
-            item(
-                key = "addItemButton",
-                contentType = "button"
+            ExposedDropdownMenuBox(
+                expanded = false,
+                onExpandedChange = {
+                    if (enabled) {
+                        popupType = PopupType.ITEMS
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            popupType = PopupType.ITEMS
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = stringResource(id = R.string.add_item_button_label),
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        textStyle = TextStyle(
-                            textAlign = TextAlign.Center
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                }
+                OutlinedTextField(
+                    value = stringResource(id = R.string.add_item_button_label),
+                    onValueChange = {},
+                    enabled = enabled,
+                    readOnly = true,
+                    textStyle = TextStyle(
+                        textAlign = TextAlign.Center
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
             }
         }
     }

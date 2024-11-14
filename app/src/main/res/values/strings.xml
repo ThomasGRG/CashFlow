@@ -117,6 +117,7 @@
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
+    <string name="field_required_error_label">This field is required</string>
     <string name="invalid_price_error_label">Price cannot be 0</string>
     <string name="invalid_amount_error_label">Enter a number > 0</string>
     <string name="invalid_balance_error_label">Enter a number >= 0</string>
