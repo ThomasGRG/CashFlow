@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -74,7 +75,11 @@ fun RoundedCornerOutlinedTextField(
         targetValue = if (isError) {
             MaterialTheme.colorScheme.error
         } else {
-            MaterialTheme.colorScheme.onBackground
+            if (enabled) {
+                MaterialTheme.colorScheme.onBackground
+            } else {
+                MaterialTheme.colorScheme.onBackground.copy(alpha)
+            }
         },
         label = "animated icon color"
     )
@@ -169,6 +174,130 @@ fun RoundedCornerOutlinedTextField(
 
 @Composable
 fun RoundedCornerOutlinedTextField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    isFocused: Boolean,
+    enabled: Boolean,
+    label: String,
+    placeHolder: String,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    icon: ImageVector,
+    iconDescription: String,
+    isError: Boolean = false,
+    errorHint: String = "",
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        capitalization = KeyboardCapitalization.Words,
+        imeAction = ImeAction.Done
+    ),
+    onDone: KeyboardActionScope.() -> Unit,
+    interactionSource: MutableInteractionSource
+) {
+    val alpha by remember(key1 = enabled) {
+        mutableFloatStateOf(if (enabled) 1f else 0.38f)
+    }
+
+    val animatedIconColor by animateColorAsState(
+        targetValue = if (isError) {
+            MaterialTheme.colorScheme.error
+        } else {
+            if (enabled) {
+                MaterialTheme.colorScheme.onBackground
+            } else {
+                MaterialTheme.colorScheme.onBackground.copy(alpha)
+            }
+        },
+        label = "animated icon color"
+    )
+
+    val animatedLabelColor by animateColorAsState(
+        targetValue = if (enabled) {
+            if (isError) {
+                MaterialTheme.colorScheme.error
+            } else {
+                if (isFocused) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.outline
+                }
+            }
+        } else {
+            MaterialTheme.colorScheme.outline
+        },
+        label = "animated label color"
+    )
+
+    Box {
+        Column {
+            Spacer(modifier = Modifier.height(9.dp))
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                enabled = enabled,
+                modifier = modifier
+                    .fillMaxWidth(),
+                placeholder = {
+                    Text(text = placeHolder)
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = iconDescription,
+                        tint = animatedIconColor
+                    )
+                },
+                trailingIcon = {
+                    AnimatedVisibility(
+                        visible = value.text.isNotEmpty(),
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "clear field",
+                            modifier = Modifier
+                                .clickable(
+                                    enabled = enabled,
+                                    onClick = {
+                                        onValueChange(TextFieldValue(""))
+                                    }
+                                )
+                        )
+                    }
+                },
+                isError = isError,
+                keyboardOptions = keyboardOptions,
+                keyboardActions = KeyboardActions(
+                    onDone = onDone
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+            AnimatedTextFieldErrorLabel(
+                visible = isError,
+                errorLabel = errorHint
+            )
+        }
+        Row(
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .align(Alignment.TopStart)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = animatedLabelColor,
+                modifier = Modifier
+                    .background(backgroundColor)
+                    .alpha(alpha = alpha)
+                    .padding(start = 3.dp, end = 3.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun RoundedCornerOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -200,7 +329,11 @@ fun RoundedCornerOutlinedTextField(
         targetValue = if (isError) {
             MaterialTheme.colorScheme.error
         } else {
-            MaterialTheme.colorScheme.onBackground
+            if (enabled) {
+                MaterialTheme.colorScheme.onBackground
+            } else {
+                MaterialTheme.colorScheme.onBackground.copy(alpha)
+            }
         },
         label = "animated icon color"
     )
