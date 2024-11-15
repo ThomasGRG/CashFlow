@@ -122,7 +122,7 @@ fun RoundedCornerOutlinedTextField(
                 },
                 trailingIcon = {
                     AnimatedVisibility(
-                        visible = value.text.isNotEmpty(),
+                        visible = enabled && value.text.isNotEmpty(),
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
@@ -242,7 +242,7 @@ fun RoundedCornerOutlinedTextField(
                 },
                 trailingIcon = {
                     AnimatedVisibility(
-                        visible = value.text.isNotEmpty(),
+                        visible = enabled && value.text.isNotEmpty(),
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
@@ -370,7 +370,7 @@ fun RoundedCornerOutlinedTextField(
                 },
                 trailingIcon = {
                     AnimatedVisibility(
-                        visible = value.isNotEmpty(),
+                        visible = enabled && value.isNotEmpty(),
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
