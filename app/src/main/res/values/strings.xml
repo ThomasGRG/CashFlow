@@ -11,14 +11,23 @@
     <!--  Non Translatable Strings  -->
 
     <!--  Unit Strings  -->
-    <string name="gram_label">g</string>
-    <string name="kilogram_label">kg</string>
-    <string name="milliLiter_label">mL</string>
-    <string name="Liter_label">L</string>
-    <string name="ounce_label">oz</string>
-    <string name="fluid_ounce_label">fl oz</string>
-    <string name="pound_label">lb</string>
-    <string name="piece_label">Unit</string>
+    <string name="gram_code">g</string>
+    <string name="kilogram_code">kg</string>
+    <string name="milliLiter_code">mL</string>
+    <string name="liter_code">L</string>
+    <string name="ounce_code">oz</string>
+    <string name="fluid_ounce_code">fl oz</string>
+    <string name="pound_code">lb</string>
+
+    <string name="piece_label">Piece</string>
+
+    <string name="gram_label">Gram (g)</string>
+    <string name="kilogram_label">Kilogram (kg)</string>
+    <string name="milliLiter_label">Milliliter (mL)</string>
+    <string name="liter_label">Liter (L)</string>
+    <string name="ounce_label">Ounce (oz)</string>
+    <string name="fluid_ounce_label">Fluid Ounce (fl oz)</string>
+    <string name="pound_label">Pound (lb)</string>
     <!--  Unit Strings  -->
 
     <!--  Common Strings  -->
