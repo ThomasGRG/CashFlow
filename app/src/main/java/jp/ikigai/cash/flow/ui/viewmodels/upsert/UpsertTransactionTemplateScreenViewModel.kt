@@ -10,6 +10,7 @@ import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
+import jp.ikigai.cash.flow.data.dto.UpsertTemplateItemCardInfo
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionTemplateFlows
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
@@ -18,6 +19,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.combineSixFlows
@@ -124,7 +126,20 @@ class UpsertTransactionTemplateScreenViewModel(
                     selectedCounterParty = selectedCounterParty,
                     counterParties = upsertTransactionTemplateFlows.counterParties,
                     items = upsertTransactionTemplateFlows.items,
-                    transactionItems = transactionTemplate.items.associateBy { transactionItem -> transactionItem.item!! },
+                    addItemsFilteredList = upsertTransactionTemplateFlows.items,
+                    templateItems = transactionTemplate.items.map { transactionItem ->
+                        val total = transactionItem.price * transactionItem.quantity
+                        UpsertTemplateItemCardInfo(
+                            item = transactionItem.item!!,
+                            unit = transactionItem.unit,
+                            price = transactionItem.price,
+                            displayPrice = transactionItem.price.toString(),
+                            totalPrice = total,
+                            totalDisplayPrice = total.toString(),
+                            quantity = transactionItem.quantity,
+                            displayQuantity = transactionItem.quantity.toString()
+                        )
+                    },
                     selectedMethod = selectedMethod,
                     methods = upsertTransactionTemplateFlows.methods,
                     selectedSource = selectedSource,
@@ -146,6 +161,7 @@ class UpsertTransactionTemplateScreenViewModel(
         if (state.value.selectedCounterParty.uuid.isNotBlank()) validCount += 1
         if (state.value.selectedMethod.uuid.isNotBlank()) validCount += 1
         if (state.value.selectedSource.uuid.isNotBlank()) validCount += 1
+        if (state.value.templateItems.isNotEmpty()) validCount += 1
         return validCount >= 2
     }
 
@@ -174,9 +190,6 @@ class UpsertTransactionTemplateScreenViewModel(
             val selectedMethod = state.value.selectedMethod
             val selectedSource = state.value.selectedSource
 
-            val transactionItems: List<TransactionItem> =
-                state.value.transactionItems.values.toList()
-
             val result = realm.write {
                 val latestCategory =
                     if (selectedCategory.uuid.isNotBlank()) findLatest(selectedCategory) else null
@@ -186,15 +199,19 @@ class UpsertTransactionTemplateScreenViewModel(
                     if (selectedMethod.uuid.isNotBlank()) findLatest(selectedMethod) else null
                 val latestSource =
                     if (selectedSource.uuid.isNotBlank()) findLatest(selectedSource) else null
-                val latestTransactionItems = transactionItems.map {
-                    val latestItem = findLatest(it.item!!)
-                    TransactionItem(
-                        item = latestItem,
-                        price = it.price,
-                        quantity = it.quantity,
-                        unit = it.unit
-                    )
-                }.toRealmList()
+                val latestTransactionItems = if (state.value.type == TransactionType.DEBIT) {
+                    state.value.templateItems.map {
+                        val latestItem = findLatest(it.item)
+                        TransactionItem(
+                            item = latestItem,
+                            price = it.price,
+                            quantity = it.quantity,
+                            unit = it.unit
+                        )
+                    }
+                } else {
+                    emptyList()
+                }
                 if (templateUuid.isBlank()) {
                     copyToRealm(
                         instance = transactionTemplate.apply {
@@ -203,13 +220,14 @@ class UpsertTransactionTemplateScreenViewModel(
                             this.title = newTitle
                             this.description = newDescription
                             this.amount = state.value.amount
-                            this.taxAmount = state.value.taxAmount
+                            this.taxAmount =
+                                if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                             this.type = state.value.type
                             this.category = latestCategory
                             this.method = latestMethod
                             this.source = latestSource
                             this.counterParty = latestCounterParty
-                            this.items = latestTransactionItems
+                            this.items = latestTransactionItems.toRealmList()
                         },
                         updatePolicy = UpdatePolicy.ALL
                     )
@@ -219,13 +237,14 @@ class UpsertTransactionTemplateScreenViewModel(
                         it.title = newTitle
                         it.description = newDescription
                         it.amount = state.value.amount
-                        it.taxAmount = state.value.taxAmount
+                        it.taxAmount =
+                            if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                         it.type = state.value.type
                         it.category = latestCategory
                         it.method = latestMethod
                         it.source = latestSource
                         it.counterParty = latestCounterParty
-                        it.items = latestTransactionItems
+                        it.items = latestTransactionItems.toRealmList()
                     }
                 }
             }
@@ -274,52 +293,135 @@ class UpsertTransactionTemplateScreenViewModel(
     }
 
     fun setTaxAmount(amountString: String) {
-        val newTaxAmount = amountString.toDoubleOrNull() ?: 0.0
-        val newAmount = calculateAmount(tax = newTaxAmount)
         _state.update {
             it.copy(
-                taxAmount = newTaxAmount,
-                amount = newAmount,
+                taxAmount = amountString.toDoubleOrNull() ?: 0.0,
                 displayTaxAmount = amountString,
-                displayAmount = newAmount.toString()
             )
         }
     }
 
-    fun addItem(transactionItem: TransactionItem) {
-        val transactionItems = state.value.transactionItems.toMutableMap()
-        transactionItems[transactionItem.item!!] = transactionItem
-        val newAmount = calculateAmount(
-            totalItemPrice = transactionItems.values.sumOf { it.price }
-        )
-        _state.update {
-            it.copy(
-                transactionItems = transactionItems,
+    fun addItems(items: List<Item>) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            templateItems.addAll(
+                items.map { item ->
+                    val isSameCurrency =
+                        screenState.selectedSource.uuid.isNotEmpty() && item.lastUsedCurrency == screenState.selectedSource.currency
+                    val price = if (isSameCurrency) item.lastKnownPrice else 0.0
+                    UpsertTemplateItemCardInfo(
+                        item = item,
+                        unit = item.lastUsedUnit,
+                        price = price,
+                        displayPrice = price.toString(),
+                        quantity = 0.0,
+                        displayQuantity = "0",
+                        totalPrice = 0.0,
+                        totalDisplayPrice = "0"
+                    )
+                }
+            )
+            val selectedItemUUIDs = templateItems.map { it.item.uuid }
+            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
+            val newAmount = templateItems.sumOf { it.totalPrice }
+            screenState.copy(
+                templateItems = templateItems,
+                addItemsFilteredList = filteredItems,
                 amount = newAmount,
                 displayAmount = newAmount.toString(),
             )
         }
     }
 
-    fun removeItem(transactionItem: TransactionItem) {
-        val transactionItems = state.value.transactionItems.toMutableMap()
-        transactionItems.remove(transactionItem.item)
-        val newAmount = calculateAmount(
-            totalItemPrice = transactionItems.values.sumOf { it.price }
-        )
-        _state.update {
-            it.copy(
-                transactionItems = transactionItems,
-                amount = newAmount,
-                displayAmount = newAmount.toString(),
+    fun updateItem(item: Item, index: Int) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            templateItems[index] = templateItems[index].copy(
+                item = item
+            )
+            val selectedItemUUIDs = templateItems.map { it.item.uuid }
+            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
+            screenState.copy(
+                templateItems = templateItems,
+                addItemsFilteredList = filteredItems
             )
         }
     }
 
-    private fun calculateAmount(totalItemPrice: Double? = null, tax: Double? = null): Double {
-        return (totalItemPrice
-            ?: state.value.transactionItems.values.sumOf { it.price }) + (tax
-            ?: state.value.taxAmount)
+    fun updateUnit(itemUnit: ItemUnit, index: Int) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            templateItems[index] = templateItems[index].copy(
+                unit = itemUnit
+            )
+            screenState.copy(
+                templateItems = templateItems
+            )
+        }
+    }
+
+    fun getChangeItemFilteredList(uuid: String): List<Item> {
+        val templateItems = state.value.templateItems
+        val selectedItemUUIDs = templateItems.map { it.item.uuid }
+        return state.value.items.filter { item ->
+            item.uuid == uuid || !selectedItemUUIDs.contains(item.uuid)
+        }
+    }
+
+    fun updateTemplateItemPrice(amountString: String, index: Int) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            val newAmount = amountString.toDoubleOrNull() ?: 0.0
+            val totalPrice = newAmount * templateItems[index].quantity
+            templateItems[index] = templateItems[index].copy(
+                price = newAmount,
+                displayPrice = amountString,
+                totalPrice = totalPrice,
+                totalDisplayPrice = totalPrice.toString()
+            )
+            val totalAmount = templateItems.sumOf { it.totalPrice }
+            screenState.copy(
+                templateItems = templateItems,
+                amount = totalAmount,
+                displayAmount = totalAmount.toString()
+            )
+        }
+    }
+
+    fun updateTemplateItemQuantity(quantityString: String, index: Int) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            val newQuantity = quantityString.toDoubleOrNull() ?: 0.0
+            val totalPrice = templateItems[index].price * newQuantity
+            templateItems[index] = templateItems[index].copy(
+                quantity = newQuantity,
+                displayQuantity = quantityString,
+                totalPrice = totalPrice,
+                totalDisplayPrice = totalPrice.toString()
+            )
+            val totalAmount = templateItems.sumOf { it.price }
+            screenState.copy(
+                templateItems = templateItems,
+                amount = totalAmount,
+                displayAmount = totalAmount.toString()
+            )
+        }
+    }
+
+    fun removeItem(index: Int) {
+        _state.update { screenState ->
+            val templateItems = screenState.templateItems.toMutableList()
+            templateItems.removeAt(index)
+            val selectedItemUUIDs = templateItems.map { it.item.uuid }
+            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
+            val totalAmount = templateItems.sumOf { it.price }
+            screenState.copy(
+                templateItems = templateItems,
+                addItemsFilteredList = filteredItems,
+                amount = totalAmount,
+                displayAmount = totalAmount.toString()
+            )
+        }
     }
 
     fun setSelectedCategory(category: Category) {

@@ -1,11 +1,11 @@
 package jp.ikigai.cash.flow.ui.screenStates.upsert
 
+import jp.ikigai.cash.flow.data.dto.UpsertTemplateItemCardInfo
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 
@@ -25,7 +25,8 @@ data class UpsertTransactionTemplateScreenState(
     val sources: List<Source> = emptyList(),
     val selectedSource: Source = Source(),
     val items: List<Item> = emptyList(),
-    val transactionItems: Map<Item, TransactionItem> = emptyMap(),
+    val addItemsFilteredList: List<Item> = emptyList(),
+    val templateItems: List<UpsertTemplateItemCardInfo> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
 )

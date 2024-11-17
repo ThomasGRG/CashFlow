@@ -1,29 +1,28 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,11 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -48,30 +45,33 @@ import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.LetterCase
-import compose.icons.tablericons.Stack
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
+import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.TransactionItem
+import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
+import jp.ikigai.cash.flow.ui.components.cards.UpsertTemplateItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.popups.AddItemsPopup
+import jp.ikigai.cash.flow.ui.components.popups.ChangeItemPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectItemPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectUnitPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -82,12 +82,17 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertTransactionTemplateScreen(
     navigateBack: () -> Unit,
-    addItem: (TransactionItem) -> Unit,
-    removeItem: (TransactionItem) -> Unit,
+    addItems: (List<Item>) -> Unit,
+    changeItem: (Item, Int) -> Unit,
+    getChangeItemFilteredList: (String) -> List<Item>,
+    updateTransactionItemUnit: (ItemUnit, Int) -> Unit,
+    updateTemplateItemPrice: (String, Int) -> Unit,
+    updateTemplateItemQuantity: (String, Int) -> Unit,
+    removeItem: (Int) -> Unit,
     setAmount: (String) -> Unit,
     setTaxAmount: (String) -> Unit,
     setSelectedCategory: (Category) -> Unit,
@@ -134,14 +139,6 @@ fun UpsertTransactionTemplateScreen(
         }
     }
 
-    val transactionItems by remember(key1 = state.transactionItems) {
-        mutableStateOf(state.transactionItems.values.toList())
-    }
-
-    val itemHeaderVisible by remember(key1 = state.transactionItems) {
-        derivedStateOf { state.transactionItems.isNotEmpty() }
-    }
-
     val categories by remember(key1 = state.categories) {
         mutableStateOf(state.categories)
     }
@@ -150,8 +147,12 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.counterParties)
     }
 
-    val items by remember(key1 = state.items) {
-        mutableStateOf(state.items)
+    val addItemsFilteredList by remember(key1 = state.addItemsFilteredList) {
+        mutableStateOf(state.addItemsFilteredList)
+    }
+
+    val templateItems by remember(key1 = state.templateItems) {
+        mutableStateOf(state.templateItems)
     }
 
     val methods by remember(key1 = state.methods) {
@@ -201,6 +202,12 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.displayAmount)
     }
 
+    val amountEnabled by remember(key1 = enabled, key2 = state.type, key3 = templateItems) {
+        mutableStateOf(
+            enabled && (state.type == TransactionType.CREDIT || templateItems.isEmpty())
+        )
+    }
+
     val taxAmount by remember(key1 = state.displayTaxAmount) {
         mutableStateOf(state.displayTaxAmount)
     }
@@ -221,8 +228,12 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.selectedSource)
     }
 
-    var selectedTransactionItem by remember {
-        mutableStateOf(TransactionItem())
+    var selectedTemplateItemIndex by remember {
+        mutableIntStateOf(-1)
+    }
+
+    val itemHeaderVisible by remember(key1 = state.templateItems) {
+        mutableStateOf(state.templateItems.isNotEmpty())
     }
 
     val transactionType by remember(key1 = state.type) {
@@ -335,14 +346,37 @@ fun UpsertTransactionTemplateScreen(
                     )
                 }
 
-                PopupType.ITEMS -> {
-                    SelectItemPopup(
-                        index = items.indexOfFirst { it.uuid == selectedTransactionItem.item?.uuid }
-                            .coerceAtLeast(0),
-                        templateMode = true,
-                        selectedTransactionItem = selectedTransactionItem,
-                        items = items,
-                        addItem = addItem,
+                PopupType.ADD_ITEMS -> {
+                    AddItemsPopup(
+                        items = addItemsFilteredList,
+                        addItems = addItems,
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        }
+                    )
+                }
+
+                PopupType.CHANGE_ITEM -> {
+                    ChangeItemPopup(
+                        selectedItemUUID = templateItems[selectedTemplateItemIndex].item.uuid,
+                        setSelectedItem = {
+                            changeItem(it, selectedTemplateItemIndex)
+                        },
+                        getItems = getChangeItemFilteredList,
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        }
+                    )
+                }
+
+                PopupType.ITEM_UNIT -> {
+                    SelectUnitPopup(
+                        selectedUnit = templateItems[selectedTemplateItemIndex].unit,
+                        updateUnit = {
+                            updateTransactionItemUnit(it, selectedTemplateItemIndex)
+                        },
                         dismiss = {
                             hidePopup()
                             popupType = PopupType.NONE
@@ -436,7 +470,7 @@ fun UpsertTransactionTemplateScreen(
             }
             item(
                 key = "name",
-                contentType = "dropDown"
+                contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
                     value = nameFieldValue,
@@ -453,12 +487,13 @@ fun UpsertTransactionTemplateScreen(
                     iconDescription = "name icon",
                     onDone = {
                         keyboardController?.hide()
-                    }
+                    },
+                    boxModifier = Modifier.animateItem()
                 )
             }
             item(
                 key = "title",
-                contentType = "dropDown"
+                contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
                     value = titleFieldValue,
@@ -470,12 +505,13 @@ fun UpsertTransactionTemplateScreen(
                     iconDescription = "title icon",
                     onDone = {
                         keyboardController?.hide()
-                    }
+                    },
+                    boxModifier = Modifier.animateItem()
                 )
             }
             item(
                 key = "description",
-                contentType = "textField"
+                contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
                     value = descriptionFieldValue,
@@ -491,24 +527,63 @@ fun UpsertTransactionTemplateScreen(
                     ),
                     onDone = {
                         keyboardController?.hide()
-                    }
+                    },
+                    boxModifier = Modifier.animateItem()
                 )
             }
             item(
                 key = "amount",
-                contentType = "textField"
+                contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
                     value = amount,
                     onValueChange = setAmount,
-                    enabled = enabled && !itemHeaderVisible,
+                    enabled = amountEnabled,
                     label = stringResource(id = R.string.amount_label),
                     placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
                     icon = TablerIcons.CashBanknote,
                     iconDescription = "amount icon",
                     onDone = {
                         keyboardController?.hide()
-                    }
+                    },
+                    boxModifier = Modifier.animateItem()
+                )
+            }
+            if (transactionType == TransactionType.DEBIT) {
+                item(
+                    key = "taxAmount",
+                    contentType = "textField"
+                ) {
+                    RoundedCornerOutlinedTextField(
+                        value = taxAmount,
+                        onValueChange = setTaxAmount,
+                        enabled = enabled,
+                        label = stringResource(id = R.string.tax_field_label),
+                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
+                        icon = TablerIcons.CashBanknote,
+                        iconDescription = "tax amount icon",
+                        onDone = {
+                            keyboardController?.hide()
+                        },
+                        boxModifier = Modifier.animateItem()
+                    )
+                }
+            }
+            item(
+                key = "transactionType",
+                contentType = "dropDown"
+            ) {
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = stringResource(id = transactionType.label),
+                    label = stringResource(id = R.string.transaction_type_field_label),
+                    placeHolder = "",
+                    leadingIcon = transactionType.icon,
+                    onClick = {
+                        resetOneHandMode()
+                        popupType = PopupType.TYPE
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
             item(
@@ -528,7 +603,8 @@ fun UpsertTransactionTemplateScreen(
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.CATEGORY
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
             item(
@@ -548,7 +624,8 @@ fun UpsertTransactionTemplateScreen(
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.COUNTERPARTY
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
             item(
@@ -568,7 +645,8 @@ fun UpsertTransactionTemplateScreen(
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.METHOD
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
             item(
@@ -588,26 +666,11 @@ fun UpsertTransactionTemplateScreen(
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.SOURCE
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
-            item(
-                key = "transactionType",
-                contentType = "dropDown"
-            ) {
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = stringResource(id = transactionType.label),
-                    label = stringResource(id = R.string.transaction_type_field_label),
-                    placeHolder = "",
-                    leadingIcon = transactionType.icon,
-                    onClick = {
-                        resetOneHandMode()
-                        popupType = PopupType.TYPE
-                    }
-                )
-            }
-            if (itemHeaderVisible) {
+            if (transactionType == TransactionType.DEBIT && itemHeaderVisible) {
                 item(
                     key = "itemHeader",
                     contentType = "header"
@@ -615,85 +678,58 @@ fun UpsertTransactionTemplateScreen(
                     Text(
                         text = stringResource(id = R.string.items_label),
                         modifier = Modifier
-                            .animateItemPlacement()
                             .fillMaxWidth()
-                            .padding(10.dp),
+                            .padding(10.dp)
+                            .animateItem(),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-            }
-            itemsIndexed(
-                items = transactionItems,
-                key = { _, transactionItem -> transactionItem.item!!.uuid }
-            ) { index, transactionItem ->
-                CustomOutlinedButton(
-                    enabled = enabled,
-                    value = stringResource(
-                        id = R.string.item_quantity_unit_label,
-                        transactionItem.item!!.name,
-                        transactionItem.quantity.toString(),
-                        stringResource(id = transactionItem.unit.code)
-                    ),
-                    label = stringResource(id = R.string.item_field_label, index + 1),
-                    placeHolder = "",
-                    leadingIcon = TablerIcons.Stack,
-                    trailingIcon = Icons.Filled.Clear,
-                    onTrailingIconClick = {
-                        resetOneHandMode()
-                        removeItem(transactionItem)
-                    },
-                    onClick = {
-                        resetOneHandMode()
-                        selectedTransactionItem = transactionItem
-                        popupType = PopupType.ITEMS
-                    }
-                )
-            }
-            if (itemHeaderVisible) {
-                item(
-                    key = "taxAmount",
-                    contentType = "textField"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = taxAmount,
-                        onValueChange = setTaxAmount,
+                itemsIndexed(
+                    items = templateItems,
+                    key = { _, templateItem -> templateItem.item.uuid }
+                ) { index, templateItem ->
+                    UpsertTemplateItemCard(
+                        modifier = Modifier.animateItem(),
+                        index = index,
                         enabled = enabled,
-                        label = stringResource(id = R.string.tax_field_label),
-                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
-                        icon = TablerIcons.CashBanknote,
-                        iconDescription = "tax amount icon",
-                        onDone = {
-                            keyboardController?.hide()
-                        }
+                        data = templateItem,
+                        onItemClick = {
+                            selectedTemplateItemIndex = index
+                            resetOneHandMode()
+                            popupType = PopupType.CHANGE_ITEM
+                        },
+                        onUnitClick = {
+                            selectedTemplateItemIndex = index
+                            resetOneHandMode()
+                            popupType = PopupType.ITEM_UNIT
+                        },
+                        updatePrice = updateTemplateItemPrice,
+                        updateQuantity = updateTemplateItemQuantity,
+                        remove = removeItem
                     )
                 }
             }
-            item(
-                key = "addItemButton",
-                contentType = "button"
-            ) {
-                ExposedDropdownMenuBox(
-                    expanded = false,
-                    onExpandedChange = {
-                        if (enabled) {
-                            popupType = PopupType.ITEMS
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+            if (transactionType == TransactionType.DEBIT) {
+                item(
+                    key = "add-item",
+                    contentType = "button"
                 ) {
-                    OutlinedTextField(
-                        value = stringResource(id = R.string.add_item_button_label),
-                        onValueChange = {},
-                        enabled = enabled,
-                        readOnly = true,
-                        textStyle = TextStyle(
-                            textAlign = TextAlign.Center
-                        ),
-                        shape = RoundedCornerShape(14.dp),
+                    OutlinedButton(
+                        onClick = {
+                            popupType = PopupType.ADD_ITEMS
+                        },
+                        enabled = enabled && addItemsFilteredList.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
-                    )
+                            .height(55.dp)
+                            .animateItem(),
+                        shape = MaterialTheme.shapes.small,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onBackground
+                        )
+                    ) {
+                        Text(text = stringResource(id = R.string.add_item_button_label))
+                    }
                 }
             }
         }
@@ -705,7 +741,12 @@ fun UpsertTransactionTemplateScreen(
 fun UpsertTransactionTemplateScreenPreview() {
     UpsertTransactionTemplateScreen(
         navigateBack = {},
-        addItem = {},
+        addItems = {},
+        changeItem = { _, _ -> },
+        getChangeItemFilteredList = { _ -> emptyList() },
+        updateTemplateItemPrice = { _, _ -> },
+        updateTransactionItemUnit = { _, _ -> },
+        updateTemplateItemQuantity = { _, _ -> },
         removeItem = {},
         setAmount = {},
         setTaxAmount = {},
@@ -738,7 +779,12 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             navigateBack = {
                 navController.popBackStack()
             },
-            addItem = viewModel::addItem,
+            addItems = viewModel::addItems,
+            changeItem = viewModel::updateItem,
+            getChangeItemFilteredList = viewModel::getChangeItemFilteredList,
+            updateTransactionItemUnit = viewModel::updateUnit,
+            updateTemplateItemPrice = viewModel::updateTemplateItemPrice,
+            updateTemplateItemQuantity = viewModel::updateTemplateItemQuantity,
             removeItem = viewModel::removeItem,
             setAmount = viewModel::setAmount,
             setTaxAmount = viewModel::setTaxAmount,
