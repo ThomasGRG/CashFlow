@@ -218,11 +218,12 @@ class TransactionTemplateScreenViewModel(
                     )
                 )
             }
+            val totalAmount = template.amount + template.taxAmount
             TransactionTemplateWithIcons(
                 uuid = template.uuid,
                 annotatedName = getHighlightedString(template.name, searchText),
-                amount = if (template.amount > 0) {
-                    formatter.format(template.amount).toString()
+                amount = if (totalAmount > 0) {
+                    formatter.format(totalAmount).toString()
                 } else {
                     ""
                 },
