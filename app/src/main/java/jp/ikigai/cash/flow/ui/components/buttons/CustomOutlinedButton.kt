@@ -40,6 +40,7 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
 
 @Composable
 fun CustomOutlinedButton(
+    modifier: Modifier = Modifier,
     enabled: Boolean,
     value: String,
     label: String,
@@ -90,7 +91,7 @@ fun CustomOutlinedButton(
         label = "animated icon color"
     )
 
-    Box {
+    Box(modifier = modifier) {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
             Surface(
