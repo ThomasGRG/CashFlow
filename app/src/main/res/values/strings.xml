@@ -77,6 +77,7 @@
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
+    <string name="remove_button_label">Remove</string>
     <string name="cancel_button_label">Cancel</string>
     <string name="sort_button_label">Sort</string>
     <string name="add_item_button_label">Add item</string>
@@ -85,7 +86,7 @@
     <string name="delete_button_label">Delete</string>
     <string name="filter_button_label">Filter</string>
     <string name="back_button_label">Back</string>
-    <string name="add_button_label">Add</string>
+    <string name="add_button_label">Add (%1$d)</string>
     <string name="new_transaction_button_label">New</string>
     <string name="clone_transaction_button_label">Clone transaction</string>
     <string name="clone_transaction_current_date_button_label">Clone transaction with today\'s time</string>
@@ -148,7 +149,8 @@
 
     <!--  TextField Strings  -->
     <string name="search_field_label">Search</string>
-    <string name="item_field_label">Item #%1$d</string>
+    <string name="item_field_label">Item</string>
+    <string name="unit_field_label">Unit</string>
     <string name="template_name_field_label">Template name</string>
     <string name="title_field_label">Title</string>
     <string name="description_field_label">Description</string>
@@ -161,7 +163,7 @@
     <string name="source_field_label">Source</string>
     <string name="transaction_type_field_label">Transaction type</string>
     <string name="balance_field_label">Balance</string>
-    <string name="price_field_label">Price</string>
+    <string name="price_field_label">Price per unit</string>
     <string name="quantity_field_label">Quantity</string>
     <string name="name_field_label">Name</string>
     <string name="minimum_amount_field_label">Minimum amount</string>
@@ -173,6 +175,7 @@
     <!--  Dialog Strings  -->
 
     <!--  Card Strings  -->
+    <string name="item_number_label">Item #%1$d - %2$s</string>
     <string name="frequency_of_use_label">Frequency of use : %1$s</string>
     <string name="last_known_price_label">Last known price : %1$s/%2$s</string>
     <string name="transaction_count_label">Transactions : %1$s</string>
