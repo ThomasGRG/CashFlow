@@ -49,6 +49,7 @@ fun RoundedCornerOutlinedTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
     enabled: Boolean,
     label: String,
     placeHolder: String,
@@ -97,7 +98,7 @@ fun RoundedCornerOutlinedTextField(
         label = "animated label color"
     )
 
-    Box {
+    Box(modifier = boxModifier) {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
             OutlinedTextField(
@@ -174,6 +175,7 @@ fun RoundedCornerOutlinedTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
     isFocused: Boolean,
     enabled: Boolean,
     label: String,
@@ -220,7 +222,7 @@ fun RoundedCornerOutlinedTextField(
         label = "animated label color"
     )
 
-    Box {
+    Box(modifier = boxModifier) {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
             OutlinedTextField(
@@ -295,6 +297,7 @@ fun RoundedCornerOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
     enabled: Boolean,
     label: String,
     placeHolder: String,
@@ -345,7 +348,7 @@ fun RoundedCornerOutlinedTextField(
         label = "animated label color"
     )
 
-    Box {
+    Box(modifier = boxModifier) {
         Column {
             Spacer(modifier = Modifier.height(9.dp))
             OutlinedTextField(
