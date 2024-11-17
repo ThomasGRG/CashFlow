@@ -73,7 +73,7 @@ fun RoundedCornerOutlinedTextField(
     }
 
     val animatedIconColor by animateColorAsState(
-        targetValue = if (isError) {
+        targetValue = if (enabled && isError) {
             MaterialTheme.colorScheme.error
         } else {
             MaterialTheme.colorScheme.onBackground
@@ -148,7 +148,7 @@ fun RoundedCornerOutlinedTextField(
                 shape = RoundedCornerShape(14.dp),
             )
             AnimatedTextFieldErrorLabel(
-                visible = isError,
+                visible = enabled && isError,
                 errorLabel = errorHint
             )
         }
@@ -197,7 +197,7 @@ fun RoundedCornerOutlinedTextField(
     }
 
     val animatedIconColor by animateColorAsState(
-        targetValue = if (isError) {
+        targetValue = if (enabled && isError) {
             MaterialTheme.colorScheme.error
         } else {
             MaterialTheme.colorScheme.onBackground
@@ -270,7 +270,7 @@ fun RoundedCornerOutlinedTextField(
                 interactionSource = interactionSource
             )
             AnimatedTextFieldErrorLabel(
-                visible = isError,
+                visible = enabled && isError,
                 errorLabel = errorHint
             )
         }
@@ -323,7 +323,7 @@ fun RoundedCornerOutlinedTextField(
     }
 
     val animatedIconColor by animateColorAsState(
-        targetValue = if (isError) {
+        targetValue = if (enabled && isError) {
             MaterialTheme.colorScheme.error
         } else {
             MaterialTheme.colorScheme.onBackground
@@ -398,7 +398,7 @@ fun RoundedCornerOutlinedTextField(
                 shape = RoundedCornerShape(14.dp),
             )
             AnimatedTextFieldErrorLabel(
-                visible = isError,
+                visible = enabled && isError,
                 errorLabel = errorHint
             )
         }
