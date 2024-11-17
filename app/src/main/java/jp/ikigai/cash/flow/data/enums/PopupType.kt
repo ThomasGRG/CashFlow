@@ -15,7 +15,7 @@ enum class PopupType {
     MORE_OPTIONS,
     FILTER,
     TEMPLATES,
-    ITEMS,
+    UPSERT_ITEM,
     ADD_ITEMS,
     CHANGE_ITEM,
     ITEM_UNIT,

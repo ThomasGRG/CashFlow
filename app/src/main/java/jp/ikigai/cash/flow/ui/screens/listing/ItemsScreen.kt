@@ -178,7 +178,7 @@ fun ItemsScreen(
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when (popupType) {
-                PopupType.ITEMS -> {
+                PopupType.UPSERT_ITEM -> {
                     UpsertItemPopup(
                         name = selectedItem?.annotatedName?.text ?: "",
                         items = itemNames,
@@ -243,7 +243,7 @@ fun ItemsScreen(
                 sortIcon = sortIcon,
                 addClick = {
                     editItem(null)
-                    popupType = PopupType.ITEMS
+                    popupType = PopupType.UPSERT_ITEM
                 },
                 searchClick = if (count > 0) {
                     {
@@ -334,7 +334,7 @@ fun ItemsScreen(
                         onClick = { itemDTO ->
                             resetOneHandMode()
                             editItem(itemDTO)
-                            popupType = PopupType.ITEMS
+                            popupType = PopupType.UPSERT_ITEM
                         },
                     )
                 }
