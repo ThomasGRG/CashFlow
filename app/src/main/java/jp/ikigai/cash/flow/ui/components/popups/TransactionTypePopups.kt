@@ -15,6 +15,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 
 @Composable
@@ -101,6 +105,121 @@ fun SelectTransactionTypePopup(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterTransactionTypePopup(
+    selectedTransactionTypes: List<Int>,
+    filter: (List<Int>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val selectedTypes = remember {
+        mutableStateListOf<Int>()
+    }
+
+    LaunchedEffect(Unit) {
+        selectedTypes.addAll(selectedTransactionTypes)
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 200.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item(
+                key = "credit",
+                contentType = "row"
+            ) {
+                MultiSelectCard(
+                    checked = {
+                        selectedTypes.contains(TransactionType.CREDIT.id)
+                    },
+                    label = AnnotatedString(stringResource(id = TransactionType.CREDIT.label)),
+                    icon = TransactionType.CREDIT.icon,
+                    iconTint = TransactionType.CREDIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (selectedTypes.contains(TransactionType.CREDIT.id)) {
+                            selectedTypes.remove(TransactionType.CREDIT.id)
+                        } else {
+                            selectedTypes.add(TransactionType.CREDIT.id)
+                        }
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            item(
+                key = "debit",
+                contentType = "row"
+            ) {
+                MultiSelectCard(
+                    checked = {
+                        selectedTypes.contains(TransactionType.DEBIT.id)
+                    },
+                    label = AnnotatedString(stringResource(id = TransactionType.DEBIT.label)),
+                    icon = TransactionType.DEBIT.icon,
+                    iconTint = TransactionType.DEBIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (selectedTypes.contains(TransactionType.DEBIT.id)) {
+                            selectedTypes.remove(TransactionType.DEBIT.id)
+                        } else {
+                            selectedTypes.add(TransactionType.DEBIT.id)
+                        }
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    dismiss()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(selectedTypes)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedTypes.isNotEmpty()
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedTypes.size
+                    )
+                )
             }
         }
     }
