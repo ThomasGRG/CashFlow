@@ -296,9 +296,9 @@ class TransactionsScreenViewModel(
                 " && counterParty.uuid IN $9"
             }
             queryString += if (it.includeNoItemTransactions) {
-                " && (items.@count == 0 || items.item.uuid IN $10)"
+                " && (items.@count == 0 || ANY items.item.uuid IN $10)"
             } else {
-                " && items.item.uuid IN $10"
+                " && ANY items.item.uuid IN $10"
             }
             realm.query<Transaction>(
                 queryString,
