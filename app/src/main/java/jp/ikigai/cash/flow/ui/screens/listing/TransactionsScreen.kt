@@ -31,6 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,11 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
@@ -58,10 +60,16 @@ import jp.ikigai.cash.flow.ui.components.common.BottomPopup
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
+import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.CloneTransactionPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterItemsPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.MoreOptionsPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTemplatePopup
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
@@ -80,9 +88,16 @@ fun TransactionsScreen(
     canAddTransaction: () -> Boolean,
     addTransaction: (String) -> Unit,
     editTransaction: (String) -> Unit,
-    setFilters: (Filters) -> Unit,
     setCurrency: (String) -> Unit,
     setStartDateAndEndDate: (LocalDate, LocalDate) -> Unit,
+    setSelectedCategories: (Map<String, Boolean>) -> Unit,
+    setSelectedCounterParties: (Boolean, Map<String, Boolean>) -> Unit,
+    setSelectedMethods: (Map<String, Boolean>) -> Unit,
+    setSelectedSources: (Map<String, Boolean>) -> Unit,
+    setSelectedItems: (Boolean, Map<String, Boolean>) -> Unit,
+    setSelectedTransactionTypes: (List<Int>) -> Unit,
+    setSortDirection: (Sort) -> Unit,
+    filterByAmount: (Double, Double) -> Unit,
     cloneTransaction: (String, Boolean) -> Unit,
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
@@ -170,23 +185,107 @@ fun TransactionsScreen(
     }
 
     val totalExpense by remember(key1 = state.expense) {
-        mutableStateOf(state.expense)
+        mutableDoubleStateOf(state.expense)
     }
 
     val expenseTransactionsCount by remember(key1 = state.expenseTransactionsCount) {
-        mutableStateOf(state.expenseTransactionsCount)
+        mutableIntStateOf(state.expenseTransactionsCount)
     }
 
     val totalIncome by remember(key1 = state.income) {
-        mutableStateOf(state.income)
+        mutableDoubleStateOf(state.income)
     }
 
     val incomeTransactionsCount by remember(key1 = state.incomeTransactionsCount) {
-        mutableStateOf(state.incomeTransactionsCount)
+        mutableIntStateOf(state.incomeTransactionsCount)
     }
 
-    val filters by remember(key1 = state.filters) {
-        mutableStateOf(state.filters)
+    val categories by remember(key1 = state.categories) {
+        mutableStateOf(state.categories)
+    }
+
+    val selectedCategories by remember(key1 = state.selectedCategories) {
+        mutableStateOf(state.selectedCategories)
+    }
+
+    val selectedCategoryCount by remember(key1 = state.selectedCategoryCount) {
+        mutableIntStateOf(state.selectedCategoryCount)
+    }
+
+    val counterParties by remember(key1 = state.counterParties) {
+        mutableStateOf(state.counterParties)
+    }
+
+    val includeNoCounterPartyTransactions by remember(key1 = state.includeNoCounterPartyTransactions) {
+        mutableStateOf(state.includeNoCounterPartyTransactions)
+    }
+
+    val selectedCounterParties by remember(key1 = state.selectedCounterParties) {
+        mutableStateOf(state.selectedCounterParties)
+    }
+
+    val selectedCounterPartyCount by remember(key1 = state.selectedCounterPartyCount) {
+        mutableIntStateOf(state.selectedCounterPartyCount)
+    }
+
+    val methods by remember(key1 = state.methods) {
+        mutableStateOf(state.methods)
+    }
+
+    val selectedMethods by remember(key1 = state.selectedMethods) {
+        mutableStateOf(state.selectedMethods)
+    }
+
+    val selectedMethodCount by remember(key1 = state.selectedMethodCount) {
+        mutableIntStateOf(state.selectedMethodCount)
+    }
+
+    val sources by remember(key1 = state.sources) {
+        mutableStateOf(state.sources)
+    }
+
+    val selectedSources by remember(key1 = state.selectedSources) {
+        mutableStateOf(state.selectedSources)
+    }
+
+    val selectedSourceCount by remember(key1 = state.selectedSourceCount) {
+        mutableIntStateOf(state.selectedSourceCount)
+    }
+
+    val items by remember(key1 = state.items) {
+        mutableStateOf(state.items)
+    }
+
+    val includeNoItemTransactions by remember(key1 = state.includeNoItemTransactions) {
+        mutableStateOf(state.includeNoItemTransactions)
+    }
+
+    val selectedItems by remember(key1 = state.selectedItems) {
+        mutableStateOf(state.selectedItems)
+    }
+
+    val selectedItemCount by remember(key1 = state.selectedItemCount) {
+        mutableIntStateOf(state.selectedItemCount)
+    }
+
+    val selectedTransactionTypes by remember(key1 = state.selectedTransactionTypes) {
+        mutableStateOf(state.selectedTransactionTypes)
+    }
+
+    val filterAmountMin by remember(key1 = state.filterAmountMin) {
+        mutableDoubleStateOf(state.filterAmountMin)
+    }
+
+    val filterAmountMax by remember(key1 = state.filterAmountMax) {
+        mutableDoubleStateOf(state.filterAmountMax)
+    }
+
+    val filterAmountRange by remember(key1 = state.filterAmountRange) {
+        mutableStateOf(state.filterAmountRange)
+    }
+
+    val sortDirection by remember(key1 = state.sortDirection) {
+        mutableStateOf(state.sortDirection)
     }
 
     var selectedTransactionUUID by remember {
@@ -219,6 +318,42 @@ fun TransactionsScreen(
             bottomBar = {
                 TransactionScreenRoundedBottomBar(
                     selectedCurrencySymbol = selectedCurrencySymbol,
+                    filterAmount = filterAmountRange,
+                    sortDirection = sortDirection,
+                    selectedCategoryCount = selectedCategoryCount,
+                    selectedCounterPartyCount = selectedCounterPartyCount,
+                    selectedMethodCount = selectedMethodCount,
+                    selectedSourceCount = selectedSourceCount,
+                    selectedItemCount = selectedItemCount,
+                    selectedTransactionTypeCount = selectedTransactionTypes.size,
+                    onSortClick = {
+                        if (sortDirection == Sort.DESCENDING) {
+                            setSortDirection(Sort.ASCENDING)
+                        } else {
+                            setSortDirection(Sort.DESCENDING)
+                        }
+                    },
+                    onFilterByAmountClick = {
+                        popupType = PopupType.AMOUNT
+                    },
+                    onFilterByTypeClick = {
+                        popupType = PopupType.TYPE
+                    },
+                    onFilterByCategoryClick = {
+                        popupType = PopupType.CATEGORY
+                    },
+                    onFilterByCounterPartyClick = {
+                        popupType = PopupType.COUNTERPARTY
+                    },
+                    onFilterByMethodClick = {
+                        popupType = PopupType.METHOD
+                    },
+                    onFilterBySourceClick = {
+                        popupType = PopupType.SOURCE
+                    },
+                    onFilterByItemClick = {
+                        popupType = PopupType.FILTER_ITEMS
+                    },
                     onCurrencyClick = {
                         popupType = PopupType.CURRENCY
                     },
@@ -234,12 +369,10 @@ fun TransactionsScreen(
                             }
                         }
                     },
-                    onFilterClick = {
-                        popupType = PopupType.FILTER
-                    },
+                    onFilterClick = {},
                     onMoreClick = {
                         popupType = PopupType.MORE_OPTIONS
-                    },
+                    }
                 )
             }
         ) { contentPadding ->
@@ -398,10 +531,84 @@ fun TransactionsScreen(
                         )
                     }
 
-                    PopupType.FILTER -> {
-                        FilterPopup(
-                            filters = filters,
-                            setFilters = setFilters,
+                    PopupType.AMOUNT -> {
+                        AmountFilterPopup(
+                            minAmount = filterAmountMin,
+                            maxAmount = filterAmountMax,
+                            filter = filterByAmount,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.CATEGORY -> {
+                        FilterCategoryPopup(
+                            selectedCategoryMap = selectedCategories,
+                            filter = setSelectedCategories,
+                            categories = categories,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.COUNTERPARTY -> {
+                        FilterCounterPartyPopup(
+                            includeTransactionsWithNoCounterParty = includeNoCounterPartyTransactions,
+                            selectedCounterPartyMap = selectedCounterParties,
+                            filter = setSelectedCounterParties,
+                            counterParties = counterParties,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.METHOD -> {
+                        FilterMethodPopup(
+                            selectedMethodsMap = selectedMethods,
+                            filter = setSelectedMethods,
+                            methods = methods,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.SOURCE -> {
+                        FilterSourcePopup(
+                            selectedSourcesMap = selectedSources,
+                            filter = setSelectedSources,
+                            sources = sources,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.FILTER_ITEMS -> {
+                        FilterItemsPopup(
+                            includeTransactionsWithNoItems = includeNoItemTransactions,
+                            selectedItemsMap = selectedItems,
+                            filterItems = setSelectedItems,
+                            items = items,
+                            dismiss = {
+                                hidePopup()
+                                popupType = PopupType.NONE
+                            }
+                        )
+                    }
+
+                    PopupType.TYPE -> {
+                        FilterTransactionTypePopup(
+                            selectedTransactionTypes = selectedTransactionTypes,
+                            filter = setSelectedTransactionTypes,
                             dismiss = {
                                 hidePopup()
                                 popupType = PopupType.NONE
@@ -446,9 +653,16 @@ fun TransactionsScreenPreview() {
         canAddTransaction = { true },
         addTransaction = {},
         editTransaction = {},
-        setFilters = {},
         setCurrency = {},
         setStartDateAndEndDate = { _, _ -> },
+        setSelectedCategories = {},
+        setSelectedCounterParties = { _, _ -> },
+        setSelectedMethods = {},
+        setSelectedSources = {},
+        setSelectedItems = { _, _ -> },
+        setSelectedTransactionTypes = {},
+        setSortDirection = {},
+        filterByAmount = { _, _ -> },
         cloneTransaction = { _, _ -> },
         navigateToCategoriesScreen = {},
         navigateToCounterPartyScreen = {},
@@ -506,9 +720,16 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            setFilters = viewModel::setFilters,
             setCurrency = viewModel::setCurrency,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
+            setSelectedCategories = viewModel::setSelectedCategories,
+            setSelectedCounterParties = viewModel::setSelectedCounterParties,
+            setSelectedMethods = viewModel::setSelectedMethods,
+            setSelectedSources = viewModel::setSelectedSources,
+            setSelectedItems = viewModel::setSelectedItems,
+            setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
+            setSortDirection = viewModel::setSortDirection,
+            filterByAmount = viewModel::setFilterAmounts,
             cloneTransaction = viewModel::cloneTransaction,
             navigateToMethodsScreen = {
                 navController.navigate(Routes.Methods.route) {

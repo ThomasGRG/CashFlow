@@ -83,6 +83,7 @@
     <string name="set_button_label">Set</string>
     <string name="delete_button_label">Delete</string>
     <string name="filter_button_label">Filter</string>
+    <string name="filter_button_with_count_label">Filter (%1$d)</string>
     <string name="back_button_label">Back</string>
     <string name="add_button_label">Add (%1$d)</string>
     <string name="new_transaction_button_label">New</string>
@@ -90,6 +91,17 @@
     <string name="clone_transaction_current_date_button_label">Clone transaction with today\'s time</string>
     <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
+
+    <!--  Filter Chip Strings  -->
+    <string name="sort_by_time_chip_label">Sort by: Time</string>
+    <string name="amount_filter_chip_label">Amount: %1$s</string>
+    <string name="category_filter_chip_label">Categories (%1$d)</string>
+    <string name="counter_party_filter_chip_label">Counterparties (%1$d)</string>
+    <string name="method_filter_chip_label">Methods (%1$d)</string>
+    <string name="source_filter_chip_label">Sources (%1$d)</string>
+    <string name="item_filter_chip_label">Items (%1$d)</string>
+    <string name="transaction_type_filter_chip_label">Transaction Types (%1$d)</string>
+    <!--  Filter Chip Strings  -->
 
     <!--  Empty Placeholder Strings  -->
     <string name="choose_icon_screen_empty_placeholder_label">No results found for \"%1$s\"</string>
@@ -127,6 +139,8 @@
     <!--  Error Strings  -->
     <string name="field_required_error_label">This field is required</string>
     <string name="invalid_price_error_label">Price cannot be 0</string>
+    <string name="invalid_min_amount_error_label">Amount must be less than %1$s</string>
+    <string name="invalid_max_amount_error_label">Amount must be greater than %1$s</string>
     <string name="invalid_amount_error_label">Enter a number > 0</string>
     <string name="invalid_balance_error_label">Enter a number >= 0</string>
     <string name="name_empty_error_label">Name cannot be empty</string>

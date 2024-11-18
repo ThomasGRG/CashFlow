@@ -14,7 +14,6 @@ import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.dto.Filters
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
 import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
@@ -124,6 +123,26 @@ class TransactionsScreenViewModel(
                 transactionScreenFlows.transactions.filter { it.type == TransactionType.DEBIT }
             val expense = expenseTransactions.sumOf { it.amount }
             _state.update {
+                val selectedCategories = getSelectedCategories(
+                    transactionScreenFlows.categories,
+                    it.selectedCategories
+                )
+                val selectedCounterParties = getSelectedCounterParties(
+                    transactionScreenFlows.counterParties,
+                    it.selectedCounterParties
+                )
+                val selectedMethods = getSelectedMethods(
+                    transactionScreenFlows.methods,
+                    it.selectedMethods
+                )
+                val selectedSources = getSelectedSources(
+                    transactionScreenFlows.sources,
+                    it.selectedSources
+                )
+                val selectedItems = getSelectedItems(
+                    transactionScreenFlows.items,
+                    it.selectedItems
+                )
                 it.copy(
                     transactions = getTransactionsMap(transactionScreenFlows.transactions),
                     expenseTransactionsCount = expenseTransactions.size,
@@ -133,33 +152,21 @@ class TransactionsScreenViewModel(
                     loading = false,
                     balance = transactionScreenFlows.balance,
                     templates = mapToTemplateDTO(transactionScreenFlows.templates),
-                    filters = it.filters.copy(
-                        categories = transactionScreenFlows.categories,
-                        selectedCategories = getSelectedCategories(
-                            transactionScreenFlows.categories,
-                            it.filters.selectedCategories
-                        ),
-                        counterParties = transactionScreenFlows.counterParties,
-                        selectedCounterParties = getSelectedCounterParties(
-                            transactionScreenFlows.counterParties,
-                            it.filters.selectedCounterParties
-                        ),
-                        items = transactionScreenFlows.items,
-                        selectedItems = getSelectedItems(
-                            transactionScreenFlows.items,
-                            it.filters.selectedItems
-                        ),
-                        methods = transactionScreenFlows.methods,
-                        selectedMethods = getSelectedMethods(
-                            transactionScreenFlows.methods,
-                            it.filters.selectedMethods
-                        ),
-                        sources = transactionScreenFlows.sources,
-                        selectedSources = getSelectedSources(
-                            transactionScreenFlows.sources,
-                            it.filters.selectedSources
-                        )
-                    )
+                    categories = transactionScreenFlows.categories,
+                    selectedCategories = selectedCategories,
+                    selectedCategoryCount = selectedCategories.filter { entry -> entry.value }.size,
+                    counterParties = transactionScreenFlows.counterParties,
+                    selectedCounterParties = selectedCounterParties,
+                    selectedCounterPartyCount = selectedCounterParties.filter { entry -> entry.value }.size,
+                    items = transactionScreenFlows.items,
+                    selectedItems = selectedItems,
+                    selectedItemCount = selectedItems.filter { entry -> entry.value }.size,
+                    methods = transactionScreenFlows.methods,
+                    selectedMethods = selectedMethods,
+                    selectedMethodCount = selectedMethods.filter { entry -> entry.value }.size,
+                    sources = transactionScreenFlows.sources,
+                    selectedSources = selectedSources,
+                    selectedSourceCount = selectedSources.filter { entry -> entry.value }.size,
                 )
             }
         }
@@ -283,12 +290,12 @@ class TransactionsScreenViewModel(
         return state.flatMapLatest {
             var queryString =
                 "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
-            queryString += if (it.filters.includeNoCounterPartyTransactions) {
+            queryString += if (it.includeNoCounterPartyTransactions) {
                 " && (counterParty == nil || counterParty.uuid IN $9)"
             } else {
                 " && counterParty.uuid IN $9"
             }
-            queryString += if (it.filters.includeNoItemTransactions) {
+            queryString += if (it.includeNoItemTransactions) {
                 " && (items.@count == 0 || items.item.uuid IN $10)"
             } else {
                 " && items.item.uuid IN $10"
@@ -298,15 +305,15 @@ class TransactionsScreenViewModel(
                 it.startDate.getStartOfDayInEpochMilli(),
                 it.endDate.getEndOfDayInEpochMilli(),
                 it.selectedCurrency,
-                it.filters.filterAmountMin,
-                if (it.filters.filterAmountMax <= it.filters.filterAmountMin) Double.MAX_VALUE else it.filters.filterAmountMax,
-                it.filters.selectedTransactionTypes,
-                it.filters.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
-                it.filters.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
-                it.filters.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
-                it.filters.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys,
-                it.filters.selectedItems.filter { selectedItems -> selectedItems.value }.keys
-            ).sort("time", Sort.DESCENDING).asFlow()
+                it.filterAmountMin,
+                if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
+                it.selectedTransactionTypes,
+                it.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
+                it.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
+                it.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
+                it.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys,
+                it.selectedItems.filter { selectedItems -> selectedItems.value }.keys
+            ).sort("time", it.sortDirection).asFlow()
         }
     }
 
@@ -382,10 +389,85 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setFilters(filters: Filters) {
+    fun setSelectedCategories(selectedCategories: Map<String, Boolean>) {
         _state.update {
             it.copy(
-                filters = filters
+                selectedCategories = selectedCategories
+            )
+        }
+    }
+
+    fun setSelectedCounterParties(
+        includeTransactionsWithNoCounterParty: Boolean,
+        selectedCounterParties: Map<String, Boolean>
+    ) {
+        _state.update {
+            it.copy(
+                selectedCounterParties = selectedCounterParties,
+                includeNoCounterPartyTransactions = includeTransactionsWithNoCounterParty
+            )
+        }
+    }
+
+    fun setSelectedMethods(selectedMethods: Map<String, Boolean>) {
+        _state.update {
+            it.copy(
+                selectedMethods = selectedMethods
+            )
+        }
+    }
+
+    fun setSelectedSources(selectedSources: Map<String, Boolean>) {
+        _state.update {
+            it.copy(
+                selectedSources = selectedSources
+            )
+        }
+    }
+
+    fun setSelectedItems(
+        includeTransactionsWithNoItems: Boolean,
+        selectedItems: Map<String, Boolean>
+    ) {
+        _state.update {
+            it.copy(
+                selectedItems = selectedItems,
+                includeNoItemTransactions = includeTransactionsWithNoItems
+            )
+        }
+    }
+
+    fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
+        _state.update {
+            it.copy(
+                selectedTransactionTypes = selectedTransactionTypes
+            )
+        }
+    }
+
+    fun setSortDirection(sortDirection: Sort) {
+        _state.update {
+            it.copy(
+                sortDirection = sortDirection
+            )
+        }
+    }
+
+    fun setFilterAmounts(min: Double, max: Double) {
+        val filterAmountRange = if (min > 0 && max > 0 && min < max) {
+            "$min - $max"
+        } else if (min > 0 && max == 0.0) {
+            "$min+"
+        } else if (min == 0.0 && max > 0) {
+            "0 - $max"
+        } else {
+            "0+"
+        }
+        _state.update {
+            it.copy(
+                filterAmountMin = min,
+                filterAmountMax = max,
+                filterAmountRange = filterAmountRange
             )
         }
     }
