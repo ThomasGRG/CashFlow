@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ElevatedCard
@@ -22,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
 
@@ -50,12 +49,11 @@ fun TransactionTemplateCard(
         ) {
             Text(
                 text = transactionTemplateWithIcons.annotatedName,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(4.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
             if (transactionTemplateWithIcons.amount.isNotBlank()) {
                 Row(
                     modifier = Modifier
@@ -67,18 +65,18 @@ fun TransactionTemplateCard(
                         imageVector = transactionTemplateWithIcons.typeIcon,
                         contentDescription = "type icon",
                         tint = transactionTemplateWithIcons.typeIconColor,
-                        modifier = Modifier.size(38.dp)
+                        modifier = Modifier.size(30.dp)
                     )
                     Text(
                         text = transactionTemplateWithIcons.amount,
-                        style = MaterialTheme.typography.displaySmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = transactionTemplateWithIcons.currency,
                         style = MaterialTheme.typography.headlineSmall,
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
