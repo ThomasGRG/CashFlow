@@ -20,8 +20,7 @@ import java.time.LocalDate
 @Composable
 fun TransactionGroupHeader(
     date: LocalDate,
-    amount: String,
-    currency: String
+    amount: String
 ) {
     Row(
         modifier = Modifier
@@ -46,7 +45,7 @@ fun TransactionGroupHeader(
         }
         Spacer(modifier = Modifier.weight(1f))
         Text(
-            text = "$amount $currency",
+            text = amount,
             fontWeight = FontWeight.Bold
         )
     }
@@ -55,5 +54,5 @@ fun TransactionGroupHeader(
 @Preview
 @Composable
 fun TransactionGroupHeaderPreview() {
-    TransactionGroupHeader(date = LocalDate.now(), amount = "239.01", currency = "INR")
+    TransactionGroupHeader(date = LocalDate.now(), amount = "239.01")
 }

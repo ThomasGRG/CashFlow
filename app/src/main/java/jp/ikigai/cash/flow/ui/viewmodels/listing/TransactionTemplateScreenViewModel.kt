@@ -22,6 +22,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
+import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
@@ -120,7 +121,11 @@ class TransactionTemplateScreenViewModel(
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    templates = getTemplateWithIcons(changes.list, screenState.searchText),
+                    templates = getTemplateWithIcons(
+                        changes.list,
+                        screenState.searchText,
+                        screenState.locale
+                    ),
                     loading = false,
                     countString = formatter.format(screenState.count).toString()
                 )
@@ -130,7 +135,8 @@ class TransactionTemplateScreenViewModel(
 
     private fun getTemplateWithIcons(
         templates: List<TransactionTemplate>,
-        searchText: String
+        searchText: String,
+        locale: Locale?
     ): List<TransactionTemplateWithIcons> {
         return templates.map { template ->
             val category = template.category
@@ -219,17 +225,22 @@ class TransactionTemplateScreenViewModel(
                 )
             }
             val totalAmount = template.amount + template.taxAmount
+            val formattedAmount = if (totalAmount > 0) {
+                if (source != null) {
+                    val currencyFormatter = getCurrencyFormatter(locale, source.currency)
+                    currencyFormatter.format(totalAmount).toString()
+                } else {
+                    formatter.format(totalAmount).toString()
+                }
+            } else {
+                ""
+            }
             TransactionTemplateWithIcons(
                 uuid = template.uuid,
                 annotatedName = getHighlightedString(template.name, searchText),
-                amount = if (totalAmount > 0) {
-                    formatter.format(totalAmount).toString()
-                } else {
-                    ""
-                },
+                amount = formattedAmount,
                 typeIcon = template.type.icon,
                 typeIconColor = template.type.color,
-                currency = source?.currency ?: "",
                 chips = chips
             )
         }

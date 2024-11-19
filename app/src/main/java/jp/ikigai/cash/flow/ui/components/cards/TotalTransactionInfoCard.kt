@@ -26,7 +26,6 @@ import jp.ikigai.cash.flow.R
 @Composable
 fun TotalTransactionInfoCard(
     modifier: Modifier,
-    currency: String,
     total: String,
     count: String,
     color: Color,
@@ -49,7 +48,7 @@ fun TotalTransactionInfoCard(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "$total $currency",
+                text = total,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium
             )
@@ -76,7 +75,6 @@ fun TotalTransactionInfoCard(
 fun TotalTransactionInfoCardPreview() {
     TotalTransactionInfoCard(
         modifier = Modifier.fillMaxWidth(),
-        currency = "INR",
         total = "233.09",
         count = "2",
         color = Color(0xFFF44336),

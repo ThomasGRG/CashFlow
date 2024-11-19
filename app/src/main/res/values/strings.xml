@@ -95,11 +95,11 @@
     <!--  Filter Chip Strings  -->
     <string name="sort_by_time_chip_label">Sort by: Time</string>
     <string name="amount_filter_chip_label">Amount: %1$s</string>
-    <string name="category_filter_chip_label">Categories (%1$d)</string>
-    <string name="counter_party_filter_chip_label">Counterparties (%1$d)</string>
-    <string name="method_filter_chip_label">Methods (%1$d)</string>
-    <string name="source_filter_chip_label">Sources (%1$d)</string>
-    <string name="item_filter_chip_label">Items (%1$d)</string>
+    <string name="category_filter_chip_label">Categories (%1$s)</string>
+    <string name="counter_party_filter_chip_label">Counterparties (%1$s)</string>
+    <string name="method_filter_chip_label">Methods (%1$s)</string>
+    <string name="source_filter_chip_label">Sources (%1$s)</string>
+    <string name="item_filter_chip_label">Items (%1$s)</string>
     <string name="transaction_type_filter_chip_label">Transaction Types (%1$d)</string>
     <!--  Filter Chip Strings  -->
 

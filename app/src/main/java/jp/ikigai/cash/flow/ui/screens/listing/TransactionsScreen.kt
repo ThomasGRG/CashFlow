@@ -42,7 +42,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,7 +89,6 @@ import jp.ikigai.cash.flow.ui.components.popups.MoreOptionsPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTemplatePopup
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
-import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -177,10 +175,6 @@ fun TransactionsScreen(
         mutableStateOf(PopupType.NONE)
     }
 
-    val numberFormatter by remember {
-        mutableStateOf(getNumberFormatter())
-    }
-
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
     }
@@ -202,7 +196,7 @@ fun TransactionsScreen(
     }
 
     val balance by remember(key1 = state.balance) {
-        mutableStateOf(numberFormatter.format(state.balance).toString())
+        mutableStateOf(state.balance)
     }
 
     val selectedCurrency by remember(key1 = state.selectedCurrency) {
@@ -230,19 +224,19 @@ fun TransactionsScreen(
     }
 
     val totalExpense by remember(key1 = state.expense) {
-        mutableDoubleStateOf(state.expense)
+        mutableStateOf(state.expense)
     }
 
     val expenseTransactionsCount by remember(key1 = state.expenseTransactionsCount) {
-        mutableIntStateOf(state.expenseTransactionsCount)
+        mutableStateOf(state.expenseTransactionsCount)
     }
 
     val totalIncome by remember(key1 = state.income) {
-        mutableDoubleStateOf(state.income)
+        mutableStateOf(state.income)
     }
 
     val incomeTransactionsCount by remember(key1 = state.incomeTransactionsCount) {
-        mutableIntStateOf(state.incomeTransactionsCount)
+        mutableStateOf(state.incomeTransactionsCount)
     }
 
     val categories by remember(key1 = state.categories) {
@@ -254,7 +248,7 @@ fun TransactionsScreen(
     }
 
     val selectedCategoryCount by remember(key1 = state.selectedCategoryCount) {
-        mutableIntStateOf(state.selectedCategoryCount)
+        mutableStateOf(state.selectedCategoryCount)
     }
 
     val counterParties by remember(key1 = state.counterParties) {
@@ -270,7 +264,7 @@ fun TransactionsScreen(
     }
 
     val selectedCounterPartyCount by remember(key1 = state.selectedCounterPartyCount) {
-        mutableIntStateOf(state.selectedCounterPartyCount)
+        mutableStateOf(state.selectedCounterPartyCount)
     }
 
     val methods by remember(key1 = state.methods) {
@@ -282,7 +276,7 @@ fun TransactionsScreen(
     }
 
     val selectedMethodCount by remember(key1 = state.selectedMethodCount) {
-        mutableIntStateOf(state.selectedMethodCount)
+        mutableStateOf(state.selectedMethodCount)
     }
 
     val sources by remember(key1 = state.sources) {
@@ -294,7 +288,7 @@ fun TransactionsScreen(
     }
 
     val selectedSourceCount by remember(key1 = state.selectedSourceCount) {
-        mutableIntStateOf(state.selectedSourceCount)
+        mutableStateOf(state.selectedSourceCount)
     }
 
     val items by remember(key1 = state.items) {
@@ -310,7 +304,7 @@ fun TransactionsScreen(
     }
 
     val selectedItemCount by remember(key1 = state.selectedItemCount) {
-        mutableIntStateOf(state.selectedItemCount)
+        mutableStateOf(state.selectedItemCount)
     }
 
     val selectedTransactionTypes by remember(key1 = state.selectedTransactionTypes) {
@@ -499,7 +493,7 @@ fun TransactionsScreen(
                                         .fillMaxWidth()
                                 ) {
                                     Text(
-                                        text = "$balance $selectedCurrency",
+                                        text = balance,
                                         style = MaterialTheme.typography.displaySmall
                                     )
                                 }
@@ -508,13 +502,10 @@ fun TransactionsScreen(
                                 key = "infoRow"
                             ) {
                                 TotalTransactionInfo(
-                                    currency = selectedCurrency,
-                                    expenses = numberFormatter.format(totalExpense).toString(),
-                                    expensesCount = numberFormatter.format(expenseTransactionsCount)
-                                        .toString(),
-                                    income = numberFormatter.format(totalIncome).toString(),
-                                    incomeCount = numberFormatter.format(incomeTransactionsCount)
-                                        .toString()
+                                    expenses = totalExpense,
+                                    expensesCount = expenseTransactionsCount,
+                                    income = totalIncome,
+                                    incomeCount = incomeTransactionsCount
                                 )
                             }
                         }
@@ -522,9 +513,7 @@ fun TransactionsScreen(
                             stickyHeader {
                                 TransactionGroupHeader(
                                     date = it.key,
-                                    amount = numberFormatter.format(it.value.totalAmount)
-                                        .toString(),
-                                    currency = selectedCurrency
+                                    amount = it.value.totalAmount
                                 )
                             }
                             items(

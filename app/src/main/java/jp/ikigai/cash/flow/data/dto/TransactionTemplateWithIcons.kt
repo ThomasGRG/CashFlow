@@ -11,6 +11,5 @@ data class TransactionTemplateWithIcons(
     val amount: String = "",
     val typeIcon: ImageVector = Constants.DEFAULT_TYPE_ICON,
     val typeIconColor: Color = Color(0xFFF44336),
-    val currency: String = "",
     val chips: List<ChipInfo> = emptyList()
 )

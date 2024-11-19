@@ -72,10 +72,6 @@ fun TransactionTemplateCard(
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = transactionTemplateWithIcons.currency,
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
                 }
             }
             FlowRow(

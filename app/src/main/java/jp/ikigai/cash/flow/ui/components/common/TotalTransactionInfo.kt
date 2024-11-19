@@ -16,7 +16,6 @@ import jp.ikigai.cash.flow.ui.components.cards.TotalTransactionInfoCard
 
 @Composable
 fun TotalTransactionInfo(
-    currency: String,
     expenses: String,
     expensesCount: String,
     income: String,
@@ -30,7 +29,6 @@ fun TotalTransactionInfo(
     ) {
         TotalTransactionInfoCard(
             modifier = Modifier.weight(1f),
-            currency = currency,
             total = expenses,
             count = expensesCount,
             color = Color(0xFFF44336),
@@ -38,7 +36,6 @@ fun TotalTransactionInfo(
         )
         TotalTransactionInfoCard(
             modifier = Modifier.weight(1f),
-            currency = currency,
             total = income,
             count = incomeCount,
             color = Color(0xFF4CAF50),
@@ -51,7 +48,6 @@ fun TotalTransactionInfo(
 @Composable
 fun TotalTransactionInfoPreview() {
     TotalTransactionInfo(
-        currency = "INR",
         expenses = "341",
         expensesCount = "4",
         income = "112",

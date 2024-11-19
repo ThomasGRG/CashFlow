@@ -87,10 +87,6 @@ fun TransactionCard(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = transactionWithIcons.currency,
-                    style = MaterialTheme.typography.headlineSmall,
-                )
             }
             FlowRow(
                 modifier = Modifier

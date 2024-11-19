@@ -31,6 +31,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineEightFlows
+import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -62,6 +63,8 @@ class TransactionsScreenViewModel(
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
+
+    private var currencyFormatter = getCurrencyFormatter(null, "INR")
 
     private val _state = MutableStateFlow(TransactionsScreenState())
     val state: StateFlow<TransactionsScreenState> = _state.asStateFlow()
@@ -150,33 +153,43 @@ class TransactionsScreenViewModel(
                     transactionScreenFlows.items,
                     it.selectedItems
                 )
+                val selectedCategoryCount = selectedCategories.filter { entry -> entry.value }.size
+                val selectedCounterPartyCount =
+                    selectedCounterParties.filter { entry -> entry.value }.size
+                val selectedItemCount = selectedItems.filter { entry -> entry.value }.size
+                val selectedMethodCount = selectedMethods.filter { entry -> entry.value }.size
+                val selectedSourceCount = selectedSources.filter { entry -> entry.value }.size
                 it.copy(
                     transactions = getTransactionsMap(
                         transactionScreenFlows.transactions,
                         it.searchText
                     ),
-                    expenseTransactionsCount = expenseTransactions.size,
-                    expense = expense,
-                    incomeTransactionsCount = incomeTransactions.size,
-                    income = income,
+                    expenseTransactionsCount = numberFormatter.format(expenseTransactions.size)
+                        .toString(),
+                    expense = currencyFormatter.format(expense).toString(),
+                    incomeTransactionsCount = numberFormatter.format(incomeTransactions.size)
+                        .toString(),
+                    income = currencyFormatter.format(income).toString(),
                     loading = false,
-                    balance = transactionScreenFlows.balance,
+                    balance = currencyFormatter.format(transactionScreenFlows.balance).toString(),
                     templates = mapToTemplateDTO(transactionScreenFlows.templates),
                     categories = transactionScreenFlows.categories,
                     selectedCategories = selectedCategories,
-                    selectedCategoryCount = selectedCategories.filter { entry -> entry.value }.size,
+                    selectedCategoryCount = numberFormatter.format(selectedCategoryCount)
+                        .toString(),
                     counterParties = transactionScreenFlows.counterParties,
                     selectedCounterParties = selectedCounterParties,
-                    selectedCounterPartyCount = selectedCounterParties.filter { entry -> entry.value }.size,
+                    selectedCounterPartyCount = numberFormatter.format(selectedCounterPartyCount)
+                        .toString(),
                     items = transactionScreenFlows.items,
                     selectedItems = selectedItems,
-                    selectedItemCount = selectedItems.filter { entry -> entry.value }.size,
+                    selectedItemCount = numberFormatter.format(selectedItemCount).toString(),
                     methods = transactionScreenFlows.methods,
                     selectedMethods = selectedMethods,
-                    selectedMethodCount = selectedMethods.filter { entry -> entry.value }.size,
+                    selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
                     sources = transactionScreenFlows.sources,
                     selectedSources = selectedSources,
-                    selectedSourceCount = selectedSources.filter { entry -> entry.value }.size,
+                    selectedSourceCount = numberFormatter.format(selectedSourceCount).toString(),
                 )
             }
         }
@@ -346,7 +359,7 @@ class TransactionsScreenViewModel(
 
             transactionDetailsMap[localDate] = TransactionDetailsByDay(
                 transactions = transactionsList.map { getTransactionWithIcons(it, searchText) },
-                totalAmount = credit - debit,
+                totalAmount = currencyFormatter.format(credit - debit).toString(),
             )
         }
         return transactionDetailsMap
@@ -413,7 +426,7 @@ class TransactionsScreenViewModel(
             uuid = transaction.uuid,
             annotatedTitle = getHighlightedString(transaction.title, searchText),
             annotatedDescription = getHighlightedString(transaction.description, searchText),
-            amount = numberFormatter.format(totalAmount).toString(),
+            amount = currencyFormatter.format(totalAmount).toString(),
             typeIcon = transaction.type.icon,
             typeIconColor = transaction.type.color,
             currency = transaction.currency,
@@ -423,6 +436,7 @@ class TransactionsScreenViewModel(
 
     fun setCurrency(currency: String) {
         _state.update {
+            currencyFormatter = getCurrencyFormatter(it.locale, currency)
             it.copy(
                 loading = true,
                 selectedCurrency = currency
@@ -545,6 +559,7 @@ class TransactionsScreenViewModel(
     fun setLocale(locale: Locale?) {
         numberFormatter = getNumberFormatter(locale)
         _state.update {
+            currencyFormatter = getCurrencyFormatter(locale, it.selectedCurrency)
             it.copy(
                 locale = locale
             )
