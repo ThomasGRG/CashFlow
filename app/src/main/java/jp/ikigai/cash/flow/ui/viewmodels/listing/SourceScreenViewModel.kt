@@ -15,6 +15,7 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SourceListingDTO
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
+import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
@@ -82,7 +83,7 @@ class SourceScreenViewModel(
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    sources = mapToDTO(changes.list, screenState.searchText),
+                    sources = mapToDTO(changes.list, screenState.searchText, screenState.locale),
                     loading = false,
                     countString = formatter.format(screenState.count).toString()
                 )
@@ -90,8 +91,13 @@ class SourceScreenViewModel(
         }
     }
 
-    private fun mapToDTO(sources: List<Source>, searchText: String): List<SourceListingDTO> {
+    private fun mapToDTO(
+        sources: List<Source>,
+        searchText: String,
+        locale: Locale?
+    ): List<SourceListingDTO> {
         return sources.map { source ->
+            val currencyFormatter = getCurrencyFormatter(locale, source.currency)
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
                 ChipInfo(
@@ -123,7 +129,7 @@ class SourceScreenViewModel(
                 annotatedName = getHighlightedString(source.name, searchText),
                 icon = source.icon,
                 currency = source.currency,
-                balance = formatter.format(source.balance).toString(),
+                balance = currencyFormatter.format(source.balance).toString(),
                 chips = chips
             )
         }

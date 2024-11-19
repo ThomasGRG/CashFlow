@@ -79,21 +79,10 @@ fun TransactionSourceCard(
                     modifier = Modifier.fillMaxWidth(0.98f)
                 )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Text(
-                    text = data.balance,
-                    style = MaterialTheme.typography.displaySmall
-                )
-                Text(
-                    text = data.currency,
-                    modifier = Modifier.padding(start = 6.dp),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
+            Text(
+                text = data.balance,
+                style = MaterialTheme.typography.displaySmall
+            )
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
