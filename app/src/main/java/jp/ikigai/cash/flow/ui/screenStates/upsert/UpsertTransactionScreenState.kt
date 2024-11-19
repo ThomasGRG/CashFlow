@@ -1,5 +1,7 @@
 package jp.ikigai.cash.flow.ui.screenStates.upsert
 
+import androidx.annotation.StringRes
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionItemCardInfo
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
@@ -36,6 +38,7 @@ data class UpsertTransactionScreenState(
     val sources: List<Source> = emptyList(),
     val selectedSource: Source = Source(),
     val sourceValid: Boolean = true,
+    @StringRes val sourceErrorStringRes: Int = R.string.field_required_error_label,
     val items: List<Item> = emptyList(),
     val addItemsFilteredList: List<Item> = emptyList(),
     val transactionItems: List<UpsertTransactionItemCardInfo> = emptyList(),

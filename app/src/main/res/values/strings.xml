@@ -148,7 +148,7 @@
     <string name="internal_error_label">Internal error</string>
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
-    <string name="not_enough_balance_error_label">Insufficient balance to save this transaction</string>
+    <string name="not_enough_balance_error_label">Insufficient balance</string>
     <string name="minimum_two_fields_required_error_label">Minimum two fields are required</string>
     <string name="category_method_source_required_error_label">At least one category, method and source are required to proceed</string>
     <string name="category_method_required_error_label">At least one category and method are required to proceed</string>

@@ -8,6 +8,7 @@ import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.query.Sort
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
@@ -290,7 +291,19 @@ class UpsertTransactionScreenViewModel(
         val titleValid = state.value.title.isNotBlank()
         val categoryValid = state.value.selectedCategory.uuid.isNotEmpty()
         val methodValid = state.value.selectedMethod.uuid.isNotEmpty()
-        val sourceValid = state.value.selectedSource.uuid.isNotEmpty()
+
+        val selectedSource = state.value.selectedSource
+        var sourceValid = true
+        var sourceErrorStringRes = R.string.field_required_error_label
+        if (selectedSource.uuid.isNotEmpty()) {
+            val totalAmount = amount + state.value.taxAmount
+            if (state.value.type == TransactionType.DEBIT && totalAmount > selectedSource.balance) {
+                sourceValid = false
+                sourceErrorStringRes = R.string.not_enough_balance_error_label
+            }
+        } else {
+            sourceValid = false
+        }
 
         val transactionItems = state.value.transactionItems.toMutableList()
             .map { transactionItem ->
@@ -307,6 +320,7 @@ class UpsertTransactionScreenViewModel(
                 categoryValid = categoryValid,
                 methodValid = methodValid,
                 sourceValid = sourceValid,
+                sourceErrorStringRes = sourceErrorStringRes,
                 transactionItems = transactionItems
             )
         }
@@ -314,14 +328,6 @@ class UpsertTransactionScreenViewModel(
         val itemsValid =
             state.value.type == TransactionType.CREDIT || !transactionItems.any { it.quantity == 0.0 || it.price == 0.0 }
 
-        val selectedSource = state.value.selectedSource
-
-        if (amountValid && selectedSource.uuid.isNotBlank() && state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
-            viewModelScope.launch {
-                _event.send(Event.NotEnoughBalance)
-            }
-            return false
-        }
         return amountValid && itemsValid && categoryValid && methodValid && sourceValid && titleValid
     }
 
@@ -331,14 +337,20 @@ class UpsertTransactionScreenViewModel(
         type: TransactionType,
         source: Source
     ) {
-        if (type != TransactionType.DEBIT) {
-            return
-        }
-        val totalAmount = amount + tax
-        if (totalAmount > 0.0 && source.uuid.isNotBlank() && totalAmount > source.balance) {
-            viewModelScope.launch {
-                _event.send(Event.NotEnoughBalance)
+        var sourceValid = true
+        var sourceErrorStringRes = R.string.field_required_error_label
+        if (type == TransactionType.DEBIT) {
+            val totalAmount = amount + tax
+            if (totalAmount > 0.0 && source.uuid.isNotBlank() && totalAmount > source.balance) {
+                sourceValid = false
+                sourceErrorStringRes = R.string.not_enough_balance_error_label
             }
+        }
+        _state.update {
+            it.copy(
+                sourceValid = sourceValid,
+                sourceErrorStringRes = sourceErrorStringRes
+            )
         }
     }
 
@@ -972,7 +984,6 @@ class UpsertTransactionScreenViewModel(
             )
             screenState.copy(
                 selectedSource = source,
-                sourceValid = true,
                 transaction = screenState.transaction.apply {
                     currency = source.currency
                 }

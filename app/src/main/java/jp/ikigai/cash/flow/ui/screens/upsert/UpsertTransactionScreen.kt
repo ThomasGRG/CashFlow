@@ -216,6 +216,10 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.sourceValid)
     }
 
+    val sourceErrorStringRes by remember(key1 = state.sourceErrorStringRes) {
+        mutableIntStateOf(state.sourceErrorStringRes)
+    }
+
     val transactionItems by remember(key1 = state.transactionItems) {
         mutableStateOf(state.transactionItems)
     }
@@ -771,7 +775,7 @@ fun UpsertTransactionScreen(
                     label = stringResource(id = R.string.source_field_label),
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                     isError = !sourceValid,
-                    errorHint = stringResource(id = R.string.field_required_error_label),
+                    errorHint = stringResource(id = sourceErrorStringRes),
                     leadingIcon = selectedSource.icon,
                     onClick = {
                         resetOneHandMode()
