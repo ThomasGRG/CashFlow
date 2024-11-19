@@ -184,11 +184,12 @@ class UpsertTransactionScreenViewModel(
     ) {
         val dateTime = transaction.time.toZonedDateTime()
         val source = transaction.source!!
+        val totalAmount = transaction.amount + transaction.taxAmount
         previousSource = transaction.source
         previousBalance = if (transaction.type == TransactionType.DEBIT) {
-            source.balance + transaction.amount
+            source.balance + totalAmount
         } else {
-            source.balance - transaction.amount
+            source.balance - totalAmount
         }
         _state.update {
             it.copy(
@@ -385,20 +386,30 @@ class UpsertTransactionScreenViewModel(
             if (transactionUuid.isNotBlank()) {
                 updateSource(
                     source = selectedSource,
-                    amount = state.value.amount,
+                    amount = state.value.amount + state.value.taxAmount,
                     frequency = selectedSource.frequency,
                     time = time,
                     type = state.value.type
                 )
+                if (selectedSource.uuid != previousSource!!.uuid) {
+                    realm.write {
+                        findLatest(previousSource!!)?.also {
+                            it.frequency -= 1
+                            it.balance = previousBalance
+                        }
+                    }
+                }
             } else {
                 updateCategory(
                     category = selectedCategory,
-                    frequency = selectedCategory.frequency + 1, time = time
+                    frequency = selectedCategory.frequency + 1,
+                    time = time
                 )
                 if (selectedCounterParty.uuid.isNotBlank()) {
                     updateCounterParty(
                         counterParty = selectedCounterParty,
-                        frequency = selectedCounterParty.frequency + 1, time = time
+                        frequency = selectedCounterParty.frequency + 1,
+                        time = time
                     )
                 }
                 updateMethod(
@@ -408,7 +419,7 @@ class UpsertTransactionScreenViewModel(
                 )
                 updateSource(
                     source = selectedSource,
-                    amount = state.value.amount,
+                    amount = state.value.amount + state.value.taxAmount,
                     frequency = selectedSource.frequency + 1,
                     time = time,
                     type = state.value.type
@@ -438,27 +449,27 @@ class UpsertTransactionScreenViewModel(
             }
 
             val transaction = state.value.transaction
-            val selectedCategory = state.value.selectedCategory
-            val selectedCounterParty = state.value.selectedCounterParty
-            val selectedMethod = state.value.selectedMethod
-            val selectedSource = state.value.selectedSource
+            val category = transaction.category!!
+            val counterParty = transaction.counterParty
+            val method = transaction.method!!
+            val source = transaction.source!!
 
             updateCategory(
-                category = selectedCategory,
-                frequency = selectedCategory.frequency - 1
+                category = category,
+                frequency = category.frequency - 1
             )
-            if (selectedCounterParty.uuid.isNotBlank()) {
+            if (counterParty != null) {
                 updateCounterParty(
-                    counterParty = selectedCounterParty,
-                    frequency = selectedCounterParty.frequency - 1
+                    counterParty = counterParty,
+                    frequency = counterParty.frequency - 1
                 )
             }
             updateMethod(
-                method = selectedMethod,
-                frequency = selectedMethod.frequency - 1,
+                method = method,
+                frequency = method.frequency - 1,
             )
             realm.write {
-                findLatest(selectedSource)?.also {
+                findLatest(source)?.also {
                     it.frequency -= 1
                     it.balance = previousBalance
                 }
