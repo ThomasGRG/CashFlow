@@ -14,6 +14,7 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Locale
 
 data class TransactionsScreenState(
     val transactions: Map<LocalDate, TransactionDetailsByDay> = emptyMap(),
@@ -50,7 +51,9 @@ data class TransactionsScreenState(
     val endDate: LocalDate = YearMonth.now().atEndOfMonth(),
     val startDateString: String = "",
     val endDateString: String = "",
+    val searchText: String = "",
     val sortDirection: Sort = Sort.DESCENDING,
     val balance: Double = 0.0,
     val loading: Boolean = true,
+    val locale: Locale? = null
 )

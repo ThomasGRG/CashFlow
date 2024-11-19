@@ -1,19 +1,21 @@
 package jp.ikigai.cash.flow.ui.viewmodels.listing
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
+import compose.icons.tablericons.Stack
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
+import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
 import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
@@ -31,6 +33,8 @@ import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineEightFlows
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
+import jp.ikigai.cash.flow.utils.getHighlightedString
+import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.toEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
@@ -50,11 +54,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.UUID
 
 class TransactionsScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private var numberFormatter = getNumberFormatter()
 
     private val _state = MutableStateFlow(TransactionsScreenState())
     val state: StateFlow<TransactionsScreenState> = _state.asStateFlow()
@@ -144,7 +151,10 @@ class TransactionsScreenViewModel(
                     it.selectedItems
                 )
                 it.copy(
-                    transactions = getTransactionsMap(transactionScreenFlows.transactions),
+                    transactions = getTransactionsMap(
+                        transactionScreenFlows.transactions,
+                        it.searchText
+                    ),
                     expenseTransactionsCount = expenseTransactions.size,
                     expense = expense,
                     incomeTransactionsCount = incomeTransactions.size,
@@ -290,6 +300,9 @@ class TransactionsScreenViewModel(
         return state.flatMapLatest {
             var queryString =
                 "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+            if (it.searchText.isNotBlank()) {
+                queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
+            }
             queryString += if (it.includeNoCounterPartyTransactions) {
                 " && (counterParty == nil || counterParty.uuid IN $9)"
             } else {
@@ -317,7 +330,10 @@ class TransactionsScreenViewModel(
         }
     }
 
-    private fun getTransactionsMap(transactions: List<Transaction>): Map<LocalDate, TransactionDetailsByDay> {
+    private fun getTransactionsMap(
+        transactions: List<Transaction>,
+        searchText: String
+    ): Map<LocalDate, TransactionDetailsByDay> {
         val transactionsMap = transactions.groupBy { it.time.toLocalDate() }
         val transactionDetailsMap = mutableMapOf<LocalDate, TransactionDetailsByDay>()
         transactionsMap.forEach { (localDate, transactionsList) ->
@@ -329,41 +345,78 @@ class TransactionsScreenViewModel(
             val debit = debitTransactions.sumOf { it.amount }
 
             transactionDetailsMap[localDate] = TransactionDetailsByDay(
-                transactions = transactionsList.map { getTransactionWithIcons(it) },
+                transactions = transactionsList.map { getTransactionWithIcons(it, searchText) },
                 totalAmount = credit - debit,
             )
         }
         return transactionDetailsMap
     }
 
-    private fun getTransactionWithIcons(transaction: Transaction): TransactionWithIcons {
+    private fun getTransactionWithIcons(
+        transaction: Transaction,
+        searchText: String
+    ): TransactionWithIcons {
         val category = transaction.category!!
         val counterParty = transaction.counterParty
         val method = transaction.method!!
         val source = transaction.source!!
-        val chips: MutableList<Pair<String, ImageVector>> = mutableListOf()
+        val chips: MutableList<ChipInfo> = mutableListOf()
         if (counterParty != null) {
-            chips.add(Pair(counterParty.name, counterParty.icon))
+            chips.add(
+                ChipInfo(
+                    icon = counterParty.icon,
+                    value = counterParty.name,
+                    resId = R.string.placeholder
+                )
+            )
         }
-        chips.add(Pair(category.name, category.icon))
-        chips.add(Pair(method.name, method.icon))
-        chips.add(Pair(source.name, source.icon))
         chips.add(
-            Pair(
-                transaction.time.toZonedDateTime().format(DateTimeFormatter.ofPattern("hh:mm a")),
-                TablerIcons.Alarm
+            ChipInfo(
+                icon = category.icon,
+                value = category.name,
+                resId = R.string.placeholder
             )
         )
-        val transactionItemSize = transaction.items.size
+        chips.add(
+            ChipInfo(
+                icon = method.icon,
+                value = method.name,
+                resId = R.string.placeholder
+            )
+        )
+        chips.add(
+            ChipInfo(
+                icon = source.icon,
+                value = source.name,
+                resId = R.string.placeholder
+            )
+        )
+        if (transaction.items.size > 0) {
+            chips.add(
+                ChipInfo(
+                    resId = R.string.item_count_label,
+                    value = numberFormatter.format(transaction.items.size).toString(),
+                    icon = TablerIcons.Stack
+                )
+            )
+        }
+        chips.add(
+            ChipInfo(
+                icon = TablerIcons.Alarm,
+                value = transaction.time.toZonedDateTime()
+                    .format(DateTimeFormatter.ofPattern("hh:mm a")),
+                resId = R.string.placeholder
+            )
+        )
+        val totalAmount = transaction.amount + transaction.taxAmount
         return TransactionWithIcons(
             uuid = transaction.uuid,
-            title = transaction.title,
-            description = transaction.description,
-            amount = transaction.amount,
+            annotatedTitle = getHighlightedString(transaction.title, searchText),
+            annotatedDescription = getHighlightedString(transaction.description, searchText),
+            amount = numberFormatter.format(totalAmount).toString(),
             typeIcon = transaction.type.icon,
             typeIconColor = transaction.type.color,
             currency = transaction.currency,
-            itemCount = transactionItemSize,
             chips = chips
         )
     }
@@ -392,6 +445,7 @@ class TransactionsScreenViewModel(
     fun setSelectedCategories(selectedCategories: Map<String, Boolean>) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedCategories = selectedCategories
             )
         }
@@ -403,6 +457,7 @@ class TransactionsScreenViewModel(
     ) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedCounterParties = selectedCounterParties,
                 includeNoCounterPartyTransactions = includeTransactionsWithNoCounterParty
             )
@@ -412,6 +467,7 @@ class TransactionsScreenViewModel(
     fun setSelectedMethods(selectedMethods: Map<String, Boolean>) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedMethods = selectedMethods
             )
         }
@@ -420,6 +476,7 @@ class TransactionsScreenViewModel(
     fun setSelectedSources(selectedSources: Map<String, Boolean>) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedSources = selectedSources
             )
         }
@@ -431,6 +488,7 @@ class TransactionsScreenViewModel(
     ) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedItems = selectedItems,
                 includeNoItemTransactions = includeTransactionsWithNoItems
             )
@@ -440,6 +498,7 @@ class TransactionsScreenViewModel(
     fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
         _state.update {
             it.copy(
+                loading = true,
                 selectedTransactionTypes = selectedTransactionTypes
             )
         }
@@ -448,6 +507,7 @@ class TransactionsScreenViewModel(
     fun setSortDirection(sortDirection: Sort) {
         _state.update {
             it.copy(
+                loading = true,
                 sortDirection = sortDirection
             )
         }
@@ -465,9 +525,28 @@ class TransactionsScreenViewModel(
         }
         _state.update {
             it.copy(
+                loading = true,
                 filterAmountMin = min,
                 filterAmountMax = max,
                 filterAmountRange = filterAmountRange
+            )
+        }
+    }
+
+    fun setSearchText(searchText: String) {
+        _state.update {
+            it.copy(
+                loading = true,
+                searchText = searchText,
+            )
+        }
+    }
+
+    fun setLocale(locale: Locale?) {
+        numberFormatter = getNumberFormatter(locale)
+        _state.update {
+            it.copy(
+                locale = locale
             )
         }
     }

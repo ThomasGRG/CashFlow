@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -33,7 +34,6 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowNarrowDown
 import compose.icons.tablericons.ArrowNarrowUp
 import compose.icons.tablericons.CalendarEvent
-import compose.icons.tablericons.Filter
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
 
@@ -59,7 +59,7 @@ fun TransactionScreenRoundedBottomBar(
     onCurrencyClick: () -> Unit,
     onCalendarClick: () -> Unit,
     addTransaction: () -> Unit,
-    onFilterClick: () -> Unit,
+    onSearchClick: () -> Unit,
     onMoreClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -230,13 +230,13 @@ fun TransactionScreenRoundedBottomBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterClick()
+                        onSearchClick()
                     },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Icon(imageVector = TablerIcons.Filter, contentDescription = "filter")
+                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search")
                 }
                 IconButton(
                     onClick = {
@@ -278,7 +278,7 @@ fun TransactionScreenRoundedBottomBarPreview() {
         onCurrencyClick = {},
         onCalendarClick = {},
         addTransaction = {},
-        onFilterClick = {},
+        onSearchClick = {},
         onMoreClick = {},
     )
 }

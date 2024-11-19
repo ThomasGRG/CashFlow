@@ -10,6 +10,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +24,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,12 +49,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -81,6 +97,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -88,6 +105,8 @@ fun TransactionsScreen(
     canAddTransaction: () -> Boolean,
     addTransaction: (String) -> Unit,
     editTransaction: (String) -> Unit,
+    setSearchText: (String) -> Unit,
+    setLocale: (Locale?) -> Unit,
     setCurrency: (String) -> Unit,
     setStartDateAndEndDate: (LocalDate, LocalDate) -> Unit,
     setSelectedCategories: (Map<String, Boolean>) -> Unit,
@@ -109,7 +128,29 @@ fun TransactionsScreen(
     events: Flow<Event>,
     state: TransactionsScreenState,
 ) {
+    val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(
+            ConfigurationCompat.getLocales(configuration).get(0)
+        )
+    }
+
+    LaunchedEffect(key1 = locale) {
+        setLocale(locale)
+    }
 
     var showToastBar by remember { mutableStateOf(false) }
 
@@ -138,6 +179,10 @@ fun TransactionsScreen(
 
     val numberFormatter by remember {
         mutableStateOf(getNumberFormatter())
+    }
+
+    val searchText by remember(key1 = state.searchText) {
+        mutableStateOf(state.searchText)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -302,9 +347,7 @@ fun TransactionsScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Column(
-                            modifier = Modifier.padding(5.dp)
-                        ) {
+                        Column {
                             Text(text = stringResource(id = R.string.transactions_label))
                             Text(
                                 text = "$startDateString to $endDateString",
@@ -369,7 +412,13 @@ fun TransactionsScreen(
                             }
                         }
                     },
-                    onFilterClick = {},
+                    onSearchClick = {
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
+                        }
+                    },
                     onMoreClick = {
                         popupType = PopupType.MORE_OPTIONS
                     }
@@ -381,69 +430,121 @@ fun TransactionsScreen(
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item(
-                        key = "totalBalance"
-                    ) {
+                Column {
+                    AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Start,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(10.dp)
+                                .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = "$balance $selectedCurrency",
-                                style = MaterialTheme.typography.displaySmall
+                            OutlinedTextField(
+                                value = searchText,
+                                onValueChange = setSearchText,
+                                enabled = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester = focusRequester),
+                                label = {
+                                    Text(text = stringResource(id = R.string.search_field_label))
+                                },
+                                trailingIcon = {
+                                    AnimatedVisibility(
+                                        visible = searchText.isNotEmpty(),
+                                        enter = scaleIn() + fadeIn(),
+                                        exit = scaleOut() + fadeOut()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Clear,
+                                            contentDescription = "clear field",
+                                            modifier = Modifier
+                                                .clickable(
+                                                    enabled = true,
+                                                    onClick = {
+                                                        setSearchText("")
+                                                    }
+                                                )
+                                        )
+                                    }
+                                },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                shape = RoundedCornerShape(14.dp),
+                                interactionSource = interactionSource
                             )
                         }
                     }
-
-                    item(
-                        key = "infoRow"
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        TotalTransactionInfo(
-                            currency = selectedCurrency,
-                            expenses = numberFormatter.format(totalExpense).toString(),
-                            expensesCount = numberFormatter.format(expenseTransactionsCount)
-                                .toString(),
-                            income = numberFormatter.format(totalIncome).toString(),
-                            incomeCount = numberFormatter.format(incomeTransactionsCount).toString()
-                        )
-                    }
-                    transactions.forEach {
-                        stickyHeader {
-                            TransactionGroupHeader(
-                                date = it.key,
-                                amount = numberFormatter.format(it.value.totalAmount).toString(),
-                                currency = selectedCurrency
-                            )
+                        if (searchText.isBlank()) {
+                            item(
+                                key = "totalBalance"
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "$balance $selectedCurrency",
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                }
+                            }
+                            item(
+                                key = "infoRow"
+                            ) {
+                                TotalTransactionInfo(
+                                    currency = selectedCurrency,
+                                    expenses = numberFormatter.format(totalExpense).toString(),
+                                    expensesCount = numberFormatter.format(expenseTransactionsCount)
+                                        .toString(),
+                                    income = numberFormatter.format(totalIncome).toString(),
+                                    incomeCount = numberFormatter.format(incomeTransactionsCount)
+                                        .toString()
+                                )
+                            }
                         }
-                        items(
-                            items = it.value.transactions,
-                            key = { transactionWithIcons -> transactionWithIcons.uuid }
-                        ) { transactionWithIcons ->
-                            TransactionCard(
-                                transactionWithIcons = transactionWithIcons,
-                                amount = numberFormatter.format(transactionWithIcons.amount)
-                                    .toString(),
-                                onClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    editTransaction(transactionWithIcons.uuid)
-                                },
-                                onLongClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    selectedTransactionUUID = transactionWithIcons.uuid
-                                    popupType = PopupType.CLONE_TRANSACTION
-                                },
-                                modifier = Modifier.animateItemPlacement()
-                            )
+                        transactions.forEach {
+                            stickyHeader {
+                                TransactionGroupHeader(
+                                    date = it.key,
+                                    amount = numberFormatter.format(it.value.totalAmount)
+                                        .toString(),
+                                    currency = selectedCurrency
+                                )
+                            }
+                            items(
+                                items = it.value.transactions,
+                                key = { transactionWithIcons -> transactionWithIcons.uuid }
+                            ) { transactionWithIcons ->
+                                TransactionCard(
+                                    transactionWithIcons = transactionWithIcons,
+                                    onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        editTransaction(transactionWithIcons.uuid)
+                                    },
+                                    onLongClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        selectedTransactionUUID = transactionWithIcons.uuid
+                                        popupType = PopupType.CLONE_TRANSACTION
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                 }
@@ -453,7 +554,7 @@ fun TransactionsScreen(
                             .fillMaxWidth()
                             .align(Alignment.TopCenter)
                     )
-                } else if (transactions.isEmpty()) {
+                } else if (searchText.isEmpty() && transactions.isEmpty()) {
                     Text(
                         text = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
                         modifier = Modifier.align(
@@ -653,6 +754,8 @@ fun TransactionsScreenPreview() {
         canAddTransaction = { true },
         addTransaction = {},
         editTransaction = {},
+        setSearchText = {},
+        setLocale = {},
         setCurrency = {},
         setStartDateAndEndDate = { _, _ -> },
         setSelectedCategories = {},
@@ -720,6 +823,8 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
+            setSearchText = viewModel::setSearchText,
+            setLocale = viewModel::setLocale,
             setCurrency = viewModel::setCurrency,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
             setSelectedCategories = viewModel::setSelectedCategories,
