@@ -8,6 +8,7 @@ import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.query.Sort
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTemplateItemCardInfo
@@ -23,6 +24,8 @@ import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.combineSixFlows
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -32,6 +35,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -64,6 +69,7 @@ class UpsertTransactionTemplateScreenViewModel(
 
     init {
         loadDataJob = loadData()
+        checkNameAlreadyInUse()
     }
 
     override fun onCleared() {
@@ -117,6 +123,7 @@ class UpsertTransactionTemplateScreenViewModel(
                 val selectedSource = transactionTemplate.source ?: it.selectedSource
                 it.copy(
                     transactionTemplate = transactionTemplate,
+                    name = transactionTemplate.name,
                     amount = transactionTemplate.amount,
                     displayAmount = transactionTemplate.amount.toString(),
                     taxAmount = transactionTemplate.taxAmount,
@@ -152,6 +159,31 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun checkNameAlreadyInUse() = viewModelScope.launch {
+        state
+            .debounce(250L)
+            .flatMapLatest { screenState ->
+                val searchName =
+                    if (screenState.name.isNotBlank() && screenState.name.trim() != screenState.transactionTemplate.name) {
+                        screenState.name.trim()
+                    } else {
+                        ""
+                    }
+                realm.query<TransactionTemplate>("name == [c]$0", searchName)
+                    .count()
+                    .asFlow()
+            }.collectLatest { count ->
+                _state.update {
+                    it.copy(
+                        nameValid = if (count > 0) false else it.nameValid,
+                        nameErrorStringRes = if (count > 0) R.string.name_in_use_label else R.string.name_empty_error_label,
+                        loading = false
+                    )
+                }
+            }
+    }
+
     private fun validate(title: String, description: String): Boolean {
         var validCount = 0
         if (title.isNotBlank()) validCount += 1
@@ -167,13 +199,12 @@ class UpsertTransactionTemplateScreenViewModel(
 
     fun upsertTransactionTemplate(newName: String, newTitle: String, newDescription: String) =
         viewModelScope.launch {
+            if (!state.value.nameValid || state.value.loading) {
+                return@launch
+            }
             val isValid = validate(newTitle, newDescription)
             if (!isValid) {
                 _event.send(Event.MinimumTwoFieldsRequired)
-                return@launch
-            }
-            if (newName != state.value.transactionTemplate.name && realm.query<TransactionTemplate>("name == [c]$0", newName).count().find() > 0) {
-                _event.send(Event.NameAlreadyTaken)
                 return@launch
             }
             loadDataJob?.cancelAndJoin()
@@ -280,6 +311,17 @@ class UpsertTransactionTemplateScreenViewModel(
                 )
             }
             _event.send(Event.DeleteSuccess)
+        }
+    }
+
+    fun setName(name: String) {
+        _state.update {
+            it.copy(
+                name = name,
+                nameValid = name.isNotBlank(),
+                nameErrorStringRes = R.string.name_empty_error_label,
+                loading = name.isNotBlank()
+            )
         }
     }
 

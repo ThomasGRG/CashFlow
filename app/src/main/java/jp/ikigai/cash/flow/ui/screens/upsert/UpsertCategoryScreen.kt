@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,9 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +32,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -54,7 +55,6 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
-import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getIconForCategory
 import kotlinx.coroutines.delay
@@ -69,6 +69,7 @@ fun UpsertCategoryScreen(
     navigateBack: () -> Unit,
     chooseIcon: (String) -> Unit,
     selectedIcon: String,
+    setName: (String) -> Unit,
     upsertCategory: (ImageVector, String) -> Unit,
     events: Flow<Event>,
     state: UpsertCategoryScreenState,
@@ -92,14 +93,16 @@ fun UpsertCategoryScreen(
         mutableStateOf(state.enabled)
     }
 
-    var nameFieldValue by rememberSaveable(state.category, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.category.name)
-        )
+    val name by remember(key1 = state.name) {
+        mutableStateOf(state.name)
     }
 
-    var nameValid by rememberSaveable {
-        mutableStateOf(true)
+    val nameValid by remember(key1 = state.nameValid) {
+        mutableStateOf(state.nameValid)
+    }
+
+    val nameErrorStringRes by remember(key1 = state.nameErrorStringRes) {
+        mutableIntStateOf(state.nameErrorStringRes)
     }
 
     val categoryUuid by remember(key1 = state.category) {
@@ -131,16 +134,6 @@ fun UpsertCategoryScreen(
             if (currentEvent == Event.SaveSuccess) {
                 navigateBack()
             }
-        }
-    }
-
-    LaunchedEffect(key1 = state.enabled) {
-        if (enabled) {
-            nameFieldValue = nameFieldValue.copy(
-                selection = TextRange(nameFieldValue.text.length)
-            )
-            delay(500)
-            focusRequester.requestFocus()
         }
     }
 
@@ -199,7 +192,7 @@ fun UpsertCategoryScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        upsertCategory(icon, nameFieldValue.text)
+                        upsertCategory(icon, name.trim())
                     }
                 },
             )
@@ -242,18 +235,19 @@ fun UpsertCategoryScreen(
             )
             RoundedCornerOutlinedTextField(
                 enabled = enabled,
-                value = nameFieldValue,
-                onValueChange = { value ->
-                    nameFieldValue = value
-                    nameValid = value.text.isNotBlank()
-                },
+                value = name,
+                onValueChange = setName,
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = stringResource(id = R.string.name_field_label),
                 placeHolder = stringResource(id = R.string.category_name_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = stringResource(id = R.string.name_empty_error_label),
+                errorHint = stringResource(id = nameErrorStringRes),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
                 onDone = {
                     keyboardController?.hide()
                 }
@@ -269,6 +263,7 @@ fun UpsertCategoryScreenPreview() {
         navigateBack = {},
         chooseIcon = {},
         selectedIcon = "",
+        setName = {},
         upsertCategory = { _, _ -> },
         events = emptyList<Event>().asFlow(),
         state = UpsertCategoryScreenState()
@@ -299,6 +294,7 @@ fun NavGraphBuilder.upsertCategoryScreen(navController: NavController) {
             },
             selectedIcon = it.savedStateHandle.get<String>("icon")
                 ?: Constants.DEFAULT_CATEGORY_ICON.name,
+            setName = viewModel::setName,
             upsertCategory = viewModel::upsertCategory,
             events = viewModel.event,
             state = state

@@ -1,5 +1,7 @@
 package jp.ikigai.cash.flow.ui.screenStates.upsert
 
+import androidx.annotation.StringRes
+import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.UpsertTemplateItemCardInfo
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
@@ -11,6 +13,9 @@ import jp.ikigai.cash.flow.data.enums.TransactionType
 
 data class UpsertTransactionTemplateScreenState(
     val transactionTemplate: TransactionTemplate = TransactionTemplate(),
+    val name: String = "",
+    val nameValid: Boolean = true,
+    @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
     val amount: Double = 0.0,
     val displayAmount: String = "",
     val taxAmount: Double = 0.0,

@@ -93,6 +93,7 @@ fun UpsertTransactionTemplateScreen(
     updateTemplateItemPrice: (String, Int) -> Unit,
     updateTemplateItemQuantity: (String, Int) -> Unit,
     removeItem: (Int) -> Unit,
+    setName: (String) -> Unit,
     setAmount: (String) -> Unit,
     setTaxAmount: (String) -> Unit,
     setSelectedCategory: (Category) -> Unit,
@@ -167,17 +168,16 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.transactionTemplate.uuid)
     }
 
-    var nameFieldValue by rememberSaveable(
-        state.transactionTemplate,
-        saver = TextFieldValueSaver
-    ) {
-        mutableStateOf(
-            TextFieldValue(state.transactionTemplate.name)
-        )
+    val name by remember(key1 = state.name) {
+        mutableStateOf(state.name)
     }
 
-    var nameValid by remember {
-        mutableStateOf(true)
+    val nameValid by remember(key1 = state.nameValid) {
+        mutableStateOf(state.nameValid)
+    }
+
+    val nameErrorStringRes by remember(key1 = state.nameErrorStringRes) {
+        mutableIntStateOf(state.nameErrorStringRes)
     }
 
     var titleFieldValue by rememberSaveable(
@@ -428,15 +428,11 @@ fun UpsertTransactionTemplateScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        if (nameFieldValue.text.isNotBlank()) {
-                            upsertTransactionTemplate(
-                                nameFieldValue.text,
-                                titleFieldValue.text,
-                                descriptionFieldValue.text
-                            )
-                        } else {
-                            nameValid = false
-                        }
+                        upsertTransactionTemplate(
+                            name.trim(),
+                            titleFieldValue.text,
+                            descriptionFieldValue.text
+                        )
                     }
                 },
                 extraButtonIcon = if (transactionTemplateUuid.isNotBlank()) {
@@ -473,18 +469,19 @@ fun UpsertTransactionTemplateScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = nameFieldValue,
-                    onValueChange = {
-                        nameFieldValue = it
-                        nameValid = it.text.isNotBlank()
-                    },
+                    value = name,
+                    onValueChange = setName,
                     enabled = enabled,
                     label = stringResource(id = R.string.template_name_field_label),
                     placeHolder = stringResource(id = R.string.template_name_placeholder_label),
-                    isError = !nameValid,
-                    errorHint = stringResource(id = R.string.name_empty_error_label),
                     icon = TablerIcons.Typography,
                     iconDescription = "name icon",
+                    isError = !nameValid,
+                    errorHint = stringResource(id = nameErrorStringRes),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
                     onDone = {
                         keyboardController?.hide()
                     },
@@ -748,6 +745,7 @@ fun UpsertTransactionTemplateScreenPreview() {
         updateTransactionItemUnit = { _, _ -> },
         updateTemplateItemQuantity = { _, _ -> },
         removeItem = {},
+        setName = {},
         setAmount = {},
         setTaxAmount = {},
         setSelectedCategory = {},
@@ -786,6 +784,7 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             updateTemplateItemPrice = viewModel::updateTemplateItemPrice,
             updateTemplateItemQuantity = viewModel::updateTemplateItemQuantity,
             removeItem = viewModel::removeItem,
+            setName = viewModel::setName,
             setAmount = viewModel::setAmount,
             setTaxAmount = viewModel::setTaxAmount,
             setSelectedCategory = viewModel::setSelectedCategory,

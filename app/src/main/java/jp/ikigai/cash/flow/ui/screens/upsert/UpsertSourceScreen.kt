@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,7 +33,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,6 +77,7 @@ fun UpsertSourceScreen(
     navigateBack: () -> Unit,
     chooseIcon: (String) -> Unit,
     selectedIcon: String,
+    setName: (String) -> Unit,
     upsertTransactionSource: (ImageVector, String, String, Double) -> Unit,
     events: Flow<Event>,
     state: UpsertSourceScreenState,
@@ -100,14 +101,16 @@ fun UpsertSourceScreen(
         mutableStateOf(state.enabled)
     }
 
-    var nameFieldValue by rememberSaveable(state.source, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.source.name)
-        )
+    val name by remember(key1 = state.name) {
+        mutableStateOf(state.name)
     }
 
-    var nameValid by rememberSaveable {
-        mutableStateOf(true)
+    val nameValid by remember(key1 = state.nameValid) {
+        mutableStateOf(state.nameValid)
+    }
+
+    val nameErrorStringRes by remember(key1 = state.nameErrorStringRes) {
+        mutableIntStateOf(state.nameErrorStringRes)
     }
 
     var balanceFieldValue by rememberSaveable(state.source, saver = TextFieldValueSaver) {
@@ -157,16 +160,6 @@ fun UpsertSourceScreen(
             if (currentEvent == Event.SaveSuccess) {
                 navigateBack()
             }
-        }
-    }
-
-    LaunchedEffect(key1 = state.enabled) {
-        if (enabled) {
-            nameFieldValue = nameFieldValue.copy(
-                selection = TextRange(nameFieldValue.text.length)
-            )
-            delay(500)
-            focusRequester.requestFocus()
         }
     }
 
@@ -248,7 +241,7 @@ fun UpsertSourceScreen(
                     if (enabled) {
                         upsertTransactionSource(
                             icon,
-                            nameFieldValue.text,
+                            name.trim(),
                             selectedCurrency,
                             balanceFieldValue.text.toDoubleOrNull() ?: 0.0
                         )
@@ -294,18 +287,19 @@ fun UpsertSourceScreen(
             )
             RoundedCornerOutlinedTextField(
                 enabled = enabled,
-                value = nameFieldValue,
-                onValueChange = { value ->
-                    nameFieldValue = value
-                    nameValid = value.text.isNotBlank()
-                },
+                value = name,
+                onValueChange = setName,
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = stringResource(id = R.string.name_field_label),
                 placeHolder = stringResource(id = R.string.source_name_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
-                errorHint = stringResource(id = R.string.name_empty_error_label),
+                errorHint = stringResource(id = nameErrorStringRes),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done
+                ),
                 onDone = {
                     keyboardController?.hide()
                 }
@@ -326,7 +320,7 @@ fun UpsertSourceScreen(
                 errorHint = stringResource(id = R.string.invalid_balance_error_label),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
-                    autoCorrect = false,
+                    autoCorrectEnabled = false,
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
                 ),
@@ -356,6 +350,7 @@ fun UpsertSourceScreenPreview() {
         navigateBack = {},
         chooseIcon = {},
         selectedIcon = "",
+        setName = {},
         upsertTransactionSource = { _, _, _, _ -> },
         events = emptyList<Event>().asFlow(),
         state = UpsertSourceScreenState()
@@ -386,6 +381,7 @@ fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
             },
             selectedIcon = it.savedStateHandle.get<String>("icon")
                 ?: Constants.DEFAULT_SOURCE_ICON.name,
+            setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
             events = viewModel.event,
             state = state
