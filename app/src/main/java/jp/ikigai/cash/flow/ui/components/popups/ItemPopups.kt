@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.entity.Item
@@ -302,7 +303,7 @@ fun FilterItemsPopup(
             itemList
                 .filter {
                     it.first.name.contains(
-                        searchText,
+                        searchText.trim(),
                         ignoreCase = true
                     )
                 }
@@ -369,6 +370,24 @@ fun FilterItemsPopup(
                     },
                     modifier = Modifier.animateItem()
                 )
+            }
+            if (searchText.isNotBlank() && filteredItemList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
             }
         }
         Row(
