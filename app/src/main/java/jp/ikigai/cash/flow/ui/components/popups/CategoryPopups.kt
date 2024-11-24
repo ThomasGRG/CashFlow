@@ -1,23 +1,32 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -38,6 +47,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -273,6 +283,15 @@ fun FilterCategoryPopup(
         }
     }
 
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredCategoryList
+                .map { selectedCategories[it.first.uuid] }
+                .filter { it == true }
+                .size
+        }
+    }
+
     LaunchedEffect(Unit) {
         selectedCategories.putAll(selectedCategoryMap)
     }
@@ -281,7 +300,7 @@ fun FilterCategoryPopup(
         modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -344,7 +363,7 @@ fun FilterCategoryPopup(
             modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             FilledTonalButton(
                 onClick = {
@@ -352,13 +371,48 @@ fun FilterCategoryPopup(
                     dismiss()
                 },
                 modifier = Modifier
-                    .weight(1f)
+                    .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.cancel_button_label)
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredCategoryList.size
+                    filteredCategoryList
+                        .map { category -> category.first.uuid }
+                        .forEach { uuid -> selectedCategories[uuid] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Text(text = stringResource(id = R.string.cancel_button_label))
+                Box(
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = filteredListSelectedCount == filteredCategoryList.size,
+                        enter = expandHorizontally(expandFrom = Alignment.Start),
+                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_deselect_24),
+                            contentDescription = "toggle_select_icon"
+                        )
+                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_select_all_24),
+                        contentDescription = "toggle_select_icon"
+                    )
+                }
             }
-            FilledTonalButton(
+            FilledTonalIconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (isFocused) {
@@ -368,11 +422,11 @@ fun FilterCategoryPopup(
                     }
                 },
                 modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Text(text = stringResource(id = R.string.search_field_label))
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
             }
             FilledTonalButton(
                 onClick = {
@@ -381,10 +435,11 @@ fun FilterCategoryPopup(
                     filter(selectedCategories)
                 },
                 modifier = Modifier
-                    .weight(1f)
+                    .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCount > 0
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = stringResource(
