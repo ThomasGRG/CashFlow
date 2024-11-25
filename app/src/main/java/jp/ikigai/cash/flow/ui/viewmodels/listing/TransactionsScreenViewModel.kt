@@ -312,7 +312,7 @@ class TransactionsScreenViewModel(
     private fun getTransactionQuery(): Flow<ResultsChange<Transaction>> {
         return state.flatMapLatest {
             var queryString =
-                "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+                "time >= $0 && time <= $1 && currency==$2 && (amount + taxAmount) >= $3 && (amount + taxAmount) <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
             if (it.searchText.isNotBlank()) {
                 queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
             }
