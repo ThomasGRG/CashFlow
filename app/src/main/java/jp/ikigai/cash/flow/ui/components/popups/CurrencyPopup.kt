@@ -1,30 +1,41 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,13 +47,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.dto.CurrencyInfo
+import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
 
@@ -194,6 +208,250 @@ fun CurrencyPopup(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.search_field_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterCurrencyPopup(
+    selectedCurrencyMap: Map<String, Boolean>,
+    currencies: List<CurrencyInfo>,
+    filter: (Map<String, Boolean>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    var filteredCurrencies by remember {
+        mutableStateOf(currencies)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredCurrencies = if (searchText.isBlank()) {
+            currencies
+        } else {
+            currencies
+                .filter {
+                    it.annotatedString.text.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    it.copy(
+                        annotatedString = getHighlightedString(it.annotatedString.text, searchText)
+                    )
+                }
+        }
+    }
+
+    val selectedCurrencies = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedCurrencies.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredCurrencies
+                .map { selectedCurrencies[it.currency.currencyCode] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        selectedCurrencies.putAll(selectedCurrencyMap)
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(min = 0.dp, max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredCurrencies,
+                key = { currencyInfo -> "currency-${currencyInfo.currency.currencyCode}" }
+            ) { currencyInfo ->
+                MultiSelectCard(
+                    checked = {
+                        selectedCurrencies.getOrDefault(
+                            currencyInfo.currency.currencyCode,
+                            true
+                        )
+                    },
+                    label = currencyInfo.annotatedString,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedCurrencies[currencyInfo.currency.currencyCode] =
+                            !selectedCurrencies[currencyInfo.currency.currencyCode]!!
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredCurrencies.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredCurrencies.size
+                    filteredCurrencies
+                        .map { currencyInfo -> currencyInfo.currency.currencyCode }
+                        .forEach { currencyCode -> selectedCurrencies[currencyCode] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Box(
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = filteredListSelectedCount == filteredCurrencies.size,
+                        enter = expandHorizontally(expandFrom = Alignment.Start),
+                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_deselect_24),
+                            contentDescription = "toggle_select_icon"
+                        )
+                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_select_all_24),
+                        contentDescription = "toggle_select_icon"
+                    )
+                }
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(selectedCurrencies)
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
             }
         }
     }
