@@ -555,7 +555,7 @@ fun UpsertTransactionScreen(
                     boxModifier = Modifier.animateItem()
                 )
             }
-            if (isTitleFieldFocused && filteredTransactionTitles.isNotEmpty()) {
+            if (filteredTransactionTitles.isNotEmpty() && (titleFieldValue.text.isBlank() || isTitleFieldFocused)) {
                 item(
                     key = "auto-complete",
                     contentType = "lazyRow"
