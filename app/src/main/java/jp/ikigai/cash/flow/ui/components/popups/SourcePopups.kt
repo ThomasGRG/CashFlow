@@ -1,13 +1,10 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -48,7 +45,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -60,6 +56,7 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.BuildingBank
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.entity.Source
+import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -450,24 +447,9 @@ fun FilterSourcePopup(
                     .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Box(
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = filteredListSelectedCount == filteredSourceList.size,
-                        enter = expandHorizontally(expandFrom = Alignment.Start),
-                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_deselect_24),
-                            contentDescription = "toggle_select_icon"
-                        )
-                    }
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_select_all_24),
-                        contentDescription = "toggle_select_icon"
-                    )
-                }
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredSourceList.size
+                )
             }
             FilledTonalIconButton(
                 onClick = {
