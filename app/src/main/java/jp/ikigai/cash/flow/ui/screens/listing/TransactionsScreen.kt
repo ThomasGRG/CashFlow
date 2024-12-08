@@ -344,7 +344,11 @@ fun TransactionsScreen(
                         Column {
                             Text(text = stringResource(id = R.string.transactions_label))
                             Text(
-                                text = "$startDateString to $endDateString",
+                                text = stringResource(
+                                    id = R.string.date_range_label,
+                                    startDateString,
+                                    endDateString
+                                ),
                                 style = MaterialTheme.typography.titleSmall,
                                 modifier = Modifier.alpha(0.8f)
                             )
