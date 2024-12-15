@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
-import compose.icons.tablericons.InfoCircle
+import compose.icons.tablericons.AlertTriangle
 import jp.ikigai.cash.flow.R
 
 @Composable
@@ -46,8 +46,8 @@ fun ConfirmDeletePopup(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
-            imageVector = TablerIcons.InfoCircle,
-            contentDescription = "caution icon",
+            imageVector = TablerIcons.AlertTriangle,
+            contentDescription = "warning icon",
             tint = MaterialTheme.colorScheme.error,
             modifier = Modifier.size(40.dp)
         )
@@ -94,12 +94,101 @@ fun ConfirmDeletePopup(
     }
 }
 
+@Composable
+fun ConfirmDeletePopup(
+    message: String,
+    delete: () -> Unit,
+    migrate: () -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = TablerIcons.AlertTriangle,
+            contentDescription = "warning icon",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(40.dp)
+        )
+        Text(
+            text = message,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    delete()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.delete_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    migrate()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.migrate_button_label))
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun ConfirmDeletePopupPreview() {
-    ConfirmDeletePopup(
-        message = stringResource(id = R.string.delete_transaction_confirmation_label),
-        dismiss = {},
-        delete = {}
-    )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        ConfirmDeletePopup(
+            message = stringResource(id = R.string.delete_transaction_confirmation_label),
+            dismiss = {},
+            delete = {}
+        )
+        ConfirmDeletePopup(
+            message = stringResource(id = R.string.category_transactions_deletion_warning_label),
+            dismiss = {},
+            delete = {},
+            migrate = {}
+        )
+    }
 }
