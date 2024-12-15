@@ -111,6 +111,94 @@ fun DateRangePickerPopup(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateRangePickerPopup(
+    startDate: LocalDate?,
+    endDate: LocalDate?,
+    filter: (LocalDate, LocalDate) -> Unit,
+    reset: () -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val dateRangePickerState = rememberDateRangePickerState(
+        initialSelectedStartDateMillis = startDate?.getStartOfDayInEpochMilli(),
+        initialSelectedEndDateMillis = endDate?.getStartOfDayInEpochMilli()
+    )
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(top = 24.dp, bottom = 15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        DateRangePicker(
+            state = dateRangePickerState,
+            modifier = Modifier
+                .fillMaxHeight(0.68f),
+            showModeToggle = false,
+            colors = DatePickerDefaults.colors(
+                containerColor = Color.Transparent
+            )
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    reset()
+                    dismiss()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.reset_button_label))
+            }
+            FilledTonalButton(
+                enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(
+                        (dateRangePickerState.selectedStartDateMillis!!).toZonedDateTime()
+                            .toLocalDate(),
+                        (dateRangePickerState.selectedEndDateMillis!!).toZonedDateTime()
+                            .toLocalDate()
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.filter_button_label))
+            }
+        }
+    }
+}
+
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun DateRangePickerPopupPreview() {
