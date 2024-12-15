@@ -11,10 +11,14 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Category
+import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
+import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,12 +30,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
 
 class UpsertCategoryScreenViewModel(
     savedStateHandle: SavedStateHandle,
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private var numberFormatter = getNumberFormatter()
 
     private val categoryUuid: String = checkNotNull(savedStateHandle["id"])
 
@@ -46,6 +53,7 @@ class UpsertCategoryScreenViewModel(
     init {
         if (categoryUuid.isNotBlank()) {
             getCategoryJob = getCategory()
+            getTransactionCount()
         } else {
             _state.update {
                 it.copy(
@@ -60,6 +68,18 @@ class UpsertCategoryScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun getTransactionCount() = viewModelScope.launch {
+        realm.query<Transaction>("category.uuid == $0", categoryUuid).count().asFlow()
+            .collectLatest { count ->
+                _state.update {
+                    it.copy(
+                        transactionCount = if (count > 0) numberFormatter.format(count)
+                            .toString() else ""
+                    )
+                }
+            }
     }
 
     private fun getCategory() = viewModelScope.launch {
@@ -112,6 +132,15 @@ class UpsertCategoryScreenViewModel(
         }
     }
 
+    fun setLocale(locale: Locale?) {
+        numberFormatter = getNumberFormatter(locale)
+        _state.update {
+            it.copy(
+                locale = locale
+            )
+        }
+    }
+
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val category = state.value.category
         if (state.value.nameValid && !state.value.loading) {
@@ -149,6 +178,45 @@ class UpsertCategoryScreenViewModel(
                     loading = false
                 )
             }
+        }
+    }
+
+    fun deleteCategory() = viewModelScope.launch {
+        if (categoryUuid.isNotBlank()) {
+            getCategoryJob?.cancelAndJoin()
+            _state.update {
+                it.copy(
+                    loading = true,
+                    enabled = false
+                )
+            }
+            val category = state.value.category
+            realm.write {
+                this.query<Transaction>("category.uuid == $0", categoryUuid).find()
+                    .groupBy { transaction -> transaction.source!! }
+                    .forEach { (source, transactions) ->
+                        var newBalance = source.balance
+                        transactions.forEach { transaction ->
+                            val totalAmount = transaction.amount + transaction.taxAmount
+                            if (transaction.type == TransactionType.CREDIT) {
+                                newBalance -= totalAmount
+                            } else {
+                                newBalance += totalAmount
+                            }
+                            delete(transaction)
+                        }
+                        source.balance = newBalance
+                    }
+                findLatest(category)?.also {
+                    delete(it)
+                }
+            }
+            _state.update {
+                it.copy(
+                    loading = false
+                )
+            }
+            _event.send(Event.DeleteSuccess)
         }
     }
 }
