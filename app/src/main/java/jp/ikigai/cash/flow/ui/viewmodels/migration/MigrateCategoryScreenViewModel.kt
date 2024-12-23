@@ -96,17 +96,6 @@ class MigrateCategoryScreenViewModel(
                 .asFlow()
         }.collectLatest { transactionChanges ->
             _state.update {
-                val transactionsMap = transactionChanges.list.groupBy(
-                    keySelector = { transaction -> transaction.time.toLocalDate() },
-                    valueTransform = { transaction ->
-                        getTransactionWithIcons(
-                            transaction,
-                            it.searchText,
-                            it.locale
-                        )
-                    }
-                )
-
                 val counterParties = transactionChanges.list
                     .mapNotNull { transaction -> transaction.counterParty }
                     .distinctBy { counterParty -> counterParty.uuid }
@@ -162,7 +151,7 @@ class MigrateCategoryScreenViewModel(
                 )
 
                 it.copy(
-                    transactions = transactionsMap,
+                    transactions = transactionChanges.list,
                     filteredTransactions = filteredTransactionsMap,
                     selectedTransactions = selectedTransactions,
                     selectedLocalDates = getSelectedLocalDates(
@@ -602,10 +591,39 @@ class MigrateCategoryScreenViewModel(
     }
 
     fun setSortDirection(sortDirection: Sort) {
-        _state.update { screenState ->
-            screenState.copy(
-                loading = true,
-                sortDirection = sortDirection
+        _state.update {
+            val transactions = if (sortDirection == Sort.DESCENDING) {
+                it.transactions.sortedByDescending { transaction -> transaction.time }
+            } else {
+                it.transactions.sortedBy { transaction -> transaction.time }
+            }
+            val selectedCounterParties =
+                it.selectedCounterParties.filter { entry -> entry.value }.keys
+            val selectedMethods = it.selectedMethods.filter { entry -> entry.value }.keys
+            val selectedSources = it.selectedSources.filter { entry -> entry.value }.keys
+            val selectedItems = it.selectedItems.filter { entry -> entry.value }.keys
+            val selectedCurrencies =
+                it.selectedCurrencies.filter { entry -> entry.value }.keys
+            it.copy(
+                sortDirection = sortDirection,
+                transactions = transactions,
+                filteredTransactions = filterTransactions(
+                    transactions = transactions,
+                    searchText = it.searchText.trim(),
+                    maxAmount = if (it.filterAmountMax == 0.0) Double.MAX_VALUE else it.filterAmountMax,
+                    minAmount = it.filterAmountMin,
+                    minTime = it.startDate?.getStartOfDayInEpochMilli() ?: 0L,
+                    maxTime = it.endDate?.getEndOfDayInEpochMilli() ?: Long.MAX_VALUE,
+                    selectedCurrencies = selectedCurrencies,
+                    selectedCounterParties = selectedCounterParties,
+                    includeNoCounterPartyTransactions = it.includeNoCounterPartyTransactions,
+                    selectedMethods = selectedMethods,
+                    selectedSources = selectedSources,
+                    includeNoItemTransactions = it.includeNoItemTransactions,
+                    selectedItems = selectedItems,
+                    selectedTransactionTypes = it.selectedTransactionTypes,
+                    locale = it.locale
+                )
             )
         }
     }
