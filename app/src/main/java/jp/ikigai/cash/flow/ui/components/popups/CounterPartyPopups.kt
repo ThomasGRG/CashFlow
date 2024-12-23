@@ -224,6 +224,183 @@ fun SelectCounterPartyPopup(
 }
 
 @Composable
+fun MigrateCounterPartyPopup(
+    migrateCount: Int,
+    selectCounterParty: (CounterParty) -> Unit,
+    counterParties: List<CounterParty>,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val counterPartyList by remember {
+        mutableStateOf(
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.name, ""))
+            }
+        )
+    }
+
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
+        } else {
+            counterPartyList
+                .filter {
+                    it.first.name.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                }
+        }
+    }
+
+    var selectedCounterParty by remember {
+        mutableStateOf(CounterParty())
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredCounterPartyList,
+                key = { counterPartyPair -> "counterParty-${counterPartyPair.first.uuid}" }
+            ) { counterPartyPair ->
+                SelectableCard(
+                    checked = { counterPartyPair.first.uuid == selectedCounterParty.uuid },
+                    label = counterPartyPair.second,
+                    icon = counterPartyPair.first.icon,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedCounterParty = counterPartyPair.first
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.search_field_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    selectCounterParty(selectedCounterParty)
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCounterParty.uuid.isNotEmpty(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.migrate_with_count_button_label,
+                        migrateCount
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun FilterCounterPartyPopup(
     includeTransactionsWithNoCounterParty: Boolean,
     selectedCounterPartyMap: Map<String, Boolean>,
