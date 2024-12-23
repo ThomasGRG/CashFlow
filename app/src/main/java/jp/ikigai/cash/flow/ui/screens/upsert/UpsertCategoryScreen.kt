@@ -193,7 +193,7 @@ fun UpsertCategoryScreen(
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
+                PopupType.WARN_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.category_transactions_deletion_warning_label),
                         delete = deleteCategory,
@@ -204,6 +204,17 @@ fun UpsertCategoryScreen(
                             hidePopup()
                             popupType = PopupType.NONE
                         }
+                    )
+                }
+
+                PopupType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.delete_category_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        delete = deleteCategory
                     )
                 }
 
@@ -277,10 +288,10 @@ fun UpsertCategoryScreen(
                     } else null,
                     extraButtonAction = if (categoryUuid.isNotBlank() && enabled) {
                         {
-                            if (transactionCount.isNotEmpty()) {
-                                popupType = PopupType.CONFIRM_DELETE
+                            popupType = if (transactionCount.isNotEmpty()) {
+                                PopupType.WARN_DELETE
                             } else {
-                                deleteCategory()
+                                PopupType.CONFIRM_DELETE
                             }
                         }
                     } else null

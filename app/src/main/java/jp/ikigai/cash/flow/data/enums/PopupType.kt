@@ -21,6 +21,7 @@ enum class PopupType {
     CHANGE_ITEM,
     ITEM_UNIT,
     CONFIRM_DELETE,
+    WARN_DELETE,
     RESET_ICON,
     CLONE_TRANSACTION
 }

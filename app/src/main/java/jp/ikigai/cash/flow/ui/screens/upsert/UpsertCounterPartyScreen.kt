@@ -193,7 +193,7 @@ fun UpsertCounterPartyScreen(
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
+                PopupType.WARN_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.counter_party_transactions_deletion_warning_label),
                         delete = deleteCounterParty,
@@ -204,6 +204,17 @@ fun UpsertCounterPartyScreen(
                             hidePopup()
                             popupType = PopupType.NONE
                         }
+                    )
+                }
+
+                PopupType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.delete_counter_party_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        delete = deleteCounterParty
                     )
                 }
 
@@ -277,10 +288,10 @@ fun UpsertCounterPartyScreen(
                     } else null,
                     extraButtonAction = if (counterPartyUuid.isNotBlank() && enabled) {
                         {
-                            if (transactionCount.isNotEmpty()) {
-                                popupType = PopupType.CONFIRM_DELETE
+                            popupType = if (transactionCount.isNotEmpty()) {
+                                PopupType.WARN_DELETE
                             } else {
-                                deleteCounterParty()
+                                PopupType.CONFIRM_DELETE
                             }
                         }
                     } else null
