@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.migration
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -470,7 +469,6 @@ class MigrateCategoryScreenViewModel(
             }
             _event.send(Event.MigrationSuccess)
         } catch (exception: Exception) {
-            Log.i("error", exception.toString())
             _event.send(Event.InternalError)
         }
         _state.update {
