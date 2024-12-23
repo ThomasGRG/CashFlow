@@ -51,7 +51,7 @@ fun ThreeSlotRoundedBottomBar(
                 }
             }
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(3f),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
