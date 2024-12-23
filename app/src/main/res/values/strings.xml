@@ -4,6 +4,7 @@
     <string name="delete_transaction_confirmation_label">Are you sure you want to delete this transaction?</string>
     <string name="delete_category_confirmation_label">Are you sure you want to delete this category?</string>
     <string name="category_transactions_deletion_warning_label">This will also delete all transactions under this category.</string>
+    <string name="counter_party_transactions_deletion_warning_label">This will also delete all transactions under this counterparty.</string>
     <string name="delete_template_confirmation_label">Are you sure you want to delete this template?</string>
 
     <!--  Non Translatable Strings  -->

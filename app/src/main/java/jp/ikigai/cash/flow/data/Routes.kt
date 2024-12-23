@@ -23,6 +23,11 @@ sealed class Routes(val route: String) {
             return "upsertCounterParty?id=${id}"
         }
     }
+    object MigrateCounterParty : Routes("migrateCounterParty?id={id}") {
+        fun getRoute(id: String = ""): String {
+            return "migrateCounterParty?id=${id}"
+        }
+    }
 
     object Sources: Routes("sources")
     object UpsertSource: Routes("upsertSource?id={id}") {
