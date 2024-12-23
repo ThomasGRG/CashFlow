@@ -281,7 +281,7 @@ fun MigrateCategoryScreenRoundedBottomBar(
 
 @Preview
 @Composable
-fun MigrationScreenRoundedBottomBarPreview() {
+fun MigrateCategoryScreenRoundedBottomBarPreview() {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.background(MaterialTheme.colorScheme.background)
