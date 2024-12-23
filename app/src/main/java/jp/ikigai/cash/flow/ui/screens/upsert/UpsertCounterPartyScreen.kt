@@ -4,13 +4,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +35,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -36,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -52,6 +60,7 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCounterPartyScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewModel
@@ -62,20 +71,35 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun UpsertCounterPartyScreen(
     navigateBack: () -> Unit,
+    migrateTransactions: (String) -> Unit,
     chooseIcon: (String) -> Unit,
     selectedIcon: String,
     setName: (String) -> Unit,
+    setLocale: (Locale?) -> Unit,
     upsertCounterParty: (ImageVector, String) -> Unit,
+    deleteCounterParty: () -> Unit,
     events: Flow<Event>,
     state: UpsertCounterPartyScreenState,
 ) {
+    val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(
+            ConfigurationCompat.getLocales(configuration).get(0)
+        )
+    }
+
+    LaunchedEffect(key1 = locale) {
+        setLocale(locale)
+    }
 
     var icon by remember(key1 = selectedIcon) {
         mutableStateOf(selectedIcon.getIconForCounterParty())
@@ -105,6 +129,10 @@ fun UpsertCounterPartyScreen(
         mutableIntStateOf(state.nameErrorStringRes)
     }
 
+    val transactionCount by remember(key1 = state.transactionCount) {
+        mutableStateOf(state.transactionCount)
+    }
+
     val counterPartyUuid by remember(key1 = state.counterParty) {
         mutableStateOf(state.counterParty.uuid)
     }
@@ -131,7 +159,7 @@ fun UpsertCounterPartyScreen(
         if (showToastBar) {
             delay(2000)
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         }
@@ -145,22 +173,42 @@ fun UpsertCounterPartyScreen(
         } ?: "",
         onDismissToastBar = {
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         },
-        showBottomPopup = popupType == PopupType.RESET_ICON,
+        showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
-            ResetIconPopup(
-                dismiss = {
-                    hidePopup()
-                    popupType = PopupType.NONE
-                },
-                reset = {
-                    icon = Constants.DEFAULT_COUNTERPARTY_ICON
-                    popupType = PopupType.NONE
+            when (popupType) {
+                PopupType.RESET_ICON -> {
+                    ResetIconPopup(
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        reset = {
+                            icon = Constants.DEFAULT_COUNTERPARTY_ICON
+                            popupType = PopupType.NONE
+                        }
+                    )
                 }
-            )
+
+                PopupType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.counter_party_transactions_deletion_warning_label),
+                        delete = deleteCounterParty,
+                        migrate = {
+                            migrateTransactions(counterPartyUuid)
+                        },
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        }
+                    )
+                }
+
+                else -> {}
+            }
         },
         onDismissPopup = {
             popupType = PopupType.NONE
@@ -179,23 +227,65 @@ fun UpsertCounterPartyScreen(
             )
         },
         bottomBar = {
-            ThreeSlotRoundedBottomBar(
-                navigateBack = {
-                    keyboardController?.hide()
-                    navigateBack()
-                },
-                floatingButtonIcon = {
-                    Icon(
-                        imageVector = TablerIcons.DeviceFloppy,
-                        contentDescription = TablerIcons.DeviceFloppy.name
-                    )
-                },
-                floatingButtonAction = {
-                    if (enabled) {
-                        upsertCounterParty(icon, name.trim())
+            Column {
+                if (transactionCount.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        FilledTonalButton(
+                            onClick = {
+                                migrateTransactions(counterPartyUuid)
+                            },
+                            contentPadding = PaddingValues(0.dp),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.migrate_transactions_chip_label,
+                                    transactionCount
+                                ),
+                                modifier = Modifier.padding(10.dp),
+                            )
+                        }
                     }
-                },
-            )
+                }
+                ThreeSlotRoundedBottomBar(
+                    navigateBack = {
+                        keyboardController?.hide()
+                        navigateBack()
+                    },
+                    floatingButtonIcon = {
+                        Icon(
+                            imageVector = TablerIcons.DeviceFloppy,
+                            contentDescription = TablerIcons.DeviceFloppy.name
+                        )
+                    },
+                    floatingButtonAction = {
+                        if (enabled) {
+                            upsertCounterParty(icon, name.trim())
+                        }
+                    },
+                    extraButtonIcon = if (counterPartyUuid.isNotBlank()) {
+                        {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = Icons.Outlined.Delete.name,
+                            )
+                        }
+                    } else null,
+                    extraButtonAction = if (counterPartyUuid.isNotBlank() && enabled) {
+                        {
+                            if (transactionCount.isNotEmpty()) {
+                                popupType = PopupType.CONFIRM_DELETE
+                            } else {
+                                deleteCounterParty()
+                            }
+                        }
+                    } else null
+                )
+            }
         }
     ) { oneHandModeBoxHeight, resetOneHandMode ->
         Column(
@@ -261,10 +351,13 @@ fun UpsertCounterPartyScreen(
 fun UpsertCounterPartyScreenPreview() {
     UpsertCounterPartyScreen(
         navigateBack = {},
+        migrateTransactions = {},
         chooseIcon = {},
         selectedIcon = "",
         setName = {},
+        setLocale = {},
         upsertCounterParty = { _, _ -> },
+        deleteCounterParty = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertCounterPartyScreenState()
     )
@@ -287,6 +380,11 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
+            migrateTransactions = { uuid ->
+                navController.navigate(Routes.MigrateCounterParty.getRoute(uuid)) {
+                    launchSingleTop = true
+                }
+            },
             chooseIcon = { defaultIcon ->
                 navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
                     launchSingleTop = true
@@ -295,7 +393,9 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
             selectedIcon = it.savedStateHandle.get<String>("icon")
                 ?: Constants.DEFAULT_COUNTERPARTY_ICON.name,
             setName = viewModel::setName,
+            setLocale = viewModel::setLocale,
             upsertCounterParty = viewModel::upsertCounterParty,
+            deleteCounterParty = viewModel::deleteCounterParty,
             events = viewModel.event,
             state = state
         )
