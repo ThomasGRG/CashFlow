@@ -16,6 +16,7 @@ import jp.ikigai.cash.flow.ui.screens.listing.transactionTemplateScreen
 import jp.ikigai.cash.flow.ui.screens.listing.transactionsScreen
 import jp.ikigai.cash.flow.ui.screens.migration.migrateCategoryScreen
 import jp.ikigai.cash.flow.ui.screens.migration.migrateCounterPartyScreen
+import jp.ikigai.cash.flow.ui.screens.migration.migrateMethodScreen
 import jp.ikigai.cash.flow.ui.screens.upsert.upsertCategoryScreen
 import jp.ikigai.cash.flow.ui.screens.upsert.upsertCounterPartyScreen
 import jp.ikigai.cash.flow.ui.screens.upsert.upsertMethodScreen
@@ -52,6 +53,7 @@ fun BaseScreen() {
 
         methodScreen(navController = navController)
         upsertMethodScreen(navController = navController)
+        migrateMethodScreen(navController = navController)
 
         sourceScreen(navController = navController)
         upsertSourceScreen(navController = navController)

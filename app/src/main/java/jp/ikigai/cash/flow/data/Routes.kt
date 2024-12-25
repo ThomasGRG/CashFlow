@@ -42,6 +42,11 @@ sealed class Routes(val route: String) {
             return "upsertMethod?id=${id}"
         }
     }
+    object MigrateMethod : Routes("migrateMethod?id={id}") {
+        fun getRoute(id: String = ""): String {
+            return "migrateMethod?id=${id}"
+        }
+    }
 
     object Categories: Routes("categories")
     object UpsertCategory: Routes("upsertCategory?id={id}") {

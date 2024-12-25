@@ -10,6 +10,7 @@ import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewMo
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateCategoryScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateCounterPartyScreenViewModel
+import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateMethodScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
@@ -32,6 +33,7 @@ val appModule = module {
 
     viewModel() { MethodScreenViewModel() }
     viewModel() { UpsertMethodScreenViewModel(get()) }
+    viewModel() { MigrateMethodScreenViewModel(get()) }
 
     viewModel() { CategoryScreenViewModel() }
     viewModel() { UpsertCategoryScreenViewModel(get()) }
