@@ -11,10 +11,14 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Method
+import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
+import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,12 +30,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
 
 class UpsertMethodScreenViewModel(
     savedStateHandle: SavedStateHandle,
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private var numberFormatter = getNumberFormatter()
 
     private val methodUuid: String = checkNotNull(savedStateHandle["id"])
 
@@ -46,6 +53,7 @@ class UpsertMethodScreenViewModel(
     init {
         if (methodUuid.isNotBlank()) {
             getMethodJob = getMethod()
+            getTransactionCount()
         } else {
             _state.update {
                 it.copy(
@@ -60,6 +68,18 @@ class UpsertMethodScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun getTransactionCount() = viewModelScope.launch {
+        realm.query<Transaction>("method.uuid == $0", methodUuid).count().asFlow()
+            .collectLatest { count ->
+                _state.update {
+                    it.copy(
+                        transactionCount = if (count > 0) numberFormatter.format(count)
+                            .toString() else ""
+                    )
+                }
+            }
     }
 
     private fun getMethod() = viewModelScope.launch {
@@ -112,7 +132,16 @@ class UpsertMethodScreenViewModel(
         }
     }
 
-    fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
+    fun setLocale(locale: Locale?) {
+        numberFormatter = getNumberFormatter(locale)
+        _state.update {
+            it.copy(
+                locale = locale
+            )
+        }
+    }
+
+    fun upsertMethod(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val method = state.value.method
         if (state.value.nameValid && !state.value.loading) {
             getMethodJob?.cancel()
@@ -149,6 +178,45 @@ class UpsertMethodScreenViewModel(
                     loading = false
                 )
             }
+        }
+    }
+
+    fun deleteMethod() = viewModelScope.launch {
+        if (methodUuid.isNotBlank()) {
+            getMethodJob?.cancelAndJoin()
+            _state.update {
+                it.copy(
+                    loading = true,
+                    enabled = false
+                )
+            }
+            val method = state.value.method
+            realm.write {
+                this.query<Transaction>("method.uuid == $0", methodUuid).find()
+                    .groupBy { transaction -> transaction.source!! }
+                    .forEach { (source, transactions) ->
+                        var newBalance = source.balance
+                        transactions.forEach { transaction ->
+                            val totalAmount = transaction.amount + transaction.taxAmount
+                            if (transaction.type == TransactionType.CREDIT) {
+                                newBalance -= totalAmount
+                            } else {
+                                newBalance += totalAmount
+                            }
+                            delete(transaction)
+                        }
+                        source.balance = newBalance
+                    }
+                findLatest(method)?.also {
+                    delete(it)
+                }
+            }
+            _state.update {
+                it.copy(
+                    loading = false
+                )
+            }
+            _event.send(Event.DeleteSuccess)
         }
     }
 }

@@ -4,13 +4,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +35,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -36,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -52,6 +60,7 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
@@ -62,20 +71,35 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun UpsertMethodScreen(
     navigateBack: () -> Unit,
+    migrateTransactions: (String) -> Unit,
     chooseIcon: (String) -> Unit,
     selectedIcon: String,
+    setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     upsertMethod: (ImageVector, String) -> Unit,
+    deleteMethod: () -> Unit,
     events: Flow<Event>,
     state: UpsertMethodScreenState,
 ) {
+    val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(
+            ConfigurationCompat.getLocales(configuration).get(0)
+        )
+    }
+
+    LaunchedEffect(key1 = locale) {
+        setLocale(locale)
+    }
 
     var icon by remember(key1 = selectedIcon) {
         mutableStateOf(selectedIcon.getIconForMethod())
@@ -105,6 +129,10 @@ fun UpsertMethodScreen(
         mutableIntStateOf(state.nameErrorStringRes)
     }
 
+    val transactionCount by remember(key1 = state.transactionCount) {
+        mutableStateOf(state.transactionCount)
+    }
+
     val methodUuid by remember(key1 = state.method) {
         mutableStateOf(state.method.uuid)
     }
@@ -131,7 +159,7 @@ fun UpsertMethodScreen(
         if (showToastBar) {
             delay(2000)
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         }
@@ -145,22 +173,53 @@ fun UpsertMethodScreen(
         } ?: "",
         onDismissToastBar = {
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         },
-        showBottomPopup = popupType == PopupType.RESET_ICON,
+        showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
-            ResetIconPopup(
-                dismiss = {
-                    hidePopup()
-                    popupType = PopupType.NONE
-                },
-                reset = {
-                    icon = Constants.DEFAULT_METHOD_ICON
-                    popupType = PopupType.NONE
+            when (popupType) {
+                PopupType.RESET_ICON -> {
+                    ResetIconPopup(
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        reset = {
+                            icon = Constants.DEFAULT_METHOD_ICON
+                            popupType = PopupType.NONE
+                        }
+                    )
                 }
-            )
+
+                PopupType.WARN_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.method_transactions_deletion_warning_label),
+                        delete = deleteMethod,
+                        migrate = {
+                            migrateTransactions(methodUuid)
+                        },
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        }
+                    )
+                }
+
+                PopupType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.delete_method_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        delete = deleteMethod
+                    )
+                }
+
+                else -> {}
+            }
         },
         onDismissPopup = {
             popupType = PopupType.NONE
@@ -179,23 +238,65 @@ fun UpsertMethodScreen(
             )
         },
         bottomBar = {
-            ThreeSlotRoundedBottomBar(
-                navigateBack = {
-                    keyboardController?.hide()
-                    navigateBack()
-                },
-                floatingButtonIcon = {
-                    Icon(
-                        imageVector = TablerIcons.DeviceFloppy,
-                        contentDescription = TablerIcons.DeviceFloppy.name
-                    )
-                },
-                floatingButtonAction = {
-                    if (enabled) {
-                        upsertMethod(icon, name.trim())
+            Column {
+                if (transactionCount.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        FilledTonalButton(
+                            onClick = {
+                                migrateTransactions(methodUuid)
+                            },
+                            contentPadding = PaddingValues(0.dp),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.migrate_transactions_chip_label,
+                                    transactionCount
+                                ),
+                                modifier = Modifier.padding(10.dp),
+                            )
+                        }
                     }
-                },
-            )
+                }
+                ThreeSlotRoundedBottomBar(
+                    navigateBack = {
+                        keyboardController?.hide()
+                        navigateBack()
+                    },
+                    floatingButtonIcon = {
+                        Icon(
+                            imageVector = TablerIcons.DeviceFloppy,
+                            contentDescription = TablerIcons.DeviceFloppy.name
+                        )
+                    },
+                    floatingButtonAction = {
+                        if (enabled) {
+                            upsertMethod(icon, name.trim())
+                        }
+                    },
+                    extraButtonIcon = if (methodUuid.isNotBlank()) {
+                        {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = Icons.Outlined.Delete.name,
+                            )
+                        }
+                    } else null,
+                    extraButtonAction = if (methodUuid.isNotBlank() && enabled) {
+                        {
+                            popupType = if (transactionCount.isNotEmpty()) {
+                                PopupType.WARN_DELETE
+                            } else {
+                                PopupType.CONFIRM_DELETE
+                            }
+                        }
+                    } else null
+                )
+            }
         }
     ) { oneHandModeBoxHeight, resetOneHandMode ->
         Column(
@@ -261,10 +362,13 @@ fun UpsertMethodScreen(
 fun UpsertMethodScreenPreview() {
     UpsertMethodScreen(
         navigateBack = {},
+        migrateTransactions = {},
         chooseIcon = {},
         selectedIcon = "",
         setName = {},
+        setLocale = {},
         upsertMethod = { _, _ -> },
+        deleteMethod = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertMethodScreenState()
     )
@@ -287,6 +391,11 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
+            migrateTransactions = { uuid ->
+                navController.navigate(Routes.MigrateMethod.getRoute(uuid)) {
+                    launchSingleTop = true
+                }
+            },
             chooseIcon = { defaultIcon ->
                 navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
                     launchSingleTop = true
@@ -295,7 +404,9 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
             selectedIcon = it.savedStateHandle.get<String>("icon")
                 ?: Constants.DEFAULT_METHOD_ICON.name,
             setName = viewModel::setName,
-            upsertMethod = viewModel::upsertCategory,
+            setLocale = viewModel::setLocale,
+            upsertMethod = viewModel::upsertMethod,
+            deleteMethod = viewModel::deleteMethod,
             events = viewModel.event,
             state = state
         )
