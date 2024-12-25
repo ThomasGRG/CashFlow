@@ -219,6 +219,183 @@ fun SelectMethodPopup(
 }
 
 @Composable
+fun MigrateMethodPopup(
+    migrateCount: Int,
+    selectMethod: (Method) -> Unit,
+    methods: List<Method>,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val methodList by remember {
+        mutableStateOf(
+            methods.map { method ->
+                Pair(method, getHighlightedString(method.name, ""))
+            }
+        )
+    }
+
+    var filteredMethodList by remember {
+        mutableStateOf(methodList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredMethodList = if (searchText.isBlank()) {
+            methodList
+        } else {
+            methodList
+                .filter {
+                    it.first.name.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                }
+        }
+    }
+
+    var selectedMethod by remember {
+        mutableStateOf(Method())
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredMethodList,
+                key = { methodPair -> "method-${methodPair.first.uuid}" }
+            ) { methodPair ->
+                SelectableCard(
+                    checked = { methodPair.first.uuid == selectedMethod.uuid },
+                    label = methodPair.second,
+                    icon = methodPair.first.icon,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedMethod = methodPair.first
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.search_field_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    selectMethod(selectedMethod)
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedMethod.uuid.isNotEmpty(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.migrate_with_count_button_label,
+                        migrateCount
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun FilterMethodPopup(
     selectedMethodsMap: Map<String, Boolean>,
     methods: List<Method>,
