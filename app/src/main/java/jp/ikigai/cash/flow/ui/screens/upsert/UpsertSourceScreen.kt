@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +60,7 @@ import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
@@ -79,6 +82,7 @@ fun UpsertSourceScreen(
     selectedIcon: String,
     setName: (String) -> Unit,
     upsertTransactionSource: (ImageVector, String, String, Double) -> Unit,
+    deleteSource: () -> Unit,
     events: Flow<Event>,
     state: UpsertSourceScreenState,
 ) {
@@ -111,6 +115,10 @@ fun UpsertSourceScreen(
 
     val nameErrorStringRes by remember(key1 = state.nameErrorStringRes) {
         mutableIntStateOf(state.nameErrorStringRes)
+    }
+
+    val hasTransactions by remember(key1 = state.hasTransactions) {
+        mutableStateOf(state.hasTransactions)
     }
 
     var balanceFieldValue by rememberSaveable(state.source, saver = TextFieldValueSaver) {
@@ -157,7 +165,7 @@ fun UpsertSourceScreen(
         if (showToastBar) {
             delay(2000)
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         }
@@ -171,7 +179,7 @@ fun UpsertSourceScreen(
         } ?: "",
         onDismissToastBar = {
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess) {
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
                 navigateBack()
             }
         },
@@ -203,6 +211,28 @@ fun UpsertSourceScreen(
                             icon = Constants.DEFAULT_SOURCE_ICON
                             popupType = PopupType.NONE
                         }
+                    )
+                }
+
+                PopupType.CONFIRM_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.delete_source_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        delete = deleteSource
+                    )
+                }
+
+                PopupType.WARN_DELETE -> {
+                    ConfirmDeletePopup(
+                        message = stringResource(id = R.string.source_transactions_deletion_warning_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        delete = deleteSource
                     )
                 }
 
@@ -247,6 +277,23 @@ fun UpsertSourceScreen(
                         )
                     }
                 },
+                extraButtonIcon = if (sourceUuid.isNotBlank()) {
+                    {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = Icons.Outlined.Delete.name,
+                        )
+                    }
+                } else null,
+                extraButtonAction = if (sourceUuid.isNotBlank() && enabled) {
+                    {
+                        popupType = if (hasTransactions) {
+                            PopupType.WARN_DELETE
+                        } else {
+                            PopupType.CONFIRM_DELETE
+                        }
+                    }
+                } else null
             )
         }
     ) { oneHandModeBoxHeight, resetOneHandMode ->
@@ -352,6 +399,7 @@ fun UpsertSourceScreenPreview() {
         selectedIcon = "",
         setName = {},
         upsertTransactionSource = { _, _, _, _ -> },
+        deleteSource = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertSourceScreenState()
     )
@@ -383,6 +431,7 @@ fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
                 ?: Constants.DEFAULT_SOURCE_ICON.name,
             setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
+            deleteSource = viewModel::deleteSource,
             events = viewModel.event,
             state = state
         )

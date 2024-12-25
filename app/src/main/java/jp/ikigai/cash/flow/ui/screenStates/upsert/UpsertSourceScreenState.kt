@@ -12,6 +12,7 @@ data class UpsertSourceScreenState(
     val nameValid: Boolean = true,
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
     val currencies: List<CurrencyInfo> = Constants.currencyList,
+    val hasTransactions: Boolean = false,
     val loading: Boolean = true,
-    val enabled: Boolean = false,
+    val enabled: Boolean = false
 )

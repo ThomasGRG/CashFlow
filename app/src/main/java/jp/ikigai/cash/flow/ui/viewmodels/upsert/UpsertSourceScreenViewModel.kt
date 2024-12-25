@@ -11,10 +11,12 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Source
+import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +48,7 @@ class UpsertSourceScreenViewModel(
     init {
         if (sourceUuid.isNotBlank()) {
             getSourceJob = getSource()
+            checkTransactionCount()
         } else {
             _state.update {
                 it.copy(
@@ -60,6 +63,17 @@ class UpsertSourceScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+    }
+
+    private fun checkTransactionCount() = viewModelScope.launch {
+        realm.query<Transaction>("source.uuid == $0", sourceUuid).count().asFlow()
+            .collectLatest { count ->
+                _state.update {
+                    it.copy(
+                        hasTransactions = count > 0
+                    )
+                }
+            }
     }
 
     private fun getSource() = viewModelScope.launch {
@@ -158,6 +172,34 @@ class UpsertSourceScreenViewModel(
                     loading = false
                 )
             }
+        }
+    }
+
+    fun deleteSource() = viewModelScope.launch {
+        if (sourceUuid.isNotBlank()) {
+            getSourceJob?.cancelAndJoin()
+            _state.update {
+                it.copy(
+                    loading = true,
+                    enabled = false
+                )
+            }
+            val source = state.value.source
+            realm.write {
+                this.query<Transaction>("source.uuid == $0", sourceUuid).find()
+                    .forEach { transaction ->
+                        delete(transaction)
+                    }
+                findLatest(source)?.also {
+                    delete(it)
+                }
+            }
+            _state.update {
+                it.copy(
+                    loading = false
+                )
+            }
+            _event.send(Event.DeleteSuccess)
         }
     }
 }
