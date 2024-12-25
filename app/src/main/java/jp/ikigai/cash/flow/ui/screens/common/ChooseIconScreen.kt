@@ -177,6 +177,7 @@ fun ChooseIconScreen(
                 navigateBack = {
                     navigateBackWithResult(defaultIcon)
                 },
+                enabled = true,
                 floatingButtonIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Search,

@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -17,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
 fun ThreeSlotRoundedBottomBar(
     navigateBack: () -> Unit,
+    enabled: Boolean,
     floatingButtonIcon: (@Composable () -> Unit)? = null,
     floatingButtonAction: (() -> Unit)? = null,
     extraButtonIcon: (@Composable () -> Unit)? = null,
@@ -56,13 +57,14 @@ fun ThreeSlotRoundedBottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 floatingButtonIcon?.let {
-                    FloatingActionButton(
+                    CustomFloatingActionButton(
                         onClick = {
                             floatingButtonAction?.let {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 floatingButtonAction()
                             }
-                        }
+                        },
+                        enabled = enabled
                     ) {
                         floatingButtonIcon()
                     }
@@ -80,7 +82,8 @@ fun ThreeSlotRoundedBottomBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 extraButtonAction()
                             }
-                        }
+                        },
+                        enabled = enabled
                     ) {
                         extraButtonIcon()
                     }
@@ -96,6 +99,7 @@ fun ThreeSlotRoundedBottomBarPreview() {
     Column {
         ThreeSlotRoundedBottomBar(
             navigateBack = {},
+            enabled = true,
             floatingButtonIcon = {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
             },
@@ -110,6 +114,7 @@ fun ThreeSlotRoundedBottomBarPreview() {
         )
         ThreeSlotRoundedBottomBar(
             navigateBack = {},
+            enabled = false,
             floatingButtonIcon = {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
             },
@@ -119,6 +124,7 @@ fun ThreeSlotRoundedBottomBarPreview() {
         )
         ThreeSlotRoundedBottomBar(
             navigateBack = {},
+            enabled = true,
             floatingButtonIcon = null,
             floatingButtonAction = null,
             extraButtonIcon = null,

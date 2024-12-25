@@ -267,6 +267,7 @@ fun UpsertCategoryScreen(
                         keyboardController?.hide()
                         navigateBack()
                     },
+                    enabled = enabled,
                     floatingButtonIcon = {
                         Icon(
                             imageVector = TablerIcons.DeviceFloppy,
