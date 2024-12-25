@@ -143,6 +143,15 @@ class UpsertMethodScreenViewModel(
 
     fun upsertMethod(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val method = state.value.method
+        if (newName.isBlank()) {
+            _state.update {
+                it.copy(
+                    nameValid = false,
+                    nameErrorStringRes = R.string.name_empty_error_label,
+                )
+            }
+            return@launch
+        }
         if (state.value.nameValid && !state.value.loading) {
             getMethodJob?.cancel()
             _state.update {

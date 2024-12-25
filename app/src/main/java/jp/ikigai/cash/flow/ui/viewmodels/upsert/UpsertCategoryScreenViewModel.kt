@@ -143,6 +143,15 @@ class UpsertCategoryScreenViewModel(
 
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val category = state.value.category
+        if (newName.isBlank()) {
+            _state.update {
+                it.copy(
+                    nameValid = false,
+                    nameErrorStringRes = R.string.name_empty_error_label,
+                )
+            }
+            return@launch
+        }
         if (state.value.nameValid && !state.value.loading) {
             getCategoryJob?.cancel() // otherwise enabled will be set to true after saving and the flow updates
             _state.update {

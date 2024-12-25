@@ -133,6 +133,15 @@ class UpsertSourceScreenViewModel(
         newBalance: Double
     ) = viewModelScope.launch {
         val source = state.value.source
+        if (newName.isBlank()) {
+            _state.update {
+                it.copy(
+                    nameValid = false,
+                    nameErrorStringRes = R.string.name_empty_error_label,
+                )
+            }
+            return@launch
+        }
         if (state.value.nameValid && !state.value.loading) {
             getSourceJob?.cancel()
             _state.update {

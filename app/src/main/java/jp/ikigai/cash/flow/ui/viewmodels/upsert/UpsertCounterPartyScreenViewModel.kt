@@ -144,6 +144,15 @@ class UpsertCounterPartyScreenViewModel(
 
     fun upsertCounterParty(newIcon: ImageVector, newName: String) = viewModelScope.launch {
         val counterParty = state.value.counterParty
+        if (newName.isBlank()) {
+            _state.update {
+                it.copy(
+                    nameValid = false,
+                    nameErrorStringRes = R.string.name_empty_error_label,
+                )
+            }
+            return@launch
+        }
         if (state.value.nameValid && !state.value.loading) {
             getCounterPartyJob?.cancel()
             _state.update {
