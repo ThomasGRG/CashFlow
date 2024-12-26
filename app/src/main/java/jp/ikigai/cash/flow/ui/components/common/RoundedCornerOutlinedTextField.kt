@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +51,7 @@ fun RoundedCornerOutlinedTextField(
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
     boxModifier: Modifier = Modifier,
+    hasValueChanged: (() -> Boolean)? = null,
     enabled: Boolean,
     label: String,
     placeHolder: String,
@@ -89,7 +91,11 @@ fun RoundedCornerOutlinedTextField(
                 if (focused) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.outline
+                    if (hasValueChanged != null && hasValueChanged()) {
+                        Color(221, 161, 82)
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    }
                 }
             }
         } else {
@@ -146,6 +152,9 @@ fun RoundedCornerOutlinedTextField(
                     onDone = onDone
                 ),
                 shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = animatedLabelColor
+                )
             )
             AnimatedTextFieldErrorLabel(
                 visible = enabled && isError,
@@ -176,6 +185,7 @@ fun RoundedCornerOutlinedTextField(
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
     boxModifier: Modifier = Modifier,
+    initialValue: String = "",
     isFocused: Boolean,
     enabled: Boolean,
     label: String,
@@ -213,7 +223,11 @@ fun RoundedCornerOutlinedTextField(
                 if (isFocused) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.outline
+                    if (initialValue.isNotEmpty() && value.text != initialValue) {
+                        Color(221, 161, 82)
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    }
                 }
             }
         } else {
@@ -267,7 +281,10 @@ fun RoundedCornerOutlinedTextField(
                     onDone = onDone
                 ),
                 shape = RoundedCornerShape(14.dp),
-                interactionSource = interactionSource
+                interactionSource = interactionSource,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = animatedLabelColor
+                )
             )
             AnimatedTextFieldErrorLabel(
                 visible = enabled && isError,
@@ -298,6 +315,7 @@ fun RoundedCornerOutlinedTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     boxModifier: Modifier = Modifier,
+    hasValueChanged: (() -> Boolean)? = null,
     enabled: Boolean,
     label: String,
     placeHolder: String,
@@ -339,7 +357,11 @@ fun RoundedCornerOutlinedTextField(
                 if (focused) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.outline
+                    if (hasValueChanged != null && hasValueChanged()) {
+                        Color(221, 161, 82)
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    }
                 }
             }
         } else {
@@ -396,6 +418,9 @@ fun RoundedCornerOutlinedTextField(
                     onDone = onDone
                 ),
                 shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = animatedLabelColor
+                )
             )
             AnimatedTextFieldErrorLabel(
                 visible = enabled && isError,

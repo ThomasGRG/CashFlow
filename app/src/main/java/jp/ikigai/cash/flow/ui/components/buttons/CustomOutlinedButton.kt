@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.components.buttons
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,7 @@ fun CustomOutlinedButton(
     enabled: Boolean,
     value: String,
     label: String,
+    hasValueChanged: (() -> Boolean)? = null,
     placeHolder: String,
     isError: Boolean = false,
     errorHint: String = "",
@@ -56,11 +59,10 @@ fun CustomOutlinedButton(
         MutableInteractionSource()
     }
 
-    val alpha by remember(key1 = enabled) {
-        derivedStateOf {
-            if (enabled) 1f else 0.38f
-        }
-    }
+    val alpha by animateFloatAsState(
+        targetValue = if (enabled) 1f else 0.38f,
+        label = "animated alpha"
+    )
 
     val text by remember(key1 = value, key2 = placeHolder) {
         derivedStateOf {
@@ -68,19 +70,35 @@ fun CustomOutlinedButton(
         }
     }
 
-    val borderColor = if (enabled) {
-        if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
-    } else MaterialTheme.colorScheme.outline.copy(alpha = alpha)
-
-    val textColor = if (value.isBlank()) {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    } else {
-        if (isError) {
-            MaterialTheme.colorScheme.error
+    val borderColor by animateColorAsState(
+        targetValue = if (enabled) {
+            if (isError) {
+                MaterialTheme.colorScheme.error
+            } else {
+                if (hasValueChanged != null && hasValueChanged()) {
+                    Color(221, 161, 82)
+                } else {
+                    MaterialTheme.colorScheme.outline
+                }
+            }
         } else {
-            MaterialTheme.colorScheme.onBackground
-        }
-    }
+            MaterialTheme.colorScheme.outline.copy(alpha = alpha)
+        },
+        label = "animated border color"
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (value.isBlank()) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            if (isError) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onBackground
+            }
+        },
+        label = "animated text color"
+    )
 
     val animatedIconColor by animateColorAsState(
         targetValue = if (isError) {

@@ -43,6 +43,7 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 @Composable
 fun UpsertTransactionItemCard(
     modifier: Modifier,
+    transactionUuid: String,
     index: Int,
     enabled: Boolean,
     data: UpsertTransactionItemCardInfo,
@@ -111,6 +112,9 @@ fun UpsertTransactionItemCard(
                     CustomOutlinedButton(
                         enabled = enabled,
                         value = data.item.name,
+                        hasValueChanged = {
+                            transactionUuid.isNotEmpty() && data.item.uuid != data.initialItem.uuid
+                        },
                         label = stringResource(id = R.string.item_field_label),
                         placeHolder = "",
                         leadingIcon = TablerIcons.Stack,
@@ -120,6 +124,9 @@ fun UpsertTransactionItemCard(
                         value = data.displayPrice,
                         onValueChange = {
                             updatePrice(it, index)
+                        },
+                        hasValueChanged = {
+                            transactionUuid.isNotEmpty() && data.initialPrice != data.price
                         },
                         enabled = enabled,
                         label = stringResource(id = R.string.price_field_label),
@@ -135,6 +142,9 @@ fun UpsertTransactionItemCard(
                     CustomOutlinedButton(
                         enabled = enabled,
                         value = stringResource(id = data.unit.label),
+                        hasValueChanged = {
+                            transactionUuid.isNotEmpty() && data.initialUnit != data.unit
+                        },
                         label = stringResource(id = R.string.unit_field_label),
                         placeHolder = "",
                         leadingIcon = TablerIcons.Scale,
@@ -144,6 +154,9 @@ fun UpsertTransactionItemCard(
                         value = data.displayQuantity,
                         onValueChange = {
                             updateQuantity(it, index)
+                        },
+                        hasValueChanged = {
+                            transactionUuid.isNotEmpty() && data.initialQuantity != data.quantity
                         },
                         enabled = enabled,
                         label = stringResource(id = R.string.quantity_field_label),

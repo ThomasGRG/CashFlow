@@ -219,12 +219,16 @@ class UpsertTransactionScreenViewModel(
                     val total = transactionItem.price * transactionItem.quantity
                     UpsertTransactionItemCardInfo(
                         item = transactionItem.item!!,
+                        initialItem = transactionItem.item!!,
                         unit = transactionItem.unit,
+                        initialUnit = transactionItem.unit,
                         price = transactionItem.price,
+                        initialPrice = transactionItem.price,
                         displayPrice = transactionItem.price.toString(),
                         totalPrice = total,
                         totalDisplayPrice = total.toString(),
                         quantity = transactionItem.quantity,
+                        initialQuantity = transactionItem.quantity,
                         displayQuantity = transactionItem.quantity.toString()
                     )
                 },
@@ -270,11 +274,16 @@ class UpsertTransactionScreenViewModel(
                     val total = transactionItem.price * transactionItem.quantity
                     UpsertTransactionItemCardInfo(
                         item = transactionItem.item!!,
+                        initialItem = transactionItem.item!!,
                         unit = transactionItem.unit,
+                        initialUnit = transactionItem.unit,
+                        price = transactionItem.price,
+                        initialPrice = transactionItem.price,
                         displayPrice = transactionItem.price.toString(),
                         totalPrice = total,
                         totalDisplayPrice = total.toString(),
                         quantity = transactionItem.quantity,
+                        initialQuantity = transactionItem.quantity,
                         displayQuantity = transactionItem.quantity.toString()
                     )
                 },
@@ -785,10 +794,14 @@ class UpsertTransactionScreenViewModel(
                     val price = if (isSameCurrency) item.lastKnownPrice else 0.0
                     UpsertTransactionItemCardInfo(
                         item = item,
+                        initialItem = item,
                         unit = item.lastUsedUnit,
+                        initialUnit = item.lastUsedUnit,
                         price = price,
+                        initialPrice = price,
                         displayPrice = price.toString(),
                         quantity = 0.0,
+                        initialQuantity = 0.0,
                         displayQuantity = "0",
                         totalPrice = 0.0,
                         totalDisplayPrice = "0"

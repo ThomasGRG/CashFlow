@@ -85,6 +85,7 @@ import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
+import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -242,6 +243,10 @@ fun UpsertTransactionScreen(
 
     val transactionUuid by remember(key1 = state.transaction) {
         mutableStateOf(state.transaction.uuid)
+    }
+
+    val transaction by remember(key1 = state.transaction) {
+        mutableStateOf(state.transaction)
     }
 
     val titleFieldInteractionSource = remember {
@@ -537,6 +542,7 @@ fun UpsertTransactionScreen(
                     onValueChange = {
                         setTitle(it.text)
                     },
+                    initialValue = transaction.title,
                     enabled = enabled,
                     isFocused = isTitleFieldFocused,
                     label = stringResource(id = R.string.title_field_label),
@@ -601,6 +607,9 @@ fun UpsertTransactionScreen(
                 RoundedCornerOutlinedTextField(
                     value = descriptionFieldValue,
                     onValueChange = { descriptionFieldValue = it },
+                    hasValueChanged = {
+                        transaction.uuid.isNotEmpty() && transaction.description != descriptionFieldValue.text
+                    },
                     enabled = enabled,
                     label = stringResource(id = R.string.description_field_label),
                     placeHolder = stringResource(id = R.string.description_placeholder_label),
@@ -623,6 +632,10 @@ fun UpsertTransactionScreen(
                 RoundedCornerOutlinedTextField(
                     value = amount,
                     onValueChange = setAmount,
+                    hasValueChanged = {
+                        val newAmount = amount.toDoubleOrNull()
+                        newAmount != null && newAmount > 0 && transaction.uuid.isNotEmpty() && newAmount != transaction.amount
+                    },
                     enabled = amountEnabled,
                     label = stringResource(id = R.string.amount_label),
                     placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
@@ -644,6 +657,10 @@ fun UpsertTransactionScreen(
                     RoundedCornerOutlinedTextField(
                         value = taxAmount,
                         onValueChange = setTaxAmount,
+                        hasValueChanged = {
+                            val newTaxAmount = taxAmount.toDoubleOrNull()
+                            newTaxAmount != null && transaction.uuid.isNotEmpty() && newTaxAmount != transaction.taxAmount
+                        },
                         enabled = enabled,
                         label = stringResource(id = R.string.tax_field_label),
                         placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
@@ -664,6 +681,9 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = stringResource(id = transactionType.label),
                     label = stringResource(id = R.string.transaction_type_field_label),
+                    hasValueChanged = {
+                        transaction.uuid.isNotEmpty() && transactionType != transaction.type
+                    },
                     placeHolder = "",
                     leadingIcon = transactionType.icon,
                     onClick = {
@@ -680,6 +700,11 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = date,
+                    hasValueChanged = {
+                        val initialDate = transaction.time.toZonedDateTime().toLocalDate()
+                        transaction.uuid.isNotEmpty() && (!dateTime.toLocalDate()
+                            .equals(initialDate))
+                    },
                     label = stringResource(id = R.string.date_field_label),
                     placeHolder = "",
                     leadingIcon = TablerIcons.CalendarEvent,
@@ -697,6 +722,10 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = time,
+                    hasValueChanged = {
+                        val initialDateTime = transaction.time.toZonedDateTime()
+                        transaction.uuid.isNotEmpty() && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
+                    },
                     label = stringResource(id = R.string.time_field_label),
                     placeHolder = "",
                     leadingIcon = TablerIcons.Alarm,
@@ -714,6 +743,9 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCategory.name,
+                    hasValueChanged = {
+                        transaction.uuid.isNotEmpty() && transaction.category?.uuid != selectedCategory.uuid
+                    },
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                     isError = !categoryValid,
@@ -733,6 +765,21 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedCounterParty.name,
+                    hasValueChanged = {
+                        if (transaction.uuid.isNotEmpty()) {
+                            if (transaction.counterParty != null && selectedCounterParty.uuid.isEmpty()) {
+                                true
+                            } else if (transaction.counterParty == null && selectedCounterParty.uuid.isNotEmpty()) {
+                                true
+                            } else if (transaction.counterParty == null && selectedCounterParty.uuid.isEmpty()) {
+                                false
+                            } else {
+                                transaction.counterParty?.uuid != selectedCounterParty.uuid
+                            }
+                        } else {
+                            false
+                        }
+                    },
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                     leadingIcon = selectedCounterParty.icon,
@@ -754,6 +801,9 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedMethod.name,
+                    hasValueChanged = {
+                        transaction.uuid.isNotEmpty() && transaction.method?.uuid != selectedMethod.uuid
+                    },
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                     isError = !methodValid,
@@ -773,6 +823,9 @@ fun UpsertTransactionScreen(
                 CustomOutlinedButton(
                     enabled = enabled,
                     value = selectedSource.name,
+                    hasValueChanged = {
+                        transaction.uuid.isNotEmpty() && transaction.source?.uuid != selectedSource.uuid
+                    },
                     label = stringResource(id = R.string.source_field_label),
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                     isError = !sourceValid,
@@ -805,6 +858,7 @@ fun UpsertTransactionScreen(
                 ) { index, transactionItem ->
                     UpsertTransactionItemCard(
                         modifier = Modifier.animateItem(),
+                        transactionUuid = transactionUuid,
                         index = index,
                         enabled = enabled,
                         data = transactionItem,

@@ -135,6 +135,10 @@ fun UpsertSourceScreen(
         mutableStateOf(state.source.uuid)
     }
 
+    val source by remember(key1 = state.source) {
+        mutableStateOf(state.source)
+    }
+
     val currencies by remember(key1 = state.currencies) {
         mutableStateOf(state.currencies)
     }
@@ -337,6 +341,7 @@ fun UpsertSourceScreen(
                 enabled = enabled,
                 value = name,
                 onValueChange = setName,
+                hasValueChanged = { source.uuid.isNotEmpty() && source.name != name },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = stringResource(id = R.string.name_field_label),
                 placeHolder = stringResource(id = R.string.source_name_placeholder_label),
@@ -359,6 +364,10 @@ fun UpsertSourceScreen(
                     val newBalance = value.text.toDoubleOrNull()
                     balanceValid = newBalance != null
                 },
+                hasValueChanged = {
+                    val newBalance = balanceFieldValue.text.toDoubleOrNull()
+                    source.uuid.isNotEmpty() && newBalance != null && newBalance != source.balance
+                },
                 enabled = enabled,
                 label = stringResource(id = R.string.balance_field_label),
                 placeHolder = stringResource(id = R.string.balance_placeholder_label),
@@ -379,6 +388,9 @@ fun UpsertSourceScreen(
             CustomOutlinedButton(
                 enabled = enabled,
                 value = selectedCurrency,
+                hasValueChanged = {
+                    source.uuid.isNotEmpty() && source.currency != selectedCurrency
+                },
                 label = stringResource(id = R.string.currency_label),
                 placeHolder = "",
                 leadingIcon = TablerIcons.CurrencyDollar,
