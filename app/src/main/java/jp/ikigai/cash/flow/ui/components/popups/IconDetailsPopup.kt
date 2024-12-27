@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -53,12 +53,14 @@ fun IconDetailsPopup(
                 style = MaterialTheme.typography.titleMedium,
             )
         }
-        OutlinedButton(
+        FilledTonalButton(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 dismiss()
             },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
             shape = RoundedCornerShape(35)
         ) {
             Text(text = "Close")

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -67,7 +66,7 @@ fun CloneTransactionPopup(
         ) {
             Text(text = stringResource(id = R.string.clone_transaction_button_label))
         }
-        OutlinedButton(
+        FilledTonalButton(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 dismiss()
