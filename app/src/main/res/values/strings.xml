@@ -101,7 +101,7 @@
     <string name="add_button_label">Add (%1$d)</string>
     <string name="new_transaction_button_label">New</string>
     <string name="clone_transaction_button_label">Clone transaction</string>
-    <string name="clone_transaction_current_date_button_label">Clone transaction with today\'s time</string>
+    <string name="clone_transaction_current_date_button_label">Clone transaction with current time</string>
     <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
 
