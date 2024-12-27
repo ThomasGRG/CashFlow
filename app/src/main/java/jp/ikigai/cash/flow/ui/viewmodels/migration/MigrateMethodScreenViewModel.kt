@@ -153,7 +153,7 @@ class MigrateMethodScreenViewModel(
                 )
 
                 it.copy(
-                    transactions = transactionChanges.list,
+                    transactionsHashCode = transactionChanges.list.hashCode(),
                     filteredTransactions = filteredTransactionsMap,
                     selectedTransactions = selectedTransactions,
                     selectedLocalDates = getSelectedLocalDates(
@@ -596,39 +596,9 @@ class MigrateMethodScreenViewModel(
 
     fun setSortDirection(sortDirection: Sort) {
         _state.update {
-            val transactions = if (sortDirection == Sort.DESCENDING) {
-                it.transactions.sortedByDescending { transaction -> transaction.time }
-            } else {
-                it.transactions.sortedBy { transaction -> transaction.time }
-            }
-            val selectedCategories =
-                it.selectedCategories.filter { entry -> entry.value }.keys
-            val selectedCounterParties =
-                it.selectedCounterParties.filter { entry -> entry.value }.keys
-            val selectedSources = it.selectedSources.filter { entry -> entry.value }.keys
-            val selectedItems = it.selectedItems.filter { entry -> entry.value }.keys
-            val selectedCurrencies =
-                it.selectedCurrencies.filter { entry -> entry.value }.keys
             it.copy(
                 sortDirection = sortDirection,
-                transactions = transactions,
-                filteredTransactions = getFilteredTransactions(
-                    transactions = transactions,
-                    searchText = it.searchText.trim(),
-                    maxAmount = if (it.filterAmountMax == 0.0) Double.MAX_VALUE else it.filterAmountMax,
-                    minAmount = it.filterAmountMin,
-                    minTime = it.startDate?.getStartOfDayInEpochMilli() ?: 0L,
-                    maxTime = it.endDate?.getEndOfDayInEpochMilli() ?: Long.MAX_VALUE,
-                    selectedCurrencies = selectedCurrencies,
-                    selectedCategories = selectedCategories,
-                    selectedCounterParties = selectedCounterParties,
-                    includeNoCounterPartyTransactions = it.includeNoCounterPartyTransactions,
-                    selectedSources = selectedSources,
-                    includeNoItemTransactions = it.includeNoItemTransactions,
-                    selectedItems = selectedItems,
-                    selectedTransactionTypes = it.selectedTransactionTypes,
-                    locale = it.locale
-                )
+                loading = true
             )
         }
     }

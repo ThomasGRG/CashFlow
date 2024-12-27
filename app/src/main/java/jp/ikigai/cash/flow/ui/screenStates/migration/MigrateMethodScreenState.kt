@@ -11,13 +11,12 @@ import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.LocalDate
 import java.util.Locale
 
 data class MigrateMethodScreenState(
-    val transactions: List<Transaction> = emptyList(),
+    val transactionsHashCode: Int = 0,
     val filteredTransactions: Map<LocalDate, List<TransactionWithIcons>> = emptyMap(),
     val selectedTransactions: Map<String, Boolean> = emptyMap(),
     val selectedTransactionCount: Int = 0,

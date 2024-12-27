@@ -172,7 +172,10 @@ fun MigrateCategoryScreen(
         mutableStateOf(state.enabled)
     }
 
-    val transactions by remember(key1 = state.filteredTransactions, key2 = state.sortDirection) {
+    val transactions by remember(
+        key1 = state.filteredTransactions,
+        key2 = state.transactionsHashCode
+    ) {
         mutableStateOf(state.filteredTransactions)
     }
 

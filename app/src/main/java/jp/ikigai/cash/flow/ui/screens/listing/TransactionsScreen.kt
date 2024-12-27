@@ -183,7 +183,7 @@ fun TransactionsScreen(
         mutableStateOf(state.loading)
     }
 
-    val transactions by remember(key1 = state.transactions) {
+    val transactions by remember(key1 = state.transactions, key2 = state.transactionsHashCode) {
         mutableStateOf(state.transactions)
     }
 

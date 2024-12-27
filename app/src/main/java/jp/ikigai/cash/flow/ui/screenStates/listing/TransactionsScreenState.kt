@@ -17,6 +17,7 @@ import java.time.YearMonth
 import java.util.Locale
 
 data class TransactionsScreenState(
+    val transactionsHashCode: Int = 0,
     val transactions: Map<LocalDate, TransactionDetailsByDay> = emptyMap(),
     val income: String = "",
     val incomeTransactionsCount: String = "0",

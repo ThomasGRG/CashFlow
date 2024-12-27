@@ -160,6 +160,7 @@ class TransactionsScreenViewModel(
                 val selectedMethodCount = selectedMethods.filter { entry -> entry.value }.size
                 val selectedSourceCount = selectedSources.filter { entry -> entry.value }.size
                 it.copy(
+                    transactionsHashCode = transactionScreenFlows.transactions.hashCode(),
                     transactions = getTransactionsMap(
                         transactionScreenFlows.transactions,
                         it.searchText
