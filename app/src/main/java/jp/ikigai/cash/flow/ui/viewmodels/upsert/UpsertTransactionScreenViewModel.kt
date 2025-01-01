@@ -267,7 +267,7 @@ class UpsertTransactionScreenViewModel(
                 title = transactionTemplate.title,
                 amount = transactionTemplate.amount,
                 taxAmount = transactionTemplate.taxAmount,
-                displayAmount = transactionTemplate.amount.toString(),
+                displayAmount = if (transactionTemplate.amount > 0) transactionTemplate.amount.toString() else "",
                 displayTaxAmount = transactionTemplate.taxAmount.toString(),
                 type = transactionTemplate.type,
                 transactionItems = transactionTemplate.items.map { transactionItem ->
