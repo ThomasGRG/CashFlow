@@ -36,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -66,6 +68,10 @@ fun RoundedCornerOutlinedTextField(
     ),
     onDone: KeyboardActionScope.() -> Unit,
 ) {
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
     val alpha by remember(key1 = enabled) {
         mutableFloatStateOf(if (enabled) 1f else 0.38f)
     }
@@ -113,6 +119,7 @@ fun RoundedCornerOutlinedTextField(
                 enabled = enabled,
                 modifier = modifier
                     .fillMaxWidth()
+                    .focusRequester(focusRequester)
                     .onFocusChanged {
                         focused = it.isFocused || it.hasFocus
                     },
@@ -141,6 +148,7 @@ fun RoundedCornerOutlinedTextField(
                                     enabled = enabled,
                                     onClick = {
                                         onValueChange(TextFieldValue(""))
+                                        if (!focused) focusRequester.requestFocus()
                                     }
                                 )
                         )
@@ -202,6 +210,10 @@ fun RoundedCornerOutlinedTextField(
     onDone: KeyboardActionScope.() -> Unit,
     interactionSource: MutableInteractionSource
 ) {
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
     val alpha by remember(key1 = enabled) {
         mutableFloatStateOf(if (enabled) 1f else 0.38f)
     }
@@ -244,7 +256,8 @@ fun RoundedCornerOutlinedTextField(
                 onValueChange = onValueChange,
                 enabled = enabled,
                 modifier = modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
                 placeholder = {
                     Text(text = placeHolder)
                 },
@@ -270,6 +283,7 @@ fun RoundedCornerOutlinedTextField(
                                     enabled = enabled,
                                     onClick = {
                                         onValueChange("")
+                                        if (!isFocused) focusRequester.requestFocus()
                                     }
                                 )
                         )
@@ -332,6 +346,10 @@ fun RoundedCornerOutlinedTextField(
     ),
     onDone: KeyboardActionScope.() -> Unit,
 ) {
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
     val alpha by remember(key1 = enabled) {
         mutableFloatStateOf(if (enabled) 1f else 0.38f)
     }
@@ -379,6 +397,7 @@ fun RoundedCornerOutlinedTextField(
                 enabled = enabled,
                 modifier = modifier
                     .fillMaxWidth()
+                    .focusRequester(focusRequester)
                     .onFocusChanged {
                         focused = it.isFocused || it.hasFocus
                     },
@@ -407,6 +426,7 @@ fun RoundedCornerOutlinedTextField(
                                     enabled = enabled,
                                     onClick = {
                                         onValueChange("")
+                                        if (!focused) focusRequester.requestFocus()
                                     }
                                 )
                         )
