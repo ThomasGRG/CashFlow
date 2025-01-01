@@ -43,7 +43,7 @@ class ChooseIconScreenViewModel(
                 val filteredIcons = if (searchText.isBlank()) {
                     icons
                 } else {
-                    icons.filter { it.name.startsWith(searchText, ignoreCase = true) }
+                    icons.filter { it.name.contains(searchText, ignoreCase = true) }
                 }
                 _state.update {
                     it.copy(
