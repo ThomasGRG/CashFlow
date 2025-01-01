@@ -181,8 +181,8 @@ fun RoundedCornerOutlinedTextField(
 
 @Composable
 fun RoundedCornerOutlinedTextField(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
+    value: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     boxModifier: Modifier = Modifier,
     initialValue: String = "",
@@ -223,7 +223,7 @@ fun RoundedCornerOutlinedTextField(
                 if (isFocused) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    if (initialValue.isNotEmpty() && value.text != initialValue) {
+                    if (initialValue.isNotEmpty() && value != initialValue) {
                         Color(221, 161, 82)
                     } else {
                         MaterialTheme.colorScheme.outline
@@ -258,7 +258,7 @@ fun RoundedCornerOutlinedTextField(
                 },
                 trailingIcon = {
                     AnimatedVisibility(
-                        visible = enabled && value.text.isNotEmpty(),
+                        visible = enabled && value.isNotEmpty(),
                         enter = scaleIn() + fadeIn(),
                         exit = scaleOut() + fadeOut()
                     ) {
@@ -269,7 +269,7 @@ fun RoundedCornerOutlinedTextField(
                                 .clickable(
                                     enabled = enabled,
                                     onClick = {
-                                        onValueChange(TextFieldValue(""))
+                                        onValueChange("")
                                     }
                                 )
                         )
