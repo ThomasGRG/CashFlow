@@ -79,7 +79,7 @@ fun UpsertMethodScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
     chooseIcon: (String) -> Unit,
-    selectedIcon: String,
+    selectedIcon: String?,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     upsertMethod: (ImageVector, String) -> Unit,
@@ -101,8 +101,8 @@ fun UpsertMethodScreen(
         setLocale(locale)
     }
 
-    var icon by remember(key1 = selectedIcon) {
-        mutableStateOf(selectedIcon.getIconForMethod())
+    var icon by remember(key1 = selectedIcon, key2 = state.method) {
+        mutableStateOf(selectedIcon?.getIconForMethod() ?: state.method.icon)
     }
 
     val focusRequester = remember {
@@ -365,7 +365,7 @@ fun UpsertMethodScreenPreview() {
         navigateBack = {},
         migrateTransactions = {},
         chooseIcon = {},
-        selectedIcon = "",
+        selectedIcon = null,
         setName = {},
         setLocale = {},
         upsertMethod = { _, _ -> },
@@ -402,8 +402,7 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon")
-                ?: Constants.DEFAULT_METHOD_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertMethod = viewModel::upsertMethod,

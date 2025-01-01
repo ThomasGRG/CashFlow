@@ -79,7 +79,7 @@ fun UpsertCounterPartyScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
     chooseIcon: (String) -> Unit,
-    selectedIcon: String,
+    selectedIcon: String?,
     setName: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     upsertCounterParty: (ImageVector, String) -> Unit,
@@ -101,8 +101,8 @@ fun UpsertCounterPartyScreen(
         setLocale(locale)
     }
 
-    var icon by remember(key1 = selectedIcon) {
-        mutableStateOf(selectedIcon.getIconForCounterParty())
+    var icon by remember(key1 = selectedIcon, key2 = state.counterParty) {
+        mutableStateOf(selectedIcon?.getIconForCounterParty() ?: state.counterParty.icon)
     }
 
     val focusRequester = remember {
@@ -365,7 +365,7 @@ fun UpsertCounterPartyScreenPreview() {
         navigateBack = {},
         migrateTransactions = {},
         chooseIcon = {},
-        selectedIcon = "",
+        selectedIcon = null,
         setName = {},
         setLocale = {},
         upsertCounterParty = { _, _ -> },
@@ -402,8 +402,7 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon")
-                ?: Constants.DEFAULT_COUNTERPARTY_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertCounterParty = viewModel::upsertCounterParty,

@@ -79,7 +79,7 @@ fun UpsertCategoryScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
     chooseIcon: (String) -> Unit,
-    selectedIcon: String,
+    selectedIcon: String?,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     upsertCategory: (ImageVector, String) -> Unit,
@@ -101,8 +101,8 @@ fun UpsertCategoryScreen(
         setLocale(locale)
     }
 
-    var icon by remember(key1 = selectedIcon) {
-        mutableStateOf(selectedIcon.getIconForCategory())
+    var icon by remember(key1 = selectedIcon, key2 = state.category) {
+        mutableStateOf(selectedIcon?.getIconForCategory() ?: state.category.icon)
     }
 
     val focusRequester = remember {
@@ -365,7 +365,7 @@ fun UpsertCategoryScreenPreview() {
         navigateBack = {},
         migrateTransactions = {},
         chooseIcon = {},
-        selectedIcon = "",
+        selectedIcon = null,
         setLocale = {},
         setName = {},
         upsertCategory = { _, _ -> },
@@ -402,8 +402,7 @@ fun NavGraphBuilder.upsertCategoryScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon")
-                ?: Constants.DEFAULT_CATEGORY_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setLocale = viewModel::setLocale,
             setName = viewModel::setName,
             upsertCategory = viewModel::upsertCategory,

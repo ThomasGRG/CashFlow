@@ -79,7 +79,7 @@ import org.koin.androidx.compose.koinViewModel
 fun UpsertSourceScreen(
     navigateBack: () -> Unit,
     chooseIcon: (String) -> Unit,
-    selectedIcon: String,
+    selectedIcon: String?,
     setName: (String) -> Unit,
     upsertTransactionSource: (ImageVector, String, String, Double) -> Unit,
     deleteSource: () -> Unit,
@@ -89,8 +89,8 @@ fun UpsertSourceScreen(
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    var icon by remember(key1 = selectedIcon) {
-        mutableStateOf(selectedIcon.getIconForSource())
+    var icon by remember(key1 = selectedIcon, key2 = state.source) {
+        mutableStateOf(selectedIcon?.getIconForSource() ?: state.source.icon)
     }
 
     val focusRequester = remember {
@@ -409,7 +409,7 @@ fun UpsertSourceScreenPreview() {
     UpsertSourceScreen(
         navigateBack = {},
         chooseIcon = {},
-        selectedIcon = "",
+        selectedIcon = null,
         setName = {},
         upsertTransactionSource = { _, _, _, _ -> },
         deleteSource = {},
@@ -440,8 +440,7 @@ fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            selectedIcon = it.savedStateHandle.get<String>("icon")
-                ?: Constants.DEFAULT_SOURCE_ICON.name,
+            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
             deleteSource = viewModel::deleteSource,
