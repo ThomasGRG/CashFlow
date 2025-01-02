@@ -344,6 +344,7 @@ fun TransactionsScreen(
                     sortDirection = sortDirection,
                     selectedCategoryCount = selectedCategoryCount,
                     selectedCounterPartyCount = selectedCounterPartyCount,
+                    counterPartyFilterVisible = counterParties.isNotEmpty(),
                     selectedMethodCount = selectedMethodCount,
                     selectedSourceCount = selectedSourceCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
@@ -388,10 +389,12 @@ fun TransactionsScreen(
                         }
                     },
                     onSearchClick = {
-                        if (isFocused) {
-                            keyboardController?.show()
-                        } else {
-                            focusRequester.requestFocus()
+                        if (!(transactions.isEmpty() && searchText.isEmpty())) {
+                            if (isFocused) {
+                                keyboardController?.show()
+                            } else {
+                                focusRequester.requestFocus()
+                            }
                         }
                     },
                     onMoreClick = {

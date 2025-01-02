@@ -44,6 +44,7 @@ fun TransactionScreenRoundedBottomBar(
     filterAmount: String,
     selectedCategoryCount: String,
     selectedCounterPartyCount: String,
+    counterPartyFilterVisible: Boolean,
     selectedMethodCount: String,
     selectedSourceCount: String,
     selectedTransactionTypeCount: Int,
@@ -126,18 +127,20 @@ fun TransactionScreenRoundedBottomBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            FilledTonalButton(
-                onClick = onFilterByCounterPartyClick,
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.counter_party_filter_chip_label,
-                        selectedCounterPartyCount
-                    ),
-                    modifier = Modifier.padding(10.dp),
-                )
+            if (counterPartyFilterVisible) {
+                FilledTonalButton(
+                    onClick = onFilterByCounterPartyClick,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.counter_party_filter_chip_label,
+                            selectedCounterPartyCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
             }
             FilledTonalButton(
                 onClick = onFilterByMethodClick,
@@ -249,6 +252,7 @@ fun TransactionScreenRoundedBottomBarPreview() {
         selectedCurrencySymbol = Currency.getInstance("INR").symbol,
         sortDirection = Sort.DESCENDING,
         filterAmount = "3000+",
+        counterPartyFilterVisible = true,
         selectedCategoryCount = "1",
         selectedCounterPartyCount = "1",
         selectedMethodCount = "1",
