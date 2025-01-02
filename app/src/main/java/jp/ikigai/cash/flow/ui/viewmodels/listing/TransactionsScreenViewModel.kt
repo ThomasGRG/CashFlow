@@ -5,11 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
-import compose.icons.tablericons.Stack
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
-import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
@@ -26,7 +24,6 @@ import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
@@ -322,11 +319,6 @@ class TransactionsScreenViewModel(
             } else {
                 " && counterParty.uuid IN $9"
             }
-            queryString += if (it.includeNoItemTransactions) {
-                " && (items.@count == 0 || ANY items.item.uuid IN $10)"
-            } else {
-                " && ANY items.item.uuid IN $10"
-            }
             realm.query<Transaction>(
                 queryString,
                 it.startDate.getStartOfDayInEpochMilli(),
@@ -338,8 +330,7 @@ class TransactionsScreenViewModel(
                 it.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
                 it.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
                 it.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
-                it.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys,
-                it.selectedItems.filter { selectedItems -> selectedItems.value }.keys
+                it.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys
             ).sort("time", it.sortDirection).asFlow()
         }
     }
@@ -405,15 +396,6 @@ class TransactionsScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        if (transaction.items.size > 0) {
-            chips.add(
-                ChipInfo(
-                    resId = R.string.item_count_label,
-                    value = numberFormatter.format(transaction.items.size).toString(),
-                    icon = TablerIcons.Stack
-                )
-            )
-        }
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
@@ -596,18 +578,6 @@ class TransactionsScreenViewModel(
                             it.balance += latestTransaction.amount
                         }
                     }
-                    val itemsCopy = latestTransaction.items.map { transactionItem ->
-                        val latestItem = findLatest(transactionItem.item!!)?.also {
-                            it.frequency += 1
-                            it.lastUsed = currentTime
-                        }
-                        TransactionItem(
-                            latestItem,
-                            transactionItem.unit,
-                            transactionItem.price,
-                            transactionItem.quantity
-                        )
-                    }.toRealmList()
                     val clone = Transaction().apply {
                         uuid = UUID.randomUUID().toString()
                         title = latestTransaction.title
@@ -622,7 +592,6 @@ class TransactionsScreenViewModel(
                         counterParty = latestCounterParty
                         method = latestMethod
                         source = latestSource
-                        items = itemsCopy
                     }
                     copyToRealm(
                         instance = clone,

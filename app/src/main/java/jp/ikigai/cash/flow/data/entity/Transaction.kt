@@ -1,8 +1,6 @@
 package jp.ikigai.cash.flow.data.entity
 
 import android.icu.util.Currency
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -35,7 +33,6 @@ class Transaction() : RealmObject {
     var counterParty: CounterParty? = null
     var method: Method? = null
     var source: Source? = null
-    var items: RealmList<TransactionItem> = realmListOf()
     
     constructor(title: String, description: String): this() {
         this.title = title

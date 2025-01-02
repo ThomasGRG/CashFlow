@@ -6,7 +6,6 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.History
-import compose.icons.tablericons.Stack
 import compose.icons.tablericons.Typography
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
@@ -188,15 +187,6 @@ class TransactionTemplateScreenViewModel(
             if (source != null) {
                 chips.add(
                     ChipInfo(resId = R.string.placeholder, value = source.name, icon = source.icon)
-                )
-            }
-            if (template.items.size > 0) {
-                chips.add(
-                    ChipInfo(
-                        resId = R.string.item_count_label,
-                        value = formatter.format(template.items.size).toString(),
-                        icon = TablerIcons.Stack
-                    )
                 )
             }
             chips.add(

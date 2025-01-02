@@ -2,20 +2,14 @@ package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -51,27 +45,21 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
-import jp.ikigai.cash.flow.ui.components.cards.UpsertTemplateItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.AddItemsPopup
-import jp.ikigai.cash.flow.ui.components.popups.ChangeItemPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectUnitPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -86,13 +74,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun UpsertTransactionTemplateScreen(
     navigateBack: () -> Unit,
-    addItems: (List<Item>) -> Unit,
-    changeItem: (Item, Int) -> Unit,
-    getChangeItemFilteredList: (String) -> List<Item>,
-    updateTransactionItemUnit: (ItemUnit, Int) -> Unit,
-    updateTemplateItemPrice: (String, Int) -> Unit,
-    updateTemplateItemQuantity: (String, Int) -> Unit,
-    removeItem: (Int) -> Unit,
     setName: (String) -> Unit,
     setAmount: (String) -> Unit,
     setSelectedCategory: (Category) -> Unit,
@@ -147,14 +128,6 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.counterParties)
     }
 
-    val addItemsFilteredList by remember(key1 = state.addItemsFilteredList) {
-        mutableStateOf(state.addItemsFilteredList)
-    }
-
-    val templateItems by remember(key1 = state.templateItems) {
-        mutableStateOf(state.templateItems)
-    }
-
     val methods by remember(key1 = state.methods) {
         mutableStateOf(state.methods)
     }
@@ -201,12 +174,6 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.displayAmount)
     }
 
-    val amountEnabled by remember(key1 = enabled, key2 = state.type, key3 = templateItems) {
-        mutableStateOf(
-            enabled && (state.type == TransactionType.CREDIT || templateItems.isEmpty())
-        )
-    }
-
     val selectedCategory by remember(key1 = state.selectedCategory) {
         mutableStateOf(state.selectedCategory)
     }
@@ -221,14 +188,6 @@ fun UpsertTransactionTemplateScreen(
 
     val selectedSource by remember(key1 = state.selectedSource) {
         mutableStateOf(state.selectedSource)
-    }
-
-    var selectedTemplateItemIndex by remember {
-        mutableIntStateOf(-1)
-    }
-
-    val itemHeaderVisible by remember(key1 = state.templateItems) {
-        mutableStateOf(state.templateItems.isNotEmpty())
     }
 
     val transactionType by remember(key1 = state.type) {
@@ -333,44 +292,6 @@ fun UpsertTransactionTemplateScreen(
                         selectedTransactionType = transactionType,
                         setSelectedTransactionType = { selectedTransactionType ->
                             setTransactionType(selectedTransactionType)
-                        },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.ADD_ITEMS -> {
-                    AddItemsPopup(
-                        items = addItemsFilteredList,
-                        addItems = addItems,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.CHANGE_ITEM -> {
-                    ChangeItemPopup(
-                        selectedItemUUID = templateItems[selectedTemplateItemIndex].item.uuid,
-                        setSelectedItem = {
-                            changeItem(it, selectedTemplateItemIndex)
-                        },
-                        getItems = getChangeItemFilteredList,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.ITEM_UNIT -> {
-                    SelectUnitPopup(
-                        selectedUnit = templateItems[selectedTemplateItemIndex].unit,
-                        updateUnit = {
-                            updateTransactionItemUnit(it, selectedTemplateItemIndex)
                         },
                         dismiss = {
                             hidePopup()
@@ -531,7 +452,7 @@ fun UpsertTransactionTemplateScreen(
                 RoundedCornerOutlinedTextField(
                     value = amount,
                     onValueChange = setAmount,
-                    enabled = amountEnabled,
+                    enabled = enabled,
                     label = stringResource(id = R.string.amount_label),
                     placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
                     icon = TablerIcons.CashBanknote,
@@ -643,68 +564,6 @@ fun UpsertTransactionTemplateScreen(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (transactionType == TransactionType.DEBIT && itemHeaderVisible) {
-                item(
-                    key = "itemHeader",
-                    contentType = "header"
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.items_label),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp)
-                            .animateItem(),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                itemsIndexed(
-                    items = templateItems,
-                    key = { _, templateItem -> templateItem.item.uuid }
-                ) { index, templateItem ->
-                    UpsertTemplateItemCard(
-                        modifier = Modifier.animateItem(),
-                        index = index,
-                        enabled = enabled,
-                        data = templateItem,
-                        onItemClick = {
-                            selectedTemplateItemIndex = index
-                            resetOneHandMode()
-                            popupType = PopupType.CHANGE_ITEM
-                        },
-                        onUnitClick = {
-                            selectedTemplateItemIndex = index
-                            resetOneHandMode()
-                            popupType = PopupType.ITEM_UNIT
-                        },
-                        updatePrice = updateTemplateItemPrice,
-                        updateQuantity = updateTemplateItemQuantity,
-                        remove = removeItem
-                    )
-                }
-            }
-            if (transactionType == TransactionType.DEBIT) {
-                item(
-                    key = "add-item",
-                    contentType = "button"
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            popupType = PopupType.ADD_ITEMS
-                        },
-                        enabled = enabled && addItemsFilteredList.isNotEmpty(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp)
-                            .animateItem(),
-                        shape = MaterialTheme.shapes.small,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onBackground
-                        )
-                    ) {
-                        Text(text = stringResource(id = R.string.add_item_button_label))
-                    }
-                }
-            }
         }
     }
 }
@@ -714,13 +573,6 @@ fun UpsertTransactionTemplateScreen(
 fun UpsertTransactionTemplateScreenPreview() {
     UpsertTransactionTemplateScreen(
         navigateBack = {},
-        addItems = {},
-        changeItem = { _, _ -> },
-        getChangeItemFilteredList = { _ -> emptyList() },
-        updateTemplateItemPrice = { _, _ -> },
-        updateTransactionItemUnit = { _, _ -> },
-        updateTemplateItemQuantity = { _, _ -> },
-        removeItem = {},
         setName = {},
         setAmount = {},
         setSelectedCategory = {},
@@ -752,13 +604,6 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             navigateBack = {
                 navController.popBackStack()
             },
-            addItems = viewModel::addItems,
-            changeItem = viewModel::updateItem,
-            getChangeItemFilteredList = viewModel::getChangeItemFilteredList,
-            updateTransactionItemUnit = viewModel::updateUnit,
-            updateTemplateItemPrice = viewModel::updateTemplateItemPrice,
-            updateTemplateItemQuantity = viewModel::updateTemplateItemQuantity,
-            removeItem = viewModel::removeItem,
             setName = viewModel::setName,
             setAmount = viewModel::setAmount,
             setSelectedCategory = viewModel::setSelectedCategory,

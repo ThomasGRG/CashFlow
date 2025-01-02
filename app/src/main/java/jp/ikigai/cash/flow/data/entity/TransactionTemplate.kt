@@ -1,7 +1,5 @@
 package jp.ikigai.cash.flow.data.entity
 
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.RealmList
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -30,7 +28,6 @@ class TransactionTemplate() : RealmObject {
     var counterParty: CounterParty? = null
     var method: Method? = null
     var source: Source? = null
-    var items: RealmList<TransactionItem> = realmListOf()
     var frequency: Int = 0
     var lastUsed: Long = 0L
 }

@@ -6,23 +6,19 @@ import androidx.lifecycle.viewModelScope
 import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
-import io.realm.kotlin.ext.toRealmList
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
-import jp.ikigai.cash.flow.data.dto.UpsertTransactionItemCardInfo
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
-import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.utils.combineSevenFlows
@@ -212,23 +208,6 @@ class UpsertTransactionScreenViewModel(
                 amount = transaction.amount,
                 displayAmount = transaction.amount.toString(),
                 type = transaction.type,
-                transactionItems = transaction.items.map { transactionItem ->
-                    val total = transactionItem.price * transactionItem.quantity
-                    UpsertTransactionItemCardInfo(
-                        item = transactionItem.item!!,
-                        initialItem = transactionItem.item!!,
-                        unit = transactionItem.unit,
-                        initialUnit = transactionItem.unit,
-                        price = transactionItem.price,
-                        initialPrice = transactionItem.price,
-                        displayPrice = transactionItem.price.toString(),
-                        totalPrice = total,
-                        totalDisplayPrice = total.toString(),
-                        quantity = transactionItem.quantity,
-                        initialQuantity = transactionItem.quantity,
-                        displayQuantity = transactionItem.quantity.toString()
-                    )
-                },
                 loading = false,
                 enabled = true
             )
@@ -265,23 +244,6 @@ class UpsertTransactionScreenViewModel(
                 amount = transactionTemplate.amount,
                 displayAmount = if (transactionTemplate.amount > 0) transactionTemplate.amount.toString() else "",
                 type = transactionTemplate.type,
-                transactionItems = transactionTemplate.items.map { transactionItem ->
-                    val total = transactionItem.price * transactionItem.quantity
-                    UpsertTransactionItemCardInfo(
-                        item = transactionItem.item!!,
-                        initialItem = transactionItem.item!!,
-                        unit = transactionItem.unit,
-                        initialUnit = transactionItem.unit,
-                        price = transactionItem.price,
-                        initialPrice = transactionItem.price,
-                        displayPrice = transactionItem.price.toString(),
-                        totalPrice = total,
-                        totalDisplayPrice = total.toString(),
-                        quantity = transactionItem.quantity,
-                        initialQuantity = transactionItem.quantity,
-                        displayQuantity = transactionItem.quantity.toString()
-                    )
-                },
                 loading = false,
                 enabled = true
             )
@@ -308,14 +270,6 @@ class UpsertTransactionScreenViewModel(
             sourceValid = false
         }
 
-        val transactionItems = state.value.transactionItems.toMutableList()
-            .map { transactionItem ->
-                transactionItem.copy(
-                    priceValid = transactionItem.price > 0,
-                    quantityValid = transactionItem.quantity > 0
-                )
-            }
-
         _state.update {
             it.copy(
                 titleValid = titleValid,
@@ -323,15 +277,11 @@ class UpsertTransactionScreenViewModel(
                 categoryValid = categoryValid,
                 methodValid = methodValid,
                 sourceValid = sourceValid,
-                sourceErrorStringRes = sourceErrorStringRes,
-                transactionItems = transactionItems
+                sourceErrorStringRes = sourceErrorStringRes
             )
         }
 
-        val itemsValid =
-            state.value.type == TransactionType.CREDIT || !transactionItems.any { it.quantity == 0.0 || it.price == 0.0 }
-
-        return amountValid && itemsValid && categoryValid && methodValid && sourceValid && titleValid
+        return amountValid && categoryValid && methodValid && sourceValid && titleValid
     }
 
     private fun hasSufficientBalance(
@@ -373,22 +323,6 @@ class UpsertTransactionScreenViewModel(
             val selectedSource = state.value.selectedSource
 
             val time = ZonedDateTime.now(ZoneId.of("UTC")).toEpochMilli()
-
-            val transactionItems: List<TransactionItem> =
-                if (state.value.type == TransactionType.DEBIT) {
-                    state.value.transactionItems.map {
-                        TransactionItem(
-                            item = it.item,
-                            unit = it.unit,
-                            price = it.price,
-                            quantity = it.quantity
-                        )
-                    }
-                } else {
-                    emptyList()
-                }
-
-            updateItems(transactionItems, time, transaction.currency)
 
             updateTransactionTitle(newTitle, time)
 
@@ -445,8 +379,7 @@ class UpsertTransactionScreenViewModel(
                 category = selectedCategory,
                 counterParty = selectedCounterParty,
                 method = selectedMethod,
-                source = selectedSource,
-                transactionItems = transactionItems
+                source = selectedSource
             )
         }
     }
@@ -508,8 +441,7 @@ class UpsertTransactionScreenViewModel(
         category: Category,
         counterParty: CounterParty,
         method: Method,
-        source: Source,
-        transactionItems: List<TransactionItem>
+        source: Source
     ) {
         val result = realm.write {
             val latestCategory = findLatest(category)
@@ -517,15 +449,6 @@ class UpsertTransactionScreenViewModel(
                 if (counterParty.uuid.isNotBlank()) findLatest(counterParty) else null
             val latestMethod = findLatest(method)
             val latestSource = findLatest(source)
-            val latestTransactionItems = transactionItems.map {
-                val latestItem = findLatest(it.item!!)
-                TransactionItem(
-                    item = latestItem,
-                    price = it.price,
-                    quantity = it.quantity,
-                    unit = it.unit
-                )
-            }.toRealmList()
             if (transactionUuid.isBlank()) {
                 copyToRealm(
                     instance = transaction.apply {
@@ -539,7 +462,6 @@ class UpsertTransactionScreenViewModel(
                         this.method = latestMethod
                         this.source = latestSource
                         this.counterParty = latestCounterParty
-                        this.items = latestTransactionItems
                     },
                     updatePolicy = UpdatePolicy.ALL
                 )
@@ -554,7 +476,6 @@ class UpsertTransactionScreenViewModel(
                     it.method = latestMethod
                     it.source = latestSource
                     it.counterParty = latestCounterParty
-                    it.items = latestTransactionItems
                 }
             }
         }
@@ -594,24 +515,6 @@ class UpsertTransactionScreenViewModel(
                 findLatest(transactionTitle.first())?.also {
                     it.frequency += 1
                     it.lastUsed
-                }
-            }
-        }
-    }
-
-    private suspend fun updateItems(
-        transactionItems: List<TransactionItem>,
-        time: Long,
-        currency: String
-    ) {
-        transactionItems.forEach {
-            realm.write {
-                findLatest(it.item!!)?.also { item ->
-                    item.lastUsed = time
-                    item.lastUsedUnit = it.unit
-                    item.lastKnownPrice = it.price
-                    item.lastUsedCurrency = currency
-                    item.frequency += 1
                 }
             }
         }
@@ -743,179 +646,6 @@ class UpsertTransactionScreenViewModel(
                 dateTime = time,
                 dateString = time.getDateString(),
                 timeString = time.getTimeString(),
-            )
-        }
-    }
-
-    fun addItems(items: List<Item>) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            transactionItems.addAll(
-                items.map { item ->
-                    val isSameCurrency =
-                        screenState.selectedSource.uuid.isNotEmpty() && item.lastUsedCurrency == screenState.selectedSource.currency
-                    val price = if (isSameCurrency) item.lastKnownPrice else 0.0
-                    UpsertTransactionItemCardInfo(
-                        item = item,
-                        initialItem = item,
-                        unit = item.lastUsedUnit,
-                        initialUnit = item.lastUsedUnit,
-                        price = price,
-                        initialPrice = price,
-                        displayPrice = price.toString(),
-                        quantity = 0.0,
-                        initialQuantity = 0.0,
-                        displayQuantity = "0",
-                        totalPrice = 0.0,
-                        totalDisplayPrice = "0"
-                    )
-                }
-            )
-            val selectedItemUUIDs = transactionItems.map { it.item.uuid }
-            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
-            val newAmount = transactionItems.sumOf { it.totalPrice }
-            hasSufficientBalance(
-                newAmount,
-                screenState.type,
-                screenState.selectedSource
-            )
-            screenState.copy(
-                transactionItems = transactionItems,
-                addItemsFilteredList = filteredItems,
-                amount = newAmount,
-                displayAmount = newAmount.toString(),
-                amountValid = true
-            )
-        }
-    }
-
-    fun updateItem(item: Item, index: Int) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            transactionItems[index] = transactionItems[index].copy(
-                item = item
-            )
-            val selectedItemUUIDs = transactionItems.map { it.item.uuid }
-            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
-            screenState.copy(
-                transactionItems = transactionItems,
-                addItemsFilteredList = filteredItems
-            )
-        }
-    }
-
-    fun updateUnit(itemUnit: ItemUnit, index: Int) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            transactionItems[index] = transactionItems[index].copy(
-                unit = itemUnit
-            )
-            screenState.copy(
-                transactionItems = transactionItems
-            )
-        }
-    }
-
-    fun getChangeItemFilteredList(uuid: String): List<Item> {
-        val transactionItems = state.value.transactionItems
-        val selectedItemUUIDs = transactionItems.map { it.item.uuid }
-        return state.value.items.filter { item ->
-            item.uuid == uuid || !selectedItemUUIDs.contains(item.uuid)
-        }
-    }
-
-    fun updateTransactionItemPrice(amountString: String, index: Int) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            var newAmount = 0.0
-            var amountValid = false
-            var displayAmount = ""
-            if (amountString.isNotBlank()) {
-                val amt = amountString.toDoubleOrNull()
-                if (amt != null) {
-                    newAmount = amt
-                    amountValid = amt > 0
-                    displayAmount = amountString
-                }
-            }
-            val totalPrice = newAmount * transactionItems[index].quantity
-            transactionItems[index] = transactionItems[index].copy(
-                price = newAmount,
-                priceValid = amountValid,
-                displayPrice = displayAmount,
-                totalPrice = totalPrice,
-                totalDisplayPrice = totalPrice.toString()
-            )
-            val totalAmount = transactionItems.sumOf { it.totalPrice }
-            hasSufficientBalance(
-                totalAmount,
-                screenState.type,
-                screenState.selectedSource
-            )
-            screenState.copy(
-                transactionItems = transactionItems,
-                amount = totalAmount,
-                amountValid = true,
-                displayAmount = totalAmount.toString()
-            )
-        }
-    }
-
-    fun updateTransactionItemQuantity(quantityString: String, index: Int) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            var newQuantity = 0.0
-            var quantityValid = false
-            var displayQuantity = ""
-            if (quantityString.isNotBlank()) {
-                val quantity = quantityString.toDoubleOrNull()
-                if (quantity != null) {
-                    newQuantity = quantity
-                    quantityValid = quantity > 0
-                    displayQuantity = quantityString
-                }
-            }
-            val totalPrice = transactionItems[index].price * newQuantity
-            transactionItems[index] = transactionItems[index].copy(
-                quantity = newQuantity,
-                quantityValid = quantityValid,
-                displayQuantity = displayQuantity,
-                totalPrice = totalPrice,
-                totalDisplayPrice = totalPrice.toString()
-            )
-            val totalAmount = transactionItems.sumOf { it.price }
-            hasSufficientBalance(
-                totalAmount,
-                screenState.type,
-                screenState.selectedSource
-            )
-            screenState.copy(
-                transactionItems = transactionItems,
-                amount = totalAmount,
-                amountValid = true,
-                displayAmount = totalAmount.toString()
-            )
-        }
-    }
-
-    fun removeItem(index: Int) {
-        _state.update { screenState ->
-            val transactionItems = screenState.transactionItems.toMutableList()
-            transactionItems.removeAt(index)
-            val selectedItemUUIDs = transactionItems.map { it.item.uuid }
-            val filteredItems = screenState.items.filter { !selectedItemUUIDs.contains(it.uuid) }
-            val totalAmount = transactionItems.sumOf { it.price }
-            hasSufficientBalance(
-                totalAmount,
-                screenState.type,
-                screenState.selectedSource
-            )
-            screenState.copy(
-                transactionItems = transactionItems,
-                addItemsFilteredList = filteredItems,
-                amount = totalAmount,
-                amountValid = true,
-                displayAmount = totalAmount.toString()
             )
         }
     }

@@ -5,12 +5,10 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -57,20 +55,15 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.enums.ItemUnit
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
-import jp.ikigai.cash.flow.ui.components.cards.UpsertTransactionItemCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.AddItemsPopup
-import jp.ikigai.cash.flow.ui.components.popups.ChangeItemPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.DatePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
@@ -78,7 +71,6 @@ import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectUnitPopup
 import jp.ikigai.cash.flow.ui.components.popups.TimePickerPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
@@ -103,13 +95,6 @@ fun UpsertTransactionScreen(
     setAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
     setTime: (ZonedDateTime) -> Unit,
-    addItems: (List<Item>) -> Unit,
-    changeItem: (Item, Int) -> Unit,
-    getChangeItemFilteredList: (String) -> List<Item>,
-    updateTransactionItemUnit: (ItemUnit, Int) -> Unit,
-    updateTransactionItemPrice: (String, Int) -> Unit,
-    updateTransactionItemQuantity: (String, Int) -> Unit,
-    removeItem: (Int) -> Unit,
     setSelectedCategory: (Category) -> Unit,
     setSelectedCounterParty: (CounterParty) -> Unit,
     setSelectedMethod: (Method) -> Unit,
@@ -219,22 +204,6 @@ fun UpsertTransactionScreen(
         mutableIntStateOf(state.sourceErrorStringRes)
     }
 
-    val transactionItems by remember(key1 = state.transactionItems) {
-        mutableStateOf(state.transactionItems)
-    }
-
-    var selectedTransactionItemIndex by remember {
-        mutableIntStateOf(-1)
-    }
-
-    val itemHeaderVisible by remember(key1 = transactionItems) {
-        mutableStateOf(transactionItems.isNotEmpty())
-    }
-
-    val addItemsFilteredList by remember(key1 = state.addItemsFilteredList) {
-        mutableStateOf(state.addItemsFilteredList)
-    }
-
     val transactionType by remember(key1 = state.type) {
         mutableStateOf(state.type)
     }
@@ -280,12 +249,6 @@ fun UpsertTransactionScreen(
 
     val amountValid by remember(key1 = state.amountValid) {
         mutableStateOf(state.amountValid)
-    }
-
-    val amountEnabled by remember(key1 = enabled, key2 = transactionType, key3 = transactionItems) {
-        mutableStateOf(
-            enabled && (transactionType == TransactionType.CREDIT || transactionItems.isEmpty())
-        )
     }
 
     val dateTime by remember(key1 = state.dateTime) {
@@ -402,44 +365,6 @@ fun UpsertTransactionScreen(
                     SelectTransactionTypePopup(
                         selectedTransactionType = transactionType,
                         setSelectedTransactionType = setTransactionType,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.ADD_ITEMS -> {
-                    AddItemsPopup(
-                        items = addItemsFilteredList,
-                        addItems = addItems,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.CHANGE_ITEM -> {
-                    ChangeItemPopup(
-                        selectedItemUUID = transactionItems[selectedTransactionItemIndex].item.uuid,
-                        setSelectedItem = {
-                            changeItem(it, selectedTransactionItemIndex)
-                        },
-                        getItems = getChangeItemFilteredList,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
-                PopupType.ITEM_UNIT -> {
-                    SelectUnitPopup(
-                        selectedUnit = transactionItems[selectedTransactionItemIndex].unit,
-                        updateUnit = {
-                            updateTransactionItemUnit(it, selectedTransactionItemIndex)
-                        },
                         dismiss = {
                             hidePopup()
                             popupType = PopupType.NONE
@@ -625,7 +550,7 @@ fun UpsertTransactionScreen(
                         val newAmount = amount.toDoubleOrNull()
                         newAmount != null && newAmount > 0 && transaction.uuid.isNotEmpty() && newAmount != transaction.amount
                     },
-                    enabled = amountEnabled,
+                    enabled = enabled,
                     label = stringResource(id = R.string.amount_label),
                     placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
                     icon = TablerIcons.CashBanknote,
@@ -803,69 +728,6 @@ fun UpsertTransactionScreen(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (transactionType == TransactionType.DEBIT && itemHeaderVisible) {
-                item(
-                    key = "items-header",
-                    contentType = "header"
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.items_label),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp)
-                            .animateItem(),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                itemsIndexed(
-                    items = transactionItems,
-                    key = { _, transactionItem -> transactionItem.item.uuid }
-                ) { index, transactionItem ->
-                    UpsertTransactionItemCard(
-                        modifier = Modifier.animateItem(),
-                        transactionUuid = transactionUuid,
-                        index = index,
-                        enabled = enabled,
-                        data = transactionItem,
-                        onItemClick = {
-                            selectedTransactionItemIndex = index
-                            resetOneHandMode()
-                            popupType = PopupType.CHANGE_ITEM
-                        },
-                        onUnitClick = {
-                            selectedTransactionItemIndex = index
-                            resetOneHandMode()
-                            popupType = PopupType.ITEM_UNIT
-                        },
-                        updatePrice = updateTransactionItemPrice,
-                        updateQuantity = updateTransactionItemQuantity,
-                        remove = removeItem
-                    )
-                }
-            }
-            if (transactionType == TransactionType.DEBIT) {
-                item(
-                    key = "add-item",
-                    contentType = "button"
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            popupType = PopupType.ADD_ITEMS
-                        },
-                        enabled = enabled && addItemsFilteredList.isNotEmpty(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp)
-                            .animateItem(),
-                        shape = MaterialTheme.shapes.small,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onBackground
-                        )
-                    ) {
-                        Text(text = stringResource(id = R.string.add_item_button_label))
-                    }
-                }
-            }
         }
     }
 }
@@ -879,13 +741,6 @@ fun UpsertTransactionScreenPreview() {
         setAmount = {},
         setDate = {},
         setTime = {},
-        addItems = {},
-        changeItem = { _, _ -> },
-        getChangeItemFilteredList = { _ -> emptyList() },
-        updateTransactionItemPrice = { _, _ -> },
-        updateTransactionItemUnit = { _, _ -> },
-        updateTransactionItemQuantity = { _, _ -> },
-        removeItem = {},
         setSelectedCategory = {},
         setSelectedCounterParty = {},
         setSelectedMethod = {},
@@ -924,13 +779,6 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             setAmount = viewModel::setAmount,
             setDate = viewModel::setDate,
             setTime = viewModel::setTime,
-            addItems = viewModel::addItems,
-            changeItem = viewModel::updateItem,
-            getChangeItemFilteredList = viewModel::getChangeItemFilteredList,
-            updateTransactionItemUnit = viewModel::updateUnit,
-            updateTransactionItemPrice = viewModel::updateTransactionItemPrice,
-            updateTransactionItemQuantity = viewModel::updateTransactionItemQuantity,
-            removeItem = viewModel::removeItem,
             setSelectedCategory = viewModel::setSelectedCategory,
             setSelectedCounterParty = viewModel::setSelectedCounterParty,
             setSelectedMethod = viewModel::setSelectedMethod,

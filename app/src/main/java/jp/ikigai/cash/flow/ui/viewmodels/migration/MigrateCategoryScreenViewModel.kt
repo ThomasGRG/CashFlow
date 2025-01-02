@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
-import compose.icons.tablericons.Stack
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
@@ -16,7 +15,6 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
@@ -108,23 +106,15 @@ class MigrateCategoryScreenViewModel(
                     .mapNotNull { transaction -> transaction.source }
                     .distinctBy { source -> source.uuid }
 
-                val items = transactionChanges.list
-                    .map { transaction -> transaction.items }
-                    .flatten()
-                    .mapNotNull { transactionItem -> transactionItem.item }
-                    .distinctBy { item -> item.uuid }
-
                 val selectedCounterPartiesMap =
                     getSelectedCounterParties(counterParties, it.selectedCounterParties)
                 val selectedMethodsMap = getSelectedMethods(methods, it.selectedMethods)
                 val selectedSourcesMap = getSelectedSources(sources, it.selectedSources)
-                val selectedItemsMap = getSelectedItems(items, it.selectedItems)
 
                 val selectedCounterParties =
                     selectedCounterPartiesMap.filter { entry -> entry.value }.keys
                 val selectedMethods = selectedMethodsMap.filter { entry -> entry.value }.keys
                 val selectedSources = selectedSourcesMap.filter { entry -> entry.value }.keys
-                val selectedItems = selectedItemsMap.filter { entry -> entry.value }.keys
                 val selectedCurrencies = it.selectedCurrencies.filter { entry -> entry.value }.keys
 
                 val filteredTransactionsMap = filterTransactions(
@@ -139,8 +129,6 @@ class MigrateCategoryScreenViewModel(
                     selectedCounterParties = selectedCounterParties,
                     selectedMethods = selectedMethods,
                     selectedSources = selectedSources,
-                    includeNoItemTransactions = it.includeNoItemTransactions,
-                    selectedItems = selectedItems,
                     selectedTransactionTypes = it.selectedTransactionTypes,
                     locale = it.locale
                 )
@@ -175,9 +163,6 @@ class MigrateCategoryScreenViewModel(
                     selectedSources = selectedSourcesMap,
                     selectedSourceCount = numberFormatter.format(selectedSources.size)
                         .toString(),
-                    items = items,
-                    selectedItems = selectedItemsMap,
-                    selectedItemCount = numberFormatter.format(selectedItems.size).toString(),
                     selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size)
                         .toString(),
                     loading = false,
@@ -254,20 +239,6 @@ class MigrateCategoryScreenViewModel(
         )
     }
 
-    private fun getSelectedItems(
-        items: List<Item>,
-        selectedItems: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return items.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedItems.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
     private fun getSelectedSources(
         sources: List<Source>,
         selectedSources: Map<String, Boolean>
@@ -294,8 +265,6 @@ class MigrateCategoryScreenViewModel(
         selectedCounterParties: Set<String>,
         selectedMethods: Set<String>,
         selectedSources: Set<String>,
-        includeNoItemTransactions: Boolean,
-        selectedItems: Set<String>,
         selectedTransactionTypes: List<Int>,
         locale: Locale?
     ): Map<LocalDate, List<TransactionWithIcons>> {
@@ -324,23 +293,11 @@ class MigrateCategoryScreenViewModel(
                     selectedCounterParties.contains(transaction.counterParty?.uuid)
                 }
 
-                val containsItems = if (includeNoItemTransactions) {
-                    transaction.items.isEmpty() || transaction.items
-                        .mapNotNull { item -> item.item?.uuid }
-                        .distinct()
-                        .any { itemUuid -> selectedItems.contains(itemUuid) }
-                } else {
-                    transaction.items
-                        .mapNotNull { item -> item.item?.uuid }
-                        .distinct()
-                        .any { itemUuid -> selectedItems.contains(itemUuid) }
-                }
-
                 val amountBetween = transaction.amount in minAmount..maxAmount
 
                 val timeBetween = transaction.time in minTime..maxTime
 
-                containsTitleOrDescription && containsCurrency && containsType && containsMethod && containsSource && amountBetween && timeBetween && containsCounterParty && containsItems
+                containsTitleOrDescription && containsCurrency && containsType && containsMethod && containsSource && amountBetween && timeBetween && containsCounterParty
             }
             .groupBy(
                 keySelector = { transaction -> transaction.time.toLocalDate() },
@@ -395,15 +352,6 @@ class MigrateCategoryScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        if (transaction.items.size > 0) {
-            chips.add(
-                ChipInfo(
-                    resId = R.string.item_count_label,
-                    value = numberFormatter.format(transaction.items.size).toString(),
-                    icon = TablerIcons.Stack
-                )
-            )
-        }
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
