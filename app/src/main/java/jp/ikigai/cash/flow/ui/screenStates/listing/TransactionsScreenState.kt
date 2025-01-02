@@ -8,7 +8,6 @@ import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionDetailsByDay
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -36,10 +35,6 @@ data class TransactionsScreenState(
     val sources: List<Source> = emptyList(),
     val selectedSources: Map<String, Boolean> = emptyMap(),
     val selectedSourceCount: String = "0",
-    val items: List<Item> = emptyList(),
-    val selectedItems: Map<String, Boolean> = emptyMap(),
-    val selectedItemCount: String = "0",
-    val includeNoItemTransactions: Boolean = true,
     val transactionTypes: List<TransactionType> = TransactionType.values().toList(),
     val selectedTransactionTypes: List<Int> = listOf(1, 2),
     val filterAmountMin: Double = 0.0,

@@ -2,8 +2,6 @@ package jp.ikigai.cash.flow.data
 
 sealed class Routes(val route: String) {
 
-    object Items: Routes("items")
-
     object Transactions: Routes("transactions")
     object UpsertTransaction: Routes("upsertTransaction?id={id}&templateId={templateId}") {
         fun getRoute(id: String = "", templateId: String = ""): String {

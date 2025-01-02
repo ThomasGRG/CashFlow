@@ -81,7 +81,6 @@ import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterItemsPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
@@ -111,7 +110,6 @@ fun TransactionsScreen(
     setSelectedCounterParties: (Boolean, Map<String, Boolean>) -> Unit,
     setSelectedMethods: (Map<String, Boolean>) -> Unit,
     setSelectedSources: (Map<String, Boolean>) -> Unit,
-    setSelectedItems: (Boolean, Map<String, Boolean>) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
     setSortDirection: (Sort) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
@@ -120,7 +118,6 @@ fun TransactionsScreen(
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
-    navigateToItemsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
     openGithubPage: () -> Unit,
     events: Flow<Event>,
@@ -291,22 +288,6 @@ fun TransactionsScreen(
         mutableStateOf(state.selectedSourceCount)
     }
 
-    val items by remember(key1 = state.items) {
-        mutableStateOf(state.items)
-    }
-
-    val includeNoItemTransactions by remember(key1 = state.includeNoItemTransactions) {
-        mutableStateOf(state.includeNoItemTransactions)
-    }
-
-    val selectedItems by remember(key1 = state.selectedItems) {
-        mutableStateOf(state.selectedItems)
-    }
-
-    val selectedItemCount by remember(key1 = state.selectedItemCount) {
-        mutableStateOf(state.selectedItemCount)
-    }
-
     val selectedTransactionTypes by remember(key1 = state.selectedTransactionTypes) {
         mutableStateOf(state.selectedTransactionTypes)
     }
@@ -365,7 +346,6 @@ fun TransactionsScreen(
                     selectedCounterPartyCount = selectedCounterPartyCount,
                     selectedMethodCount = selectedMethodCount,
                     selectedSourceCount = selectedSourceCount,
-                    selectedItemCount = selectedItemCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
                     onSortClick = {
                         if (sortDirection == Sort.DESCENDING) {
@@ -391,9 +371,6 @@ fun TransactionsScreen(
                     },
                     onFilterBySourceClick = {
                         popupType = PopupType.SOURCE
-                    },
-                    onFilterByItemClick = {
-                        popupType = PopupType.FILTER_ITEMS
                     },
                     onCurrencyClick = {
                         popupType = PopupType.CURRENCY
@@ -616,7 +593,6 @@ fun TransactionsScreen(
                             navigateToMethodsScreen = navigateToMethodsScreen,
                             navigateToSourcesScreen = navigateToSourcesScreen,
                             navigateToTemplatesScreen = navigateToTemplatesScreen,
-                            navigateToItemsScreen = navigateToItemsScreen,
                             openGithubReleasesPage = openGithubPage,
                             dismiss = {
                                 hidePopup()
@@ -686,19 +662,6 @@ fun TransactionsScreen(
                         )
                     }
 
-                    PopupType.FILTER_ITEMS -> {
-                        FilterItemsPopup(
-                            includeTransactionsWithNoItems = includeNoItemTransactions,
-                            selectedItemsMap = selectedItems,
-                            filterItems = setSelectedItems,
-                            items = items,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
-                        )
-                    }
-
                     PopupType.TYPE -> {
                         FilterTransactionTypePopup(
                             selectedTransactionTypes = selectedTransactionTypes,
@@ -755,7 +718,6 @@ fun TransactionsScreenPreview() {
         setSelectedCounterParties = { _, _ -> },
         setSelectedMethods = {},
         setSelectedSources = {},
-        setSelectedItems = { _, _ -> },
         setSelectedTransactionTypes = {},
         setSortDirection = {},
         filterByAmount = { _, _ -> },
@@ -764,7 +726,6 @@ fun TransactionsScreenPreview() {
         navigateToCounterPartyScreen = {},
         navigateToMethodsScreen = {},
         navigateToTemplatesScreen = {},
-        navigateToItemsScreen = {},
         navigateToSourcesScreen = {},
         openGithubPage = {},
         events = emptyList<Event>().asFlow(),
@@ -824,7 +785,6 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
             setSelectedSources = viewModel::setSelectedSources,
-            setSelectedItems = viewModel::setSelectedItems,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
             setSortDirection = viewModel::setSortDirection,
             filterByAmount = viewModel::setFilterAmounts,
@@ -851,11 +811,6 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             },
             navigateToTemplatesScreen = {
                 navController.navigate(Routes.Templates.route) {
-                    launchSingleTop = true
-                }
-            },
-            navigateToItemsScreen = {
-                navController.navigate(Routes.Items.route) {
                     launchSingleTop = true
                 }
             },

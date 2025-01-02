@@ -13,7 +13,6 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
@@ -21,7 +20,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
-import jp.ikigai.cash.flow.utils.combineSevenFlows
+import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.combineSixFlows
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
@@ -65,8 +64,6 @@ class UpsertTransactionScreenViewModel(
 
     private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
 
-    private val itemsQuery = realm.query<Item>().sort("frequency", Sort.DESCENDING)
-
     private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
@@ -85,62 +82,56 @@ class UpsertTransactionScreenViewModel(
 
     private fun loadData() = viewModelScope.launch {
         val flows = if (transactionUuid.isNotBlank()) {
-            combineSevenFlows(
+            combineSixFlows(
                 categoryQuery.asFlow(),
                 counterPartyQuery.asFlow(),
-                itemsQuery.asFlow(),
                 methodQuery.asFlow(),
                 sourceQuery.asFlow(),
                 transactionTitleQuery.asFlow(),
                 realm.query<Transaction>("uuid==$0", transactionUuid).asFlow()
-            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges, transactionChanges ->
+            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges, transactionChanges ->
                 UpsertTransactionFlows(
                     categories = categoryChanges.list,
                     counterParties = counterPartyChanges.list,
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
-                    items = itemChanges.list,
                     transactionTitles = transactionTitleChanges.list,
                     transaction = transactionChanges.list.first(),
                     transactionTemplate = null,
                 )
             }
         } else if (templateUuid.isNotBlank()) {
-            combineSevenFlows(
+            combineSixFlows(
                 categoryQuery.asFlow(),
                 counterPartyQuery.asFlow(),
-                itemsQuery.asFlow(),
                 methodQuery.asFlow(),
                 sourceQuery.asFlow(),
                 transactionTitleQuery.asFlow(),
                 realm.query<TransactionTemplate>("uuid==$0", templateUuid).asFlow()
-            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges, templateChanges ->
+            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges, templateChanges ->
                 UpsertTransactionFlows(
                     categories = categoryChanges.list,
                     counterParties = counterPartyChanges.list,
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
-                    items = itemChanges.list,
                     transactionTitles = transactionTitleChanges.list,
                     transaction = null,
                     transactionTemplate = templateChanges.list.first(),
                 )
             }
         } else {
-            combineSixFlows(
+            combineFiveFlows(
                 categoryQuery.asFlow(),
                 counterPartyQuery.asFlow(),
-                itemsQuery.asFlow(),
                 methodQuery.asFlow(),
                 sourceQuery.asFlow(),
                 transactionTitleQuery.asFlow()
-            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTitleChanges ->
+            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges ->
                 UpsertTransactionFlows(
                     categories = categoryChanges.list,
                     counterParties = counterPartyChanges.list,
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
-                    items = itemChanges.list,
                     transactionTitles = transactionTitleChanges.list,
                     transaction = null,
                     transactionTemplate = null,
@@ -156,8 +147,6 @@ class UpsertTransactionScreenViewModel(
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
                         sources = upsertTransactionFlows.sources,
-                        items = upsertTransactionFlows.items,
-                        addItemsFilteredList = upsertTransactionFlows.items,
                         dateString = it.dateTime.getDateString(),
                         timeString = it.dateTime.getTimeString(),
                         loading = false,
@@ -198,8 +187,6 @@ class UpsertTransactionScreenViewModel(
                 selectedMethod = transaction.method!!,
                 sources = upsertTransactionFlows.sources,
                 selectedSource = source,
-                items = upsertTransactionFlows.items,
-                addItemsFilteredList = upsertTransactionFlows.items,
                 transaction = transaction,
                 title = transaction.title,
                 dateTime = dateTime,
@@ -232,8 +219,6 @@ class UpsertTransactionScreenViewModel(
                 sources = upsertTransactionFlows.sources,
                 selectedSource = transactionTemplate.source
                     ?: it.selectedSource,
-                items = upsertTransactionFlows.items,
-                addItemsFilteredList = upsertTransactionFlows.items,
                 transaction = Transaction(
                     transactionTemplate.title,
                     transactionTemplate.description

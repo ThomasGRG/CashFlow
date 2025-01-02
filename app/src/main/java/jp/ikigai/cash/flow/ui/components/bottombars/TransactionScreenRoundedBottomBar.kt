@@ -46,7 +46,6 @@ fun TransactionScreenRoundedBottomBar(
     selectedCounterPartyCount: String,
     selectedMethodCount: String,
     selectedSourceCount: String,
-    selectedItemCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
@@ -55,7 +54,6 @@ fun TransactionScreenRoundedBottomBar(
     onFilterByCounterPartyClick: () -> Unit,
     onFilterByMethodClick: () -> Unit,
     onFilterBySourceClick: () -> Unit,
-    onFilterByItemClick: () -> Unit,
     onCurrencyClick: () -> Unit,
     onCalendarClick: () -> Unit,
     addTransaction: () -> Unit,
@@ -167,16 +165,6 @@ fun TransactionScreenRoundedBottomBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            FilledTonalButton(
-                onClick = onFilterByItemClick,
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(id = R.string.item_filter_chip_label, selectedItemCount),
-                    modifier = Modifier.padding(10.dp),
-                )
-            }
         }
         RoundedBottomBar {
             Row(
@@ -265,7 +253,6 @@ fun TransactionScreenRoundedBottomBarPreview() {
         selectedCounterPartyCount = "1",
         selectedMethodCount = "1",
         selectedSourceCount = "1",
-        selectedItemCount = "1",
         selectedTransactionTypeCount = 2,
         onSortClick = {},
         onFilterByAmountClick = {},
@@ -274,7 +261,6 @@ fun TransactionScreenRoundedBottomBarPreview() {
         onFilterByCounterPartyClick = {},
         onFilterByMethodClick = {},
         onFilterBySourceClick = {},
-        onFilterByItemClick = {},
         onCurrencyClick = {},
         onCalendarClick = {},
         addTransaction = {},

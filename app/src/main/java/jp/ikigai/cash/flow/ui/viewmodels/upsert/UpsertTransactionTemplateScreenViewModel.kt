@@ -13,13 +13,12 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionTemplateFlows
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
-import jp.ikigai.cash.flow.utils.combineSixFlows
+import jp.ikigai.cash.flow.utils.combineFiveFlows
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -57,8 +56,6 @@ class UpsertTransactionTemplateScreenViewModel(
 
     private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
 
-    private val itemsQuery = realm.query<Item>().sort("frequency", Sort.DESCENDING)
-
     private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
@@ -75,18 +72,16 @@ class UpsertTransactionTemplateScreenViewModel(
 
     private fun loadData() = viewModelScope.launch {
         val flows = if (templateUuid.isNotBlank()) {
-            combineSixFlows(
+            combineFiveFlows(
                 categoryQuery.asFlow(),
                 counterPartyQuery.asFlow(),
-                itemsQuery.asFlow(),
                 methodQuery.asFlow(),
                 sourceQuery.asFlow(),
                 realm.query<TransactionTemplate>("uuid==$0", templateUuid).asFlow()
-            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, transactionTemplateChanges ->
+            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTemplateChanges ->
                 UpsertTransactionTemplateFlows(
                     categories = categoryChanges.list,
                     counterParties = counterPartyChanges.list,
-                    items = itemChanges.list,
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
                     transactionTemplate = transactionTemplateChanges.list.first()
@@ -96,14 +91,12 @@ class UpsertTransactionTemplateScreenViewModel(
             combine(
                 categoryQuery.asFlow(),
                 counterPartyQuery.asFlow(),
-                itemsQuery.asFlow(),
                 methodQuery.asFlow(),
                 sourceQuery.asFlow(),
-            ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges ->
+            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges ->
                 UpsertTransactionTemplateFlows(
                     categories = categoryChanges.list,
                     counterParties = counterPartyChanges.list,
-                    items = itemChanges.list,
                     methods = methodChanges.list,
                     sources = sourceChanges.list,
                 )
@@ -126,8 +119,6 @@ class UpsertTransactionTemplateScreenViewModel(
                     categories = upsertTransactionTemplateFlows.categories,
                     selectedCounterParty = selectedCounterParty,
                     counterParties = upsertTransactionTemplateFlows.counterParties,
-                    items = upsertTransactionTemplateFlows.items,
-                    addItemsFilteredList = upsertTransactionTemplateFlows.items,
                     selectedMethod = selectedMethod,
                     methods = upsertTransactionTemplateFlows.methods,
                     selectedSource = selectedSource,

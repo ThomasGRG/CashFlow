@@ -9,7 +9,6 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.screens.common.chooseIconScreen
 import jp.ikigai.cash.flow.ui.screens.listing.categoryScreen
 import jp.ikigai.cash.flow.ui.screens.listing.counterPartyScreen
-import jp.ikigai.cash.flow.ui.screens.listing.itemScreen
 import jp.ikigai.cash.flow.ui.screens.listing.methodScreen
 import jp.ikigai.cash.flow.ui.screens.listing.sourceScreen
 import jp.ikigai.cash.flow.ui.screens.listing.transactionTemplateScreen
@@ -40,8 +39,6 @@ fun BaseScreen() {
         upsertTransactionTemplateScreen(navController = navController)
 
         chooseIconScreen(navController = navController)
-
-        itemScreen(navController = navController)
 
         categoryScreen(navController = navController)
         upsertCategoryScreen(navController = navController)

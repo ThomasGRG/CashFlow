@@ -70,7 +70,6 @@ import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCurrencyPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterItemsPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
@@ -101,7 +100,6 @@ fun MigrateCategoryScreen(
     setSelectedCounterParties: (Boolean, Map<String, Boolean>) -> Unit,
     setSelectedMethods: (Map<String, Boolean>) -> Unit,
     setSelectedSources: (Map<String, Boolean>) -> Unit,
-    setSelectedItems: (Boolean, Map<String, Boolean>) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
     setSortDirection: (Sort) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
@@ -271,22 +269,6 @@ fun MigrateCategoryScreen(
         mutableStateOf(state.selectedSourceCount)
     }
 
-    val items by remember(key1 = state.items) {
-        mutableStateOf(state.items)
-    }
-
-    val includeNoItemTransactions by remember(key1 = state.includeNoItemTransactions) {
-        mutableStateOf(state.includeNoItemTransactions)
-    }
-
-    val selectedItems by remember(key1 = state.selectedItems) {
-        mutableStateOf(state.selectedItems)
-    }
-
-    val selectedItemCount by remember(key1 = state.selectedItemCount) {
-        mutableStateOf(state.selectedItemCount)
-    }
-
     val selectedTransactionTypes by remember(key1 = state.selectedTransactionTypes) {
         mutableStateOf(state.selectedTransactionTypes)
     }
@@ -420,19 +402,6 @@ fun MigrateCategoryScreen(
                     )
                 }
 
-                PopupType.FILTER_ITEMS -> {
-                    FilterItemsPopup(
-                        includeTransactionsWithNoItems = includeNoItemTransactions,
-                        selectedItemsMap = selectedItems,
-                        filterItems = setSelectedItems,
-                        items = items,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
-                    )
-                }
-
                 PopupType.TYPE -> {
                     FilterTransactionTypePopup(
                         selectedTransactionTypes = selectedTransactionTypes,
@@ -485,8 +454,6 @@ fun MigrateCategoryScreen(
                 selectedCounterPartyCount = selectedCounterPartyCount,
                 selectedMethodCount = selectedMethodCount,
                 selectedSourceCount = selectedSourceCount,
-                itemFilterVisible = items.isNotEmpty(),
-                selectedItemCount = selectedItemCount,
                 selectedTransactionTypeCount = selectedTransactionTypes.size,
                 onSortClick = {
                     if (sortDirection == Sort.DESCENDING) {
@@ -512,9 +479,6 @@ fun MigrateCategoryScreen(
                 },
                 onFilterBySourceClick = {
                     popupType = PopupType.SOURCE
-                },
-                onFilterByItemClick = {
-                    popupType = PopupType.FILTER_ITEMS
                 },
                 onCalendarClick = {
                     popupType = PopupType.DATE_RANGE
@@ -653,7 +617,6 @@ fun MigrateCategoryScreenPreview() {
         setSelectedCounterParties = { _, _ -> },
         setSelectedMethods = {},
         setSelectedSources = {},
-        setSelectedItems = { _, _ -> },
         setSelectedTransactionTypes = {},
         setSortDirection = {},
         filterByAmount = { _, _ -> },
@@ -690,7 +653,6 @@ fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
             setSelectedSources = viewModel::setSelectedSources,
-            setSelectedItems = viewModel::setSelectedItems,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
             setSortDirection = viewModel::setSortDirection,
             filterByAmount = viewModel::setFilterAmounts,

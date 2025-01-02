@@ -4,7 +4,6 @@ import androidx.annotation.StringRes
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
@@ -26,8 +25,6 @@ data class UpsertTransactionTemplateScreenState(
     val selectedMethod: Method = Method(),
     val sources: List<Source> = emptyList(),
     val selectedSource: Source = Source(),
-    val items: List<Item> = emptyList(),
-    val addItemsFilteredList: List<Item> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
 )

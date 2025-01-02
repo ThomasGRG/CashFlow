@@ -3,7 +3,6 @@ package jp.ikigai.cash.flow.koin
 import jp.ikigai.cash.flow.ui.viewmodels.common.ChooseIconScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.CategoryScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.CounterPartyScreenViewModel
-import jp.ikigai.cash.flow.ui.viewmodels.listing.ItemsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.MethodScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.SourceScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
@@ -40,7 +39,6 @@ val appModule = module {
     viewModel() { MigrateCategoryScreenViewModel(get()) }
 
     viewModel() { ChooseIconScreenViewModel(get()) }
-    viewModel() { ItemsScreenViewModel() }
 
     viewModel() { TransactionTemplateScreenViewModel() }
     viewModel() { UpsertTransactionTemplateScreenViewModel(get()) }

@@ -506,19 +506,6 @@ class MigrateCounterPartyScreenViewModel(
         }
     }
 
-    fun setSelectedItems(
-        includeTransactionsWithNoItems: Boolean,
-        selectedItems: Map<String, Boolean>
-    ) {
-        _state.update {
-            it.copy(
-                loading = true,
-                selectedItems = selectedItems,
-                includeNoItemTransactions = includeTransactionsWithNoItems,
-            )
-        }
-    }
-
     fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
         _state.update {
             it.copy(

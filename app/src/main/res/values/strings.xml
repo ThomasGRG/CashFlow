@@ -16,26 +16,6 @@
     <string name="placeholder">%1$s</string>
     <!--  Non Translatable Strings  -->
 
-    <!--  Unit Strings  -->
-    <string name="gram_code">g</string>
-    <string name="kilogram_code">kg</string>
-    <string name="milliLiter_code">mL</string>
-    <string name="liter_code">L</string>
-    <string name="ounce_code">oz</string>
-    <string name="fluid_ounce_code">fl oz</string>
-    <string name="pound_code">lb</string>
-
-    <string name="piece_label">Piece</string>
-
-    <string name="gram_label">Gram (g)</string>
-    <string name="kilogram_label">Kilogram (kg)</string>
-    <string name="milliLiter_label">Milliliter (mL)</string>
-    <string name="liter_label">Liter (L)</string>
-    <string name="ounce_label">Ounce (oz)</string>
-    <string name="fluid_ounce_label">Fluid Ounce (fl oz)</string>
-    <string name="pound_label">Pound (lb)</string>
-    <!--  Unit Strings  -->
-
     <!--  Common Strings  -->
     <string name="debit_label">Debit</string>
     <string name="credit_label">Credit</string>
@@ -45,14 +25,12 @@
     <string name="counter_parties_label">Counter parties</string>
     <string name="methods_label">Methods</string>
     <string name="sources_label">Sources</string>
-    <string name="items_label">Items</string>
     <string name="types_label">Transaction types</string>
     <string name="amount_label">Amount</string>
     <string name="templates_label">Templates</string>
     <string name="transactions_label">Transactions</string>
     <string name="updates_label">Updates</string>
     <string name="no_counter_party_label">No counter party</string>
-    <string name="no_item_label">No items</string>
     <string name="frequency_label">Frequency</string>
     <string name="last_used_label">Last used</string>
     <!--  Common Strings  -->
@@ -81,24 +59,19 @@
     <string name="counter_party_count_label">Counter party count : %1$s</string>
     <string name="method_count_label">Method count : %1$s</string>
     <string name="source_count_label">Source count : %1$s</string>
-    <string name="items_count_label">Item count : %1$s</string>
     <string name="templates_count_label">Template count : %1$s</string>
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
     <string name="migrate_button_label">Migrate</string>
     <string name="migrate_with_count_button_label">Migrate (%1$d)</string>
-    <string name="remove_button_label">Remove</string>
     <string name="cancel_button_label">Cancel</string>
     <string name="sort_button_label">Sort</string>
-    <string name="add_item_button_label">Add item</string>
     <string name="reset_button_label">Reset</string>
     <string name="set_button_label">Set</string>
     <string name="delete_button_label">Delete</string>
     <string name="filter_button_label">Filter</string>
     <string name="filter_button_with_count_label">Filter (%1$d)</string>
-    <string name="back_button_label">Back</string>
-    <string name="add_button_label">Add (%1$d)</string>
     <string name="new_transaction_button_label">New</string>
     <string name="clone_transaction_button_label">Clone transaction</string>
     <string name="clone_transaction_current_date_button_label">Clone transaction with current time</string>
@@ -114,7 +87,6 @@
     <string name="counter_party_filter_chip_label">Counterparties (%1$s)</string>
     <string name="method_filter_chip_label">Methods (%1$s)</string>
     <string name="source_filter_chip_label">Sources (%1$s)</string>
-    <string name="item_filter_chip_label">Items (%1$s)</string>
     <string name="transaction_type_filter_chip_label">Transaction Types (%1$d)</string>
     <!--  Filter Chip Strings  -->
 
@@ -125,7 +97,6 @@
     <string name="counter_parties_screen_empty_placeholder_label">You have not added any counter parties.</string>
     <string name="methods_screen_empty_placeholder_label">You have not added any methods.</string>
     <string name="sources_screen_empty_placeholder_label">You have not added any sources.</string>
-    <string name="items_screen_empty_placeholder_label">You have not added any items.</string>
     <string name="templates_screen_empty_placeholder_label">You have not added any templates.</string>
     <!--  Empty Placeholder Strings  -->
 
@@ -139,20 +110,16 @@
     <string name="description_placeholder_label">Enter description</string>
     <string name="transaction_amount_placeholder_label">Enter transaction amount</string>
     <string name="balance_placeholder_label">Enter source balance</string>
-    <string name="name_placeholder_label">Enter item name</string>
     <string name="counter_party_name_placeholder_label">Enter counter party name</string>
     <string name="category_name_placeholder_label">Enter category name</string>
     <string name="method_name_placeholder_label">Enter method name</string>
     <string name="source_name_placeholder_label">Enter source name</string>
-    <string name="quantity_placeholder_label">Enter quantity</string>
-    <string name="price_placeholder_label">Enter price</string>
     <string name="minimum_amount_placeholder_label">Enter minimum amount</string>
     <string name="maximum_amount_placeholder_label">Enter maximum amount</string>
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
     <string name="field_required_error_label">This field is required</string>
-    <string name="invalid_price_error_label">Price cannot be 0</string>
     <string name="invalid_min_amount_error_label">Amount must be less than %1$s</string>
     <string name="invalid_max_amount_error_label">Amount must be greater than %1$s</string>
     <string name="invalid_amount_error_label">Enter a number > 0</string>
@@ -176,8 +143,6 @@
 
     <!--  TextField Strings  -->
     <string name="search_field_label">Search</string>
-    <string name="item_field_label">Item</string>
-    <string name="unit_field_label">Unit</string>
     <string name="template_name_field_label">Template name</string>
     <string name="title_field_label">Title</string>
     <string name="description_field_label">Description</string>
@@ -189,8 +154,6 @@
     <string name="source_field_label">Source</string>
     <string name="transaction_type_field_label">Transaction type</string>
     <string name="balance_field_label">Balance</string>
-    <string name="price_field_label">Price per unit</string>
-    <string name="quantity_field_label">Quantity</string>
     <string name="name_field_label">Name</string>
     <string name="minimum_amount_field_label">Minimum amount</string>
     <string name="maximum_amount_field_label">Maximum amount</string>
@@ -201,11 +164,8 @@
     <!--  Dialog Strings  -->
 
     <!--  Card Strings  -->
-    <string name="item_number_label">Item #%1$d - %2$s</string>
     <string name="frequency_of_use_label">Frequency of use : %1$s</string>
-    <string name="last_known_price_label">Last known price : %1$s/%2$s</string>
     <string name="transaction_count_label">Transactions : %1$s</string>
-    <string name="item_count_label">Item count : %1$s</string>
     <string name="last_used_datetime_label">Last used : %1$s</string>
     <string name="last_used_never_label">Last used : Never%1$s</string>
     <!--  Card Strings  -->

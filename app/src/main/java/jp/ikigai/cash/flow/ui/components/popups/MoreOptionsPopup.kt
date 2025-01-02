@@ -28,7 +28,6 @@ import compose.icons.tablericons.BrandGithub
 import compose.icons.tablericons.BuildingBank
 import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.CreditCard
-import compose.icons.tablericons.TriangleSquareCircle
 import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.R
 
@@ -39,7 +38,6 @@ fun MoreOptionsPopup(
     navigateToMethodsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
-    navigateToItemsScreen: () -> Unit,
     openGithubReleasesPage: () -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -156,26 +154,6 @@ fun MoreOptionsPopup(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    dismiss()
-                    navigateToItemsScreen()
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 58.dp),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Icon(
-                    imageVector = TablerIcons.TriangleSquareCircle,
-                    contentDescription = TablerIcons.TriangleSquareCircle.name
-                )
-                Text(
-                    text = stringResource(id = R.string.items_label),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
         }
         Row(
             modifier = Modifier
@@ -237,7 +215,6 @@ fun MoreOptionsPopupPreview() {
         navigateToMethodsScreen = {},
         navigateToSourcesScreen = {},
         navigateToTemplatesScreen = {},
-        navigateToItemsScreen = {},
         openGithubReleasesPage = {},
         dismiss = {}
     )

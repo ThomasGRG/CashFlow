@@ -4,11 +4,9 @@ import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.dynamic.DynamicMutableRealmObject
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionItem
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import java.util.UUID
@@ -19,16 +17,14 @@ object Database {
             schema = setOf(
                 Category::class,
                 CounterParty::class,
-                Item::class,
                 Method::class,
                 Source::class,
-                TransactionItem::class,
                 Transaction::class,
                 TransactionTemplate::class,
                 TransactionTitle::class
             )
         )
-        .schemaVersion(5)
+        .schemaVersion(6)
         .migration(
             { migrationContext ->
                 val oldRealm = migrationContext.oldRealm

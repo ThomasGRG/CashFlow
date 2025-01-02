@@ -48,8 +48,6 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
     selectedCategoryCount: String,
     selectedMethodCount: String,
     selectedSourceCount: String,
-    itemFilterVisible: Boolean,
-    selectedItemCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
@@ -58,7 +56,6 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
     onFilterByCategoryClick: () -> Unit,
     onFilterByMethodClick: () -> Unit,
     onFilterBySourceClick: () -> Unit,
-    onFilterByItemClick: () -> Unit,
     onCalendarClick: () -> Unit,
     migrateTransactions: () -> Unit,
     onSearchClick: () -> Unit,
@@ -176,22 +173,6 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            if (itemFilterVisible) {
-                FilledTonalButton(
-                    onClick = onFilterByItemClick,
-                    enabled = enabled,
-                    contentPadding = PaddingValues(0.dp),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = stringResource(
-                            id = R.string.item_filter_chip_label,
-                            selectedItemCount
-                        ),
-                        modifier = Modifier.padding(10.dp),
-                    )
-                }
-            }
         }
         RoundedBottomBar {
             Row(
@@ -294,8 +275,6 @@ fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
             selectedCategoryCount = "1",
             selectedMethodCount = "1",
             selectedSourceCount = "1",
-            itemFilterVisible = true,
-            selectedItemCount = "1",
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},
@@ -304,7 +283,6 @@ fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
             onFilterByCategoryClick = {},
             onFilterByMethodClick = {},
             onFilterBySourceClick = {},
-            onFilterByItemClick = {},
             onCalendarClick = {},
             migrateTransactions = {},
             onSearchClick = {},
@@ -321,8 +299,6 @@ fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
             selectedCategoryCount = "1",
             selectedMethodCount = "1",
             selectedSourceCount = "1",
-            itemFilterVisible = true,
-            selectedItemCount = "1",
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},
@@ -331,7 +307,6 @@ fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
             onFilterByCategoryClick = {},
             onFilterByMethodClick = {},
             onFilterBySourceClick = {},
-            onFilterByItemClick = {},
             onCalendarClick = {},
             migrateTransactions = {},
             onSearchClick = {},

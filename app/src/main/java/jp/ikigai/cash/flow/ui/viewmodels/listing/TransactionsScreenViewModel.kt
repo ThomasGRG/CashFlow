@@ -20,14 +20,13 @@ import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Item
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
-import jp.ikigai.cash.flow.utils.combineEightFlows
+import jp.ikigai.cash.flow.utils.combineSevenFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
@@ -76,8 +75,6 @@ class TransactionsScreenViewModel(
 
     private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
 
-    private val itemsQuery = realm.query<Item>().sort("frequency", Sort.DESCENDING)
-
     private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
 
     private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
@@ -99,10 +96,9 @@ class TransactionsScreenViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadData() = viewModelScope.launch {
-        combineEightFlows(
+        combineSevenFlows(
             categoryQuery.asFlow(),
             counterPartyQuery.asFlow(),
-            itemsQuery.asFlow(),
             methodQuery.asFlow(),
             sourceQuery.asFlow(),
             templateQuery.asFlow(),
@@ -110,13 +106,12 @@ class TransactionsScreenViewModel(
                 realm.query<Source>("currency==$0", it.selectedCurrency).asFlow()
             },
             getTransactionQuery()
-        ) { categoryChanges, counterPartyChanges, itemChanges, methodChanges, sourceChanges, templateChanges, balanceChanges, transactionChanges ->
+        ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, templateChanges, balanceChanges, transactionChanges ->
             TransactionScreenFlows(
                 categories = categoryChanges.list,
                 counterParties = counterPartyChanges.list,
                 methods = methodChanges.list,
                 sources = sourceChanges.list,
-                items = itemChanges.list,
                 templates = templateChanges.list,
                 balance = balanceChanges.list.sumOf { source -> source.balance },
                 transactions = transactionChanges.list,
@@ -146,16 +141,13 @@ class TransactionsScreenViewModel(
                     transactionScreenFlows.sources,
                     it.selectedSources
                 )
-                val selectedItems = getSelectedItems(
-                    transactionScreenFlows.items,
-                    it.selectedItems
-                )
+
                 val selectedCategoryCount = selectedCategories.filter { entry -> entry.value }.size
                 val selectedCounterPartyCount =
                     selectedCounterParties.filter { entry -> entry.value }.size
-                val selectedItemCount = selectedItems.filter { entry -> entry.value }.size
                 val selectedMethodCount = selectedMethods.filter { entry -> entry.value }.size
                 val selectedSourceCount = selectedSources.filter { entry -> entry.value }.size
+
                 it.copy(
                     transactionsHashCode = transactionScreenFlows.transactions.hashCode(),
                     transactions = getTransactionsMap(
@@ -179,9 +171,6 @@ class TransactionsScreenViewModel(
                     selectedCounterParties = selectedCounterParties,
                     selectedCounterPartyCount = numberFormatter.format(selectedCounterPartyCount)
                         .toString(),
-                    items = transactionScreenFlows.items,
-                    selectedItems = selectedItems,
-                    selectedItemCount = numberFormatter.format(selectedItemCount).toString(),
                     methods = transactionScreenFlows.methods,
                     selectedMethods = selectedMethods,
                     selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
@@ -231,20 +220,6 @@ class TransactionsScreenViewModel(
             },
             {
                 selectedMethods.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getSelectedItems(
-        items: List<Item>,
-        selectedItems: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return items.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedItems.getOrDefault(it.uuid, true)
             }
         )
     }
@@ -474,19 +449,6 @@ class TransactionsScreenViewModel(
             it.copy(
                 loading = true,
                 selectedSources = selectedSources
-            )
-        }
-    }
-
-    fun setSelectedItems(
-        includeTransactionsWithNoItems: Boolean,
-        selectedItems: Map<String, Boolean>
-    ) {
-        _state.update {
-            it.copy(
-                loading = true,
-                selectedItems = selectedItems,
-                includeNoItemTransactions = includeTransactionsWithNoItems
             )
         }
     }
