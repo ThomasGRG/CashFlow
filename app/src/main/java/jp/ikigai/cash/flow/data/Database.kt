@@ -28,7 +28,7 @@ object Database {
                 TransactionTitle::class
             )
         )
-        .schemaVersion(3)
+        .schemaVersion(4)
         .migration(
             { migrationContext ->
                 val oldRealm = migrationContext.oldRealm

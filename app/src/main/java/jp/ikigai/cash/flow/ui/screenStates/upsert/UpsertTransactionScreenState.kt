@@ -21,8 +21,6 @@ data class UpsertTransactionScreenState(
     val amount: Double = 0.0,
     val displayAmount: String = "",
     val amountValid: Boolean = true,
-    val taxAmount: Double = 0.0,
-    val displayTaxAmount: String = "",
     val dateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.systemDefault()),
     val dateString: String = "",
     val timeString: String = "",

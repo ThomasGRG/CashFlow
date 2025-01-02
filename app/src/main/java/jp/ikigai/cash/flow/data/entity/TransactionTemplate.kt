@@ -13,7 +13,6 @@ class TransactionTemplate() : RealmObject {
     var title: String = ""
     var description: String = ""
     var amount: Double = 0.0
-    var taxAmount: Double = 0.0
 
     private var typeId: Int = TransactionType.DEBIT.id
     var type: TransactionType

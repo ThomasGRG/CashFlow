@@ -126,8 +126,6 @@ class UpsertTransactionTemplateScreenViewModel(
                     name = transactionTemplate.name,
                     amount = transactionTemplate.amount,
                     displayAmount = transactionTemplate.amount.toString(),
-                    taxAmount = transactionTemplate.taxAmount,
-                    displayTaxAmount = transactionTemplate.taxAmount.toString(),
                     selectedCategory = selectedCategory,
                     categories = upsertTransactionTemplateFlows.categories,
                     selectedCounterParty = selectedCounterParty,
@@ -251,8 +249,6 @@ class UpsertTransactionTemplateScreenViewModel(
                             this.title = newTitle
                             this.description = newDescription
                             this.amount = state.value.amount
-                            this.taxAmount =
-                                if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                             this.type = state.value.type
                             this.category = latestCategory
                             this.method = latestMethod
@@ -268,8 +264,6 @@ class UpsertTransactionTemplateScreenViewModel(
                         it.title = newTitle
                         it.description = newDescription
                         it.amount = state.value.amount
-                        it.taxAmount =
-                            if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                         it.type = state.value.type
                         it.category = latestCategory
                         it.method = latestMethod
@@ -330,15 +324,6 @@ class UpsertTransactionTemplateScreenViewModel(
             it.copy(
                 amount = amountString.toDoubleOrNull() ?: 0.0,
                 displayAmount = amountString
-            )
-        }
-    }
-
-    fun setTaxAmount(amountString: String) {
-        _state.update {
-            it.copy(
-                taxAmount = amountString.toDoubleOrNull() ?: 0.0,
-                displayTaxAmount = amountString,
             )
         }
     }

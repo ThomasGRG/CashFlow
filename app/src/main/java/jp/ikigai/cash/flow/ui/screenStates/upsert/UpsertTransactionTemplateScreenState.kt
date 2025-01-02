@@ -18,8 +18,6 @@ data class UpsertTransactionTemplateScreenState(
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
     val amount: Double = 0.0,
     val displayAmount: String = "",
-    val taxAmount: Double = 0.0,
-    val displayTaxAmount: String = "",
     val type: TransactionType = TransactionType.DEBIT,
     val categories: List<Category> = emptyList(),
     val selectedCategory: Category = Category(),

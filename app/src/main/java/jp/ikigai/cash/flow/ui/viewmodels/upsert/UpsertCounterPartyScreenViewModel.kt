@@ -207,11 +207,10 @@ class UpsertCounterPartyScreenViewModel(
                     .forEach { (source, transactions) ->
                         var newBalance = source.balance
                         transactions.forEach { transaction ->
-                            val totalAmount = transaction.amount + transaction.taxAmount
                             if (transaction.type == TransactionType.CREDIT) {
-                                newBalance -= totalAmount
+                                newBalance -= transaction.amount
                             } else {
-                                newBalance += totalAmount
+                                newBalance += transaction.amount
                             }
                             delete(transaction)
                         }

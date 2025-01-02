@@ -338,8 +338,7 @@ class MigrateMethodScreenViewModel(
                         .any { itemUuid -> selectedItems.contains(itemUuid) }
                 }
 
-                val totalAmount = transaction.amount + transaction.taxAmount
-                val amountBetween = totalAmount in minAmount..maxAmount
+                val amountBetween = transaction.amount in minAmount..maxAmount
 
                 val timeBetween = transaction.time in minTime..maxTime
 
@@ -415,12 +414,11 @@ class MigrateMethodScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        val totalAmount = transaction.amount + transaction.taxAmount
         return TransactionWithIcons(
             uuid = transaction.uuid,
             annotatedTitle = getHighlightedString(transaction.title, searchText),
             annotatedDescription = getHighlightedString(transaction.description, searchText),
-            amount = currencyFormatter.format(totalAmount).toString(),
+            amount = currencyFormatter.format(transaction.amount).toString(),
             typeIcon = transaction.type.icon,
             typeIconColor = transaction.type.color,
             currency = transaction.currency,

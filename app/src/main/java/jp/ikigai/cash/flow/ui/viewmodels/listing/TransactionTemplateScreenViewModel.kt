@@ -224,13 +224,12 @@ class TransactionTemplateScreenViewModel(
                     )
                 )
             }
-            val totalAmount = template.amount + template.taxAmount
-            val formattedAmount = if (totalAmount > 0) {
+            val formattedAmount = if (template.amount > 0) {
                 if (source != null) {
                     val currencyFormatter = getCurrencyFormatter(locale, source.currency)
-                    currencyFormatter.format(totalAmount).toString()
+                    currencyFormatter.format(template.amount).toString()
                 } else {
-                    formatter.format(totalAmount).toString()
+                    formatter.format(template.amount).toString()
                 }
             } else {
                 ""

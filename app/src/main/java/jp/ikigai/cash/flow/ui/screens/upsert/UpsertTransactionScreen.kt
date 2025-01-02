@@ -101,7 +101,6 @@ fun UpsertTransactionScreen(
     navigateBack: () -> Unit,
     setTitle: (String) -> Unit,
     setAmount: (String) -> Unit,
-    setTaxAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
     setTime: (ZonedDateTime) -> Unit,
     addItems: (List<Item>) -> Unit,
@@ -287,10 +286,6 @@ fun UpsertTransactionScreen(
         mutableStateOf(
             enabled && (transactionType == TransactionType.CREDIT || transactionItems.isEmpty())
         )
-    }
-
-    val taxAmount by remember(key1 = state.displayTaxAmount) {
-        mutableStateOf(state.displayTaxAmount)
     }
 
     val dateTime by remember(key1 = state.dateTime) {
@@ -643,30 +638,6 @@ fun UpsertTransactionScreen(
                     boxModifier = Modifier.animateItem()
                 )
             }
-            if (transactionType == TransactionType.DEBIT) {
-                item(
-                    key = "tax",
-                    contentType = "type-enabled"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = taxAmount,
-                        onValueChange = setTaxAmount,
-                        hasValueChanged = {
-                            val newTaxAmount = taxAmount.toDoubleOrNull()
-                            newTaxAmount != null && transaction.uuid.isNotEmpty() && newTaxAmount != transaction.taxAmount
-                        },
-                        enabled = enabled,
-                        label = stringResource(id = R.string.tax_field_label),
-                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
-                        icon = TablerIcons.CashBanknote,
-                        iconDescription = "tax amount icon",
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-            }
             item(
                 key = "transaction-type",
                 contentType = "drop-down"
@@ -906,7 +877,6 @@ fun UpsertTransactionScreenPreview() {
         navigateBack = {},
         setTitle = {},
         setAmount = {},
-        setTaxAmount = {},
         setDate = {},
         setTime = {},
         addItems = {},
@@ -952,7 +922,6 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             },
             setTitle = viewModel::setTitle,
             setAmount = viewModel::setAmount,
-            setTaxAmount = viewModel::setTaxAmount,
             setDate = viewModel::setDate,
             setTime = viewModel::setTime,
             addItems = viewModel::addItems,

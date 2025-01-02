@@ -138,7 +138,6 @@
     <string name="title_placeholder_label">Enter transaction title</string>
     <string name="description_placeholder_label">Enter description</string>
     <string name="transaction_amount_placeholder_label">Enter transaction amount</string>
-    <string name="tax_amount_placeholder_label">Enter tax amount</string>
     <string name="balance_placeholder_label">Enter source balance</string>
     <string name="name_placeholder_label">Enter item name</string>
     <string name="counter_party_name_placeholder_label">Enter counter party name</string>
@@ -184,7 +183,6 @@
     <string name="description_field_label">Description</string>
     <string name="date_field_label">Date</string>
     <string name="time_field_label">Time</string>
-    <string name="tax_field_label">Tax</string>
     <string name="category_field_label">Category</string>
     <string name="counter_party_field_label">Counter party</string>
     <string name="method_field_label">Method</string>

@@ -313,7 +313,7 @@ class TransactionsScreenViewModel(
     private fun getTransactionQuery(): Flow<ResultsChange<Transaction>> {
         return state.flatMapLatest {
             var queryString =
-                "time >= $0 && time <= $1 && currency==$2 && (amount + taxAmount) >= $3 && (amount + taxAmount) <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+                "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
             if (it.searchText.isNotBlank()) {
                 queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
             }
@@ -422,12 +422,11 @@ class TransactionsScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        val totalAmount = transaction.amount + transaction.taxAmount
         return TransactionWithIcons(
             uuid = transaction.uuid,
             annotatedTitle = getHighlightedString(transaction.title, searchText),
             annotatedDescription = getHighlightedString(transaction.description, searchText),
-            amount = currencyFormatter.format(totalAmount).toString(),
+            amount = currencyFormatter.format(transaction.amount).toString(),
             typeIcon = transaction.type.icon,
             typeIconColor = transaction.type.color,
             currency = transaction.currency,
@@ -614,7 +613,6 @@ class TransactionsScreenViewModel(
                         title = latestTransaction.title
                         description = latestTransaction.description
                         amount = latestTransaction.amount
-                        taxAmount = latestTransaction.taxAmount
                         type = latestTransaction.type
                         currency = latestTransaction.currency
                         if (!setCurrentDateTime) {

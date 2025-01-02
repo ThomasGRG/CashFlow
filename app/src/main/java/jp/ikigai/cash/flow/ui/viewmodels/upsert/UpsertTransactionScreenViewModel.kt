@@ -185,12 +185,11 @@ class UpsertTransactionScreenViewModel(
     ) {
         val dateTime = transaction.time.toZonedDateTime()
         val source = transaction.source!!
-        val totalAmount = transaction.amount + transaction.taxAmount
         previousSource = transaction.source
         previousBalance = if (transaction.type == TransactionType.DEBIT) {
-            source.balance + totalAmount
+            source.balance + transaction.amount
         } else {
-            source.balance - totalAmount
+            source.balance - transaction.amount
         }
         _state.update {
             it.copy(
@@ -211,9 +210,7 @@ class UpsertTransactionScreenViewModel(
                 dateString = dateTime.getDateString(),
                 timeString = dateTime.getTimeString(),
                 amount = transaction.amount,
-                taxAmount = transaction.taxAmount,
                 displayAmount = transaction.amount.toString(),
-                displayTaxAmount = transaction.taxAmount.toString(),
                 type = transaction.type,
                 transactionItems = transaction.items.map { transactionItem ->
                     val total = transactionItem.price * transactionItem.quantity
@@ -266,9 +263,7 @@ class UpsertTransactionScreenViewModel(
                 timeString = it.dateTime.getTimeString(),
                 title = transactionTemplate.title,
                 amount = transactionTemplate.amount,
-                taxAmount = transactionTemplate.taxAmount,
                 displayAmount = if (transactionTemplate.amount > 0) transactionTemplate.amount.toString() else "",
-                displayTaxAmount = transactionTemplate.taxAmount.toString(),
                 type = transactionTemplate.type,
                 transactionItems = transactionTemplate.items.map { transactionItem ->
                     val total = transactionItem.price * transactionItem.quantity
@@ -305,8 +300,7 @@ class UpsertTransactionScreenViewModel(
         var sourceValid = true
         var sourceErrorStringRes = R.string.field_required_error_label
         if (selectedSource.uuid.isNotEmpty()) {
-            val totalAmount = amount + state.value.taxAmount
-            if (state.value.type == TransactionType.DEBIT && totalAmount > selectedSource.balance) {
+            if (state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
                 sourceValid = false
                 sourceErrorStringRes = R.string.not_enough_balance_error_label
             }
@@ -342,15 +336,13 @@ class UpsertTransactionScreenViewModel(
 
     private fun hasSufficientBalance(
         amount: Double,
-        tax: Double,
         type: TransactionType,
         source: Source
     ) {
         var sourceValid = true
         var sourceErrorStringRes = R.string.field_required_error_label
         if (type == TransactionType.DEBIT) {
-            val totalAmount = amount + tax
-            if (totalAmount > 0.0 && source.uuid.isNotBlank() && totalAmount > source.balance) {
+            if (amount > 0.0 && source.uuid.isNotBlank() && amount > source.balance) {
                 sourceValid = false
                 sourceErrorStringRes = R.string.not_enough_balance_error_label
             }
@@ -407,7 +399,7 @@ class UpsertTransactionScreenViewModel(
             if (transactionUuid.isNotBlank()) {
                 updateSource(
                     source = selectedSource,
-                    amount = state.value.amount + state.value.taxAmount,
+                    amount = state.value.amount,
                     frequency = selectedSource.frequency,
                     time = time,
                     type = state.value.type
@@ -440,7 +432,7 @@ class UpsertTransactionScreenViewModel(
                 )
                 updateSource(
                     source = selectedSource,
-                    amount = state.value.amount + state.value.taxAmount,
+                    amount = state.value.amount,
                     frequency = selectedSource.frequency + 1,
                     time = time,
                     type = state.value.type
@@ -541,8 +533,6 @@ class UpsertTransactionScreenViewModel(
                         this.title = newTitle
                         this.description = newDescription
                         this.amount = state.value.amount
-                        this.taxAmount =
-                            if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                         this.time = state.value.dateTime.toEpochMilli()
                         this.type = state.value.type
                         this.category = latestCategory
@@ -558,8 +548,6 @@ class UpsertTransactionScreenViewModel(
                     it.title = newTitle
                     it.description = newDescription
                     it.amount = state.value.amount
-                    it.taxAmount =
-                        if (state.value.type == TransactionType.DEBIT) state.value.taxAmount else 0.0
                     it.time = state.value.dateTime.toEpochMilli()
                     it.type = state.value.type
                     it.category = latestCategory
@@ -716,7 +704,6 @@ class UpsertTransactionScreenViewModel(
             }
             hasSufficientBalance(
                 amount = newAmount,
-                tax = screenState.taxAmount,
                 type = screenState.type,
                 source = screenState.selectedSource
             )
@@ -724,30 +711,6 @@ class UpsertTransactionScreenViewModel(
                 amount = newAmount,
                 amountValid = amountValid,
                 displayAmount = displayAmount
-            )
-        }
-    }
-
-    fun setTaxAmount(amountString: String) {
-        _state.update { screenState ->
-            var newTaxAmount = 0.0
-            var displayTaxAmount = ""
-            if (amountString.isNotBlank()) {
-                val amt = amountString.toDoubleOrNull()
-                if (amt != null) {
-                    newTaxAmount = amt
-                    displayTaxAmount = amountString
-                }
-            }
-            hasSufficientBalance(
-                amount = screenState.amount,
-                tax = newTaxAmount,
-                type = screenState.type,
-                source = screenState.selectedSource
-            )
-            screenState.copy(
-                taxAmount = newTaxAmount,
-                displayTaxAmount = displayTaxAmount
             )
         }
     }
@@ -813,7 +776,6 @@ class UpsertTransactionScreenViewModel(
             val newAmount = transactionItems.sumOf { it.totalPrice }
             hasSufficientBalance(
                 newAmount,
-                screenState.taxAmount,
                 screenState.type,
                 screenState.selectedSource
             )
@@ -887,7 +849,6 @@ class UpsertTransactionScreenViewModel(
             val totalAmount = transactionItems.sumOf { it.totalPrice }
             hasSufficientBalance(
                 totalAmount,
-                screenState.taxAmount,
                 screenState.type,
                 screenState.selectedSource
             )
@@ -925,7 +886,6 @@ class UpsertTransactionScreenViewModel(
             val totalAmount = transactionItems.sumOf { it.price }
             hasSufficientBalance(
                 totalAmount,
-                screenState.taxAmount,
                 screenState.type,
                 screenState.selectedSource
             )
@@ -947,7 +907,6 @@ class UpsertTransactionScreenViewModel(
             val totalAmount = transactionItems.sumOf { it.price }
             hasSufficientBalance(
                 totalAmount,
-                screenState.taxAmount,
                 screenState.type,
                 screenState.selectedSource
             )
@@ -991,7 +950,6 @@ class UpsertTransactionScreenViewModel(
         _state.update { screenState ->
             hasSufficientBalance(
                 screenState.amount,
-                screenState.taxAmount,
                 screenState.type,
                 source
             )
@@ -1008,7 +966,6 @@ class UpsertTransactionScreenViewModel(
         _state.update { screenState ->
             hasSufficientBalance(
                 screenState.amount,
-                screenState.taxAmount,
                 transactionType,
                 screenState.selectedSource
             )

@@ -95,7 +95,6 @@ fun UpsertTransactionTemplateScreen(
     removeItem: (Int) -> Unit,
     setName: (String) -> Unit,
     setAmount: (String) -> Unit,
-    setTaxAmount: (String) -> Unit,
     setSelectedCategory: (Category) -> Unit,
     setSelectedCounterParty: (CounterParty) -> Unit,
     setSelectedMethod: (Method) -> Unit,
@@ -206,10 +205,6 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(
             enabled && (state.type == TransactionType.CREDIT || templateItems.isEmpty())
         )
-    }
-
-    val taxAmount by remember(key1 = state.displayTaxAmount) {
-        mutableStateOf(state.displayTaxAmount)
     }
 
     val selectedCategory by remember(key1 = state.selectedCategory) {
@@ -547,26 +542,6 @@ fun UpsertTransactionTemplateScreen(
                     boxModifier = Modifier.animateItem()
                 )
             }
-            if (transactionType == TransactionType.DEBIT) {
-                item(
-                    key = "taxAmount",
-                    contentType = "textField"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = taxAmount,
-                        onValueChange = setTaxAmount,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.tax_field_label),
-                        placeHolder = stringResource(id = R.string.tax_amount_placeholder_label),
-                        icon = TablerIcons.CashBanknote,
-                        iconDescription = "tax amount icon",
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-            }
             item(
                 key = "transactionType",
                 contentType = "dropDown"
@@ -748,7 +723,6 @@ fun UpsertTransactionTemplateScreenPreview() {
         removeItem = {},
         setName = {},
         setAmount = {},
-        setTaxAmount = {},
         setSelectedCategory = {},
         setSelectedCounterParty = {},
         setSelectedMethod = {},
@@ -787,7 +761,6 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             removeItem = viewModel::removeItem,
             setName = viewModel::setName,
             setAmount = viewModel::setAmount,
-            setTaxAmount = viewModel::setTaxAmount,
             setSelectedCategory = viewModel::setSelectedCategory,
             setSelectedCounterParty = viewModel::setSelectedCounterParty,
             setSelectedMethod = viewModel::setSelectedMethod,
