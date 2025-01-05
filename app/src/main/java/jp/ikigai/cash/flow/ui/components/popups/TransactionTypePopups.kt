@@ -97,6 +97,7 @@ fun SelectTransactionTypePopup(
         ) {
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier

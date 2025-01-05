@@ -79,6 +79,7 @@ fun SortOptionsPopup(
             SegmentedButton(
                 selected = direction == Sort.ASCENDING,
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     direction = Sort.ASCENDING
                 },
                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
@@ -88,6 +89,7 @@ fun SortOptionsPopup(
             SegmentedButton(
                 selected = direction == Sort.DESCENDING,
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     direction = Sort.DESCENDING
                 },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)

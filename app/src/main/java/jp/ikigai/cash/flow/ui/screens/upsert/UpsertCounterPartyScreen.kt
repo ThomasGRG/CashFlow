@@ -247,6 +247,7 @@ fun UpsertCounterPartyScreen(
                     ) {
                         FilledTonalButton(
                             onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 migrateTransactions(counterPartyUuid)
                             },
                             contentPadding = PaddingValues(0.dp),

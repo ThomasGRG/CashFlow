@@ -32,6 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -106,6 +108,7 @@ fun UpsertTransactionScreen(
     events: Flow<Event>,
     state: UpsertTransactionScreenState
 ) {
+    val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val selectableDates by remember {
@@ -497,6 +500,7 @@ fun UpsertTransactionScreen(
                         ) { title ->
                             OutlinedButton(
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     setTitle(title)
                                 },
                                 shape = MaterialTheme.shapes.small,

@@ -75,7 +75,10 @@ fun MigrateMethodScreenRoundedBottomBar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilledTonalButton(
-                onClick = onSortClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSortClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 shape = MaterialTheme.shapes.small
@@ -94,7 +97,10 @@ fun MigrateMethodScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByTypeClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByTypeClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -108,7 +114,10 @@ fun MigrateMethodScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByAmountClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByAmountClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -119,7 +128,10 @@ fun MigrateMethodScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByCurrencyClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCurrencyClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -133,7 +145,10 @@ fun MigrateMethodScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByCategoryClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCategoryClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -148,7 +163,10 @@ fun MigrateMethodScreenRoundedBottomBar(
             }
             if (counterPartyFilterVisible) {
                 FilledTonalButton(
-                    onClick = onFilterByCounterPartyClick,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByCounterPartyClick()
+                    },
                     enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small
@@ -163,7 +181,10 @@ fun MigrateMethodScreenRoundedBottomBar(
                 }
             }
             FilledTonalButton(
-                onClick = onFilterBySourceClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterBySourceClick()
+                },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small

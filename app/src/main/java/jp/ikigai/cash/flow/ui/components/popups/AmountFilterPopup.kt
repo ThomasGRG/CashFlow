@@ -115,6 +115,7 @@ fun AmountFilterPopup(
         ) {
             FilledTonalButton(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                 },
                 modifier = Modifier

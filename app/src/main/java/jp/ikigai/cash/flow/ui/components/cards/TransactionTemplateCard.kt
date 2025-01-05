@@ -19,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,12 +34,20 @@ fun TransactionTemplateCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                },
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
             ),
     ) {
         Column(
@@ -77,11 +87,17 @@ fun TransactionTemplateCard(
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
-                verticalArrangement = Arrangement.spacedBy(5.dp, alignment = Alignment.CenterVertically)
+                verticalArrangement = Arrangement.spacedBy(
+                    5.dp,
+                    alignment = Alignment.CenterVertically
+                )
             ) {
                 transactionTemplateWithIcons.chips.forEach {
                     FilledTonalButton(
-                        onClick = onClick,
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onClick()
+                        },
                         shape = MaterialTheme.shapes.small,
                         contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
                     ) {

@@ -247,6 +247,7 @@ fun UpsertCategoryScreen(
                     ) {
                         FilledTonalButton(
                             onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 migrateTransactions(categoryUuid)
                             },
                             contentPadding = PaddingValues(0.dp),

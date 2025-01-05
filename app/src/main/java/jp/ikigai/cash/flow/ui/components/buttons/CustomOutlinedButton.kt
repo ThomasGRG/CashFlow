@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.ui.components.common.AnimatedTextFieldErrorLabel
@@ -55,6 +57,8 @@ fun CustomOutlinedButton(
     onTrailingIconClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val interactionSource = remember {
         MutableInteractionSource()
     }
@@ -141,7 +145,10 @@ fun CustomOutlinedButton(
                             .alpha(alpha = alpha)
                             .clickable(
                                 enabled = enabled,
-                                onClick = onClick,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onClick()
+                                },
                                 indication = null,
                                 interactionSource = interactionSource
                             )
@@ -167,6 +174,7 @@ fun CustomOutlinedButton(
                                 .clickable(
                                     enabled = enabled,
                                     onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onTrailingIconClick?.invoke()
                                     }
                                 )

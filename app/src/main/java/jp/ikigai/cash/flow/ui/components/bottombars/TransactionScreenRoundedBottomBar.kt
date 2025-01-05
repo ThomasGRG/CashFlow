@@ -74,7 +74,10 @@ fun TransactionScreenRoundedBottomBar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilledTonalButton(
-                onClick = onSortClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSortClick()
+                },
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -92,7 +95,10 @@ fun TransactionScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByTypeClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByTypeClick()
+                },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -105,7 +111,10 @@ fun TransactionScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByAmountClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByAmountClick()
+                },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -115,7 +124,10 @@ fun TransactionScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterByCategoryClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCategoryClick()
+                },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -129,7 +141,10 @@ fun TransactionScreenRoundedBottomBar(
             }
             if (counterPartyFilterVisible) {
                 FilledTonalButton(
-                    onClick = onFilterByCounterPartyClick,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByCounterPartyClick()
+                    },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small
                 ) {
@@ -143,7 +158,10 @@ fun TransactionScreenRoundedBottomBar(
                 }
             }
             FilledTonalButton(
-                onClick = onFilterByMethodClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByMethodClick()
+                },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -156,7 +174,10 @@ fun TransactionScreenRoundedBottomBar(
                 )
             }
             FilledTonalButton(
-                onClick = onFilterBySourceClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterBySourceClick()
+                },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {

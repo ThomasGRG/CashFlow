@@ -566,6 +566,7 @@ fun FilterCounterPartyPopup(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     includeNoCounterPartyTransactions = !includeNoCounterPartyTransactions
                 }
                 .padding(6.dp),

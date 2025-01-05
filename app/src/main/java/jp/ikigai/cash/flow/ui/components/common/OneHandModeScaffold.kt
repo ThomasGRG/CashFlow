@@ -30,7 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -53,6 +55,7 @@ fun OneHandModeScaffold(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val configuration = LocalConfiguration.current
+    val haptics = LocalHapticFeedback.current
 
     var screenHeight by remember {
         mutableIntStateOf(configuration.screenHeightDp)
@@ -107,6 +110,7 @@ fun OneHandModeScaffold(
                     .padding(contentPadding),
                 isRefreshing = isPulledDown,
                 onRefresh = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     isPulledDown = true
                 },
                 state = oneHandModeState,

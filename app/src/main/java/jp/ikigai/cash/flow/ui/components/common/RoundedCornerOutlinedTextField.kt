@@ -41,6 +41,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +70,8 @@ fun RoundedCornerOutlinedTextField(
     ),
     onDone: KeyboardActionScope.() -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val focusRequester = remember {
         FocusRequester()
     }
@@ -147,6 +151,7 @@ fun RoundedCornerOutlinedTextField(
                                 .clickable(
                                     enabled = enabled,
                                     onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onValueChange(TextFieldValue(""))
                                         if (!focused) focusRequester.requestFocus()
                                     }
@@ -210,6 +215,8 @@ fun RoundedCornerOutlinedTextField(
     onDone: KeyboardActionScope.() -> Unit,
     interactionSource: MutableInteractionSource
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val focusRequester = remember {
         FocusRequester()
     }
@@ -282,6 +289,7 @@ fun RoundedCornerOutlinedTextField(
                                 .clickable(
                                     enabled = enabled,
                                     onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onValueChange("")
                                         if (!isFocused) focusRequester.requestFocus()
                                     }
@@ -346,6 +354,8 @@ fun RoundedCornerOutlinedTextField(
     ),
     onDone: KeyboardActionScope.() -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     val focusRequester = remember {
         FocusRequester()
     }
@@ -425,6 +435,7 @@ fun RoundedCornerOutlinedTextField(
                                 .clickable(
                                     enabled = enabled,
                                     onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         onValueChange("")
                                         if (!focused) focusRequester.requestFocus()
                                     }

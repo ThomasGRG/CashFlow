@@ -247,6 +247,7 @@ fun UpsertMethodScreen(
                     ) {
                         FilledTonalButton(
                             onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 migrateTransactions(methodUuid)
                             },
                             contentPadding = PaddingValues(0.dp),

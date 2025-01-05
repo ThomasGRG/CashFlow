@@ -17,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,8 +37,11 @@ fun TransactionSourceCard(
     data: SourceListingDTO,
     onClick: (String) -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
+
     ElevatedCard(
         onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             onClick(data.uuid)
         },
         modifier = modifier
@@ -91,6 +96,7 @@ fun TransactionSourceCard(
                 data.chips.forEach {
                     FilledTonalButton(
                         onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             onClick(data.uuid)
                         },
                         shape = MaterialTheme.shapes.small,
