@@ -334,7 +334,7 @@ fun UpsertSourceScreen(
                 tint = if (enabled) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 }
             )
             RoundedCornerOutlinedTextField(
