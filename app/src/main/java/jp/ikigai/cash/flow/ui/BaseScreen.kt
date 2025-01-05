@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.screens.common.chooseIconScreen
+import jp.ikigai.cash.flow.ui.screens.common.settingsScreen
 import jp.ikigai.cash.flow.ui.screens.listing.categoryScreen
 import jp.ikigai.cash.flow.ui.screens.listing.counterPartyScreen
 import jp.ikigai.cash.flow.ui.screens.listing.methodScreen
@@ -32,6 +33,8 @@ fun BaseScreen() {
         startDestination = Routes.Transactions.route,
         modifier = Modifier.fillMaxSize()
     ) {
+        settingsScreen(navController = navController)
+
         transactionsScreen(navController = navController)
         upsertTransactionScreen(navController = navController)
 

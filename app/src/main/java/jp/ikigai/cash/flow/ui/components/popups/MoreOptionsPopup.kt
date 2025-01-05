@@ -28,6 +28,7 @@ import compose.icons.tablericons.BrandGithub
 import compose.icons.tablericons.BuildingBank
 import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.CreditCard
+import compose.icons.tablericons.Settings
 import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.R
 
@@ -38,6 +39,7 @@ fun MoreOptionsPopup(
     navigateToMethodsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
+    navigateToSettingsScreen: () -> Unit,
     openGithubReleasesPage: () -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -154,14 +156,6 @@ fun MoreOptionsPopup(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -179,6 +173,34 @@ fun MoreOptionsPopup(
                 )
                 Text(
                     text = stringResource(id = R.string.templates_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToSettingsScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Settings,
+                    contentDescription = TablerIcons.Settings.name
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_label),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -215,6 +237,7 @@ fun MoreOptionsPopupPreview() {
         navigateToMethodsScreen = {},
         navigateToSourcesScreen = {},
         navigateToTemplatesScreen = {},
+        navigateToSettingsScreen = {},
         openGithubReleasesPage = {},
         dismiss = {}
     )

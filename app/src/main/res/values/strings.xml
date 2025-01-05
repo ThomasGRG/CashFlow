@@ -36,6 +36,7 @@
     <!--  Common Strings  -->
 
     <!--  TopAppBar Strings  -->
+    <string name="settings_label">Settings</string>
     <string name="migrate_transactions_label">Migrate transactions</string>
     <string name="create_category_label">Create category</string>
     <string name="update_category_label">Update category</string>
@@ -63,6 +64,7 @@
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
+    <string name="re_count_button_label">Re-count frequency of use</string>
     <string name="migrate_button_label">Migrate</string>
     <string name="migrate_with_count_button_label">Migrate (%1$d)</string>
     <string name="cancel_button_label">Cancel</string>
@@ -161,6 +163,7 @@
 
     <!--  Dialog Strings  -->
     <string name="reset_icon_dialog_label">Are you sure you want to reset the icon to default?</string>
+    <string name="please_wait_dialog_label">Please wait…</string>
     <!--  Dialog Strings  -->
 
     <!--  Card Strings  -->

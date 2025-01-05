@@ -119,6 +119,7 @@ fun TransactionsScreen(
     navigateToMethodsScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
+    navigateToSettingsScreen: () -> Unit,
     openGithubPage: () -> Unit,
     events: Flow<Event>,
     state: TransactionsScreenState,
@@ -596,6 +597,7 @@ fun TransactionsScreen(
                             navigateToMethodsScreen = navigateToMethodsScreen,
                             navigateToSourcesScreen = navigateToSourcesScreen,
                             navigateToTemplatesScreen = navigateToTemplatesScreen,
+                            navigateToSettingsScreen = navigateToSettingsScreen,
                             openGithubReleasesPage = openGithubPage,
                             dismiss = {
                                 hidePopup()
@@ -730,6 +732,7 @@ fun TransactionsScreenPreview() {
         navigateToMethodsScreen = {},
         navigateToTemplatesScreen = {},
         navigateToSourcesScreen = {},
+        navigateToSettingsScreen = {},
         openGithubPage = {},
         events = emptyList<Event>().asFlow(),
         state = TransactionsScreenState()
@@ -814,6 +817,11 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             },
             navigateToTemplatesScreen = {
                 navController.navigate(Routes.Templates.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToSettingsScreen = {
+                navController.navigate(Routes.Settings.route) {
                     launchSingleTop = true
                 }
             },
