@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.screens.common
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,21 +7,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -34,11 +33,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.common.SettingsScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,12 +52,41 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(
     navigateBack: () -> Unit,
     reCount: () -> Unit,
+    events: Flow<Event>,
     state: SettingsScreenState
 ) {
     val haptics = LocalHapticFeedback.current
 
     val loading by remember(state.loading) {
         mutableStateOf(state.loading)
+    }
+
+    var popupType by remember {
+        mutableStateOf(PopupType.NONE)
+    }
+
+    var showToastBar by remember { mutableStateOf(false) }
+
+    var currentEvent: Event? by remember {
+        mutableStateOf(null)
+    }
+
+    LaunchedEffect(Unit) {
+        events.collectLatest { event ->
+            showToastBar = false
+            currentEvent = event
+            showToastBar = true
+        }
+    }
+
+    LaunchedEffect(showToastBar) {
+        if (showToastBar) {
+            delay(2000)
+            showToastBar = false
+            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
+                navigateBack()
+            }
+        }
     }
 
     if (loading) {
@@ -84,11 +119,26 @@ fun SettingsScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .animateContentSize()
-            .navigationBarsPadding()
-            .fillMaxSize(),
+    OneHandModeScaffold(
+        loading = false,
+        emptyPlaceholderText = "",
+        showEmptyPlaceholder = false,
+        showToastBar = showToastBar,
+        toastBarText = currentEvent?.let {
+            stringResource(id = it.message)
+        } ?: "",
+        onDismissToastBar = {
+            showToastBar = false
+        },
+        showBottomPopup = popupType != PopupType.NONE,
+        bottomPopupContent = {
+            when (popupType) {
+                else -> {}
+            }
+        },
+        onDismissPopup = {
+            popupType = PopupType.NONE
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -102,10 +152,9 @@ fun SettingsScreen(
                 enabled = true
             )
         }
-    ) { contentPadding ->
+    ) { oneHandModeBoxHeight, resetOneHandMode ->
         Column(
             modifier = Modifier
-                .padding(contentPadding)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -133,6 +182,7 @@ fun SettingsScreenPreview() {
     SettingsScreen(
         navigateBack = {},
         reCount = {},
+        events = emptyList<Event>().asFlow(),
         state = SettingsScreenState()
     )
 }
@@ -149,6 +199,7 @@ fun NavGraphBuilder.settingsScreen(navController: NavController) {
                 navController.popBackStack()
             },
             reCount = viewModel::reCount,
+            events = viewModel.event,
             state = state
         )
     }

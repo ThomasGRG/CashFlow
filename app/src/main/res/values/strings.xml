@@ -130,6 +130,7 @@
     <string name="name_in_use_label">Name already in use</string>
     <string name="internal_error_label">Internal error</string>
     <string name="migration_success_label">Migration complete</string>
+    <string name="recount_success_label">Frequency updated</string>
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
     <string name="not_enough_balance_error_label">Insufficient balance</string>
