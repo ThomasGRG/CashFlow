@@ -59,6 +59,11 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
+    implementation("com.squareup.moshi:moshi:1.15.2")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+
+    implementation("com.squareup.okio:okio:3.9.0")
+
     implementation("io.insert-koin:koin-core:3.5.0")
     implementation("io.insert-koin:koin-android:3.5.0")
     implementation("io.insert-koin:koin-androidx-compose:3.5.0")
