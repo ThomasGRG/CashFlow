@@ -18,5 +18,6 @@ enum class PopupType {
     CONFIRM_DELETE,
     WARN_DELETE,
     RESET_ICON,
-    CLONE_TRANSACTION
+    CLONE_TRANSACTION,
+    EXPORT
 }

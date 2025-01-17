@@ -37,6 +37,7 @@
 
     <!--  TopAppBar Strings  -->
     <string name="settings_label">Settings</string>
+    <string name="export_transactions_label">Export transactions</string>
     <string name="migrate_transactions_label">Migrate transactions</string>
     <string name="create_category_label">Create category</string>
     <string name="update_category_label">Update category</string>
@@ -65,6 +66,7 @@
 
     <!--  Button Strings  -->
     <string name="re_count_button_label">Re-count frequency of use</string>
+    <string name="export_button_label">Export</string>
     <string name="migrate_button_label">Migrate</string>
     <string name="migrate_with_count_button_label">Migrate (%1$d)</string>
     <string name="cancel_button_label">Cancel</string>
@@ -129,8 +131,10 @@
     <string name="name_empty_error_label">Name cannot be empty</string>
     <string name="name_in_use_label">Name already in use</string>
     <string name="internal_error_label">Internal error</string>
+    <string name="io_error_label">IO error</string>
     <string name="migration_success_label">Migration complete</string>
     <string name="recount_success_label">Frequency updated</string>
+    <string name="export_success_label">Successfully exported</string>
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
     <string name="not_enough_balance_error_label">Insufficient balance</string>
@@ -164,6 +168,8 @@
 
     <!--  Dialog Strings  -->
     <string name="reset_icon_dialog_label">Are you sure you want to reset the icon to default?</string>
+    <string name="export_count_label">Transactions to export : %1$d</string>
+    <string name="include_templates_label">Include templates</string>
     <string name="please_wait_dialog_label">Please wait…</string>
     <!--  Dialog Strings  -->
 

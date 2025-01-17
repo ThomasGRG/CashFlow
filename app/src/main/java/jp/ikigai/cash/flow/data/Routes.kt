@@ -4,6 +4,8 @@ sealed class Routes(val route: String) {
 
     object Settings : Routes("settings")
 
+    object ExportTransactions : Routes("exportTransactions")
+
     object Transactions: Routes("transactions")
     object UpsertTransaction: Routes("upsertTransaction?id={id}&templateId={templateId}") {
         fun getRoute(id: String = "", templateId: String = ""): String {

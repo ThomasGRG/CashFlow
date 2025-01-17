@@ -1,0 +1,299 @@
+package jp.ikigai.cash.flow.ui.components.bottombars
+
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowNarrowDown
+import compose.icons.tablericons.ArrowNarrowUp
+import compose.icons.tablericons.CalendarEvent
+import compose.icons.tablericons.DatabaseExport
+import io.realm.kotlin.query.Sort
+import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
+import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
+
+@Composable
+fun ExportTransactionsScreenRoundedBottomBar(
+    navigateBack: () -> Unit,
+    enabled: Boolean,
+    exportEnabled: Boolean,
+    allSelected: Boolean,
+    sortDirection: Sort,
+    filterAmount: String,
+    selectedCurrencyCount: String,
+    selectedCategoryCount: String,
+    counterPartyFilterVisible: Boolean,
+    selectedCounterPartyCount: String,
+    selectedMethodCount: String,
+    selectedSourceCount: String,
+    selectedTransactionTypeCount: Int,
+    onSortClick: () -> Unit,
+    onFilterByAmountClick: () -> Unit,
+    onFilterByTypeClick: () -> Unit,
+    onFilterByCurrencyClick: () -> Unit,
+    onFilterByCategoryClick: () -> Unit,
+    onFilterByCounterPartyClick: () -> Unit,
+    onFilterByMethodClick: () -> Unit,
+    onFilterBySourceClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    exportTransactions: () -> Unit,
+    onSearchClick: () -> Unit,
+    onToggleSelectClick: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Column {
+        Row(
+            modifier = Modifier
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .horizontalScroll(
+                    rememberScrollState()
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSortClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(
+                    imageVector = if (sortDirection == Sort.DESCENDING) {
+                        TablerIcons.ArrowNarrowDown
+                    } else {
+                        TablerIcons.ArrowNarrowUp
+                    },
+                    contentDescription = "sort direction icon"
+                )
+                Text(
+                    text = stringResource(id = R.string.sort_by_time_chip_label),
+                    modifier = Modifier.padding(start = 6.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByTypeClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.transaction_type_filter_chip_label,
+                        selectedTransactionTypeCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByAmountClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(id = R.string.amount_filter_chip_label, filterAmount),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCurrencyClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.currency_filter_chip_label,
+                        selectedCurrencyCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCategoryClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.category_filter_chip_label,
+                        selectedCategoryCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            if (counterPartyFilterVisible) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByCounterPartyClick()
+                    },
+                    enabled = enabled,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.counter_party_filter_chip_label,
+                            selectedCounterPartyCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByMethodClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.method_filter_chip_label,
+                        selectedMethodCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterBySourceClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.source_filter_chip_label,
+                        selectedSourceCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+        }
+        RoundedBottomBar {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        navigateBack()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "navigate back"
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCalendarClick()
+                    },
+                    enabled = enabled,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.CalendarEvent,
+                        contentDescription = "select time period"
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CustomFloatingActionButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            exportTransactions()
+                        },
+                        enabled = exportEnabled
+                    ) {
+                        Icon(
+                            imageVector = TablerIcons.DatabaseExport,
+                            contentDescription = "export transactions"
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSearchClick()
+                    },
+                    enabled = enabled,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search")
+                }
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onToggleSelectClick()
+                    },
+                    enabled = enabled,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    AnimatedToggleSelectIcon(deselectVisible = allSelected)
+                }
+            }
+        }
+    }
+}

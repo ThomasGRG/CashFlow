@@ -51,6 +51,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     navigateBack: () -> Unit,
+    navigateToExportScreen: () -> Unit,
     reCount: () -> Unit,
     events: Flow<Event>,
     state: SettingsScreenState
@@ -162,6 +163,19 @@ fun SettingsScreen(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateToExportScreen()
+                },
+                modifier = Modifier
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp)
+                    .height(50.dp)
+                    .fillMaxWidth(),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(text = stringResource(R.string.export_transactions_label))
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     reCount()
                 },
                 modifier = Modifier
@@ -181,6 +195,7 @@ fun SettingsScreen(
 fun SettingsScreenPreview() {
     SettingsScreen(
         navigateBack = {},
+        navigateToExportScreen = {},
         reCount = {},
         events = emptyList<Event>().asFlow(),
         state = SettingsScreenState()
@@ -197,6 +212,11 @@ fun NavGraphBuilder.settingsScreen(navController: NavController) {
         SettingsScreen(
             navigateBack = {
                 navController.popBackStack()
+            },
+            navigateToExportScreen = {
+                navController.navigate(Routes.ExportTransactions.route) {
+                    launchSingleTop = true
+                }
             },
             reCount = viewModel::reCount,
             events = viewModel.event,
