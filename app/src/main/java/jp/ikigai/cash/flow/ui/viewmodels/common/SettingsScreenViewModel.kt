@@ -11,6 +11,7 @@ import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +49,14 @@ class SettingsScreenViewModel(
                 val counterParties = this.query<CounterParty>().find()
                 val methods = this.query<Method>().find()
                 val sources = this.query<Source>().find()
+                val transactionTitles = this.query<TransactionTitle>().find()
+
+                transactionTitles.forEach { transactionTitle ->
+                    transactionTitle.frequency =
+                        this.query<Transaction>("title == $0", transactionTitle.title).count()
+                            .find().toInt()
+                }
+
                 categories.forEach { category ->
                     category.frequency =
                         this.query<Transaction>("category.uuid==$0", category.uuid).count().find()
