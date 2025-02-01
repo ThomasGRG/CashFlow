@@ -19,6 +19,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
+import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
 
 class UpsertTransactionTemplateScreenViewModel(
@@ -104,12 +106,21 @@ class UpsertTransactionTemplateScreenViewModel(
         }
         flows.collectLatest { upsertTransactionTemplateFlows ->
             _state.update {
+                val sources = upsertTransactionTemplateFlows.sources.toMutableList()
+
+                sources.forEach { source ->
+                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    source.displayBalance = formatter.format(source.balance).toString()
+                }
+
                 val transactionTemplate =
                     upsertTransactionTemplateFlows.transactionTemplate ?: it.transactionTemplate
                 val selectedCategory = transactionTemplate.category ?: it.selectedCategory
                 val selectedCounterParty = transactionTemplate.counterParty ?: it.selectedCounterParty
                 val selectedMethod = transactionTemplate.method ?: it.selectedMethod
-                val selectedSource = transactionTemplate.source ?: it.selectedSource
+                val selectedSource =
+                    sources.find { source -> source.uuid == transactionTemplate.source?.uuid }
+                        ?: it.selectedSource
                 it.copy(
                     transactionTemplate = transactionTemplate,
                     name = transactionTemplate.name,
@@ -122,7 +133,7 @@ class UpsertTransactionTemplateScreenViewModel(
                     selectedMethod = selectedMethod,
                     methods = upsertTransactionTemplateFlows.methods,
                     selectedSource = selectedSource,
-                    sources = upsertTransactionTemplateFlows.sources,
+                    sources = sources,
                     type = transactionTemplate.type,
                     loading = false,
                     enabled = true
@@ -322,6 +333,14 @@ class UpsertTransactionTemplateScreenViewModel(
         _state.update {
             it.copy(
                 type = transactionType
+            )
+        }
+    }
+
+    fun setLocale(locale: Locale?) {
+        _state.update {
+            it.copy(
+                locale = locale
             )
         }
     }

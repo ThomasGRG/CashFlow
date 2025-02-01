@@ -109,6 +109,13 @@ class ExportTransactionsScreenViewModel(
             )
         }.collectLatest { exportTransactionsScreenFlows ->
             _state.update {
+                val sources = exportTransactionsScreenFlows.sources.toMutableList()
+
+                sources.forEach { source ->
+                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    source.displayBalance = formatter.format(source.balance).toString()
+                }
+
                 val selectedCategories = getSelectedCategories(
                     exportTransactionsScreenFlows.categories,
                     it.selectedCategories
@@ -161,7 +168,7 @@ class ExportTransactionsScreenViewModel(
                     methods = exportTransactionsScreenFlows.methods,
                     selectedMethods = selectedMethods,
                     selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
-                    sources = exportTransactionsScreenFlows.sources,
+                    sources = sources,
                     selectedSources = selectedSources,
                     selectedSourceCount = numberFormatter.format(selectedSourceCount).toString(),
                 )

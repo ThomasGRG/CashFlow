@@ -124,7 +124,15 @@ class TransactionsScreenViewModel(
             val expenseTransactions =
                 transactionScreenFlows.transactions.filter { it.type == TransactionType.DEBIT }
             val expense = expenseTransactions.sumOf { it.amount }
+
             _state.update {
+                val sources = transactionScreenFlows.sources.toMutableList()
+
+                sources.forEach { source ->
+                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    source.displayBalance = formatter.format(source.balance).toString()
+                }
+
                 val selectedCategories = getSelectedCategories(
                     transactionScreenFlows.categories,
                     it.selectedCategories
@@ -174,7 +182,7 @@ class TransactionsScreenViewModel(
                     methods = transactionScreenFlows.methods,
                     selectedMethods = selectedMethods,
                     selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
-                    sources = transactionScreenFlows.sources,
+                    sources = sources,
                     selectedSources = selectedSources,
                     selectedSourceCount = numberFormatter.format(selectedSourceCount).toString(),
                 )

@@ -105,6 +105,12 @@ class MigrateCategoryScreenViewModel(
                 val sources = transactionChanges.list
                     .mapNotNull { transaction -> transaction.source }
                     .distinctBy { source -> source.uuid }
+                    .toMutableList()
+
+                sources.forEach { source ->
+                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    source.displayBalance = formatter.format(source.balance).toString()
+                }
 
                 val selectedCounterPartiesMap =
                     getSelectedCounterParties(counterParties, it.selectedCounterParties)

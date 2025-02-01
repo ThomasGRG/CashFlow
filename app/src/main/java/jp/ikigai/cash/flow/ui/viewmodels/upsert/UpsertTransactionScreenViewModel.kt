@@ -22,6 +22,7 @@ import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.combineSixFlows
+import jp.ikigai.cash.flow.utils.getCurrencyFormatter
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
 import jp.ikigai.cash.flow.utils.toEpochMilli
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Locale
 import java.util.UUID
 
 class UpsertTransactionScreenViewModel(
@@ -146,7 +148,10 @@ class UpsertTransactionScreenViewModel(
                         categories = upsertTransactionFlows.categories,
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
-                        sources = upsertTransactionFlows.sources,
+                        sources = getDisplayBalanceUpdatedSources(
+                            upsertTransactionFlows.sources,
+                            it.locale
+                        ),
                         dateString = it.dateTime.getDateString(),
                         timeString = it.dateTime.getTimeString(),
                         loading = false,
@@ -168,15 +173,17 @@ class UpsertTransactionScreenViewModel(
         transaction: Transaction,
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
-        val dateTime = transaction.time.toZonedDateTime()
-        val source = transaction.source!!
-        previousSource = transaction.source
-        previousBalance = if (transaction.type == TransactionType.DEBIT) {
-            source.balance + transaction.amount
-        } else {
-            source.balance - transaction.amount
-        }
         _state.update {
+            val dateTime = transaction.time.toZonedDateTime()
+            val source = transaction.source!!
+            val formatter = getCurrencyFormatter(it.locale, source.currency)
+            source.displayBalance = formatter.format(source.balance).toString()
+            previousSource = transaction.source
+            previousBalance = if (transaction.type == TransactionType.DEBIT) {
+                source.balance + transaction.amount
+            } else {
+                source.balance - transaction.amount
+            }
             it.copy(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
@@ -185,7 +192,10 @@ class UpsertTransactionScreenViewModel(
                 selectedCounterParty = transaction.counterParty ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
                 selectedMethod = transaction.method!!,
-                sources = upsertTransactionFlows.sources,
+                sources = getDisplayBalanceUpdatedSources(
+                    upsertTransactionFlows.sources,
+                    it.locale
+                ),
                 selectedSource = source,
                 transaction = transaction,
                 title = transaction.title,
@@ -206,6 +216,10 @@ class UpsertTransactionScreenViewModel(
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
         _state.update {
+            val sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources, it.locale)
+            val selectedSource =
+                sources.find { source -> source.uuid == transactionTemplate.source?.uuid }
+                    ?: it.selectedSource
             it.copy(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 categories = upsertTransactionFlows.categories,
@@ -216,9 +230,8 @@ class UpsertTransactionScreenViewModel(
                 methods = upsertTransactionFlows.methods,
                 selectedMethod = transactionTemplate.method
                     ?: it.selectedMethod,
-                sources = upsertTransactionFlows.sources,
-                selectedSource = transactionTemplate.source
-                    ?: it.selectedSource,
+                sources = sources,
+                selectedSource = selectedSource,
                 transaction = Transaction(
                     transactionTemplate.title,
                     transactionTemplate.description
@@ -233,6 +246,20 @@ class UpsertTransactionScreenViewModel(
                 enabled = true
             )
         }
+    }
+
+    private fun getDisplayBalanceUpdatedSources(
+        sourceList: List<Source>,
+        locale: Locale?
+    ): List<Source> {
+        val sources = sourceList.toMutableList()
+
+        sources.forEach { source ->
+            val formatter = getCurrencyFormatter(locale, source.currency)
+            source.displayBalance = formatter.format(source.balance).toString()
+        }
+
+        return sources
     }
 
     private fun isFormValid(): Boolean {
@@ -696,6 +723,14 @@ class UpsertTransactionScreenViewModel(
         } else {
             state.value.transactionTitles.map { it.title }
                 .filter { it.contains(searchString.trim(), ignoreCase = true) }
+        }
+    }
+
+    fun setLocale(locale: Locale?) {
+        _state.update {
+            it.copy(
+                locale = locale
+            )
         }
     }
 }

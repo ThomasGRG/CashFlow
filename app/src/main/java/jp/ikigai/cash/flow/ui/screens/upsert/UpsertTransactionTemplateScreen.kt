@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -69,11 +71,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertTransactionTemplateScreen(
     navigateBack: () -> Unit,
+    setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     setAmount: (String) -> Unit,
     setSelectedCategory: (Category) -> Unit,
@@ -87,6 +91,17 @@ fun UpsertTransactionTemplateScreen(
     state: UpsertTransactionTemplateScreenState
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val configuration = LocalConfiguration.current
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(
+            ConfigurationCompat.getLocales(configuration).get(0)
+        )
+    }
+
+    LaunchedEffect(key1 = locale) {
+        setLocale(locale)
+    }
 
     val loading by remember(key1 = state.loading) {
         mutableStateOf(state.loading)
@@ -549,7 +564,7 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedSource.name,
+                    value = if (selectedSource.uuid.isNotEmpty()) "${selectedSource.name} - ${selectedSource.displayBalance}" else "",
                     label = stringResource(id = R.string.source_field_label),
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                     leadingIcon = selectedSource.icon,
@@ -573,6 +588,7 @@ fun UpsertTransactionTemplateScreen(
 fun UpsertTransactionTemplateScreenPreview() {
     UpsertTransactionTemplateScreen(
         navigateBack = {},
+        setLocale = {},
         setName = {},
         setAmount = {},
         setSelectedCategory = {},
@@ -604,6 +620,7 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             navigateBack = {
                 navController.popBackStack()
             },
+            setLocale = viewModel::setLocale,
             setName = viewModel::setName,
             setAmount = viewModel::setAmount,
             setSelectedCategory = viewModel::setSelectedCategory,

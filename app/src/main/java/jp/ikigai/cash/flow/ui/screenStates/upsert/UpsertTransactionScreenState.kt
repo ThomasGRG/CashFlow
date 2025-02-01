@@ -11,6 +11,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Locale
 
 data class UpsertTransactionScreenState(
     val transaction: Transaction = Transaction(),
@@ -38,4 +39,5 @@ data class UpsertTransactionScreenState(
     val transactionTitles: List<TransactionTitle> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
+    val locale: Locale? = null
 )

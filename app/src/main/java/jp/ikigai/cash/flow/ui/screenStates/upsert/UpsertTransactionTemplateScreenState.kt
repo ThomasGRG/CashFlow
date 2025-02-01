@@ -8,6 +8,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import java.util.Locale
 
 data class UpsertTransactionTemplateScreenState(
     val transactionTemplate: TransactionTemplate = TransactionTemplate(),
@@ -27,4 +28,5 @@ data class UpsertTransactionTemplateScreenState(
     val selectedSource: Source = Source(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
+    val locale: Locale? = null
 )

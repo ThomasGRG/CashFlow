@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -88,11 +90,13 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertTransactionScreen(
     navigateBack: () -> Unit,
+    setLocale: (Locale?) -> Unit,
     setTitle: (String) -> Unit,
     setAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
@@ -110,6 +114,17 @@ fun UpsertTransactionScreen(
 ) {
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val configuration = LocalConfiguration.current
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(
+            ConfigurationCompat.getLocales(configuration).get(0)
+        )
+    }
+
+    LaunchedEffect(key1 = locale) {
+        setLocale(locale)
+    }
 
     val selectableDates by remember {
         mutableStateOf(
@@ -716,7 +731,7 @@ fun UpsertTransactionScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedSource.name,
+                    value = if (selectedSource.uuid.isNotEmpty()) "${selectedSource.name} - ${selectedSource.displayBalance}" else "",
                     hasValueChanged = {
                         transaction.uuid.isNotEmpty() && transaction.source?.uuid != selectedSource.uuid
                     },
@@ -741,6 +756,7 @@ fun UpsertTransactionScreen(
 fun UpsertTransactionScreenPreview() {
     UpsertTransactionScreen(
         navigateBack = {},
+        setLocale = {},
         setTitle = {},
         setAmount = {},
         setDate = {},
@@ -779,6 +795,7 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
+            setLocale = viewModel::setLocale,
             setTitle = viewModel::setTitle,
             setAmount = viewModel::setAmount,
             setDate = viewModel::setDate,

@@ -42,7 +42,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -51,7 +50,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.os.ConfigurationCompat
 import compose.icons.TablerIcons
 import compose.icons.tablericons.BuildingBank
 import jp.ikigai.cash.flow.R
@@ -60,7 +58,6 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
-import jp.ikigai.cash.flow.utils.getNumberFormatter
 
 @Composable
 fun SelectSourcePopup(
@@ -71,7 +68,6 @@ fun SelectSourcePopup(
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-    val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val focusRequester = remember {
@@ -88,21 +84,13 @@ fun SelectSourcePopup(
         mutableStateOf("")
     }
 
-    val numberFormatter = remember(key1 = configuration) {
-        getNumberFormatter(
-            ConfigurationCompat.getLocales(configuration).get(0)
-        )
-    }
-
-    val sourceList by remember(key1 = numberFormatter) {
+    val sourceList by remember {
         mutableStateOf(
             sources.map { source ->
                 val highlightedString = getHighlightedString(source.name, "")
-                val balance = numberFormatter.format(source.balance)
-                Triple(
+                Pair(
                     source,
-                    highlightedString.plus(AnnotatedString(" - $balance ${source.currency}")),
-                    balance
+                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
                 )
             }
         )
@@ -131,10 +119,9 @@ fun SelectSourcePopup(
                 }
                 .map {
                     val highlightedString = getHighlightedString(it.first.name, searchText)
-                    Triple(
+                    Pair(
                         it.first,
-                        highlightedString.plus(AnnotatedString(" - ${it.third} ${it.first.currency}")),
-                        it.third
+                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}"))
                     )
                 }
         }
@@ -248,7 +235,6 @@ fun FilterSourcePopup(
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-    val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val focusRequester = remember {
@@ -265,21 +251,13 @@ fun FilterSourcePopup(
         mutableStateOf("")
     }
 
-    val numberFormatter = remember(key1 = configuration) {
-        getNumberFormatter(
-            ConfigurationCompat.getLocales(configuration).get(0)
-        )
-    }
-
-    val sourceList by remember(key1 = numberFormatter) {
+    val sourceList by remember {
         mutableStateOf(
             sources.map { source ->
                 val highlightedString = getHighlightedString(source.name, "")
-                val balance = numberFormatter.format(source.balance)
-                Triple(
+                Pair(
                     source,
-                    highlightedString.plus(AnnotatedString(" - $balance ${source.currency}")),
-                    balance
+                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
                 )
             }
         )
@@ -302,10 +280,9 @@ fun FilterSourcePopup(
                 }
                 .map {
                     val highlightedString = getHighlightedString(it.first.name, searchText)
-                    Triple(
+                    Pair(
                         it.first,
-                        highlightedString.plus(AnnotatedString(" - ${it.third} ${it.first.currency}")),
-                        it.third
+                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}")),
                     )
                 }
         }
