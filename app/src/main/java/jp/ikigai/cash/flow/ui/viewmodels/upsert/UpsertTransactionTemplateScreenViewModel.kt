@@ -19,7 +19,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -45,6 +45,8 @@ class UpsertTransactionTemplateScreenViewModel(
 ) : ViewModel() {
 
     private val templateUuid: String = checkNotNull(savedStateHandle["id"])
+
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private var loadDataJob: Job? = null
 
@@ -109,7 +111,7 @@ class UpsertTransactionTemplateScreenViewModel(
                 val sources = upsertTransactionTemplateFlows.sources.toMutableList()
 
                 sources.forEach { source ->
-                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    val formatter = currencyFormatterMap.getValue(source.currency)
                     source.displayBalance = formatter.format(source.balance).toString()
                 }
 
@@ -338,6 +340,7 @@ class UpsertTransactionTemplateScreenViewModel(
     }
 
     fun setLocale(locale: Locale?) {
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale

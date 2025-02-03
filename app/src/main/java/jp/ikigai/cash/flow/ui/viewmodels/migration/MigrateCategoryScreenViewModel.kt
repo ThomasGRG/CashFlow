@@ -19,7 +19,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCategoryScreenState
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -54,6 +54,7 @@ class MigrateCategoryScreenViewModel(
     private var loadDataJob: Job? = null
 
     private var numberFormatter = getNumberFormatter()
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private val _state = MutableStateFlow(MigrateCategoryScreenState())
     val state: StateFlow<MigrateCategoryScreenState> = _state.asStateFlow()
@@ -108,7 +109,7 @@ class MigrateCategoryScreenViewModel(
                     .toMutableList()
 
                 sources.forEach { source ->
-                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    val formatter = currencyFormatterMap.getValue(source.currency)
                     source.displayBalance = formatter.format(source.balance).toString()
                 }
 
@@ -135,8 +136,7 @@ class MigrateCategoryScreenViewModel(
                     selectedCounterParties = selectedCounterParties,
                     selectedMethods = selectedMethods,
                     selectedSources = selectedSources,
-                    selectedTransactionTypes = it.selectedTransactionTypes,
-                    locale = it.locale
+                    selectedTransactionTypes = it.selectedTransactionTypes
                 )
 
                 val selectedTransactions = getSelectedTransactions(
@@ -271,8 +271,7 @@ class MigrateCategoryScreenViewModel(
         selectedCounterParties: Set<String>,
         selectedMethods: Set<String>,
         selectedSources: Set<String>,
-        selectedTransactionTypes: List<Int>,
-        locale: Locale?
+        selectedTransactionTypes: List<Int>
     ): Map<LocalDate, List<TransactionWithIcons>> {
         return transactions
             .filter { transaction ->
@@ -310,8 +309,7 @@ class MigrateCategoryScreenViewModel(
                 valueTransform = { transaction ->
                     getTransactionWithIcons(
                         transaction,
-                        searchText,
-                        locale
+                        searchText
                     )
                 }
             )
@@ -319,14 +317,13 @@ class MigrateCategoryScreenViewModel(
 
     private fun getTransactionWithIcons(
         transaction: Transaction,
-        searchText: String,
-        locale: Locale?
+        searchText: String
     ): TransactionWithIcons {
         val category = transaction.category!!
         val counterParty = transaction.counterParty
         val method = transaction.method!!
         val source = transaction.source!!
-        val currencyFormatter = getCurrencyFormatter(locale, source.currency)
+        val currencyFormatter = currencyFormatterMap.getValue(source.currency)
         val chips: MutableList<ChipInfo> = mutableListOf()
         if (counterParty != null) {
             chips.add(
@@ -569,6 +566,7 @@ class MigrateCategoryScreenViewModel(
 
     fun setLocale(locale: Locale?) {
         numberFormatter = getNumberFormatter(locale)
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale

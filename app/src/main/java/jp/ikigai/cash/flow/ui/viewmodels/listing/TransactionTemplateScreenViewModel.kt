@@ -21,7 +21,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
@@ -43,7 +43,8 @@ class TransactionTemplateScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
 
-    private var formatter = getNumberFormatter()
+    private var numberFormatter = getNumberFormatter()
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private val _state = MutableStateFlow(TransactionTemplateScreenState())
     val state: StateFlow<TransactionTemplateScreenState> = _state.asStateFlow()
@@ -66,7 +67,7 @@ class TransactionTemplateScreenViewModel(
             _state.update {
                 it.copy(
                     count = count,
-                    countString = formatter.format(count).toString()
+                    countString = numberFormatter.format(count).toString()
                 )
             }
         }
@@ -122,11 +123,10 @@ class TransactionTemplateScreenViewModel(
                 screenState.copy(
                     templates = getTemplateWithIcons(
                         changes.list,
-                        screenState.searchText,
-                        screenState.locale
+                        screenState.searchText
                     ),
                     loading = false,
-                    countString = formatter.format(screenState.count).toString()
+                    countString = numberFormatter.format(screenState.count).toString()
                 )
             }
         }
@@ -134,8 +134,7 @@ class TransactionTemplateScreenViewModel(
 
     private fun getTemplateWithIcons(
         templates: List<TransactionTemplate>,
-        searchText: String,
-        locale: Locale?
+        searchText: String
     ): List<TransactionTemplateWithIcons> {
         return templates.map { template ->
             val category = template.category
@@ -192,7 +191,7 @@ class TransactionTemplateScreenViewModel(
             chips.add(
                 ChipInfo(
                     resId = R.string.frequency_of_use_label,
-                    value = formatter.format(template.frequency).toString(),
+                    value = numberFormatter.format(template.frequency).toString(),
                     icon = TablerIcons.ChartLine
                 )
             )
@@ -216,10 +215,10 @@ class TransactionTemplateScreenViewModel(
             }
             val formattedAmount = if (template.amount > 0) {
                 if (source != null) {
-                    val currencyFormatter = getCurrencyFormatter(locale, source.currency)
-                    currencyFormatter.format(template.amount).toString()
+                    currencyFormatterMap.getValue(source.currency).format(template.amount)
+                        .toString()
                 } else {
-                    formatter.format(template.amount).toString()
+                    numberFormatter.format(template.amount).toString()
                 }
             } else {
                 ""
@@ -254,7 +253,8 @@ class TransactionTemplateScreenViewModel(
     }
 
     fun setLocale(locale: Locale?) {
-        formatter = getNumberFormatter(locale)
+        numberFormatter = getNumberFormatter(locale)
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale

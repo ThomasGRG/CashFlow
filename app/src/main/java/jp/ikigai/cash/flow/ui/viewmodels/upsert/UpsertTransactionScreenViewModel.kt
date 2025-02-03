@@ -22,7 +22,7 @@ import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.combineSixFlows
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
 import jp.ikigai.cash.flow.utils.toEpochMilli
@@ -50,6 +50,8 @@ class UpsertTransactionScreenViewModel(
 
     private val transactionUuid: String = checkNotNull(savedStateHandle["id"])
     private val templateUuid: String = checkNotNull(savedStateHandle["templateId"])
+
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private var loadDataJob: Job? = null
 
@@ -148,10 +150,7 @@ class UpsertTransactionScreenViewModel(
                         categories = upsertTransactionFlows.categories,
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
-                        sources = getDisplayBalanceUpdatedSources(
-                            upsertTransactionFlows.sources,
-                            it.locale
-                        ),
+                        sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources),
                         dateString = it.dateTime.getDateString(),
                         timeString = it.dateTime.getTimeString(),
                         loading = false,
@@ -176,7 +175,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             val dateTime = transaction.time.toZonedDateTime()
             val source = transaction.source!!
-            val formatter = getCurrencyFormatter(it.locale, source.currency)
+            val formatter = currencyFormatterMap.getValue(source.currency)
             source.displayBalance = formatter.format(source.balance).toString()
             previousSource = transaction.source
             previousBalance = if (transaction.type == TransactionType.DEBIT) {
@@ -192,10 +191,7 @@ class UpsertTransactionScreenViewModel(
                 selectedCounterParty = transaction.counterParty ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
                 selectedMethod = transaction.method!!,
-                sources = getDisplayBalanceUpdatedSources(
-                    upsertTransactionFlows.sources,
-                    it.locale
-                ),
+                sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources),
                 selectedSource = source,
                 transaction = transaction,
                 title = transaction.title,
@@ -216,7 +212,7 @@ class UpsertTransactionScreenViewModel(
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
         _state.update {
-            val sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources, it.locale)
+            val sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources)
             val selectedSource =
                 sources.find { source -> source.uuid == transactionTemplate.source?.uuid }
                     ?: it.selectedSource
@@ -248,14 +244,11 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private fun getDisplayBalanceUpdatedSources(
-        sourceList: List<Source>,
-        locale: Locale?
-    ): List<Source> {
+    private fun getDisplayBalanceUpdatedSources(sourceList: List<Source>): List<Source> {
         val sources = sourceList.toMutableList()
 
         sources.forEach { source ->
-            val formatter = getCurrencyFormatter(locale, source.currency)
+            val formatter = currencyFormatterMap.getValue(source.currency)
             source.displayBalance = formatter.format(source.balance).toString()
         }
 
@@ -727,6 +720,7 @@ class UpsertTransactionScreenViewModel(
     }
 
     fun setLocale(locale: Locale?) {
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale

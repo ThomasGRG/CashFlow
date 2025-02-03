@@ -27,7 +27,7 @@ import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineSevenFlows
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -60,7 +60,8 @@ class TransactionsScreenViewModel(
 
     private var numberFormatter = getNumberFormatter()
 
-    private var currencyFormatter = getCurrencyFormatter(null, "INR")
+    private var currencyFormatterMap = getCurrencyFormatterMap()
+    private var currencyFormatter = currencyFormatterMap.getValue("INR")
 
     private val _state = MutableStateFlow(TransactionsScreenState())
     val state: StateFlow<TransactionsScreenState> = _state.asStateFlow()
@@ -129,7 +130,7 @@ class TransactionsScreenViewModel(
                 val sources = transactionScreenFlows.sources.toMutableList()
 
                 sources.forEach { source ->
-                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    val formatter = currencyFormatterMap.getValue(source.currency)
                     source.displayBalance = formatter.format(source.balance).toString()
                 }
 
@@ -401,7 +402,7 @@ class TransactionsScreenViewModel(
 
     fun setCurrency(currency: String) {
         _state.update {
-            currencyFormatter = getCurrencyFormatter(it.locale, currency)
+            currencyFormatter = currencyFormatterMap.getValue(currency)
             it.copy(
                 loading = true,
                 selectedCurrency = currency
@@ -510,8 +511,9 @@ class TransactionsScreenViewModel(
 
     fun setLocale(locale: Locale?) {
         numberFormatter = getNumberFormatter(locale)
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
-            currencyFormatter = getCurrencyFormatter(locale, it.selectedCurrency)
+            currencyFormatter = currencyFormatterMap.getValue(it.selectedCurrency)
             it.copy(
                 locale = locale
             )

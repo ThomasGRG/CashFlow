@@ -15,7 +15,7 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SourceListingDTO
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toZonedDateTime
@@ -34,7 +34,8 @@ class SourceScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
 
-    private var formatter = getNumberFormatter()
+    private var numberFormatter = getNumberFormatter()
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private val _state = MutableStateFlow(SourceScreenState())
     val state: StateFlow<SourceScreenState> = _state.asStateFlow()
@@ -54,7 +55,7 @@ class SourceScreenViewModel(
             _state.update {
                 it.copy(
                     count = count,
-                    countString = formatter.format(count).toString()
+                    countString = numberFormatter.format(count).toString()
                 )
             }
         }
@@ -83,9 +84,9 @@ class SourceScreenViewModel(
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    sources = mapToDTO(changes.list, screenState.searchText, screenState.locale),
+                    sources = mapToDTO(changes.list, screenState.searchText),
                     loading = false,
-                    countString = formatter.format(screenState.count).toString()
+                    countString = numberFormatter.format(screenState.count).toString()
                 )
             }
         }
@@ -93,16 +94,15 @@ class SourceScreenViewModel(
 
     private fun mapToDTO(
         sources: List<Source>,
-        searchText: String,
-        locale: Locale?
+        searchText: String
     ): List<SourceListingDTO> {
         return sources.map { source ->
-            val currencyFormatter = getCurrencyFormatter(locale, source.currency)
+            val currencyFormatter = currencyFormatterMap.getValue(source.currency)
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
                 ChipInfo(
                     resId = R.string.frequency_of_use_label,
-                    value = formatter.format(source.frequency).toString(),
+                    value = numberFormatter.format(source.frequency).toString(),
                     icon = TablerIcons.ChartLine
                 )
             )
@@ -154,7 +154,8 @@ class SourceScreenViewModel(
     }
 
     fun setLocale(locale: Locale?) {
-        formatter = getNumberFormatter(locale)
+        numberFormatter = getNumberFormatter(locale)
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale

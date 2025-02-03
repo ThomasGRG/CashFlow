@@ -30,7 +30,7 @@ import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.ui.screenStates.common.ExportTransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
-import jp.ikigai.cash.flow.utils.getCurrencyFormatter
+import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -64,8 +64,7 @@ class ExportTransactionsScreenViewModel(
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
-
-    private var currencyFormatter = getCurrencyFormatter(null, "INR")
+    private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private var loadDataJob: Job? = null
 
@@ -112,7 +111,7 @@ class ExportTransactionsScreenViewModel(
                 val sources = exportTransactionsScreenFlows.sources.toMutableList()
 
                 sources.forEach { source ->
-                    val formatter = getCurrencyFormatter(it.locale, source.currency)
+                    val formatter = currencyFormatterMap.getValue(source.currency)
                     source.displayBalance = formatter.format(source.balance).toString()
                 }
 
@@ -306,6 +305,7 @@ class ExportTransactionsScreenViewModel(
         val counterParty = transaction.counterParty
         val method = transaction.method!!
         val source = transaction.source!!
+        val currencyFormatter = currencyFormatterMap.getValue(source.currency)
         val chips: MutableList<ChipInfo> = mutableListOf()
         if (counterParty != null) {
             chips.add(
@@ -676,6 +676,7 @@ class ExportTransactionsScreenViewModel(
 
     fun setLocale(locale: Locale?) {
         numberFormatter = getNumberFormatter(locale)
+        currencyFormatterMap = getCurrencyFormatterMap(locale)
         _state.update {
             it.copy(
                 locale = locale
