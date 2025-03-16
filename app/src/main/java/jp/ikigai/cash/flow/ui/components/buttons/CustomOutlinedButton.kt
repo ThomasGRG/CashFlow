@@ -198,7 +198,6 @@ fun CustomOutlinedButton(
                 color = borderColor,
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
-                    .alpha(alpha = alpha)
                     .padding(start = 3.dp, end = 3.dp)
             )
         }
