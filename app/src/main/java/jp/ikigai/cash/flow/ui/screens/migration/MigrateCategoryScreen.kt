@@ -563,7 +563,7 @@ fun MigrateCategoryScreen(
                     stickyHeader {
                         TransactionGroupHeader(
                             date = it.key,
-                            selected = selectedLocalDates.getOrDefault(it.key, false),
+                            selected = selectedLocalDates.contains(it.key),
                             enabled = enabled,
                             onClick = {
                                 resetOneHandMode()
@@ -577,10 +577,7 @@ fun MigrateCategoryScreen(
                         key = { transactionWithIcons -> transactionWithIcons.uuid }
                     ) { transactionWithIcons ->
                         TransactionCard(
-                            checked = selectedTransactions.getOrDefault(
-                                transactionWithIcons.uuid,
-                                false
-                            ),
+                            checked = selectedTransactions.contains(transactionWithIcons.uuid),
                             enabled = enabled,
                             transactionWithIcons = transactionWithIcons,
                             onClick = {

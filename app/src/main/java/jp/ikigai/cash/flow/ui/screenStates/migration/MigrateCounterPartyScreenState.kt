@@ -17,9 +17,9 @@ import java.util.Locale
 data class MigrateCounterPartyScreenState(
     val transactionsHashCode: Int = 0,
     val filteredTransactions: Map<LocalDate, List<TransactionWithIcons>> = emptyMap(),
-    val selectedTransactions: Map<String, Boolean> = emptyMap(),
+    val selectedTransactions: Set<String> = emptySet(),
     val selectedTransactionCount: Int = 0,
-    val selectedLocalDates: Map<LocalDate, Boolean> = emptyMap(),
+    val selectedLocalDates: Set<LocalDate> = emptySet(),
     val allSelected: Boolean = false,
     val counterParties: List<CounterParty> = emptyList(),
     val categories: List<Category> = emptyList(),
