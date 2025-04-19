@@ -35,7 +35,6 @@ import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
@@ -61,10 +60,6 @@ fun SettingsScreen(
 
     val loading by remember(state.loading) {
         mutableStateOf(state.loading)
-    }
-
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -132,15 +127,9 @@ fun SettingsScreen(
         onDismissToastBar = {
             showToastBar = false
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = {
-            when (popupType) {
-                else -> {}
-            }
-        },
-        onDismissPopup = {
-            popupType = PopupType.NONE
-        },
+        showBottomPopup = false,
+        bottomPopupContent = {},
+        onDismissPopup = {},
         topBar = {
             TopAppBar(
                 title = {
@@ -154,7 +143,7 @@ fun SettingsScreen(
                 enabled = true
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) { _, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize(),
