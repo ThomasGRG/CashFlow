@@ -80,9 +80,6 @@ fun SettingsScreen(
         if (showToastBar) {
             delay(2000)
             showToastBar = false
-            if (currentEvent == Event.SaveSuccess || currentEvent == Event.DeleteSuccess) {
-                navigateBack()
-            }
         }
     }
 
