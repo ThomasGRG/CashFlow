@@ -9,6 +9,12 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
+import jp.ikigai.cash.flow.data.entity.temp.TempCategory
+import jp.ikigai.cash.flow.data.entity.temp.TempCounterParty
+import jp.ikigai.cash.flow.data.entity.temp.TempMethod
+import jp.ikigai.cash.flow.data.entity.temp.TempSource
+import jp.ikigai.cash.flow.data.entity.temp.TempTransaction
+import jp.ikigai.cash.flow.data.entity.temp.TempTransactionTemplate
 import java.util.UUID
 
 object Database {
@@ -21,10 +27,16 @@ object Database {
                 Source::class,
                 Transaction::class,
                 TransactionTemplate::class,
-                TransactionTitle::class
+                TransactionTitle::class,
+                TempCategory::class,
+                TempCounterParty::class,
+                TempMethod::class,
+                TempSource::class,
+                TempTransaction::class,
+                TempTransactionTemplate::class
             )
         )
-        .schemaVersion(6)
+        .schemaVersion(7)
         .migration(
             { migrationContext ->
                 val oldRealm = migrationContext.oldRealm
