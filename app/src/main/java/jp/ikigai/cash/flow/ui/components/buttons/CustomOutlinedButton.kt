@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.components.buttons
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,15 +27,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -63,6 +71,14 @@ fun CustomOutlinedButton(
         MutableInteractionSource()
     }
 
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    var hasFocus by remember {
+        mutableStateOf(false)
+    }
+
     val alpha by animateFloatAsState(
         targetValue = if (enabled) 1f else 0.38f,
         label = "animated alpha"
@@ -81,6 +97,8 @@ fun CustomOutlinedButton(
             } else {
                 if (hasValueChanged != null && hasValueChanged()) {
                     Color(221, 161, 82)
+                } else if (hasFocus) {
+                    OutlinedTextFieldDefaults.colors().focusedIndicatorColor
                 } else {
                     MaterialTheme.colorScheme.outline
                 }
@@ -89,6 +107,15 @@ fun CustomOutlinedButton(
             MaterialTheme.colorScheme.outline.copy(alpha = alpha)
         },
         label = "animated border color"
+    )
+
+    val borderThickness by animateDpAsState(
+        targetValue = if (hasFocus) {
+            OutlinedTextFieldDefaults.FocusedBorderThickness
+        } else {
+            OutlinedTextFieldDefaults.UnfocusedBorderThickness
+        },
+        label = "animated border thickness"
     )
 
     val textColor by animateColorAsState(
@@ -118,8 +145,13 @@ fun CustomOutlinedButton(
             Spacer(modifier = Modifier.height(9.dp))
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, borderColor),
+                border = BorderStroke(borderThickness, borderColor),
                 modifier = Modifier
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        hasFocus = focusState.isFocused || focusState.hasFocus
+                    }
+                    .focusable()
                     .heightIn(min = 56.dp)
                     .fillMaxWidth()
             ) {
@@ -147,6 +179,7 @@ fun CustomOutlinedButton(
                                 enabled = enabled,
                                 onClick = {
                                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    focusRequester.requestFocus()
                                     onClick()
                                 },
                                 indication = null,
@@ -175,6 +208,7 @@ fun CustomOutlinedButton(
                                     enabled = enabled,
                                     onClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        focusRequester.requestFocus()
                                         onTrailingIconClick?.invoke()
                                     }
                                 )
