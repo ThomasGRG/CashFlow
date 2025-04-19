@@ -5,6 +5,7 @@ sealed class Routes(val route: String) {
     object Settings : Routes("settings")
 
     object ExportTransactions : Routes("exportTransactions")
+    object ImportBackup : Routes("importBackup")
 
     object Transactions: Routes("transactions")
     object UpsertTransaction: Routes("upsertTransaction?id={id}&templateId={templateId}") {

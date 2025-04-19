@@ -11,6 +11,16 @@
     <string name="method_transactions_deletion_warning_label">This will also delete all transactions under this method</string>
     <string name="source_transactions_deletion_warning_label">This will also delete all transactions under this source</string>
     <string name="delete_template_confirmation_label">Are you sure you want to delete this template?</string>
+    <string name="navigation_confirmation_label">You will lose all your changes. Are you sure you want to go back?</string>
+
+    <string name="select_backup_continue_label">Select a backup to continue…</string>
+
+    <!--  Hint Strings  -->
+    <string name="new_category_label">A new category will be created</string>
+    <string name="new_counterParty_label">A new counter party will be created</string>
+    <string name="new_method_label">A new method will be created</string>
+    <string name="new_source_label">A new source will be created</string>
+    <!--  Hint Strings  -->
 
     <!--  Non Translatable Strings  -->
     <string name="placeholder">%1$s</string>
@@ -38,6 +48,14 @@
     <!--  TopAppBar Strings  -->
     <string name="settings_label">Settings</string>
     <string name="export_transactions_label">Export transactions</string>
+    <string name="import_transactions_label">Import transactions</string>
+    <string name="select_transactions_label">Select transactions</string>
+    <string name="select_templates_label">Select templates</string>
+    <string name="select_backup_label">Select backup</string>
+    <string name="map_categories_label">Map categories</string>
+    <string name="map_counter_parties_label">Map counter parties</string>
+    <string name="map_methods_label">Map methods</string>
+    <string name="map_sources_label">Map sources</string>
     <string name="migrate_transactions_label">Migrate transactions</string>
     <string name="create_category_label">Create category</string>
     <string name="update_category_label">Update category</string>
@@ -67,8 +85,11 @@
     <!--  Button Strings  -->
     <string name="re_count_button_label">Re-count frequency of use</string>
     <string name="export_button_label">Export</string>
+    <string name="import_button_label">Import</string>
     <string name="migrate_button_label">Migrate</string>
     <string name="migrate_with_count_button_label">Migrate (%1$d)</string>
+    <string name="stay_button_label">No, stay here</string>
+    <string name="go_back_button_label">Yes, go back</string>
     <string name="cancel_button_label">Cancel</string>
     <string name="sort_button_label">Sort</string>
     <string name="reset_button_label">Reset</string>
@@ -102,6 +123,7 @@
     <string name="methods_screen_empty_placeholder_label">You have not added any methods.</string>
     <string name="sources_screen_empty_placeholder_label">You have not added any sources.</string>
     <string name="templates_screen_empty_placeholder_label">You have not added any templates.</string>
+    <string name="no_templates_to_import_placeholder_label">No templates found to import.</string>
     <!--  Empty Placeholder Strings  -->
 
     <!--  Placeholder Strings  -->
@@ -123,6 +145,10 @@
     <!--  Placeholder Strings  -->
 
     <!--  Error Strings  -->
+    <string name="category_exists_error_label">A category with this name already exists. Mapping is required</string>
+    <string name="counter_party_exists_error_label">A counter party with this name already exists. Mapping is required</string>
+    <string name="method_exists_error_label">A method with this name already exists. Mapping is required</string>
+    <string name="source_exists_error_label">A source with this name already exists. Mapping is required</string>
     <string name="field_required_error_label">This field is required</string>
     <string name="invalid_min_amount_error_label">Amount must be less than %1$s</string>
     <string name="invalid_max_amount_error_label">Amount must be greater than %1$s</string>
@@ -135,6 +161,7 @@
     <string name="migration_success_label">Migration complete</string>
     <string name="recount_success_label">Frequency updated</string>
     <string name="export_success_label">Successfully exported</string>
+    <string name="import_success_label">Successfully imported</string>
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
     <string name="not_enough_balance_error_label">Insufficient balance</string>
@@ -144,11 +171,16 @@
     <string name="category_source_required_error_label">At least one category and source are required to proceed</string>
     <string name="method_source_required_error_label">At least one method and source are required to proceed</string>
     <string name="category_required_error_label">At least one category is required to proceed</string>
+    <string name="category_map_required_error_label">At least one category has to be selected to proceed</string>
     <string name="method_required_error_label">At least one method is required to proceed</string>
+    <string name="method_map_required_error_label">At least one method has to be selected to proceed</string>
     <string name="source_required_error_label">At least one source is required to proceed</string>
+    <string name="source_map_required_error_label">At least one source has to be selected to proceed</string>
+    <string name="mapping_invalid_error_label">Please check and resolve all errors to proceed</string>
     <!--  Error Strings  -->
 
     <!--  TextField Strings  -->
+    <string name="map_to_field_label">Map to</string>
     <string name="search_field_label">Search</string>
     <string name="template_name_field_label">Template name</string>
     <string name="title_field_label">Title</string>
@@ -174,6 +206,7 @@
     <!--  Dialog Strings  -->
 
     <!--  Card Strings  -->
+    <string name="update_source_balance_to_label">Update selected source\'s balance to %1$s</string>
     <string name="frequency_of_use_label">Frequency of use : %1$s</string>
     <string name="transaction_count_label">Transactions : %1$s</string>
     <string name="last_used_datetime_label">Last used : %1$s</string>
