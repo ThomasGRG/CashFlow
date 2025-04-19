@@ -82,6 +82,7 @@ class UpsertTransactionScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+        _event.close()
     }
 
     private fun loadData() = viewModelScope.launch {

@@ -93,6 +93,7 @@ class TransactionsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+        _event.close()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

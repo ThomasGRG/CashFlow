@@ -68,6 +68,7 @@ class UpsertMethodScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+        _event.close()
     }
 
     private fun getTransactionCount() = viewModelScope.launch {

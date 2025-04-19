@@ -35,6 +35,7 @@ class SettingsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+        _event.close()
     }
 
     fun reCount() = viewModelScope.launch {

@@ -60,6 +60,7 @@ class TransactionTemplateScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         realm.close()
+        _event.close()
     }
 
     private fun getCount() = viewModelScope.launch {
