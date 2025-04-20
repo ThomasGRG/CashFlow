@@ -8,6 +8,7 @@ import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Category
@@ -20,6 +21,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -157,10 +159,12 @@ class UpsertCategoryScreenViewModel(
             getCategoryJob?.cancel() // otherwise enabled will be set to true after saving and the flow updates
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
+
             val result = realm.write {
                 if (category.uuid.isBlank()) {
                     copyToRealm(
@@ -178,14 +182,21 @@ class UpsertCategoryScreenViewModel(
                     }
                 }
             }
+
+            val duration = System.currentTimeMillis() - startTime
+            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+            }
+
             if (result != null) {
                 _event.send(Event.SaveSuccess)
             } else {
                 _event.send(Event.InternalError)
             }
+
             _state.update {
                 it.copy(
-                    loading = false
+                    writeOngoing = false
                 )
             }
         }
@@ -196,10 +207,12 @@ class UpsertCategoryScreenViewModel(
             getCategoryJob?.cancelAndJoin()
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
+
             val category = state.value.category
             realm.write {
                 this.query<Transaction>("category.uuid == $0", categoryUuid).find()
@@ -220,9 +233,14 @@ class UpsertCategoryScreenViewModel(
                     delete(it)
                 }
             }
+
+            val duration = System.currentTimeMillis() - startTime
+            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+            }
             _state.update {
                 it.copy(
-                    loading = false
+                    writeOngoing = false
                 )
             }
             _event.send(Event.DeleteSuccess)

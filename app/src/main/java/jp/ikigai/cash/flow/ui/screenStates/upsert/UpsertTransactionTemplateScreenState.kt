@@ -28,5 +28,6 @@ data class UpsertTransactionTemplateScreenState(
     val selectedSource: Source = Source(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
+    val writeOngoing: Boolean = false,
     val locale: Locale? = null
 )

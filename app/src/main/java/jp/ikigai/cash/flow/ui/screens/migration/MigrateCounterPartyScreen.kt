@@ -66,6 +66,7 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
+import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
@@ -160,6 +161,10 @@ fun MigrateCounterPartyScreen(
 
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
+    }
+
+    val migrateOngoing by remember(key1 = state.migrateOngoing) {
+        mutableStateOf(state.migrateOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -287,10 +292,13 @@ fun MigrateCounterPartyScreen(
 
     val migrateEnabled by remember(
         key1 = state.selectedTransactionCount,
-        key2 = currentEvent,
-        key3 = state.loading
+        key2 = state.enabled
     ) {
-        mutableStateOf(state.selectedTransactionCount > 0 && currentEvent != Event.MigrationSuccess && !state.loading)
+        mutableStateOf(state.enabled && state.selectedTransactionCount > 0)
+    }
+
+    if (migrateOngoing) {
+        WaitDialog()
     }
 
     OneHandModeScaffold(
@@ -434,11 +442,7 @@ fun MigrateCounterPartyScreen(
         },
         bottomBar = {
             MigrateCounterPartyScreenRoundedBottomBar(
-                navigateBack = {
-                    if (!loading) {
-                        navigateBack()
-                    }
-                },
+                navigateBack = navigateBack,
                 enabled = enabled,
                 migrateEnabled = migrateEnabled,
                 allSelected = allSelected,

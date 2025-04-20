@@ -8,6 +8,7 @@ import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.CounterParty
@@ -20,6 +21,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -158,10 +160,12 @@ class UpsertCounterPartyScreenViewModel(
             getCounterPartyJob?.cancel()
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
+
             val result = realm.write {
                 if (counterParty.uuid.isBlank()) {
                     copyToRealm(
@@ -179,14 +183,21 @@ class UpsertCounterPartyScreenViewModel(
                     }
                 }
             }
+
+            val duration = System.currentTimeMillis() - startTime
+            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+            }
+
             if (result != null) {
                 _event.send(Event.SaveSuccess)
             } else {
                 _event.send(Event.InternalError)
             }
+
             _state.update {
                 it.copy(
-                    loading = false
+                    writeOngoing = false
                 )
             }
         }
@@ -197,10 +208,12 @@ class UpsertCounterPartyScreenViewModel(
             getCounterPartyJob?.cancelAndJoin()
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
+
             val counterParty = state.value.counterParty
             realm.write {
                 this.query<Transaction>("counterParty.uuid == $0", counterPartyUuid).find()
@@ -221,9 +234,15 @@ class UpsertCounterPartyScreenViewModel(
                     delete(it)
                 }
             }
+
+            val duration = System.currentTimeMillis() - startTime
+            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+            }
+
             _state.update {
                 it.copy(
-                    loading = false
+                    writeOngoing = false
                 )
             }
             _event.send(Event.DeleteSuccess)

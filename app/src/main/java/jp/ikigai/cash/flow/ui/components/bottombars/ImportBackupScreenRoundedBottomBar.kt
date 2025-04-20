@@ -48,7 +48,6 @@ import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
 fun ImportBackupScreenRoundedBottomBar(
-    loading: Boolean,
     enabled: Boolean,
     navigateBack: () -> Unit,
     navigateToNext: () -> Unit,
@@ -172,7 +171,6 @@ fun ImportBackupScreenRoundedBottomBar(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize(),
-                    enabled = !loading
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -324,7 +322,6 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
     Column {
         ImportBackupScreenRoundedBottomBar(
             enabled = true,
-            loading = false,
             navigateBack = {},
             navigateToNext = {},
             isSelectTransactionsScreen = false,
@@ -346,7 +343,6 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
         )
         ImportBackupScreenRoundedBottomBar(
             enabled = false,
-            loading = true,
             navigateBack = {},
             navigateToNext = {},
             isSelectTransactionsScreen = true,

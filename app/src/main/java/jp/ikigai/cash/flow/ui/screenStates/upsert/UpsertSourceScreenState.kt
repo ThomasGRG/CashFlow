@@ -14,5 +14,6 @@ data class UpsertSourceScreenState(
     val currencies: List<CurrencyInfo> = Constants.currencyList,
     val hasTransactions: Boolean = false,
     val loading: Boolean = true,
-    val enabled: Boolean = false
+    val enabled: Boolean = false,
+    val writeOngoing: Boolean = false
 )

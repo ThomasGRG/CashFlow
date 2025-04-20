@@ -8,6 +8,7 @@ import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
@@ -30,6 +31,7 @@ import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -317,10 +319,11 @@ class UpsertTransactionScreenViewModel(
             loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
 
             val transaction = state.value.transaction
             val selectedCategory = state.value.selectedCategory
@@ -379,6 +382,7 @@ class UpsertTransactionScreenViewModel(
                 )
             }
             updateTransaction(
+                startTime = startTime,
                 transaction = transaction,
                 newTitle = newTitle,
                 newDescription = newDescription,
@@ -395,10 +399,11 @@ class UpsertTransactionScreenViewModel(
             loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(
-                    loading = true,
+                    writeOngoing = true,
                     enabled = false
                 )
             }
+            val startTime = System.currentTimeMillis()
 
             val transaction = state.value.transaction
             val category = transaction.category!!
@@ -431,9 +436,15 @@ class UpsertTransactionScreenViewModel(
                     delete(it)
                 }
             }
+
+            val duration = System.currentTimeMillis() - startTime
+            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+            }
+
             _state.update {
                 it.copy(
-                    loading = false
+                    writeOngoing = false
                 )
             }
             _event.send(Event.DeleteSuccess)
@@ -441,6 +452,7 @@ class UpsertTransactionScreenViewModel(
     }
 
     private suspend fun updateTransaction(
+        startTime: Long,
         transaction: Transaction,
         newTitle: String,
         newDescription: String,
@@ -485,6 +497,12 @@ class UpsertTransactionScreenViewModel(
                 }
             }
         }
+
+        val duration = System.currentTimeMillis() - startTime
+        if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+            delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+        }
+
         if (result != null) {
             _event.send(Event.SaveSuccess)
         } else {
@@ -492,7 +510,7 @@ class UpsertTransactionScreenViewModel(
         }
         _state.update {
             it.copy(
-                loading = false
+                writeOngoing = false
             )
         }
     }

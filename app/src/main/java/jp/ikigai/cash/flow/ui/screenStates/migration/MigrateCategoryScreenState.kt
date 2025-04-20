@@ -49,5 +49,6 @@ data class MigrateCategoryScreenState(
     val sortDirection: Sort = Sort.DESCENDING,
     val loading: Boolean = true,
     val enabled: Boolean = false,
+    val migrateOngoing: Boolean = false,
     val locale: Locale? = null
 )

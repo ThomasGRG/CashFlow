@@ -24,7 +24,8 @@ import java.util.Locale
 data class ImportBackupScreenMainState(
     val locale: Locale? = null,
     val loading: Boolean = false,
-    val importStarted: Boolean = false,
+    val enabled: Boolean = false,
+    val importOngoing: Boolean = false,
     val dataLoadComplete: Boolean = false,
     val sortDirection: Sort = Sort.DESCENDING,
     //Transaction

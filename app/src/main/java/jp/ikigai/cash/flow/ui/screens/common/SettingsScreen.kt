@@ -1,15 +1,11 @@
 package jp.ikigai.cash.flow.ui.screens.common
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +25,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import jp.ikigai.cash.flow.R
@@ -37,6 +32,7 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
+import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.common.SettingsScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -58,8 +54,8 @@ fun SettingsScreen(
 ) {
     val haptics = LocalHapticFeedback.current
 
-    val loading by remember(state.loading) {
-        mutableStateOf(state.loading)
+    val reCountOngoing by remember(state.reCountOngoing) {
+        mutableStateOf(state.reCountOngoing)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -83,34 +79,8 @@ fun SettingsScreen(
         }
     }
 
-    if (loading) {
-        BasicAlertDialog(
-            onDismissRequest = {},
-            properties = DialogProperties(
-                dismissOnClickOutside = false,
-                dismissOnBackPress = false
-            ),
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = MaterialTheme.shapes.extraLarge
-                )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                CircularProgressIndicator()
-                Text(
-                    text = stringResource(R.string.please_wait_dialog_label),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
+    if (reCountOngoing) {
+        WaitDialog()
     }
 
     OneHandModeScaffold(

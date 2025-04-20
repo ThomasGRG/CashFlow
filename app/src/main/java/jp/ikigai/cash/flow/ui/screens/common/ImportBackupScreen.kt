@@ -83,6 +83,7 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
+import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
@@ -168,12 +169,16 @@ fun ImportBackupScreen(
 
     val scrollScope = rememberCoroutineScope()
 
+    val enabled by remember(key1 = mainState.enabled) {
+        mutableStateOf(mainState.enabled)
+    }
+
     val loading by remember(key1 = mainState.loading) {
         mutableStateOf(mainState.loading)
     }
 
-    val importStarted by remember(key1 = mainState.importStarted) {
-        mutableStateOf(mainState.importStarted)
+    val importOngoing by remember(key1 = mainState.importOngoing) {
+        mutableStateOf(mainState.importOngoing)
     }
 
     var popupType by remember {
@@ -467,19 +472,15 @@ fun ImportBackupScreen(
         }
     }
 
-    BackHandler(enabled = true) {
-        if (!loading) {
-            if (importStarted) {
-                navigateBack()
-            } else if (pagerState.currentPage > 0) {
-                scrollScope.launch {
-                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                }
-            } else if (dataLoadComplete) {
-                popupType = PopupType.CONFIRM_NAVIGATION
-            } else {
-                navigateBack()
+    BackHandler(enabled = enabled) {
+        if (pagerState.currentPage > 0) {
+            scrollScope.launch {
+                pagerState.animateScrollToPage(pagerState.currentPage - 1)
             }
+        } else if (dataLoadComplete) {
+            popupType = PopupType.CONFIRM_NAVIGATION
+        } else {
+            navigateBack()
         }
     }
 
@@ -493,6 +494,10 @@ fun ImportBackupScreen(
             }
         }
     )
+
+    if (importOngoing) {
+        WaitDialog()
+    }
 
     OneHandModeScaffold(
         loading = loading,
@@ -716,21 +721,18 @@ fun ImportBackupScreen(
         },
         bottomBar = {
             ImportBackupScreenRoundedBottomBar(
-                enabled = !importStarted,
-                loading = loading,
+                enabled = enabled,
                 navigateBack = {
-                    if (!loading) {
-                        if (importStarted) {
-                            navigateBack()
-                        } else if (pagerState.currentPage > 0) {
+                    if (enabled) {
+                        if (pagerState.currentPage > 0) {
                             scrollScope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
                             }
                         } else if (dataLoadComplete) {
                             popupType = PopupType.CONFIRM_NAVIGATION
-                        } else {
-                            navigateBack()
                         }
+                    } else {
+                        navigateBack()
                     }
                 },
                 navigateToNext = {
@@ -1029,7 +1031,7 @@ fun ImportBackupScreen(
                                 OutlinedTextField(
                                     value = searchText,
                                     onValueChange = setSearchText,
-                                    enabled = !importStarted,
+                                    enabled = enabled,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .focusRequester(focusRequester = focusRequester),
@@ -1047,7 +1049,7 @@ fun ImportBackupScreen(
                                                 contentDescription = "clear field",
                                                 modifier = Modifier
                                                     .clickable(
-                                                        enabled = !importStarted,
+                                                        enabled = enabled,
                                                         onClick = {
                                                             setSearchText("")
                                                         }
@@ -1086,7 +1088,7 @@ fun ImportBackupScreen(
                                         TransactionGroupHeader(
                                             date = it.key,
                                             selected = selectedLocalDates.contains(it.key),
-                                            enabled = !importStarted && enabledLocalDates.contains(
+                                            enabled = enabled && enabledLocalDates.contains(
                                                 it.key
                                             ),
                                             onClick = {
@@ -1107,7 +1109,7 @@ fun ImportBackupScreen(
                                             checked = enabledTempTransactions.contains(
                                                 transactionWithIcons.uuid
                                             ) && selectedTransactions.contains(transactionWithIcons.uuid),
-                                            enabled = !importStarted && enabledTempTransactions.contains(
+                                            enabled = enabled && enabledTempTransactions.contains(
                                                 transactionWithIcons.uuid
                                             ),
                                             transactionWithIcons = transactionWithIcons,

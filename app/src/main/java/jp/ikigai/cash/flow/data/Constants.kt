@@ -14,6 +14,8 @@ object Constants {
 
     const val tweenDuration = 350
 
+    const val WAIT_DIALOG_MINIMUM_SCREEN_TIME: Long = 1000L
+
     val currencyList = listOf(
         Currency.getInstance("INR"),
         Currency.getInstance("USD"),

@@ -56,6 +56,7 @@ import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
@@ -101,6 +102,10 @@ fun UpsertTransactionTemplateScreen(
 
     LaunchedEffect(key1 = locale) {
         setLocale(locale)
+    }
+
+    val writeOngoing by remember(key1 = state.writeOngoing) {
+        mutableStateOf(state.writeOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -211,6 +216,10 @@ fun UpsertTransactionTemplateScreen(
 
     var popupType by remember {
         mutableStateOf(PopupType.NONE)
+    }
+
+    if (writeOngoing) {
+        WaitDialog()
     }
 
     OneHandModeScaffold(

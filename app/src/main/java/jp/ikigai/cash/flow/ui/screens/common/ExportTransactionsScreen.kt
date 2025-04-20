@@ -67,6 +67,7 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
+import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.ExportPopup
@@ -166,6 +167,10 @@ fun ExportTransactionsScreen(
 
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
+    }
+
+    val exportOngoing by remember(key1 = state.exportOngoing) {
+        mutableStateOf(state.exportOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -301,10 +306,9 @@ fun ExportTransactionsScreen(
 
     val exportEnabled by remember(
         key1 = state.selectedTransactions,
-        key2 = currentEvent,
-        key3 = state.loading
+        key2 = state.enabled
     ) {
-        mutableStateOf(state.selectedTransactions.isNotEmpty() && currentEvent != Event.ExportSuccess && !state.loading)
+        mutableStateOf(state.enabled && state.selectedTransactions.isNotEmpty())
     }
 
     var includeTemplates by remember {
@@ -325,6 +329,10 @@ fun ExportTransactionsScreen(
             }
         }
     )
+
+    if (exportOngoing) {
+        WaitDialog()
+    }
 
     OneHandModeScaffold(
         loading = loading,
@@ -484,11 +492,7 @@ fun ExportTransactionsScreen(
         },
         bottomBar = {
             ExportTransactionsScreenRoundedBottomBar(
-                navigateBack = {
-                    if (!loading) {
-                        navigateBack()
-                    }
-                },
+                navigateBack = navigateBack,
                 enabled = enabled,
                 exportEnabled = exportEnabled,
                 allSelected = allSelected,

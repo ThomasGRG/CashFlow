@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Category
@@ -14,6 +15,7 @@ import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,9 +43,11 @@ class SettingsScreenViewModel(
     fun reCount() = viewModelScope.launch {
         _state.update {
             it.copy(
-                loading = true
+                reCountOngoing = true
             )
         }
+        val startTime = System.currentTimeMillis()
+        var result: Event
         try {
             realm.write {
                 val categories = this.query<Category>().find()
@@ -79,13 +83,18 @@ class SettingsScreenViewModel(
                             .toInt()
                 }
             }
-            _event.send(Event.ReCountSuccess)
+            result = Event.ReCountSuccess
         } catch (exception: Exception) {
-            _event.send(Event.InternalError)
+            result = Event.InternalError
         }
+        val duration = System.currentTimeMillis() - startTime
+        if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+            delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+        }
+        _event.send(result)
         _state.update {
             it.copy(
-                loading = false
+                reCountOngoing = false
             )
         }
     }

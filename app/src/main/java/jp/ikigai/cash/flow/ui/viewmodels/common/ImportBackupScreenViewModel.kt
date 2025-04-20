@@ -17,6 +17,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
@@ -57,6 +58,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -439,7 +441,8 @@ class ImportBackupScreenViewModel(
                     ),
                     selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size)
                         .toString(),
-                    loading = false
+                    loading = false,
+                    enabled = true
                 )
             }
         }
@@ -530,10 +533,12 @@ class ImportBackupScreenViewModel(
         loadDataJob?.cancelAndJoin()
         _mainState.update {
             it.copy(
-                loading = true,
-                importStarted = true
+                importOngoing = true,
+                enabled = false
             )
         }
+        val startTime = System.currentTimeMillis()
+        var result: Event
 
         val tempCategories = mainState.value.tempCategories
         val selectedTempCategoryUUIDs = mainState.value.selectedTempCategories
@@ -786,13 +791,20 @@ class ImportBackupScreenViewModel(
 
                 clearTempData()
             }
-            _event.send(Event.ImportSuccess)
+            result = Event.ImportSuccess
         } catch (exception: Exception) {
-            _event.send(Event.InternalError)
+            result = Event.InternalError
         }
+
+        val duration = System.currentTimeMillis() - startTime
+        if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
+            delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
+        }
+        _event.send(result)
+
         _mainState.update {
             it.copy(
-                loading = false
+                importOngoing = false
             )
         }
     }

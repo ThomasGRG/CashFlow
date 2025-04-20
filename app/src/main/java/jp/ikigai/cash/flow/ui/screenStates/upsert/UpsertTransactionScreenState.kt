@@ -39,5 +39,6 @@ data class UpsertTransactionScreenState(
     val transactionTitles: List<TransactionTitle> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
+    val writeOngoing: Boolean = false,
     val locale: Locale? = null
 )
