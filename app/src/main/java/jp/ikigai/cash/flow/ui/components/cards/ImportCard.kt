@@ -353,7 +353,7 @@ fun MapSourceCard(
                     .alpha(alpha)
             )
             AnimatedVisibility(
-                visible = tempSource.balance != mappedSource.balance
+                visible = mappedSource.uuid.isNotEmpty() && tempSource.balance != mappedSource.balance
             ) {
                 Row(
                     modifier = Modifier
