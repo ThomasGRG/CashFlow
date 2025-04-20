@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +63,7 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
@@ -84,6 +86,7 @@ fun UpsertSourceScreen(
     setName: (String) -> Unit,
     upsertTransactionSource: (ImageVector, String, String, Double) -> Unit,
     deleteSource: () -> Unit,
+    hasChanges: (String, String, String?) -> Boolean,
     events: Flow<Event>,
     state: UpsertSourceScreenState,
 ) {
@@ -184,6 +187,14 @@ fun UpsertSourceScreen(
         WaitDialog()
     }
 
+    BackHandler {
+        if (hasChanges(balanceFieldValue.text, selectedCurrency, selectedIcon)) {
+            popupType = PopupType.CONFIRM_NAVIGATION
+        } else {
+            navigateBack()
+        }
+    }
+
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
@@ -199,6 +210,17 @@ fun UpsertSourceScreen(
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when(popupType) {
+                PopupType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationPopup(
+                        message = stringResource(id = R.string.navigation_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        navigate = navigateBack
+                    )
+                }
+
                 PopupType.CURRENCY -> {
                     CurrencyPopup(
                         index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
@@ -272,7 +294,11 @@ fun UpsertSourceScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    navigateBack()
+                    if (hasChanges(balanceFieldValue.text, selectedCurrency, selectedIcon)) {
+                        popupType = PopupType.CONFIRM_NAVIGATION
+                    } else {
+                        navigateBack()
+                    }
                 },
                 enabled = enabled,
                 floatingButtonIcon = {
@@ -422,6 +448,7 @@ fun UpsertSourceScreenPreview() {
         setName = {},
         upsertTransactionSource = { _, _, _, _ -> },
         deleteSource = {},
+        hasChanges = { _, _, _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertSourceScreenState()
     )
@@ -453,6 +480,7 @@ fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
             setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
             deleteSource = viewModel::deleteSource,
+            hasChanges = viewModel::hasChanges,
             events = viewModel.event,
             state = state
         )

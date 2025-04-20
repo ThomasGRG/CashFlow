@@ -365,4 +365,26 @@ class UpsertTransactionTemplateScreenViewModel(
             )
         }
     }
+
+    fun hasChanges(title: String, description: String): Boolean {
+        val transactionTemplate = state.value.transactionTemplate
+        val selectedCategory = state.value.selectedCategory
+        val selectedCounterParty = state.value.selectedCounterParty
+        val selectedMethod = state.value.selectedMethod
+        val selectedSource = state.value.selectedSource
+        val selectedType = state.value.type
+
+        val nameChanged = transactionTemplate.name != state.value.name
+        val titleChanged = transactionTemplate.title != title
+        val descriptionChanged = transactionTemplate.description != description
+        val amountChanged = transactionTemplate.amount != state.value.amount
+        val categoryChanged = (transactionTemplate.category?.uuid ?: "") != selectedCategory.uuid
+        val counterPartyChanged =
+            (transactionTemplate.counterParty?.uuid ?: "") != selectedCounterParty.uuid
+        val methodChanged = (transactionTemplate.method?.uuid ?: "") != selectedMethod.uuid
+        val sourceChanged = (transactionTemplate.source?.uuid ?: "") != selectedSource.uuid
+        val typeChanged = transactionTemplate.type.id != selectedType.id
+
+        return nameChanged || titleChanged || descriptionChanged || amountChanged || categoryChanged || counterPartyChanged || methodChanged || sourceChanged || typeChanged
+    }
 }

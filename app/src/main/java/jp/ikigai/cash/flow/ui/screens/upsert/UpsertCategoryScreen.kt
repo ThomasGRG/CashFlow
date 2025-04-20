@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +63,7 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
@@ -174,6 +176,14 @@ fun UpsertCategoryScreen(
         WaitDialog()
     }
 
+    BackHandler {
+        if (state.category.name != state.name || state.category.icon.name != selectedIcon) {
+            popupType = PopupType.CONFIRM_NAVIGATION
+        } else {
+            navigateBack()
+        }
+    }
+
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
@@ -189,6 +199,17 @@ fun UpsertCategoryScreen(
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when (popupType) {
+                PopupType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationPopup(
+                        message = stringResource(id = R.string.navigation_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        navigate = navigateBack
+                    )
+                }
+
                 PopupType.RESET_ICON -> {
                     ResetIconPopup(
                         dismiss = {
@@ -275,7 +296,11 @@ fun UpsertCategoryScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        navigateBack()
+                        if (state.category.name != state.name || state.category.icon.name != selectedIcon) {
+                            popupType = PopupType.CONFIRM_NAVIGATION
+                        } else {
+                            navigateBack()
+                        }
                     },
                     enabled = enabled,
                     floatingButtonIcon = {

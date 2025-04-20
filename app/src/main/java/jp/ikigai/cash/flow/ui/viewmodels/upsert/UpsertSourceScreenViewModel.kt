@@ -230,4 +230,20 @@ class UpsertSourceScreenViewModel(
             _event.send(Event.DeleteSuccess)
         }
     }
+
+    fun hasChanges(
+        balanceString: String,
+        selectedCurrency: String,
+        selectedIcon: String?
+    ): Boolean {
+        val balance = balanceString.toDoubleOrNull()
+        val source = state.value.source
+
+        val nameChanged = source.name != state.value.name
+        val balanceChanged = balance == null || source.balance != balance
+        val currencyChanged = source.currency != selectedCurrency
+        val iconChanged = source.icon.name != selectedIcon
+
+        return nameChanged || balanceChanged || currencyChanged || iconChanged
+    }
 }

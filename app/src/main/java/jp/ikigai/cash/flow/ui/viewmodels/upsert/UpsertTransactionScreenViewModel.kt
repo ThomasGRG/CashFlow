@@ -746,4 +746,37 @@ class UpsertTransactionScreenViewModel(
             )
         }
     }
+
+    fun hasChanges(description: String): Boolean {
+        val transaction = state.value.transaction
+        val selectedCategory = state.value.selectedCategory
+        val selectedCounterParty = state.value.selectedCounterParty
+        val selectedMethod = state.value.selectedMethod
+        val selectedSource = state.value.selectedSource
+        val selectedType = state.value.type
+
+        val transactionDateTime = transaction.time.toZonedDateTime()
+        val selectedDateTime = state.value.dateTime
+
+        val yearChanged = transactionDateTime.year != selectedDateTime.year
+        val monthChanged = transactionDateTime.month.value != selectedDateTime.month.value
+        val dayChanged = transactionDateTime.dayOfMonth != selectedDateTime.dayOfMonth
+        val dateChanged = yearChanged || monthChanged || dayChanged
+
+        val hourChanged = transactionDateTime.hour != selectedDateTime.hour
+        val minuteChanged = transactionDateTime.minute != selectedDateTime.minute
+        val timeChanged = hourChanged || minuteChanged
+
+        val titleChanged = transaction.title != state.value.title
+        val descriptionChanged = transaction.description != description
+        val amountChanged = transaction.amount != state.value.amount
+        val categoryChanged = (transaction.category?.uuid ?: "") != selectedCategory.uuid
+        val counterPartyChanged =
+            (transaction.counterParty?.uuid ?: "") != selectedCounterParty.uuid
+        val methodChanged = (transaction.method?.uuid ?: "") != selectedMethod.uuid
+        val sourceChanged = (transaction.source?.uuid ?: "") != selectedSource.uuid
+        val typeChanged = transaction.type.id != selectedType.id
+
+        return titleChanged || descriptionChanged || amountChanged || dateChanged || timeChanged || categoryChanged || counterPartyChanged || methodChanged || sourceChanged || typeChanged
+    }
 }

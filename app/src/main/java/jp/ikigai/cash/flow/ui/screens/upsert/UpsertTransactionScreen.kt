@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -70,6 +71,7 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
+import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.DatePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
@@ -110,6 +112,7 @@ fun UpsertTransactionScreen(
     upsertTransaction: (String, String) -> Unit,
     deleteTransaction: () -> Unit,
     filterTransactionTitles: (String) -> List<String>,
+    hasChanges: (String) -> Boolean,
     events: Flow<Event>,
     state: UpsertTransactionScreenState
 ) {
@@ -294,6 +297,14 @@ fun UpsertTransactionScreen(
         WaitDialog()
     }
 
+    BackHandler {
+        if (hasChanges(descriptionFieldValue.text)) {
+            popupType = PopupType.CONFIRM_NAVIGATION
+        } else {
+            navigateBack()
+        }
+    }
+
     OneHandModeScaffold(
         loading = loading,
         showToastBar = showToastBar,
@@ -309,6 +320,17 @@ fun UpsertTransactionScreen(
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
             when (popupType) {
+                PopupType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationPopup(
+                        message = stringResource(id = R.string.navigation_confirmation_label),
+                        dismiss = {
+                            hidePopup()
+                            popupType = PopupType.NONE
+                        },
+                        navigate = navigateBack
+                    )
+                }
+
                 PopupType.DATE -> {
                     DatePickerPopup(
                         date = dateTime,
@@ -433,7 +455,11 @@ fun UpsertTransactionScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    navigateBack()
+                    if (hasChanges(descriptionFieldValue.text)) {
+                        popupType = PopupType.CONFIRM_NAVIGATION
+                    } else {
+                        navigateBack()
+                    }
                 },
                 enabled = enabled,
                 floatingButtonIcon = {
@@ -778,6 +804,7 @@ fun UpsertTransactionScreenPreview() {
         upsertTransaction = { _, _ -> },
         deleteTransaction = {},
         filterTransactionTitles = { emptyList() },
+        hasChanges = { _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertTransactionScreenState()
     )
@@ -817,6 +844,7 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             upsertTransaction = viewModel::upsertTransaction,
             deleteTransaction = viewModel::deleteTransaction,
             filterTransactionTitles = viewModel::filterTransactionTitles,
+            hasChanges = viewModel::hasChanges,
             events = viewModel.event,
             state = state
         )
