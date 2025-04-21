@@ -23,6 +23,7 @@ data class UpsertTransactionScreenState(
     val dateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.systemDefault()),
     val dateString: String = "",
     val timeString: String = "",
+    val timeValid: Boolean = true,
     val type: TransactionType = TransactionType.DEBIT,
     val categories: List<Category> = emptyList(),
     val selectedCategory: Category = Category(),

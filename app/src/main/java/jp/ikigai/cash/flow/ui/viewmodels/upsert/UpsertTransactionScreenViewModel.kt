@@ -1,5 +1,7 @@
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,6 +57,21 @@ class UpsertTransactionScreenViewModel(
 
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
+    private var currentDateTime: ZonedDateTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val updateCurrentTime = Runnable {
+        val now = System.currentTimeMillis()
+        scheduleNextUpdate()
+        currentDateTime = now.toZonedDateTime()
+        _state.update {
+            it.copy(
+                timeValid = isTimeValid(selectedDateTime = it.dateTime)
+            )
+        }
+    }
+
     private var loadDataJob: Job? = null
 
     private var previousBalance = 0.0
@@ -78,6 +95,7 @@ class UpsertTransactionScreenViewModel(
         realm.query<TransactionTitle>().sort("frequency", Sort.DESCENDING)
 
     init {
+        scheduleNextUpdate()
         loadDataJob = loadData()
     }
 
@@ -85,6 +103,14 @@ class UpsertTransactionScreenViewModel(
         super.onCleared()
         realm.close()
         _event.close()
+        handler.removeCallbacks(updateCurrentTime)
+    }
+
+    private fun scheduleNextUpdate() {
+        val now = System.currentTimeMillis()
+        val nextMinute = ((now / 60000) + 1) * 60000
+        val delay = nextMinute - now
+        handler.postDelayed(updateCurrentTime, delay)
     }
 
     private fun loadData() = viewModelScope.launch {
@@ -278,6 +304,8 @@ class UpsertTransactionScreenViewModel(
             sourceValid = false
         }
 
+        val timeValid = isTimeValid(selectedDateTime = state.value.dateTime)
+
         _state.update {
             it.copy(
                 titleValid = titleValid,
@@ -285,11 +313,12 @@ class UpsertTransactionScreenViewModel(
                 categoryValid = categoryValid,
                 methodValid = methodValid,
                 sourceValid = sourceValid,
-                sourceErrorStringRes = sourceErrorStringRes
+                sourceErrorStringRes = sourceErrorStringRes,
+                timeValid = timeValid
             )
         }
 
-        return amountValid && categoryValid && methodValid && sourceValid && titleValid
+        return amountValid && categoryValid && methodValid && sourceValid && titleValid && timeValid
     }
 
     private fun hasSufficientBalance(
@@ -660,6 +689,7 @@ class UpsertTransactionScreenViewModel(
                 dateTime = newDateTime,
                 dateString = newDateTime.getDateString(),
                 timeString = newDateTime.getTimeString(),
+                timeValid = isTimeValid(selectedDateTime = newDateTime)
             )
         }
     }
@@ -670,7 +700,27 @@ class UpsertTransactionScreenViewModel(
                 dateTime = time,
                 dateString = time.getDateString(),
                 timeString = time.getTimeString(),
+                timeValid = isTimeValid(selectedDateTime = time)
             )
+        }
+    }
+
+    private fun isTimeValid(selectedDateTime: ZonedDateTime): Boolean {
+        val currentYear = currentDateTime.year
+        val currentMonth = currentDateTime.month.value
+        val currentDay = currentDateTime.dayOfMonth
+        return if (currentYear == selectedDateTime.year && currentMonth == selectedDateTime.month.value && currentDay == selectedDateTime.dayOfMonth) {
+            val currentHour = currentDateTime.hour
+            val currentMinute = currentDateTime.minute
+            return if (selectedDateTime.hour == currentHour) {
+                selectedDateTime.minute <= currentMinute
+            } else if (selectedDateTime.hour > currentHour) {
+                false
+            } else {
+                true
+            }
+        } else {
+            true
         }
     }
 

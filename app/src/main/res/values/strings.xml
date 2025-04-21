@@ -150,6 +150,7 @@
     <string name="method_exists_error_label">A method with this name already exists. Mapping is required</string>
     <string name="source_exists_error_label">A source with this name already exists. Mapping is required</string>
     <string name="field_required_error_label">This field is required</string>
+    <string name="future_time_error_label">Time cannot be in the future</string>
     <string name="invalid_min_amount_error_label">Amount must be less than %1$s</string>
     <string name="invalid_max_amount_error_label">Amount must be greater than %1$s</string>
     <string name="invalid_amount_error_label">Enter a number > 0</string>

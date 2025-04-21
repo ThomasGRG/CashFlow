@@ -289,6 +289,10 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.timeString)
     }
 
+    val timeValid by remember(key1 = state.timeValid) {
+        mutableStateOf(state.timeValid)
+    }
+
     var popupType by remember {
         mutableStateOf(PopupType.NONE)
     }
@@ -673,6 +677,8 @@ fun UpsertTransactionScreen(
                     label = stringResource(id = R.string.time_field_label),
                     placeHolder = "",
                     leadingIcon = TablerIcons.Alarm,
+                    isError = !timeValid,
+                    errorHint = stringResource(id = R.string.future_time_error_label),
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.TIME
