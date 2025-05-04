@@ -54,9 +54,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import compose.icons.TablerIcons
-import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
@@ -175,7 +174,7 @@ fun SelectCounterPartyPopup(
                 SelectableCard(
                     checked = { counterPartyPair.first.uuid == selectedCounterPartyUUID },
                     label = counterPartyPair.second,
-                    icon = counterPartyPair.first.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
@@ -331,7 +330,7 @@ fun MigrateCounterPartyPopup(
                 SelectableCard(
                     checked = { counterPartyPair.first.uuid == selectedCounterParty.uuid },
                     label = counterPartyPair.second,
-                    icon = counterPartyPair.first.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCounterParty = counterPartyPair.first
@@ -534,7 +533,7 @@ fun FilterCounterPartyPopup(
                         selectedCounterParties.getOrDefault(counterPartyPair.first.uuid, true)
                     },
                     label = counterPartyPair.second,
-                    icon = counterPartyPair.first.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCounterParties[counterPartyPair.first.uuid] =
@@ -682,22 +681,18 @@ fun SelectCounterPartyPopupPreview() {
             CounterParty().apply {
                 uuid = "asd"
                 name = "Shopping"
-                icon = TablerIcons.Users
             },
             CounterParty().apply {
                 uuid = "asdfrg"
                 name = "Transportation"
-                icon = TablerIcons.Users
             },
             CounterParty().apply {
                 uuid = "iurwuef"
                 name = "Personal Care"
-                icon = TablerIcons.Users
             },
             CounterParty().apply {
                 uuid = "iurwueadfegf"
                 name = "Food & Drinks"
-                icon = TablerIcons.Users
             }
         ),
         dismiss = {}

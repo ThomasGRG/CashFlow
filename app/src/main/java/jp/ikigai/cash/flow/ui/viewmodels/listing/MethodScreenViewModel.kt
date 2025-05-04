@@ -10,6 +10,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
 import io.realm.kotlin.query.TRUE_PREDICATE
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
@@ -113,7 +114,7 @@ class MethodScreenViewModel(
             CommonListingDTO(
                 uuid = method.uuid,
                 annotatedName = getHighlightedString(method.name, searchText),
-                icon = method.icon,
+                icon = Constants.DEFAULT_METHOD_ICON,
                 chips = chips
             )
         }

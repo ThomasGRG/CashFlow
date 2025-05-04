@@ -17,6 +17,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.notifications.ResultsChange
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
@@ -46,9 +47,6 @@ import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getIconForCategory
-import jp.ikigai.cash.flow.utils.getIconForCounterParty
-import jp.ikigai.cash.flow.utils.getIconForMethod
-import jp.ikigai.cash.flow.utils.getIconForSource
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
@@ -180,7 +178,6 @@ class ImportBackupScreenViewModel(
                             val tempCounterParty = TempCounterParty().apply {
                                 uuid = counterParty.uuid
                                 name = counterParty.name
-                                icon = counterParty.iconName.getIconForCounterParty()
                                 frequency = counterParty.frequency
                                 lastUsed = counterParty.lastUsed
                             }
@@ -191,7 +188,6 @@ class ImportBackupScreenViewModel(
                             val tempMethod = TempMethod().apply {
                                 uuid = method.uuid
                                 name = method.name
-                                icon = method.iconName.getIconForMethod()
                                 frequency = method.frequency
                                 lastUsed = method.lastUsed
                             }
@@ -202,7 +198,6 @@ class ImportBackupScreenViewModel(
                             val tempSource = TempSource().apply {
                                 uuid = source.uuid
                                 name = source.name
-                                icon = source.iconName.getIconForSource()
                                 currency = source.currency
                                 balance = source.balance
                                 frequency = source.frequency
@@ -642,7 +637,6 @@ class ImportBackupScreenViewModel(
                                 CounterParty().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempCounterParty.name
-                                    icon = tempCounterParty.icon
                                     frequency =
                                         tempTransactions.count { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterParty.uuid }
                                     lastUsed =
@@ -676,7 +670,6 @@ class ImportBackupScreenViewModel(
                                 Method().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempMethod.name
-                                    icon = tempMethod.icon
                                     frequency =
                                         tempTransactions.count { tempTransaction -> tempTransaction.method?.uuid == tempMethod.uuid }
                                     lastUsed =
@@ -722,7 +715,6 @@ class ImportBackupScreenViewModel(
                                 Source().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempSource.name
-                                    icon = tempSource.icon
                                     balance = tempSource.balance
                                     currency = tempSource.currency
                                     frequency =
@@ -838,7 +830,7 @@ class ImportBackupScreenViewModel(
         if (counterParty != null) {
             chips.add(
                 ChipInfo(
-                    icon = counterParty.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     value = counterParty.name,
                     resId = R.string.placeholder
                 )
@@ -853,14 +845,14 @@ class ImportBackupScreenViewModel(
         )
         chips.add(
             ChipInfo(
-                icon = method.icon,
+                icon = Constants.DEFAULT_METHOD_ICON,
                 value = method.name,
                 resId = R.string.placeholder
             )
         )
         chips.add(
             ChipInfo(
-                icon = source.icon,
+                icon = Constants.DEFAULT_SOURCE_ICON,
                 value = source.name,
                 resId = R.string.placeholder
             )
@@ -1038,18 +1030,26 @@ class ImportBackupScreenViewModel(
                     ChipInfo(
                         resId = R.string.placeholder,
                         value = counterParty.name,
-                        icon = counterParty.icon
+                        icon = Constants.DEFAULT_COUNTERPARTY_ICON
                     )
                 )
             }
             if (method != null) {
                 chips.add(
-                    ChipInfo(resId = R.string.placeholder, value = method.name, icon = method.icon)
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = method.name,
+                        icon = Constants.DEFAULT_METHOD_ICON
+                    )
                 )
             }
             if (source != null) {
                 chips.add(
-                    ChipInfo(resId = R.string.placeholder, value = source.name, icon = source.icon)
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = source.name,
+                        icon = Constants.DEFAULT_SOURCE_ICON
+                    )
                 )
             }
             chips.add(

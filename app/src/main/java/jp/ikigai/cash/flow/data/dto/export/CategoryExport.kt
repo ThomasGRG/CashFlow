@@ -1,10 +1,9 @@
 package jp.ikigai.cash.flow.data.dto.export
 
-data class SourceExport(
+data class CategoryExport(
     val uuid: String,
     val name: String,
-    val currency: String,
-    val balance: Double,
+    val iconName: String,
     val frequency: Int,
     val lastUsed: Long,
 )

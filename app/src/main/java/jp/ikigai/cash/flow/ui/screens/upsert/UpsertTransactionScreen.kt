@@ -56,6 +56,7 @@ import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
@@ -696,7 +697,7 @@ fun UpsertTransactionScreen(
                     },
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                    leadingIcon = selectedCounterParty.icon,
+                    leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedCounterParty(CounterParty())
@@ -722,7 +723,7 @@ fun UpsertTransactionScreen(
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                     isError = !methodValid,
                     errorHint = stringResource(id = R.string.field_required_error_label),
-                    leadingIcon = selectedMethod.icon,
+                    leadingIcon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.METHOD
@@ -744,7 +745,7 @@ fun UpsertTransactionScreen(
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
                     isError = !sourceValid,
                     errorHint = stringResource(id = sourceErrorStringRes),
-                    leadingIcon = selectedSource.icon,
+                    leadingIcon = Constants.DEFAULT_SOURCE_ICON,
                     onClick = {
                         resetOneHandMode()
                         popupType = PopupType.SOURCE

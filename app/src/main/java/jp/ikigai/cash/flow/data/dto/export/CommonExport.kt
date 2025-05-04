@@ -3,7 +3,6 @@ package jp.ikigai.cash.flow.data.dto.export
 data class CommonExport(
     val uuid: String,
     val name: String,
-    val iconName: String,
     val frequency: Int,
     val lastUsed: Long,
 )

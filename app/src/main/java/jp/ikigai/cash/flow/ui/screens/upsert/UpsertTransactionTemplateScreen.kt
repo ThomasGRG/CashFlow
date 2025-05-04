@@ -44,6 +44,7 @@ import compose.icons.tablericons.FileText
 import compose.icons.tablericons.LetterCase
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.entity.Category
@@ -530,7 +531,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedCounterParty.name,
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                    leadingIcon = selectedCounterParty.icon,
+                    leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedCounterParty(CounterParty())
@@ -551,7 +552,7 @@ fun UpsertTransactionTemplateScreen(
                     value = selectedMethod.name,
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
-                    leadingIcon = selectedMethod.icon,
+                    leadingIcon = Constants.DEFAULT_METHOD_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedMethod(Method())
@@ -572,7 +573,7 @@ fun UpsertTransactionTemplateScreen(
                     value = if (selectedSource.uuid.isNotEmpty()) "${selectedSource.name} - ${selectedSource.displayBalance}" else "",
                     label = stringResource(id = R.string.source_field_label),
                     placeHolder = stringResource(id = R.string.select_source_placeholder_label),
-                    leadingIcon = selectedSource.icon,
+                    leadingIcon = Constants.DEFAULT_SOURCE_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
                         setSelectedSource(Source())

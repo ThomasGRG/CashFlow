@@ -12,6 +12,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
 import io.realm.kotlin.query.TRUE_PREDICATE
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
@@ -175,18 +176,26 @@ class TransactionTemplateScreenViewModel(
                     ChipInfo(
                         resId = R.string.placeholder,
                         value = counterParty.name,
-                        icon = counterParty.icon
+                        icon = Constants.DEFAULT_COUNTERPARTY_ICON
                     )
                 )
             }
             if (method != null) {
                 chips.add(
-                    ChipInfo(resId = R.string.placeholder, value = method.name, icon = method.icon)
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = method.name,
+                        icon = Constants.DEFAULT_METHOD_ICON
+                    )
                 )
             }
             if (source != null) {
                 chips.add(
-                    ChipInfo(resId = R.string.placeholder, value = source.name, icon = source.icon)
+                    ChipInfo(
+                        resId = R.string.placeholder,
+                        value = source.name,
+                        icon = Constants.DEFAULT_SOURCE_ICON
+                    )
                 )
             }
             chips.add(

@@ -50,9 +50,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import compose.icons.TablerIcons
-import compose.icons.tablericons.BuildingBank
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
@@ -179,7 +178,7 @@ fun SelectSourcePopup(
                 SelectableCard(
                     checked = { sourcePair.first.uuid == selectedSourceUUID },
                     label = sourcePair.second,
-                    icon = sourcePair.first.icon,
+                    icon = Constants.DEFAULT_SOURCE_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
@@ -364,7 +363,7 @@ fun FilterSourcePopup(
                         selectedSources.getOrDefault(sourcePair.first.uuid, true)
                     },
                     label = sourcePair.second,
-                    icon = sourcePair.first.icon,
+                    icon = Constants.DEFAULT_SOURCE_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedSources[sourcePair.first.uuid] =
@@ -479,28 +478,24 @@ fun SelectSourcePopupPreview() {
             Source().apply {
                 uuid = "asd"
                 name = "Shopping"
-                icon = TablerIcons.BuildingBank
                 balance = 937.00
                 currency = "INR"
             },
             Source().apply {
                 uuid = "asdfrg"
                 name = "Transportation"
-                icon = TablerIcons.BuildingBank
                 balance = 937.65
                 currency = "INR"
             },
             Source().apply {
                 uuid = "iurwuef"
                 name = "Personal Care"
-                icon = TablerIcons.BuildingBank
                 balance = 937.65
                 currency = "INR"
             },
             Source().apply {
                 uuid = "iurwueadfegf"
                 name = "Food & Drinks"
-                icon = TablerIcons.BuildingBank
                 balance = 937.65
                 currency = "INR"
             }

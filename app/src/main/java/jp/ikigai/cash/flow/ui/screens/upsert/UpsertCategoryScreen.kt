@@ -168,7 +168,7 @@ fun UpsertCategoryScreen(
     }
 
     BackHandler {
-        if (state.category.name != state.name || state.category.icon.name != selectedIcon) {
+        if (state.category.name != state.name || (selectedIcon != null && state.category.icon.name != selectedIcon)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()

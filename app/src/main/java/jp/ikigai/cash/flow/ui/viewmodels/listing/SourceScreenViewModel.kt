@@ -10,6 +10,7 @@ import io.realm.kotlin.ext.query
 import io.realm.kotlin.query.Sort
 import io.realm.kotlin.query.TRUE_PREDICATE
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SourceListingDTO
@@ -127,7 +128,7 @@ class SourceScreenViewModel(
             SourceListingDTO(
                 uuid = source.uuid,
                 annotatedName = getHighlightedString(source.name, searchText),
-                icon = source.icon,
+                icon = Constants.DEFAULT_SOURCE_ICON,
                 currency = source.currency,
                 balance = currencyFormatter.format(source.balance).toString(),
                 chips = chips

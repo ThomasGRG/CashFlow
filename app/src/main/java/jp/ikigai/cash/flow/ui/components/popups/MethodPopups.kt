@@ -49,9 +49,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import compose.icons.TablerIcons
-import compose.icons.tablericons.CreditCard
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
@@ -170,7 +169,7 @@ fun SelectMethodPopup(
                 SelectableCard(
                     checked = { methodPair.first.uuid == selectedMethodUUID },
                     label = methodPair.second,
-                    icon = methodPair.first.icon,
+                    icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
@@ -326,7 +325,7 @@ fun MigrateMethodPopup(
                 SelectableCard(
                     checked = { methodPair.first.uuid == selectedMethod.uuid },
                     label = methodPair.second,
-                    icon = methodPair.first.icon,
+                    icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedMethod = methodPair.first
@@ -524,7 +523,7 @@ fun FilterMethodPopup(
                         selectedMethods.getOrDefault(methodPair.first.uuid, true)
                     },
                     label = methodPair.second,
-                    icon = methodPair.first.icon,
+                    icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedMethods[methodPair.first.uuid] =
@@ -639,22 +638,18 @@ fun SelectMethodPopupPreview() {
             Method().apply {
                 uuid = "asd"
                 name = "Shopping"
-                icon = TablerIcons.CreditCard
             },
             Method().apply {
                 uuid = "asdfrg"
                 name = "Transportation"
-                icon = TablerIcons.CreditCard
             },
             Method().apply {
                 uuid = "iurwuef"
                 name = "Personal Care"
-                icon = TablerIcons.CreditCard
             },
             Method().apply {
                 uuid = "iurwueadfegf"
                 name = "Food & Drinks"
-                icon = TablerIcons.CreditCard
             }
         ),
         dismiss = {}

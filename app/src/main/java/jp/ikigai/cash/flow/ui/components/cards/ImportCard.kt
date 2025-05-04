@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Method
@@ -179,7 +180,7 @@ fun MapCounterPartyCard(
             )
             CustomOutlinedButton(
                 value = mappedCounterParty.name,
-                leadingIcon = mappedCounterParty.icon,
+                leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedCounterParty,
                 enabled = selected,
@@ -263,7 +264,7 @@ fun MapMethodCard(
             )
             CustomOutlinedButton(
                 value = mappedMethod.name,
-                leadingIcon = mappedMethod.icon,
+                leadingIcon = Constants.DEFAULT_METHOD_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedMethod,
                 enabled = selected,
@@ -392,7 +393,7 @@ fun MapSourceCard(
             }
             CustomOutlinedButton(
                 value = if (mappedSource.uuid.isNotEmpty()) "${mappedSource.name} - ${mappedSource.displayBalance}" else "",
-                leadingIcon = mappedSource.icon,
+                leadingIcon = Constants.DEFAULT_SOURCE_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedSource,
                 enabled = selected,
