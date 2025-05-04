@@ -36,7 +36,7 @@ object Database {
                 TempTransactionTemplate::class
             )
         )
-        .schemaVersion(7)
+        .schemaVersion(8)
         .migration(
             { migrationContext ->
                 val oldRealm = migrationContext.oldRealm
