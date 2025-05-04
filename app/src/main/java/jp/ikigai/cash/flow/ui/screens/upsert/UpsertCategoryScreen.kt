@@ -61,13 +61,13 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
+import jp.ikigai.cash.flow.ui.components.popups.ChooseIconPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.getIconForCategory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -80,10 +80,9 @@ import java.util.Locale
 fun UpsertCategoryScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
-    chooseIcon: (String) -> Unit,
-    selectedIcon: String?,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
+    setIcon: (ImageVector) -> Unit,
     upsertCategory: (ImageVector, String) -> Unit,
     deleteCategory: () -> Unit,
     events: Flow<Event>,
@@ -101,10 +100,6 @@ fun UpsertCategoryScreen(
 
     LaunchedEffect(key1 = locale) {
         setLocale(locale)
-    }
-
-    var icon by remember(key1 = selectedIcon, key2 = state.category) {
-        mutableStateOf(selectedIcon?.getIconForCategory() ?: state.category.icon)
     }
 
     val focusRequester = remember {
@@ -129,6 +124,10 @@ fun UpsertCategoryScreen(
 
     val nameErrorStringRes by remember(key1 = state.nameErrorStringRes) {
         mutableIntStateOf(state.nameErrorStringRes)
+    }
+
+    val selectedIcon by remember(key1 = state.selectedIcon) {
+        mutableStateOf(state.selectedIcon)
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
@@ -168,7 +167,7 @@ fun UpsertCategoryScreen(
     }
 
     BackHandler {
-        if (state.category.name != state.name || (selectedIcon != null && state.category.icon.name != selectedIcon)) {
+        if (state.category.name != state.name || state.category.icon != selectedIcon) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -202,8 +201,7 @@ fun UpsertCategoryScreen(
                     ResetIconPopup(
                         dismiss = hidePopup,
                         reset = {
-                            icon = Constants.DEFAULT_CATEGORY_ICON
-                            popupType = PopupType.NONE
+                            setIcon(Constants.DEFAULT_CATEGORY_ICON)
                         }
                     )
                 }
@@ -224,6 +222,13 @@ fun UpsertCategoryScreen(
                         message = stringResource(id = R.string.delete_category_confirmation_label),
                         dismiss = hidePopup,
                         delete = deleteCategory
+                    )
+                }
+
+                PopupType.SELECT_ICON -> {
+                    ChooseIconPopup(
+                        dismiss = hidePopup,
+                        setIcon = setIcon
                     )
                 }
 
@@ -275,7 +280,7 @@ fun UpsertCategoryScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.category.name != state.name || state.category.icon.name != selectedIcon) {
+                        if (state.category.name != state.name || state.category.icon != selectedIcon) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -290,7 +295,7 @@ fun UpsertCategoryScreen(
                     },
                     floatingButtonAction = {
                         if (enabled) {
-                            upsertCategory(icon, name.trim())
+                            upsertCategory(selectedIcon, name.trim())
                         }
                     },
                     extraButtonIcon = if (categoryUuid.isNotBlank()) {
@@ -326,7 +331,7 @@ fun UpsertCategoryScreen(
         ) {
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
-                imageVector = icon,
+                imageVector = selectedIcon,
                 contentDescription = "default category icon",
                 modifier = Modifier
                     .size(120.dp)
@@ -335,7 +340,7 @@ fun UpsertCategoryScreen(
                         onClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            chooseIcon(icon.name)
+                            popupType = PopupType.SELECT_ICON
                         },
                         onLongClick = {
                             resetOneHandMode()
@@ -378,10 +383,9 @@ fun UpsertCategoryScreenPreview() {
     UpsertCategoryScreen(
         navigateBack = {},
         migrateTransactions = {},
-        chooseIcon = {},
-        selectedIcon = null,
         setLocale = {},
         setName = {},
+        setIcon = {},
         upsertCategory = { _, _ -> },
         deleteCategory = {},
         events = emptyList<Event>().asFlow(),
@@ -411,14 +415,9 @@ fun NavGraphBuilder.upsertCategoryScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            chooseIcon = { defaultIcon ->
-                navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
-                    launchSingleTop = true
-                }
-            },
-            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setLocale = viewModel::setLocale,
             setName = viewModel::setName,
+            setIcon = viewModel::setIcon,
             upsertCategory = viewModel::upsertCategory,
             deleteCategory = viewModel::deleteCategory,
             events = viewModel.event,

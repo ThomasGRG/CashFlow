@@ -90,6 +90,7 @@ class UpsertCategoryScreenViewModel(
                 it.copy(
                     category = category,
                     name = category.name,
+                    selectedIcon = category.icon,
                     loading = false,
                     enabled = true
                 )
@@ -129,6 +130,14 @@ class UpsertCategoryScreenViewModel(
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
                 loading = name.isNotBlank()
+            )
+        }
+    }
+
+    fun setIcon(icon: ImageVector) {
+        _state.update {
+            it.copy(
+                selectedIcon = icon
             )
         }
     }
