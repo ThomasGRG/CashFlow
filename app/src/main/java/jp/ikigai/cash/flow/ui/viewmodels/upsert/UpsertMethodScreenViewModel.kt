@@ -8,7 +8,6 @@ import io.realm.kotlin.Realm
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.entity.Method
@@ -21,7 +20,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -159,11 +157,10 @@ class UpsertMethodScreenViewModel(
             getMethodJob?.cancel()
             _state.update {
                 it.copy(
-                    writeOngoing = true,
+                    loading = true,
                     enabled = false
                 )
             }
-            val startTime = System.currentTimeMillis()
 
             val result = realm.write {
                 if (method.uuid.isBlank()) {
@@ -183,11 +180,6 @@ class UpsertMethodScreenViewModel(
                 }
             }
 
-            val duration = System.currentTimeMillis() - startTime
-            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
-                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
-            }
-
             if (result != null) {
                 _event.send(Event.SaveSuccess)
             } else {
@@ -195,7 +187,7 @@ class UpsertMethodScreenViewModel(
             }
             _state.update {
                 it.copy(
-                    writeOngoing = false
+                    loading = false
                 )
             }
         }
@@ -206,11 +198,10 @@ class UpsertMethodScreenViewModel(
             getMethodJob?.cancelAndJoin()
             _state.update {
                 it.copy(
-                    writeOngoing = true,
+                    loading = true,
                     enabled = false
                 )
             }
-            val startTime = System.currentTimeMillis()
 
             val method = state.value.method
             realm.write {
@@ -233,14 +224,9 @@ class UpsertMethodScreenViewModel(
                 }
             }
 
-            val duration = System.currentTimeMillis() - startTime
-            if (duration < Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME) {
-                delay(Constants.WAIT_DIALOG_MINIMUM_SCREEN_TIME - duration)
-            }
-
             _state.update {
                 it.copy(
-                    writeOngoing = false
+                    loading = false
                 )
             }
             _event.send(Event.DeleteSuccess)

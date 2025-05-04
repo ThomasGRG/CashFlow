@@ -67,7 +67,6 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.ExportPopup
@@ -167,10 +166,6 @@ fun ExportTransactionsScreen(
 
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
-    }
-
-    val exportOngoing by remember(key1 = state.exportOngoing) {
-        mutableStateOf(state.exportOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -329,10 +324,6 @@ fun ExportTransactionsScreen(
             }
         }
     )
-
-    if (exportOngoing) {
-        WaitDialog()
-    }
 
     OneHandModeScaffold(
         loading = loading,

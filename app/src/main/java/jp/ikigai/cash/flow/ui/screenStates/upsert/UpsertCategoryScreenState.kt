@@ -13,6 +13,5 @@ data class UpsertCategoryScreenState(
     val transactionCount: String = "",
     val loading: Boolean = true,
     val enabled: Boolean = false,
-    val writeOngoing: Boolean = false,
     val locale: Locale? = null
 )

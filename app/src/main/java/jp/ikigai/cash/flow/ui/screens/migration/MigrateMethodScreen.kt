@@ -66,7 +66,6 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
@@ -161,10 +160,6 @@ fun MigrateMethodScreen(
 
     val searchText by remember(key1 = state.searchText) {
         mutableStateOf(state.searchText)
-    }
-
-    val migrateOngoing by remember(key1 = state.migrateOngoing) {
-        mutableStateOf(state.migrateOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -299,10 +294,6 @@ fun MigrateMethodScreen(
         key2 = state.enabled
     ) {
         mutableStateOf(state.enabled && state.selectedTransactionCount > 0)
-    }
-
-    if (migrateOngoing) {
-        WaitDialog()
     }
 
     OneHandModeScaffold(

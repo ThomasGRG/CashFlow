@@ -83,7 +83,6 @@ import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
@@ -175,10 +174,6 @@ fun ImportBackupScreen(
 
     val loading by remember(key1 = mainState.loading) {
         mutableStateOf(mainState.loading)
-    }
-
-    val importOngoing by remember(key1 = mainState.importOngoing) {
-        mutableStateOf(mainState.importOngoing)
     }
 
     var popupType by remember {
@@ -494,10 +489,6 @@ fun ImportBackupScreen(
             }
         }
     )
-
-    if (importOngoing) {
-        WaitDialog()
-    }
 
     OneHandModeScaffold(
         loading = loading,

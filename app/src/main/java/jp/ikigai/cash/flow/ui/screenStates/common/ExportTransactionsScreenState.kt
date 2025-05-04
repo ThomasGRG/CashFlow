@@ -50,6 +50,5 @@ data class ExportTransactionsScreenState(
     val sortDirection: Sort = Sort.DESCENDING,
     val loading: Boolean = true,
     val enabled: Boolean = false,
-    val exportOngoing: Boolean = false,
     val locale: Locale? = null
 )

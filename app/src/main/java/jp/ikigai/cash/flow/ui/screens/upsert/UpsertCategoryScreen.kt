@@ -61,7 +61,6 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.common.WaitDialog
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
@@ -110,10 +109,6 @@ fun UpsertCategoryScreen(
 
     val focusRequester = remember {
         FocusRequester()
-    }
-
-    val writeOngoing by remember(key1 = state.writeOngoing) {
-        mutableStateOf(state.writeOngoing)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -170,10 +165,6 @@ fun UpsertCategoryScreen(
                 navigateBack()
             }
         }
-    }
-
-    if (writeOngoing) {
-        WaitDialog()
     }
 
     BackHandler {
