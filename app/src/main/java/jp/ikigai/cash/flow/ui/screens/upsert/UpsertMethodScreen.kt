@@ -1,8 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -63,11 +60,9 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.getIconForMethod
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -75,16 +70,14 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertMethodScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
-    chooseIcon: (String) -> Unit,
-    selectedIcon: String?,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
-    upsertMethod: (ImageVector, String) -> Unit,
+    upsertMethod: (String) -> Unit,
     deleteMethod: () -> Unit,
     events: Flow<Event>,
     state: UpsertMethodScreenState,
@@ -101,10 +94,6 @@ fun UpsertMethodScreen(
 
     LaunchedEffect(key1 = locale) {
         setLocale(locale)
-    }
-
-    var icon by remember(key1 = selectedIcon, key2 = state.method) {
-        mutableStateOf(selectedIcon?.getIconForMethod() ?: state.method.icon)
     }
 
     val focusRequester = remember {
@@ -168,7 +157,7 @@ fun UpsertMethodScreen(
     }
 
     BackHandler {
-        if (state.method.name != state.name || state.method.icon.name != selectedIcon) {
+        if (state.method.name != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -195,16 +184,6 @@ fun UpsertMethodScreen(
                         message = stringResource(id = R.string.navigation_confirmation_label),
                         dismiss = hidePopup,
                         navigate = navigateBack
-                    )
-                }
-
-                PopupType.RESET_ICON -> {
-                    ResetIconPopup(
-                        dismiss = hidePopup,
-                        reset = {
-                            icon = Constants.DEFAULT_METHOD_ICON
-                            popupType = PopupType.NONE
-                        }
                     )
                 }
 
@@ -275,7 +254,7 @@ fun UpsertMethodScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.method.name != state.name || state.method.icon.name != selectedIcon) {
+                        if (state.method.name != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -290,7 +269,7 @@ fun UpsertMethodScreen(
                     },
                     floatingButtonAction = {
                         if (enabled) {
-                            upsertMethod(icon, name.trim())
+                            upsertMethod(name.trim())
                         }
                     },
                     extraButtonIcon = if (methodUuid.isNotBlank()) {
@@ -326,23 +305,10 @@ fun UpsertMethodScreen(
         ) {
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
-                imageVector = icon,
+                imageVector = Constants.DEFAULT_METHOD_ICON,
                 contentDescription = "default method icon",
                 modifier = Modifier
-                    .size(120.dp)
-                    .combinedClickable(
-                        enabled = enabled,
-                        onClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            chooseIcon(icon.name)
-                        },
-                        onLongClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = PopupType.RESET_ICON
-                        }
-                    ),
+                    .size(120.dp),
                 tint = if (enabled) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
@@ -378,11 +344,9 @@ fun UpsertMethodScreenPreview() {
     UpsertMethodScreen(
         navigateBack = {},
         migrateTransactions = {},
-        chooseIcon = {},
-        selectedIcon = null,
         setName = {},
         setLocale = {},
-        upsertMethod = { _, _ -> },
+        upsertMethod = {},
         deleteMethod = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertMethodScreenState()
@@ -411,12 +375,6 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            chooseIcon = { defaultIcon ->
-                navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
-                    launchSingleTop = true
-                }
-            },
-            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertMethod = viewModel::upsertMethod,

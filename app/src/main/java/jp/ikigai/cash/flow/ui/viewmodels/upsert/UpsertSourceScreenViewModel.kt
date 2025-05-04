@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -128,7 +127,6 @@ class UpsertSourceScreenViewModel(
     }
 
     fun upsertSource(
-        newIcon: ImageVector,
         newName: String,
         newCurrency: String,
         newBalance: Double
@@ -157,7 +155,6 @@ class UpsertSourceScreenViewModel(
                     copyToRealm(
                         instance = source.apply {
                             uuid = UUID.randomUUID().toString()
-                            icon = newIcon
                             name = newName
                             currency = newCurrency
                             balance = newBalance
@@ -166,7 +163,6 @@ class UpsertSourceScreenViewModel(
                     )
                 } else {
                     findLatest(source)?.also {
-                        it.icon = newIcon
                         it.name = newName
                         it.currency = newCurrency
                         it.balance = newBalance
@@ -219,8 +215,7 @@ class UpsertSourceScreenViewModel(
 
     fun hasChanges(
         balanceString: String,
-        selectedCurrency: String,
-        selectedIcon: String?
+        selectedCurrency: String
     ): Boolean {
         val balance = balanceString.toDoubleOrNull()
         val source = state.value.source
@@ -228,8 +223,7 @@ class UpsertSourceScreenViewModel(
         val nameChanged = source.name != state.value.name
         val balanceChanged = balance == null || source.balance != balance
         val currencyChanged = source.currency != selectedCurrency
-        val iconChanged = source.icon.name != selectedIcon
 
-        return nameChanged || balanceChanged || currencyChanged || iconChanged
+        return nameChanged || balanceChanged || currencyChanged
     }
 }

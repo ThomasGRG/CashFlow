@@ -1,8 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -63,11 +60,9 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCounterPartyScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.getIconForCounterParty
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -75,16 +70,14 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertCounterPartyScreen(
     navigateBack: () -> Unit,
     migrateTransactions: (String) -> Unit,
-    chooseIcon: (String) -> Unit,
-    selectedIcon: String?,
     setName: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
-    upsertCounterParty: (ImageVector, String) -> Unit,
+    upsertCounterParty: (String) -> Unit,
     deleteCounterParty: () -> Unit,
     events: Flow<Event>,
     state: UpsertCounterPartyScreenState,
@@ -101,10 +94,6 @@ fun UpsertCounterPartyScreen(
 
     LaunchedEffect(key1 = locale) {
         setLocale(locale)
-    }
-
-    var icon by remember(key1 = selectedIcon, key2 = state.counterParty) {
-        mutableStateOf(selectedIcon?.getIconForCounterParty() ?: state.counterParty.icon)
     }
 
     val focusRequester = remember {
@@ -168,7 +157,7 @@ fun UpsertCounterPartyScreen(
     }
 
     BackHandler {
-        if (state.counterParty.name != state.name || state.counterParty.icon.name != selectedIcon) {
+        if (state.counterParty.name != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -198,19 +187,6 @@ fun UpsertCounterPartyScreen(
                             popupType = PopupType.NONE
                         },
                         navigate = navigateBack
-                    )
-                }
-
-                PopupType.RESET_ICON -> {
-                    ResetIconPopup(
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
-                        reset = {
-                            icon = Constants.DEFAULT_COUNTERPARTY_ICON
-                            popupType = PopupType.NONE
-                        }
                     )
                 }
 
@@ -287,7 +263,7 @@ fun UpsertCounterPartyScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.counterParty.name != state.name || state.counterParty.icon.name != selectedIcon) {
+                        if (state.counterParty.name != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -302,7 +278,7 @@ fun UpsertCounterPartyScreen(
                     },
                     floatingButtonAction = {
                         if (enabled) {
-                            upsertCounterParty(icon, name.trim())
+                            upsertCounterParty(name.trim())
                         }
                     },
                     extraButtonIcon = if (counterPartyUuid.isNotBlank()) {
@@ -338,23 +314,10 @@ fun UpsertCounterPartyScreen(
         ) {
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
-                imageVector = icon,
+                imageVector = Constants.DEFAULT_COUNTERPARTY_ICON,
                 contentDescription = "default counter party icon",
                 modifier = Modifier
-                    .size(120.dp)
-                    .combinedClickable(
-                        enabled = enabled,
-                        onClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            chooseIcon(icon.name)
-                        },
-                        onLongClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = PopupType.RESET_ICON
-                        }
-                    ),
+                    .size(120.dp),
                 tint = if (enabled) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
@@ -390,11 +353,9 @@ fun UpsertCounterPartyScreenPreview() {
     UpsertCounterPartyScreen(
         navigateBack = {},
         migrateTransactions = {},
-        chooseIcon = {},
-        selectedIcon = null,
         setName = {},
         setLocale = {},
-        upsertCounterParty = { _, _ -> },
+        upsertCounterParty = {},
         deleteCounterParty = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertCounterPartyScreenState()
@@ -423,12 +384,6 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            chooseIcon = { defaultIcon ->
-                navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
-                    launchSingleTop = true
-                }
-            },
-            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertCounterParty = viewModel::upsertCounterParty,

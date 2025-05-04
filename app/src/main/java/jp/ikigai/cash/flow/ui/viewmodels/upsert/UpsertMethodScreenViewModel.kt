@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -142,7 +141,7 @@ class UpsertMethodScreenViewModel(
         }
     }
 
-    fun upsertMethod(newIcon: ImageVector, newName: String) = viewModelScope.launch {
+    fun upsertMethod(newName: String) = viewModelScope.launch {
         val method = state.value.method
         if (newName.isBlank()) {
             _state.update {
@@ -167,14 +166,12 @@ class UpsertMethodScreenViewModel(
                     copyToRealm(
                         instance = method.apply {
                             uuid = UUID.randomUUID().toString()
-                            icon = newIcon
                             name = newName
                         },
                         updatePolicy = UpdatePolicy.ALL
                     )
                 } else {
                     findLatest(method)?.also {
-                        it.icon = newIcon
                         it.name = newName
                     }
                 }

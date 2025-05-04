@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -143,7 +142,7 @@ class UpsertCounterPartyScreenViewModel(
         }
     }
 
-    fun upsertCounterParty(newIcon: ImageVector, newName: String) = viewModelScope.launch {
+    fun upsertCounterParty(newName: String) = viewModelScope.launch {
         val counterParty = state.value.counterParty
         if (newName.isBlank()) {
             _state.update {
@@ -168,14 +167,12 @@ class UpsertCounterPartyScreenViewModel(
                     copyToRealm(
                         instance = counterParty.apply {
                             uuid = UUID.randomUUID().toString()
-                            icon = newIcon
                             name = newName
                         },
                         updatePolicy = UpdatePolicy.ALL
                     )
                 } else {
                     findLatest(counterParty)?.also {
-                        it.icon = newIcon
                         it.name = newName
                     }
                 }

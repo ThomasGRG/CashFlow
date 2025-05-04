@@ -1,8 +1,6 @@
 package jp.ikigai.cash.flow.ui.screens.upsert
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,9 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -64,37 +59,28 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
-import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.getIconForSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpsertSourceScreen(
     navigateBack: () -> Unit,
-    chooseIcon: (String) -> Unit,
-    selectedIcon: String?,
     setName: (String) -> Unit,
-    upsertTransactionSource: (ImageVector, String, String, Double) -> Unit,
+    upsertTransactionSource: (String, String, Double) -> Unit,
     deleteSource: () -> Unit,
-    hasChanges: (String, String, String?) -> Boolean,
+    hasChanges: (String, String) -> Boolean,
     events: Flow<Event>,
     state: UpsertSourceScreenState,
 ) {
-    val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    var icon by remember(key1 = selectedIcon, key2 = state.source) {
-        mutableStateOf(selectedIcon?.getIconForSource() ?: state.source.icon)
-    }
 
     val focusRequester = remember {
         FocusRequester()
@@ -179,7 +165,7 @@ fun UpsertSourceScreen(
     }
 
     BackHandler {
-        if (hasChanges(balanceFieldValue.text, selectedCurrency, selectedIcon)) {
+        if (hasChanges(balanceFieldValue.text, selectedCurrency)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -200,7 +186,7 @@ fun UpsertSourceScreen(
         },
         showBottomPopup = popupType != PopupType.NONE,
         bottomPopupContent = { hidePopup ->
-            when(popupType) {
+            when (popupType) {
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
@@ -218,16 +204,6 @@ fun UpsertSourceScreen(
                         },
                         currencies = currencies,
                         dismiss = hidePopup
-                    )
-                }
-
-                PopupType.RESET_ICON -> {
-                    ResetIconPopup(
-                        dismiss = hidePopup,
-                        reset = {
-                            icon = Constants.DEFAULT_SOURCE_ICON
-                            popupType = PopupType.NONE
-                        }
                     )
                 }
 
@@ -270,7 +246,7 @@ fun UpsertSourceScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (hasChanges(balanceFieldValue.text, selectedCurrency, selectedIcon)) {
+                    if (hasChanges(balanceFieldValue.text, selectedCurrency)) {
                         popupType = PopupType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -286,7 +262,6 @@ fun UpsertSourceScreen(
                 floatingButtonAction = {
                     if (enabled) {
                         upsertTransactionSource(
-                            icon,
                             name.trim(),
                             selectedCurrency,
                             balanceFieldValue.text.toDoubleOrNull() ?: 0.0
@@ -325,23 +300,10 @@ fun UpsertSourceScreen(
         ) {
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
-                imageVector = icon,
+                imageVector = Constants.DEFAULT_SOURCE_ICON,
                 contentDescription = "default source icon",
                 modifier = Modifier
-                    .size(120.dp)
-                    .combinedClickable(
-                        enabled = enabled,
-                        onClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            chooseIcon(icon.name)
-                        },
-                        onLongClick = {
-                            resetOneHandMode()
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = PopupType.RESET_ICON
-                        }
-                    ),
+                    .size(120.dp),
                 tint = if (enabled) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
@@ -419,12 +381,10 @@ fun UpsertSourceScreen(
 fun UpsertSourceScreenPreview() {
     UpsertSourceScreen(
         navigateBack = {},
-        chooseIcon = {},
-        selectedIcon = null,
         setName = {},
-        upsertTransactionSource = { _, _, _, _ -> },
+        upsertTransactionSource = { _, _, _ -> },
         deleteSource = {},
-        hasChanges = { _, _, _ -> false },
+        hasChanges = { _, _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertSourceScreenState()
     )
@@ -447,12 +407,6 @@ fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
-            chooseIcon = { defaultIcon ->
-                navController.navigate(Routes.ChooseIcon.getRoute(defaultIcon)) {
-                    launchSingleTop = true
-                }
-            },
-            selectedIcon = it.savedStateHandle.get<String>("icon"),
             setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
             deleteSource = viewModel::deleteSource,
