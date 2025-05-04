@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.koin
 
-import jp.ikigai.cash.flow.ui.viewmodels.common.ChooseIconScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ExportTransactionsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.SettingsScreenViewModel
@@ -41,7 +40,6 @@ val appModule = module {
     viewModel() { UpsertCategoryScreenViewModel(get()) }
     viewModel() { MigrateCategoryScreenViewModel(get()) }
 
-    viewModel() { ChooseIconScreenViewModel(get()) }
     viewModel() { SettingsScreenViewModel() }
     viewModel() { ExportTransactionsScreenViewModel() }
     viewModel() { ImportBackupScreenViewModel() }

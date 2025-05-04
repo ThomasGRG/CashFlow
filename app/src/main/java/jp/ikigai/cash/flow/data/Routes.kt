@@ -14,12 +14,6 @@ sealed class Routes(val route: String) {
         }
     }
 
-    object ChooseIcon: Routes("chooseIcon?defaultIcon={defaultIcon}") {
-        fun getRoute(defaultIcon: String): String {
-            return "chooseIcon?defaultIcon=$defaultIcon"
-        }
-    }
-
     object CounterParties: Routes("counterParties")
     object UpsertCounterParty: Routes("upsertCounterParty?id={id}") {
         fun getRoute(id: String = ""): String {

@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.screens.common.chooseIconScreen
 import jp.ikigai.cash.flow.ui.screens.common.exportTransactionsScreen
 import jp.ikigai.cash.flow.ui.screens.common.importBackupScreen
 import jp.ikigai.cash.flow.ui.screens.common.settingsScreen
@@ -46,8 +45,6 @@ fun BaseScreen() {
 
         transactionTemplateScreen(navController = navController)
         upsertTransactionTemplateScreen(navController = navController)
-
-        chooseIconScreen(navController = navController)
 
         categoryScreen(navController = navController)
         upsertCategoryScreen(navController = navController)
