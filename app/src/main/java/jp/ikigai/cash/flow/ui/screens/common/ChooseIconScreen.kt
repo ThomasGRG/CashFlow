@@ -141,10 +141,7 @@ fun ChooseIconScreen(
         showBottomPopup = showDialog,
         bottomPopupContent = { hidePopup ->
             IconDetailsPopup(
-                dismiss = {
-                    hidePopup()
-                    showDialog = false
-                },
+                dismiss = hidePopup,
                 icon = iconToPreview
             )
         },

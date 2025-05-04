@@ -359,10 +359,7 @@ fun ExportTransactionsScreen(
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -371,10 +368,7 @@ fun ExportTransactionsScreen(
                         selectedCurrencyMap = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -383,10 +377,7 @@ fun ExportTransactionsScreen(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -395,10 +386,7 @@ fun ExportTransactionsScreen(
                         selectedCategoryMap = selectedCategories,
                         categories = categories,
                         filter = setSelectedCategories,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -408,10 +396,7 @@ fun ExportTransactionsScreen(
                         selectedCounterPartyMap = selectedCounterParties,
                         filter = setSelectedCounterParties,
                         counterParties = counterParties,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -420,10 +405,7 @@ fun ExportTransactionsScreen(
                         selectedMethodsMap = selectedMethods,
                         filter = setSelectedMethods,
                         methods = methods,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -432,10 +414,7 @@ fun ExportTransactionsScreen(
                         selectedSourcesMap = selectedSources,
                         filter = setSelectedSources,
                         sources = sources,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -443,20 +422,14 @@ fun ExportTransactionsScreen(
                     FilterTransactionTypePopup(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
                 PopupType.EXPORT -> {
                     ExportPopup(
                         selectedTransactionCount = selectedTransactions.size,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         export = {
                             includeTemplates = it
                             exportDirectoryPicker.launch(

@@ -213,10 +213,7 @@ fun UpsertSourceScreen(
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         navigate = navigateBack
                     )
                 }
@@ -229,19 +226,13 @@ fun UpsertSourceScreen(
                             selectedCurrency = currency
                         },
                         currencies = currencies,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
                 PopupType.RESET_ICON -> {
                     ResetIconPopup(
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         reset = {
                             icon = Constants.DEFAULT_SOURCE_ICON
                             popupType = PopupType.NONE
@@ -252,10 +243,7 @@ fun UpsertSourceScreen(
                 PopupType.CONFIRM_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_source_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         delete = deleteSource
                     )
                 }
@@ -263,10 +251,7 @@ fun UpsertSourceScreen(
                 PopupType.WARN_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.source_transactions_deletion_warning_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         delete = deleteSource
                     )
                 }

@@ -169,10 +169,7 @@ fun MethodScreen(
                         selectedDirection = sortDirection,
                         options = sortOptions,
                         sort = setSortInfo,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 

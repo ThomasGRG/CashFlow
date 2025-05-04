@@ -330,10 +330,7 @@ fun MigrateCategoryScreen(
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -342,10 +339,7 @@ fun MigrateCategoryScreen(
                         selectedCurrencyMap = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -354,10 +348,7 @@ fun MigrateCategoryScreen(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -366,10 +357,7 @@ fun MigrateCategoryScreen(
                         migrateCount = selectedTransactionCount,
                         selectCategory = migrate,
                         categories = categories,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -379,10 +367,7 @@ fun MigrateCategoryScreen(
                         selectedCounterPartyMap = selectedCounterParties,
                         filter = setSelectedCounterParties,
                         counterParties = counterParties,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -391,10 +376,7 @@ fun MigrateCategoryScreen(
                         selectedMethodsMap = selectedMethods,
                         filter = setSelectedMethods,
                         methods = methods,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -403,10 +385,7 @@ fun MigrateCategoryScreen(
                         selectedSourcesMap = selectedSources,
                         filter = setSelectedSources,
                         sources = sources,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -414,10 +393,7 @@ fun MigrateCategoryScreen(
                     FilterTransactionTypePopup(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 

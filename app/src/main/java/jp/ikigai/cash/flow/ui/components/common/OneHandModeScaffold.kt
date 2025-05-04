@@ -145,8 +145,8 @@ fun OneHandModeScaffold(
                 }
                 AnimatedVisibility(
                     visible = showToastBar,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut(),
+                    enter = fadeIn() + scaleIn(initialScale = 0.6f),
+                    exit = fadeOut() + scaleOut(targetScale = 0.6f),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     ToastBar(
@@ -160,7 +160,9 @@ fun OneHandModeScaffold(
             visible = showBottomPopup,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.imePadding()
+            modifier = Modifier
+                .navigationBarsPadding()
+                .imePadding()
         ) {
             BottomPopup(
                 dismiss = onDismissPopup

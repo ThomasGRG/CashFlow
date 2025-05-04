@@ -326,10 +326,7 @@ fun MigrateCounterPartyScreen(
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -338,10 +335,7 @@ fun MigrateCounterPartyScreen(
                         selectedCurrencyMap = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -350,10 +344,7 @@ fun MigrateCounterPartyScreen(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -362,10 +353,7 @@ fun MigrateCounterPartyScreen(
                         selectedCategoryMap = selectedCategories,
                         categories = categories,
                         filter = setSelectedCategories,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -374,10 +362,7 @@ fun MigrateCounterPartyScreen(
                         migrateCount = selectedTransactionCount,
                         selectCounterParty = migrate,
                         counterParties = counterParties,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -386,10 +371,7 @@ fun MigrateCounterPartyScreen(
                         selectedMethodsMap = selectedMethods,
                         filter = setSelectedMethods,
                         methods = methods,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -398,10 +380,7 @@ fun MigrateCounterPartyScreen(
                         selectedSourcesMap = selectedSources,
                         filter = setSelectedSources,
                         sources = sources,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -409,10 +388,7 @@ fun MigrateCounterPartyScreen(
                     FilterTransactionTypePopup(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 

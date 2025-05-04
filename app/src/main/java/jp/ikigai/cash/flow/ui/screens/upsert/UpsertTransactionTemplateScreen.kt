@@ -251,10 +251,7 @@ fun UpsertTransactionTemplateScreen(
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         navigate = navigateBack
                     )
                 }
@@ -272,10 +269,7 @@ fun UpsertTransactionTemplateScreen(
                             }
                         },
                         categories = categories,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -286,10 +280,7 @@ fun UpsertTransactionTemplateScreen(
                         selectedCounterPartyUUID = selectedCounterParty.uuid,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -306,10 +297,7 @@ fun UpsertTransactionTemplateScreen(
                             }
                         },
                         methods = methods,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -326,10 +314,7 @@ fun UpsertTransactionTemplateScreen(
                             }
                         },
                         sources = sources,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -339,10 +324,7 @@ fun UpsertTransactionTemplateScreen(
                         setSelectedTransactionType = { selectedTransactionType ->
                             setTransactionType(selectedTransactionType)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -350,10 +332,7 @@ fun UpsertTransactionTemplateScreen(
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_template_confirmation_label),
                         delete = deleteTransactionTemplate,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 

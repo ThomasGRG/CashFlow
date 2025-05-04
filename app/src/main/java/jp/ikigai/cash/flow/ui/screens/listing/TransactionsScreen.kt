@@ -571,10 +571,7 @@ fun TransactionsScreen(
                                 setCurrency(currency)
                             },
                             currencies = currencies,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -583,10 +580,7 @@ fun TransactionsScreen(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -599,10 +593,7 @@ fun TransactionsScreen(
                             navigateToTemplatesScreen = navigateToTemplatesScreen,
                             navigateToSettingsScreen = navigateToSettingsScreen,
                             openGithubReleasesPage = openGithubPage,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -611,10 +602,7 @@ fun TransactionsScreen(
                             minAmount = filterAmountMin,
                             maxAmount = filterAmountMax,
                             filter = filterByAmount,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -623,10 +611,7 @@ fun TransactionsScreen(
                             selectedCategoryMap = selectedCategories,
                             filter = setSelectedCategories,
                             categories = categories,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -636,10 +621,7 @@ fun TransactionsScreen(
                             selectedCounterPartyMap = selectedCounterParties,
                             filter = setSelectedCounterParties,
                             counterParties = counterParties,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -648,10 +630,7 @@ fun TransactionsScreen(
                             selectedMethodsMap = selectedMethods,
                             filter = setSelectedMethods,
                             methods = methods,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -660,10 +639,7 @@ fun TransactionsScreen(
                             selectedSourcesMap = selectedSources,
                             filter = setSelectedSources,
                             sources = sources,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -671,10 +647,7 @@ fun TransactionsScreen(
                         FilterTransactionTypePopup(
                             selectedTransactionTypes = selectedTransactionTypes,
                             filter = setSelectedTransactionTypes,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -682,10 +655,7 @@ fun TransactionsScreen(
                         SelectTemplatePopup(
                             templates = templates,
                             addNewTransaction = addTransaction,
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 
@@ -694,10 +664,7 @@ fun TransactionsScreen(
                             cloneTransaction = { setCurrentDateTime ->
                                 cloneTransaction(selectedTransactionUUID, setCurrentDateTime)
                             },
-                            dismiss = {
-                                hidePopup()
-                                popupType = PopupType.NONE
-                            }
+                            dismiss = hidePopup
                         )
                     }
 

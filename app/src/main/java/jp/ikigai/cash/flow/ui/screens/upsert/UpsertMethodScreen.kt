@@ -202,20 +202,14 @@ fun UpsertMethodScreen(
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         navigate = navigateBack
                     )
                 }
 
                 PopupType.RESET_ICON -> {
                     ResetIconPopup(
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         reset = {
                             icon = Constants.DEFAULT_METHOD_ICON
                             popupType = PopupType.NONE
@@ -230,20 +224,14 @@ fun UpsertMethodScreen(
                         migrate = {
                             migrateTransactions(methodUuid)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
                 PopupType.CONFIRM_DELETE -> {
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_method_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         delete = deleteMethod
                     )
                 }

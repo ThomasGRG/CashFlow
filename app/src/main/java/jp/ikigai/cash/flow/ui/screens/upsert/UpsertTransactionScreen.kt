@@ -327,10 +327,7 @@ fun UpsertTransactionScreen(
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         navigate = navigateBack
                     )
                 }
@@ -340,10 +337,7 @@ fun UpsertTransactionScreen(
                         date = dateTime,
                         setDate = setDate,
                         selectableDates = selectableDates,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -351,10 +345,7 @@ fun UpsertTransactionScreen(
                     TimePickerPopup(
                         time = dateTime,
                         updateTime = setTime,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -365,10 +356,7 @@ fun UpsertTransactionScreen(
                         selectedCategoryUUID = selectedCategory.uuid,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -379,10 +367,7 @@ fun UpsertTransactionScreen(
                         selectedCounterPartyUUID = selectedCounterParty.uuid,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -393,10 +378,7 @@ fun UpsertTransactionScreen(
                         selectedMethodUUID = selectedMethod.uuid,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -407,10 +389,7 @@ fun UpsertTransactionScreen(
                         selectedSourceUUID = selectedSource.uuid,
                         setSelectedSource = setSelectedSource,
                         sources = sources,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -418,10 +397,7 @@ fun UpsertTransactionScreen(
                     SelectTransactionTypePopup(
                         selectedTransactionType = transactionType,
                         setSelectedTransactionType = setTransactionType,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -429,10 +405,7 @@ fun UpsertTransactionScreen(
                     ConfirmDeletePopup(
                         message = stringResource(id = R.string.delete_transaction_confirmation_label),
                         delete = deleteTransaction,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 

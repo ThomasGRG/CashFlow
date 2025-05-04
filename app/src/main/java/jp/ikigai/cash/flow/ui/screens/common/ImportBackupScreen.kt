@@ -524,10 +524,7 @@ fun ImportBackupScreen(
                         selectedTempSourceCount = selectedTempSourceCount,
                         selectedTempTransactionTemplateCount = selectedTempTransactionTemplateCount,
                         selectedTransactionsCount = selectedTransactionsCount,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         complete = import
                     )
                 }
@@ -535,10 +532,7 @@ fun ImportBackupScreen(
                 PopupType.CONFIRM_NAVIGATION -> {
                     ConfirmNavigationPopup(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        },
+                        dismiss = hidePopup,
                         navigate = navigateBack
                     )
                 }
@@ -551,10 +545,7 @@ fun ImportBackupScreen(
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -563,10 +554,7 @@ fun ImportBackupScreen(
                         selectedCurrencyMap = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -575,10 +563,7 @@ fun ImportBackupScreen(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -592,10 +577,7 @@ fun ImportBackupScreen(
                         setSelectedCategory = {
                             setCategoryMapping(selectedTempCategoryUUID, it)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -609,10 +591,7 @@ fun ImportBackupScreen(
                         setSelectedCounterParty = {
                             setCounterPartyMapping(selectedTempCounterPartyUUID, it)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -625,10 +604,7 @@ fun ImportBackupScreen(
                         setSelectedMethod = {
                             setMethodMapping(selectedTempMethodUUID, it)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -643,10 +619,7 @@ fun ImportBackupScreen(
                         setSelectedSource = {
                             setSourceMapping(selectedTempSourceUUID, it)
                         },
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
@@ -654,10 +627,7 @@ fun ImportBackupScreen(
                     FilterTransactionTypePopup(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            hidePopup()
-                            popupType = PopupType.NONE
-                        }
+                        dismiss = hidePopup
                     )
                 }
 
