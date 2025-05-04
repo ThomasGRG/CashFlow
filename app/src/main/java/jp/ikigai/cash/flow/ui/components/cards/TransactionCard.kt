@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +34,7 @@ import compose.icons.tablericons.Archive
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
+import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -96,29 +95,16 @@ fun TransactionCard(
             }
             FlowRow(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
-                verticalArrangement = Arrangement.spacedBy(
-                    5.dp,
-                    alignment = Alignment.CenterVertically
-                )
+                verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
                 transactionWithIcons.chips.forEach {
-                    FilledTonalButton(
-                        onClick = onClick,
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = it.icon,
-                            contentDescription = it.icon.name,
-                            modifier = Modifier.padding(end = 6.dp)
-                        )
-                        Text(
-                            text = stringResource(id = it.resId, it.value),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
+                    CustomChip(
+                        icon = it.icon,
+                        label = stringResource(id = it.resId, it.value)
+                    )
                 }
             }
         }
@@ -218,30 +204,17 @@ fun TransactionCard(
             }
             FlowRow(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
-                verticalArrangement = Arrangement.spacedBy(
-                    5.dp,
-                    alignment = Alignment.CenterVertically
-                )
+                verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
                 transactionWithIcons.chips.forEach {
-                    FilledTonalButton(
-                        onClick = onClick,
+                    CustomChip(
                         enabled = enabled,
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = it.icon,
-                            contentDescription = it.icon.name,
-                            modifier = Modifier.padding(end = 6.dp)
-                        )
-                        Text(
-                            text = stringResource(id = it.resId, it.value),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
+                        icon = it.icon,
+                        label = stringResource(id = it.resId, it.value)
+                    )
                 }
             }
         }

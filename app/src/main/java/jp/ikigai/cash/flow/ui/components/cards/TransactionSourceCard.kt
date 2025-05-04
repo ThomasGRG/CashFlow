@@ -4,12 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +27,7 @@ import compose.icons.tablericons.ChartLine
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SourceListingDTO
+import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -89,28 +88,17 @@ fun TransactionSourceCard(
                 style = MaterialTheme.typography.displaySmall
             )
             FlowRow(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
-                verticalArrangement = Arrangement.Top
+                verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
                 data.chips.forEach {
-                    FilledTonalButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onClick(data.uuid)
-                        },
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
-                    ) {
-                        Icon(
-                            imageVector = it.icon,
-                            contentDescription = it.icon.name,
-                            modifier = Modifier.padding(end = 6.dp)
-                        )
-                        Text(
-                            text = stringResource(id = it.resId, it.value),
-                        )
-                    }
+                    CustomChip(
+                        icon = it.icon,
+                        label = stringResource(id = it.resId, it.value)
+                    )
                 }
             }
         }
