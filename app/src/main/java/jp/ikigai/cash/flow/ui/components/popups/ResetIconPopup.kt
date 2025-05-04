@@ -76,6 +76,7 @@ fun ResetIconPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     reset()
+                    dismiss()
                 },
                 modifier = Modifier
                     .weight(1f)
