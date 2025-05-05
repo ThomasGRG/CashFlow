@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.ui.viewmodels.common
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
@@ -587,11 +588,14 @@ class ImportBackupScreenViewModel(
                     .filter { (_, category) -> category.uuid.isNotEmpty() }
                     .distinctBy { (_, category) -> category.uuid }
                     .forEach { (tempCategoryUUID, category) ->
+                        val filteredTransactions = tempTransactions
+                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempCategoryUUID }
                         findLatest(category)?.also {
-                            it.frequency += tempTransactions.count { tempTransaction -> tempTransaction.category?.uuid == tempCategoryUUID }
+                            it.frequency += filteredTransactions.size
                             it.lastUsed = maxOf(
                                 it.lastUsed,
-                                tempTransactions.maxOf { tempTransaction -> tempTransaction.time })
+                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                            )
                         }
                     }
 
@@ -601,15 +605,16 @@ class ImportBackupScreenViewModel(
                         val tempCategory =
                             tempCategories.find { tempCategory -> tempCategory.uuid == entry.key }
                         if (tempCategory != null) {
+                            val filteredTransactions = tempTransactions
+                                .filter { tempTransaction -> tempTransaction.category?.uuid == tempCategory.uuid }
                             val category = copyToRealm(
                                 Category().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempCategory.name
                                     icon = tempCategory.icon
-                                    frequency =
-                                        tempTransactions.count { tempTransaction -> tempTransaction.category?.uuid == tempCategory.uuid }
-                                    lastUsed =
-                                        tempTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                                    frequency = filteredTransactions.size
+                                    lastUsed = filteredTransactions
+                                        .maxOf { tempTransaction -> tempTransaction.time }
                                 }
                             )
                             categoryMappings[tempCategory.uuid] = category
@@ -621,11 +626,14 @@ class ImportBackupScreenViewModel(
                     .filter { (_, counterParty) -> counterParty.uuid.isNotEmpty() }
                     .distinctBy { (_, counterParty) -> counterParty.uuid }
                     .forEach { (tempCounterPartyUUID, counterParty) ->
+                        val filteredTransactions = tempTransactions
+                            .filter { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterPartyUUID }
                         findLatest(counterParty)?.also {
-                            it.frequency += tempTransactions.count { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterPartyUUID }
+                            it.frequency += filteredTransactions.size
                             it.lastUsed = maxOf(
                                 it.lastUsed,
-                                tempTransactions.maxOf { tempTransaction -> tempTransaction.time })
+                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                            )
                         }
                     }
 
@@ -635,14 +643,18 @@ class ImportBackupScreenViewModel(
                         val tempCounterParty =
                             tempCounterParties.find { tempCounterParty -> tempCounterParty.uuid == entry.key }
                         if (tempCounterParty != null) {
+                            val filteredTransactions = tempTransactions
+                                .filter { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterParty.uuid }
+                            Log.i(tempCounterParty.name, filteredTransactions
+                                .maxOf { tempTransaction -> tempTransaction.time }.toString()
+                            )
                             val counterParty = copyToRealm(
                                 CounterParty().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempCounterParty.name
-                                    frequency =
-                                        tempTransactions.count { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterParty.uuid }
-                                    lastUsed =
-                                        tempTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                                    frequency = filteredTransactions.size
+                                    lastUsed = filteredTransactions
+                                        .maxOf { tempTransaction -> tempTransaction.time }
                                 }
                             )
                             counterPartyMappings[tempCounterParty.uuid] = counterParty
@@ -654,11 +666,14 @@ class ImportBackupScreenViewModel(
                     .filter { (_, method) -> method.uuid.isNotEmpty() }
                     .distinctBy { (_, method) -> method.uuid }
                     .forEach { (tempMethodUUID, method) ->
+                        val filteredTransactions = tempTransactions
+                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempMethodUUID }
                         findLatest(method)?.also {
-                            it.frequency += tempTransactions.count { tempTransaction -> tempTransaction.category?.uuid == tempMethodUUID }
+                            it.frequency += filteredTransactions.size
                             it.lastUsed = maxOf(
                                 it.lastUsed,
-                                tempTransactions.maxOf { tempTransaction -> tempTransaction.time })
+                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                            )
                         }
                     }
 
@@ -668,14 +683,15 @@ class ImportBackupScreenViewModel(
                         val tempMethod =
                             tempMethods.find { tempMethod -> tempMethod.uuid == entry.key }
                         if (tempMethod != null) {
+                            val filteredTransactions = tempTransactions
+                                .filter { tempTransaction -> tempTransaction.method?.uuid == tempMethod.uuid }
                             val method = copyToRealm(
                                 Method().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempMethod.name
-                                    frequency =
-                                        tempTransactions.count { tempTransaction -> tempTransaction.method?.uuid == tempMethod.uuid }
-                                    lastUsed =
-                                        tempTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                                    frequency = filteredTransactions.size
+                                    lastUsed = filteredTransactions
+                                        .maxOf { tempTransaction -> tempTransaction.time }
                                 }
                             )
                             methodMappings[tempMethod.uuid] = method
@@ -687,11 +703,14 @@ class ImportBackupScreenViewModel(
                     .filter { (_, source) -> source.uuid.isNotEmpty() }
                     .distinctBy { (_, source) -> source.uuid }
                     .forEach { (tempSourceUUID, source) ->
+                        val filteredTransactions = tempTransactions
+                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempSourceUUID }
                         findLatest(source)?.also {
-                            it.frequency += tempTransactions.count { tempTransaction -> tempTransaction.category?.uuid == tempSourceUUID }
+                            it.frequency += filteredTransactions.size
                             it.lastUsed = maxOf(
                                 it.lastUsed,
-                                tempTransactions.maxOf { tempTransaction -> tempTransaction.time })
+                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                            )
                         }
                     }
 
@@ -713,16 +732,17 @@ class ImportBackupScreenViewModel(
                         val tempSource =
                             tempSources.find { tempSource -> tempSource.uuid == entry.key }
                         if (tempSource != null) {
+                            val filteredTransactions = tempTransactions
+                                .filter { tempTransaction -> tempTransaction.source?.uuid == tempSource.uuid }
                             val source = copyToRealm(
                                 Source().apply {
                                     uuid = UUID.randomUUID().toString()
                                     name = tempSource.name
                                     balance = tempSource.balance
                                     currency = tempSource.currency
-                                    frequency =
-                                        tempTransactions.count { tempTransaction -> tempTransaction.source?.uuid == tempSource.uuid }
-                                    lastUsed =
-                                        tempTransactions.maxOf { tempTransaction -> tempTransaction.time }
+                                    frequency = filteredTransactions.size
+                                    lastUsed = filteredTransactions
+                                        .maxOf { tempTransaction -> tempTransaction.time }
                                 }
                             )
                             sourceMappings[tempSource.uuid] = source
