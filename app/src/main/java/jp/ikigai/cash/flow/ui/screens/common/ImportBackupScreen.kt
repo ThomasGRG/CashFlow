@@ -106,6 +106,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.io.InputStream
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -120,7 +121,7 @@ fun ImportBackupScreen(
     toggleLocalDateSelected: (Boolean, List<TransactionWithIcons>) -> Unit,
     setSearchText: (String) -> Unit,
     setSelectedCurrencies: (Map<String, Boolean>) -> Unit,
-    setStartDateAndEndDate: (LocalDate?, LocalDate?) -> Unit,
+    setStartDateAndEndDate: (ZonedDateTime?, ZonedDateTime?) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
     setSortDirection: (Sort) -> Unit,
     filterByAmount: (Double, Double) -> Unit,

@@ -12,6 +12,7 @@ import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.Locale
 
 data class MigrateMethodScreenState(
@@ -40,8 +41,8 @@ data class MigrateMethodScreenState(
     val currencies: List<CurrencyInfo> = Constants.currencyList,
     val selectedCurrencies: Map<String, Boolean> = Constants.currencyList.associate { it.currency.currencyCode to true },
     val selectedCurrencyCount: String = "0",
-    val startDate: LocalDate? = null,
-    val endDate: LocalDate? = null,
+    val startDate: ZonedDateTime? = null,
+    val endDate: ZonedDateTime? = null,
     val startDateString: String = "",
     val endDateString: String = "",
     @StringRes val dateRangeStringRes: Int = R.string.all_time_date_range_label,

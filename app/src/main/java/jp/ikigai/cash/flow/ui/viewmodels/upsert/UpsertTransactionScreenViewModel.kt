@@ -50,6 +50,8 @@ class UpsertTransactionScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
 
+    private val datePattern = "EEEE, dd-LLL-yyyy"
+
     private val transactionUuid: String = checkNotNull(savedStateHandle["id"])
     private val templateUuid: String = checkNotNull(savedStateHandle["templateId"])
 
@@ -60,9 +62,8 @@ class UpsertTransactionScreenViewModel(
     private val handler = Handler(Looper.getMainLooper())
 
     private val updateCurrentTime = Runnable {
-        val now = System.currentTimeMillis()
+        currentDateTime = ZonedDateTime.now(ZoneId.systemDefault())
         scheduleNextUpdate()
-        currentDateTime = now.toZonedDateTime()
         _state.update {
             it.copy(
                 timeValid = isTimeValid(selectedDateTime = it.dateTime)
@@ -178,7 +179,7 @@ class UpsertTransactionScreenViewModel(
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
                         sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources),
-                        dateString = it.dateTime.getDateString(),
+                        dateString = it.dateTime.getDateString(datePattern),
                         timeString = it.dateTime.getTimeString(),
                         loading = false,
                         enabled = true
@@ -223,7 +224,7 @@ class UpsertTransactionScreenViewModel(
                 transaction = transaction,
                 title = transaction.title,
                 dateTime = dateTime,
-                dateString = dateTime.getDateString(),
+                dateString = dateTime.getDateString(datePattern),
                 timeString = dateTime.getTimeString(),
                 amount = transaction.amount,
                 displayAmount = transaction.amount.toString(),
@@ -259,7 +260,7 @@ class UpsertTransactionScreenViewModel(
                     transactionTemplate.title,
                     transactionTemplate.description
                 ),
-                dateString = it.dateTime.getDateString(),
+                dateString = it.dateTime.getDateString(datePattern),
                 timeString = it.dateTime.getTimeString(),
                 title = transactionTemplate.title,
                 amount = transactionTemplate.amount,
@@ -671,7 +672,7 @@ class UpsertTransactionScreenViewModel(
                 .withDayOfMonth(date.dayOfMonth)
             it.copy(
                 dateTime = newDateTime,
-                dateString = newDateTime.getDateString(),
+                dateString = newDateTime.getDateString(datePattern),
                 timeString = newDateTime.getTimeString(),
                 timeValid = isTimeValid(selectedDateTime = newDateTime)
             )
@@ -682,7 +683,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 dateTime = time,
-                dateString = time.getDateString(),
+                dateString = time.getDateString(datePattern),
                 timeString = time.getTimeString(),
                 timeValid = isTimeValid(selectedDateTime = time)
             )

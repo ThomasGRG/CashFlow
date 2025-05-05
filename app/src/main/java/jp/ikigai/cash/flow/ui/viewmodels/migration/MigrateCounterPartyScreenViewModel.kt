@@ -24,10 +24,9 @@ import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCounterPartyScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
-import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
+import jp.ikigai.cash.flow.utils.toEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,6 +44,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -52,6 +52,8 @@ class MigrateCounterPartyScreenViewModel(
     savedStateHandle: SavedStateHandle,
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private val datePattern = "dd-LLL-yyyy"
 
     private val counterPartyUuid: String = checkNotNull(savedStateHandle["id"])
 
@@ -249,8 +251,8 @@ class MigrateCounterPartyScreenViewModel(
             queryString += " && counterParty.uuid == $9"
             realm.query<Transaction>(
                 queryString,
-                it.startDate?.getStartOfDayInEpochMilli() ?: 0L,
-                it.endDate?.getEndOfDayInEpochMilli() ?: Long.MAX_VALUE,
+                it.startDate?.toEpochMilli() ?: 0L,
+                it.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
                 it.selectedCurrencies.filter { entry -> entry.value }.keys,
                 it.filterAmountMin,
                 if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
@@ -454,14 +456,14 @@ class MigrateCounterPartyScreenViewModel(
         }
     }
 
-    fun setStartDateAndEndDate(startDate: LocalDate?, endDate: LocalDate?) {
+    fun setStartDateAndEndDate(startDate: ZonedDateTime?, endDate: ZonedDateTime?) {
         _state.update {
             it.copy(
                 loading = true,
                 startDate = startDate,
                 endDate = endDate,
-                startDateString = startDate?.getDateString() ?: "",
-                endDateString = endDate?.getDateString() ?: "",
+                startDateString = startDate?.getDateString(datePattern) ?: "",
+                endDateString = endDate?.getDateString(datePattern) ?: "",
                 dateRangeStringRes = if (startDate == null && endDate == null) {
                     R.string.all_time_date_range_label
                 } else {

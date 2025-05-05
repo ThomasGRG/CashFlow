@@ -6,12 +6,58 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-fun ZonedDateTime.toLocalMilli(): Long {
-    return this.toInstant().toEpochMilli() + this.getOffSetInMilli()
+fun getMonthStartDate(): ZonedDateTime {
+    val currentDateTime = ZonedDateTime.now(ZoneId.systemDefault())
+    return ZonedDateTime.of(
+        currentDateTime.year,
+        currentDateTime.monthValue,
+        1,
+        0,
+        0,
+        0,
+        0,
+        ZoneId.of("UTC")
+    )
 }
 
-fun ZonedDateTime.getOffSetInMilli(): Int {
-    return this.offset.totalSeconds * 1000
+fun getMonthEndDate(): ZonedDateTime {
+    val currentDateTime = ZonedDateTime.now(ZoneId.systemDefault())
+    return ZonedDateTime.of(
+        currentDateTime.year,
+        currentDateTime.monthValue,
+        currentDateTime.month.maxLength(),
+        23,
+        59,
+        59,
+        999999999,
+        ZoneId.of("UTC")
+    )
+}
+
+fun ZonedDateTime.getStartOfDay(): ZonedDateTime {
+    return ZonedDateTime.of(
+        this.year,
+        this.monthValue,
+        this.dayOfMonth,
+        0,
+        0,
+        0,
+        0,
+        ZoneId.of("UTC")
+    )
+}
+
+fun ZonedDateTime.getEndOfDay(): ZonedDateTime {
+    return ZonedDateTime.of(
+        this.year,
+        this.monthValue,
+        this.dayOfMonth,
+        23,
+        59,
+        59,
+        999999999,
+        ZoneId.of("UTC")
+    )
 }
 
 fun ZonedDateTime.toEpochMilli(): Long {
@@ -26,28 +72,14 @@ fun Long.toZonedDateTime(): ZonedDateTime {
     return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault())
 }
 
-fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
-}
-
-fun ZonedDateTime.getDateString(): String {
-    return this.withZoneSameInstant(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("EEEE, dd-LLL-yyyy"))
-}
-
-fun LocalDate.getDateString(): String {
-    return this.format(DateTimeFormatter.ofPattern("dd-LLL-yyyy"))
-}
-
-fun LocalDate.getStartOfDayInEpochMilli(): Long {
-    return this.toEpochDay() * 86400000
-}
-
-fun LocalDate.getEndOfDayInEpochMilli(): Long {
-    return ((this.toEpochDay() + 1) * 86400000) - 1
+fun ZonedDateTime.getDateString(pattern: String): String {
+    return this.format(DateTimeFormatter.ofPattern(pattern))
 }
 
 fun ZonedDateTime.getTimeString(): String {
-    return this.withZoneSameInstant(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("hh:mm a"))
+    return this.format(DateTimeFormatter.ofPattern("hh:mm a"))
+}
+
+fun Long.toLocalDate(): LocalDate {
+    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 }

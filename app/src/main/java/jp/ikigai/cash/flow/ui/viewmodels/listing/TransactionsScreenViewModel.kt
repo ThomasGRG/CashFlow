@@ -30,10 +30,8 @@ import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineSevenFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
-import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.toEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
 import jp.ikigai.cash.flow.utils.toZonedDateTime
@@ -58,6 +56,8 @@ import java.util.UUID
 class TransactionsScreenViewModel(
     private val realm: Realm = Realm.open(Database.config),
 ) : ViewModel() {
+
+    private val datePattern = "dd-LLL-yyyy"
 
     private var numberFormatter = getNumberFormatter()
 
@@ -84,8 +84,8 @@ class TransactionsScreenViewModel(
     init {
         _state.update {
             it.copy(
-                startDateString = it.startDate.getDateString(),
-                endDateString = it.endDate.getDateString()
+                startDateString = it.startDate.getDateString(datePattern),
+                endDateString = it.endDate.getDateString(datePattern)
             )
         }
         loadData()
@@ -307,8 +307,8 @@ class TransactionsScreenViewModel(
             }
             realm.query<Transaction>(
                 queryString,
-                it.startDate.getStartOfDayInEpochMilli(),
-                it.endDate.getEndOfDayInEpochMilli(),
+                it.startDate.toEpochMilli(),
+                it.endDate.toEpochMilli(),
                 it.selectedCurrency,
                 it.filterAmountMin,
                 if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
@@ -412,13 +412,13 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setStartDateAndEndDate(startDate: LocalDate, endDate: LocalDate) {
+    fun setStartDateAndEndDate(startDate: ZonedDateTime, endDate: ZonedDateTime) {
         _state.update {
             it.copy(
                 startDate = startDate,
                 endDate = endDate,
-                startDateString = startDate.getDateString(),
-                endDateString = endDate.getDateString(),
+                startDateString = startDate.getDateString(datePattern),
+                endDateString = endDate.getDateString(datePattern),
                 loading = true
             )
         }

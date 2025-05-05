@@ -29,8 +29,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.utils.toLocalMilli
-import jp.ikigai.cash.flow.utils.toUTCZonedDateTime
+import jp.ikigai.cash.flow.utils.toEpochMilli
+import jp.ikigai.cash.flow.utils.toZonedDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -45,7 +45,7 @@ fun DatePickerPopup(
     val haptics = LocalHapticFeedback.current
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date.toLocalMilli(),
+        initialSelectedDateMillis = date.toEpochMilli(),
         selectableDates = selectableDates
     )
 
@@ -87,7 +87,7 @@ fun DatePickerPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    setDate(datePickerState.selectedDateMillis!!.toUTCZonedDateTime())
+                    setDate(datePickerState.selectedDateMillis!!.toZonedDateTime())
                 },
                 modifier = Modifier
                     .weight(1f)

@@ -83,6 +83,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -96,7 +97,7 @@ fun MigrateCounterPartyScreen(
     setSearchText: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setSelectedCurrencies: (Map<String, Boolean>) -> Unit,
-    setStartDateAndEndDate: (LocalDate?, LocalDate?) -> Unit,
+    setStartDateAndEndDate: (ZonedDateTime?, ZonedDateTime?) -> Unit,
     setSelectedCategories: (Map<String, Boolean>) -> Unit,
     setSelectedMethods: (Map<String, Boolean>) -> Unit,
     setSelectedSources: (Map<String, Boolean>) -> Unit,

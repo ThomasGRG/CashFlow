@@ -30,24 +30,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
-import jp.ikigai.cash.flow.utils.toZonedDateTime
-import java.time.LocalDate
-import java.time.YearMonth
+import jp.ikigai.cash.flow.utils.getEndOfDay
+import jp.ikigai.cash.flow.utils.getMonthEndDate
+import jp.ikigai.cash.flow.utils.getMonthStartDate
+import jp.ikigai.cash.flow.utils.getStartOfDay
+import jp.ikigai.cash.flow.utils.toEpochMilli
+import jp.ikigai.cash.flow.utils.toUTCZonedDateTime
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerPopup(
-    startDate: LocalDate,
-    endDate: LocalDate,
-    filter: (LocalDate, LocalDate) -> Unit,
+    startDate: ZonedDateTime,
+    endDate: ZonedDateTime,
+    filter: (ZonedDateTime, ZonedDateTime) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
     val dateRangePickerState = rememberDateRangePickerState(
-        initialSelectedStartDateMillis = startDate.getStartOfDayInEpochMilli(),
-        initialSelectedEndDateMillis = endDate.getStartOfDayInEpochMilli()
+        initialSelectedStartDateMillis = startDate.toEpochMilli(),
+        initialSelectedEndDateMillis = endDate.toEpochMilli()
     )
 
     Column(
@@ -93,10 +96,10 @@ fun DateRangePickerPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     filter(
-                        (dateRangePickerState.selectedStartDateMillis!!).toZonedDateTime()
-                            .toLocalDate(),
-                        (dateRangePickerState.selectedEndDateMillis!!).toZonedDateTime()
-                            .toLocalDate()
+                        (dateRangePickerState.selectedStartDateMillis!!).toUTCZonedDateTime()
+                            .getStartOfDay(),
+                        (dateRangePickerState.selectedEndDateMillis!!).toUTCZonedDateTime()
+                            .getEndOfDay()
                     )
                 },
                 modifier = Modifier
@@ -113,17 +116,17 @@ fun DateRangePickerPopup(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerPopup(
-    startDate: LocalDate?,
-    endDate: LocalDate?,
-    filter: (LocalDate, LocalDate) -> Unit,
+    startDate: ZonedDateTime?,
+    endDate: ZonedDateTime?,
+    filter: (ZonedDateTime, ZonedDateTime) -> Unit,
     reset: () -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
     val dateRangePickerState = rememberDateRangePickerState(
-        initialSelectedStartDateMillis = startDate?.getStartOfDayInEpochMilli(),
-        initialSelectedEndDateMillis = endDate?.getStartOfDayInEpochMilli()
+        initialSelectedStartDateMillis = startDate?.toEpochMilli(),
+        initialSelectedEndDateMillis = endDate?.toEpochMilli()
     )
 
     Column(
@@ -181,10 +184,10 @@ fun DateRangePickerPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
                     filter(
-                        (dateRangePickerState.selectedStartDateMillis!!).toZonedDateTime()
-                            .toLocalDate(),
-                        (dateRangePickerState.selectedEndDateMillis!!).toZonedDateTime()
-                            .toLocalDate()
+                        (dateRangePickerState.selectedStartDateMillis!!).toUTCZonedDateTime()
+                            .getStartOfDay(),
+                        (dateRangePickerState.selectedEndDateMillis!!).toUTCZonedDateTime()
+                            .getEndOfDay()
                     )
                 },
                 modifier = Modifier
@@ -202,8 +205,8 @@ fun DateRangePickerPopup(
 @Composable
 fun DateRangePickerPopupPreview() {
     DateRangePickerPopup(
-        startDate = YearMonth.now().atDay(1),
-        endDate = YearMonth.now().atEndOfMonth(),
+        startDate = getMonthStartDate(),
+        endDate = getMonthEndDate(),
         filter = { _, _ -> },
         dismiss = {})
 }

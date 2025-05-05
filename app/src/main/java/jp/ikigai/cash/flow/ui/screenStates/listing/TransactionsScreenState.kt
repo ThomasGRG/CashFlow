@@ -11,8 +11,10 @@ import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.utils.getMonthEndDate
+import jp.ikigai.cash.flow.utils.getMonthStartDate
 import java.time.LocalDate
-import java.time.YearMonth
+import java.time.ZonedDateTime
 import java.util.Locale
 
 data class TransactionsScreenState(
@@ -43,8 +45,8 @@ data class TransactionsScreenState(
     val templates: List<SelectTemplateInfoDTO> = emptyList(),
     val currencies: List<CurrencyInfo> = Constants.currencyList,
     val selectedCurrency: String = Currency.getInstance("INR").currencyCode,
-    val startDate: LocalDate = YearMonth.now().atDay(1),
-    val endDate: LocalDate = YearMonth.now().atEndOfMonth(),
+    val startDate: ZonedDateTime = getMonthStartDate(),
+    val endDate: ZonedDateTime = getMonthEndDate(),
     val startDateString: String = "",
     val endDateString: String = "",
     val searchText: String = "",

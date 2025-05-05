@@ -44,11 +44,10 @@ import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSele
 import jp.ikigai.cash.flow.utils.combineTenFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
-import jp.ikigai.cash.flow.utils.getEndOfDayInEpochMilli
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getIconForCategory
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.getStartOfDayInEpochMilli
+import jp.ikigai.cash.flow.utils.toEpochMilli
 import jp.ikigai.cash.flow.utils.toLocalDate
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,6 +69,7 @@ import okio.source
 import okio.use
 import java.io.InputStream
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.UUID
@@ -77,6 +77,8 @@ import java.util.UUID
 class ImportBackupScreenViewModel(
     private val realm: Realm = Realm.open(Database.config)
 ) : ViewModel() {
+
+    private val datePattern = "dd-LLL-yyyy"
 
     private var numberFormatter = getNumberFormatter()
     private var currencyFormatterMap = getCurrencyFormatterMap()
@@ -807,8 +809,8 @@ class ImportBackupScreenViewModel(
             }
             realm.query<TempTransaction>(
                 queryString,
-                it.startDate?.getStartOfDayInEpochMilli() ?: 0L,
-                it.endDate?.getEndOfDayInEpochMilli() ?: Long.MAX_VALUE,
+                it.startDate?.toEpochMilli() ?: 0L,
+                it.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
                 it.selectedCurrencies.filter { entry -> entry.value }.keys,
                 it.filterAmountMin,
                 if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
@@ -1518,13 +1520,13 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    fun setStartDateAndEndDate(startDate: LocalDate?, endDate: LocalDate?) {
+    fun setStartDateAndEndDate(startDate: ZonedDateTime?, endDate: ZonedDateTime?) {
         _mainState.update {
             it.copy(
                 startDate = startDate,
                 endDate = endDate,
-                startDateString = startDate?.getDateString() ?: "",
-                endDateString = endDate?.getDateString() ?: "",
+                startDateString = startDate?.getDateString(datePattern) ?: "",
+                endDateString = endDate?.getDateString(datePattern) ?: "",
                 dateRangeStringRes = if (startDate == null && endDate == null) {
                     R.string.all_time_date_range_label
                 } else {
