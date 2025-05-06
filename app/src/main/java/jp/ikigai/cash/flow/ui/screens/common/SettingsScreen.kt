@@ -48,14 +48,14 @@ fun SettingsScreen(
     navigateBack: () -> Unit,
     navigateToExportScreen: () -> Unit,
     navigateToImportScreen: () -> Unit,
-    reCount: () -> Unit,
+    fixBrokenMetadata: () -> Unit,
     events: Flow<Event>,
     state: SettingsScreenState
 ) {
     val haptics = LocalHapticFeedback.current
 
-    val reCountOngoing by remember(state.reCountOngoing) {
-        mutableStateOf(state.reCountOngoing)
+    val showWaitDialog by remember(state.showWaitDialog) {
+        mutableStateOf(state.showWaitDialog)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -79,7 +79,7 @@ fun SettingsScreen(
         }
     }
 
-    if (reCountOngoing) {
+    if (showWaitDialog) {
         WaitDialog()
     }
 
@@ -146,7 +146,7 @@ fun SettingsScreen(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    reCount()
+                    fixBrokenMetadata()
                 },
                 modifier = Modifier
                     .padding(start = 10.dp, end = 10.dp, top = 10.dp)
@@ -154,7 +154,7 @@ fun SettingsScreen(
                     .fillMaxWidth(),
                 shape = MaterialTheme.shapes.small
             ) {
-                Text(text = stringResource(R.string.re_count_button_label))
+                Text(text = stringResource(R.string.fix_metadata_button_label))
             }
         }
     }
@@ -167,7 +167,7 @@ fun SettingsScreenPreview() {
         navigateBack = {},
         navigateToExportScreen = {},
         navigateToImportScreen = {},
-        reCount = {},
+        fixBrokenMetadata = {},
         events = emptyList<Event>().asFlow(),
         state = SettingsScreenState()
     )
@@ -194,7 +194,7 @@ fun NavGraphBuilder.settingsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            reCount = viewModel::reCount,
+            fixBrokenMetadata = viewModel::fixBrokenMetadata,
             events = viewModel.event,
             state = state
         )

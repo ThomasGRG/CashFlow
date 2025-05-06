@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import io.realm.kotlin.query.max
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
@@ -40,10 +41,10 @@ class SettingsScreenViewModel(
         _event.close()
     }
 
-    fun reCount() = viewModelScope.launch {
+    fun fixBrokenMetadata() = viewModelScope.launch {
         _state.update {
             it.copy(
-                reCountOngoing = true
+                showWaitDialog = true
             )
         }
         val startTime = System.currentTimeMillis()
@@ -57,33 +58,63 @@ class SettingsScreenViewModel(
                 val transactionTitles = this.query<TransactionTitle>().find()
 
                 transactionTitles.forEach { transactionTitle ->
-                    transactionTitle.frequency =
-                        this.query<Transaction>("title == $0", transactionTitle.title).count()
-                            .find().toInt()
+                    transactionTitle.frequency = this
+                        .query<Transaction>("title == $0", transactionTitle.title)
+                        .count()
+                        .find()
+                        .toInt()
+                    transactionTitle.lastUsed = this
+                        .query<Transaction>("title == $0", transactionTitle.title)
+                        .max<Long>("time")
+                        .find() ?: 0L
                 }
 
                 categories.forEach { category ->
-                    category.frequency =
-                        this.query<Transaction>("category.uuid==$0", category.uuid).count().find()
-                            .toInt()
+                    category.frequency = this
+                        .query<Transaction>("category.uuid==$0", category.uuid)
+                        .count()
+                        .find()
+                        .toInt()
+                    category.lastUsed = this
+                        .query<Transaction>("category.uuid==$0", category.uuid)
+                        .max<Long>("time")
+                        .find() ?: 0L
                 }
                 counterParties.forEach { counterParty ->
-                    counterParty.frequency =
-                        this.query<Transaction>("counterParty.uuid==$0", counterParty.uuid).count()
-                            .find().toInt()
+                    counterParty.frequency = this
+                        .query<Transaction>("counterParty.uuid==$0", counterParty.uuid)
+                        .count()
+                        .find()
+                        .toInt()
+                    counterParty.lastUsed = this
+                        .query<Transaction>("counterParty.uuid==$0", counterParty.uuid)
+                        .max<Long>("time")
+                        .find() ?: 0L
                 }
                 methods.forEach { method ->
-                    method.frequency =
-                        this.query<Transaction>("method.uuid==$0", method.uuid).count().find()
-                            .toInt()
+                    method.frequency = this
+                        .query<Transaction>("method.uuid==$0", method.uuid)
+                        .count()
+                        .find()
+                        .toInt()
+                    method.lastUsed = this
+                        .query<Transaction>("method.uuid==$0", method.uuid)
+                        .max<Long>("time")
+                        .find() ?: 0L
                 }
                 sources.forEach { source ->
-                    source.frequency =
-                        this.query<Transaction>("source.uuid==$0", source.uuid).count().find()
-                            .toInt()
+                    source.frequency = this
+                        .query<Transaction>("source.uuid==$0", source.uuid)
+                        .count()
+                        .find()
+                        .toInt()
+                    source.lastUsed = this
+                        .query<Transaction>("source.uuid==$0", source.uuid)
+                        .max<Long>("time")
+                        .find() ?: 0L
                 }
             }
-            result = Event.ReCountSuccess
+            result = Event.MetadataFixSuccess
         } catch (exception: Exception) {
             result = Event.InternalError
         }
@@ -94,7 +125,7 @@ class SettingsScreenViewModel(
         _event.send(result)
         _state.update {
             it.copy(
-                reCountOngoing = false
+                showWaitDialog = false
             )
         }
     }

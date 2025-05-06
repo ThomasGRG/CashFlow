@@ -6,7 +6,7 @@ import jp.ikigai.cash.flow.R
 sealed class Event(@StringRes val message: Int) {
     object InternalError: Event(R.string.internal_error_label)
     object IOError : Event(R.string.io_error_label)
-    object ReCountSuccess : Event(R.string.recount_success_label)
+    object MetadataFixSuccess : Event(R.string.metadata_fix_success_label)
     object ExportSuccess : Event(R.string.export_success_label)
     object ImportSuccess : Event(R.string.import_success_label)
     object MigrationSuccess : Event(R.string.migration_success_label)
