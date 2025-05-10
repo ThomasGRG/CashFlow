@@ -14,22 +14,19 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.MigrateScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
-import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCounterPartyScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toEpochMilli
-import jp.ikigai.cash.flow.utils.toLocalDate
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -39,7 +36,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,12 +57,24 @@ class MigrateCounterPartyScreenViewModel(
     private val counterPartyUuid: String = checkNotNull(savedStateHandle["id"])
 
     private var loadDataJob: Job? = null
+    private var loadTransactionsJob: Job? = null
 
     private var numberFormatter = getNumberFormatter()
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private val _state = MutableStateFlow(MigrateCounterPartyScreenState())
     val state: StateFlow<MigrateCounterPartyScreenState> = _state.asStateFlow()
+
+    private val _filtersState = MutableStateFlow(TransactionFilters())
+    val filtersState: StateFlow<TransactionFilters> = _filtersState.asStateFlow()
+
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
+
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsScreenState(Sort.DESCENDING, "time")
+    )
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
@@ -85,88 +96,115 @@ class MigrateCounterPartyScreenViewModel(
     }
 
     private fun loadData() = viewModelScope.launch {
-        combine(
-            counterPartyQuery.asFlow(),
-            categoryMethodAndSourceQuery.asFlow(),
-            getTransactionQuery()
-        ) { counterPartyChanges, categoryMethodAndSourceChanges, transactionChanges ->
-            val categories = categoryMethodAndSourceChanges.list
-                .mapNotNull { transaction -> transaction.category }
-                .distinctBy { category -> category.uuid }
+        val counterParties = counterPartyQuery.find()
+        val transactions = categoryMethodAndSourceQuery.find()
 
-            val methods = categoryMethodAndSourceChanges.list
-                .mapNotNull { transaction -> transaction.method }
-                .distinctBy { method -> method.uuid }
+        val categories = transactions
+            .mapNotNull { transaction -> transaction.category }
+            .distinctBy { category -> category.uuid }
 
-            val sources = categoryMethodAndSourceChanges.list
-                .mapNotNull { transaction -> transaction.source }
-                .distinctBy { source -> source.uuid }
-                .toMutableList()
+        val methods = transactions
+            .mapNotNull { transaction -> transaction.method }
+            .distinctBy { method -> method.uuid }
 
-            sources.forEach { source ->
-                val formatter = currencyFormatterMap.getValue(source.currency)
-                source.displayBalance = formatter.format(source.balance).toString()
-            }
+        val sources = transactions
+            .mapNotNull { transaction -> transaction.source }
+            .distinctBy { source -> source.uuid }
+            .toMutableList()
 
-            MigrateScreenFlows(
+        sources.forEach { source ->
+            val formatter = currencyFormatterMap.getValue(source.currency)
+            source.displayBalance = formatter.format(source.balance).toString()
+        }
+
+        _state.update {
+            it.copy(
                 categories = categories,
-                counterParties = counterPartyChanges.list,
+                counterParties = counterParties,
                 methods = methods,
-                sources = sources,
-                transactions = transactionChanges.list
+                sources = sources
             )
-        }.collectLatest { migrateScreenFlows ->
-            _state.update {
-                val selectedCategoriesMap =
-                    getSelectedCategories(migrateScreenFlows.categories, it.selectedCategories)
-                val selectedMethodsMap =
-                    getSelectedMethods(migrateScreenFlows.methods, it.selectedMethods)
-                val selectedSourcesMap =
-                    getSelectedSources(migrateScreenFlows.sources, it.selectedSources)
+        }
 
-                val selectedCategories =
-                    selectedCategoriesMap.filter { entry -> entry.value }.keys
-                val selectedMethods = selectedMethodsMap.filter { entry -> entry.value }.keys
-                val selectedSources = selectedSourcesMap.filter { entry -> entry.value }.keys
-                val selectedCurrencies =
-                    it.selectedCurrencies.filter { entry -> entry.value }.keys
+        val selectedCategories = categories.map { it.uuid }.toSet()
+        val selectedMethods = methods.map { it.uuid }.toSet()
+        val selectedSources = sources.map { it.uuid }.toSet()
 
-                val filteredTransactions = migrateScreenFlows.transactions.groupBy(
-                    keySelector = { transaction -> transaction.time.toLocalDate() },
-                    valueTransform = { transaction ->
-                        getTransactionWithIcons(
-                            transaction,
-                            it.searchText
+        _filtersState.update { filters ->
+            filters.copy(
+                selectedCategories = selectedCategories,
+                selectedCategoryCount = numberFormatter.format(selectedCategories.size).toString(),
+                selectedMethods = selectedMethods,
+                selectedMethodCount = numberFormatter.format(selectedMethods.size).toString(),
+                selectedSources = selectedSources,
+                selectedSourceCount = numberFormatter.format(selectedSources.size).toString(),
+                selectedCurrencyCount = numberFormatter.format(filters.selectedCurrencies.size)
+                    .toString()
+            )
+        }
+
+        loadTransactionsJob = loadTransactions()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    private fun loadTransactions() = viewModelScope.launch {
+        combine(
+            _searchState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
                         )
                     }
-                )
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                },
+            _filtersState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions, filters ->
+            Triple(searchText, sortOptions, filters)
+        }.flatMapLatest { (searchText, sortOptions, filters) ->
+            getTransactionQuery(
+                searchText,
+                sortOptions,
+                filters
+            )
+        }.collectLatest { transactionChanges ->
+            val transactionsMap = transactionChanges.list.groupBy(
+                keySelector = { transaction -> transaction.time.toLocalDate() },
+                valueTransform = { transaction ->
+                    getTransactionWithIcons(
+                        transaction,
+                        searchState.value
+                    )
+                }
+            )
 
+            _state.update {
                 it.copy(
-                    transactionsHashCode = migrateScreenFlows.transactions.hashCode(),
-                    filteredTransactions = filteredTransactions,
+                    transactionsHashCode = transactionChanges.list.hashCode(),
+                    filteredTransactions = transactionsMap,
                     selectedLocalDates = getSelectedLocalDates(
-                        filteredTransactions,
+                        transactionsMap,
                         it.selectedTransactions
                     ),
                     allSelected = getAllSelected(
-                        filteredTransactions,
+                        transactionsMap,
                         it.selectedTransactions
                     ),
-                    categories = migrateScreenFlows.categories,
-                    selectedCategories = selectedCategoriesMap,
-                    selectedCategoryCount = numberFormatter.format(selectedCategories.size)
-                        .toString(),
-                    counterParties = migrateScreenFlows.counterParties,
-                    methods = migrateScreenFlows.methods,
-                    selectedMethods = selectedMethodsMap,
-                    selectedMethodCount = numberFormatter.format(selectedMethods.size)
-                        .toString(),
-                    sources = migrateScreenFlows.sources,
-                    selectedSources = selectedSourcesMap,
-                    selectedSourceCount = numberFormatter.format(selectedSources.size)
-                        .toString(),
-                    selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size)
-                        .toString(),
                     loading = false,
                     enabled = true
                 )
@@ -198,71 +236,33 @@ class MigrateCounterPartyScreenViewModel(
             .all { uuid -> selectedTransactions.contains(uuid) }
     }
 
-    private fun getSelectedCategories(
-        categories: List<Category>,
-        selectedCategories: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return categories.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedCategories.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getSelectedMethods(
-        methods: List<Method>,
-        selectedMethods: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return methods.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedMethods.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getSelectedSources(
-        sources: List<Source>,
-        selectedSources: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return sources.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedSources.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTransactionQuery(): Flow<ResultsChange<Transaction>> {
-        return state.flatMapLatest {
-            var queryString =
-                "time >= $0 && time <= $1 && currency IN $2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
-            if (it.searchText.isNotBlank()) {
-                queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
-            }
-            queryString += " && counterParty.uuid == $9"
-            realm.query<Transaction>(
-                queryString,
-                it.startDate?.toEpochMilli() ?: 0L,
-                it.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
-                it.selectedCurrencies.filter { entry -> entry.value }.keys,
-                it.filterAmountMin,
-                if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
-                it.selectedTransactionTypes,
-                it.selectedCategories.filter { entry -> entry.value }.keys,
-                it.selectedMethods.filter { entry -> entry.value }.keys,
-                it.selectedSources.filter { entry -> entry.value }.keys,
-                counterPartyUuid
-            ).sort("time", it.sortDirection).asFlow()
+    private fun getTransactionQuery(
+        searchText: String,
+        sortOptions: SortOptionsScreenState,
+        filters: TransactionFilters
+    ): Flow<ResultsChange<Transaction>> {
+        var queryString =
+            "time >= $0 && time <= $1 && currency IN $2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+        if (searchText.isNotBlank()) {
+            queryString += " && (title CONTAINS[c] '${searchText.trim()}' || description CONTAINS[c] '${searchText.trim()}')"
         }
+        queryString += " && counterParty.uuid == $9"
+        return realm
+            .query<Transaction>(
+                queryString,
+                filters.startDate?.toEpochMilli() ?: 0L,
+                filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
+                filters.selectedCurrencies,
+                filters.filterAmountMin,
+                if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
+                filters.selectedTransactionTypes,
+                filters.selectedCategories,
+                filters.selectedMethods,
+                filters.selectedSources,
+                counterPartyUuid
+            )
+            .sort("time", sortOptions.sortDirection)
+            .asFlow()
     }
 
     private fun getTransactionWithIcons(
@@ -308,8 +308,7 @@ class MigrateCounterPartyScreenViewModel(
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
-                value = transaction.time.toZonedDateTime()
-                    .format(DateTimeFormatter.ofPattern("hh:mm a")),
+                value = transaction.time.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 resId = R.string.placeholder
             )
         )
@@ -327,6 +326,7 @@ class MigrateCounterPartyScreenViewModel(
 
     fun migrateTransactions(counterParty: CounterParty) = viewModelScope.launch {
         loadDataJob?.cancelAndJoin()
+        loadTransactionsJob?.cancelAndJoin()
         _state.update {
             it.copy(
                 loading = true,
@@ -374,6 +374,7 @@ class MigrateCounterPartyScreenViewModel(
             val transactionUUIDs = it.filteredTransactions
                 .getOrDefault(localDate, emptyList())
                 .map { transactionWithIcons -> transactionWithIcons.uuid }
+                .toSet()
 
             val selectedTransactions = it.selectedTransactions.toMutableSet()
             val selectedLocalDates = it.selectedLocalDates.toMutableSet()
@@ -447,19 +448,18 @@ class MigrateCounterPartyScreenViewModel(
         }
     }
 
-    fun setSelectedCurrencies(selectedCurrencies: Map<String, Boolean>) {
-        _state.update {
+    fun setSelectedCurrencies(selectedCurrencies: Set<String>) {
+        _filtersState.update {
             it.copy(
-                loading = true,
-                selectedCurrencies = selectedCurrencies
+                selectedCurrencies = selectedCurrencies,
+                selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size).toString()
             )
         }
     }
 
     fun setStartDateAndEndDate(startDate: ZonedDateTime?, endDate: ZonedDateTime?) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 startDate = startDate,
                 endDate = endDate,
                 startDateString = startDate?.getDateString(datePattern) ?: "",
@@ -473,49 +473,46 @@ class MigrateCounterPartyScreenViewModel(
         }
     }
 
-    fun setSelectedCategories(
-        selectedCategories: Map<String, Boolean>
-    ) {
-        _state.update {
+    fun setSelectedCategories(selectedCategories: Set<String>) {
+        _filtersState.update {
             it.copy(
-                loading = true,
-                selectedCategories = selectedCategories
+                selectedCategories = selectedCategories,
+                selectedCounterPartyCount = numberFormatter.format(selectedCategories.size)
+                    .toString()
             )
         }
     }
 
-    fun setSelectedMethods(selectedMethods: Map<String, Boolean>) {
-        _state.update {
+    fun setSelectedMethods(selectedMethods: Set<String>) {
+        _filtersState.update {
             it.copy(
-                loading = true,
-                selectedMethods = selectedMethods
+                selectedMethods = selectedMethods,
+                selectedMethodCount = numberFormatter.format(selectedMethods.size).toString()
             )
         }
     }
 
-    fun setSelectedSources(selectedSources: Map<String, Boolean>) {
-        _state.update {
+    fun setSelectedSources(selectedSources: Set<String>) {
+        _filtersState.update {
             it.copy(
-                loading = true,
-                selectedSources = selectedSources
+                selectedSources = selectedSources,
+                selectedSourceCount = numberFormatter.format(selectedSources.size).toString()
             )
         }
     }
 
     fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedTransactionTypes = selectedTransactionTypes
             )
         }
     }
 
     fun setSortDirection(sortDirection: Sort) {
-        _state.update {
+        _sortOptionsState.update {
             it.copy(
-                sortDirection = sortDirection,
-                loading = true
+                sortDirection = sortDirection
             )
         }
     }
@@ -530,9 +527,8 @@ class MigrateCounterPartyScreenViewModel(
         } else {
             "0+"
         }
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 filterAmountMin = min,
                 filterAmountMax = max,
                 filterAmountRange = filterAmountRange
@@ -541,11 +537,8 @@ class MigrateCounterPartyScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _state.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 

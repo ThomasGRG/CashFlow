@@ -15,19 +15,25 @@ import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SourceListingDTO
 import jp.ikigai.cash.flow.data.entity.Source
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
 import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -40,6 +46,12 @@ class SourceScreenViewModel(
 
     private val _state = MutableStateFlow(SourceScreenState())
     val state: StateFlow<SourceScreenState> = _state.asStateFlow()
+
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
+
+    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
 
     init {
         getSources()
@@ -62,32 +74,51 @@ class SourceScreenViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun getSources() = viewModelScope.launch {
-        state.flatMapLatest {
+        combine(
+            _searchState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions ->
+            Pair(searchText, sortOptions)
+        }.flatMapLatest { (searchText, sortOptions) ->
             val query = realm.query<Source>(
-                if (it.searchText.isBlank()) {
+                if (searchText.isBlank()) {
                     TRUE_PREDICATE
                 } else {
-                    "name CONTAINS[c] '${it.searchText.trim()}'"
+                    "name CONTAINS[c] '${searchText.trim()}'"
                 }
             )
-            if (it.sortField == "balance") {
+            if (sortOptions.sortField == "balance") {
                 query.sort(
                     Pair("currency", Sort.ASCENDING),
-                    Pair(it.sortField, it.sortDirection)
+                    Pair(sortOptions.sortField, sortOptions.sortDirection)
                 ).asFlow()
             } else {
                 query.sort(
-                    Pair(it.sortField, it.sortDirection)
+                    Pair(sortOptions.sortField, sortOptions.sortDirection)
                 ).asFlow()
             }
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    sources = mapToDTO(changes.list, screenState.searchText),
-                    loading = false,
-                    countString = numberFormatter.format(screenState.count).toString()
+                    sources = mapToDTO(changes.list, searchState.value),
+                    loading = false
                 )
             }
         }
@@ -97,6 +128,7 @@ class SourceScreenViewModel(
         sources: List<Source>,
         searchText: String
     ): List<SourceListingDTO> {
+        val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
         return sources.map { source ->
             val currencyFormatter = currencyFormatterMap.getValue(source.currency)
             val chips: MutableList<ChipInfo> = mutableListOf()
@@ -107,11 +139,11 @@ class SourceScreenViewModel(
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (source.lastUsed > 0) {
+            if (source.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = source.lastUsed.toZonedDateTime()
+                        value = source.lastUsed
                             .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
                         icon = TablerIcons.History
                     )
@@ -137,16 +169,13 @@ class SourceScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _state.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 
-    fun setSortInfo(field: String, direction: Sort) {
-        _state.update {
+    fun setSortOptions(field: String, direction: Sort) {
+        _sortOptionsState.update {
             it.copy(
                 sortDirection = direction,
                 sortField = field

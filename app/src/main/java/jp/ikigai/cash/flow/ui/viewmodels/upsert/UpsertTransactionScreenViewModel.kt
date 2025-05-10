@@ -27,8 +27,6 @@ import jp.ikigai.cash.flow.utils.combineSixFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
-import jp.ikigai.cash.flow.utils.toEpochMilli
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -201,7 +199,7 @@ class UpsertTransactionScreenViewModel(
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
         _state.update {
-            val dateTime = transaction.time.toZonedDateTime()
+            val dateTime = transaction.time
             val source = transaction.source!!
             val formatter = currencyFormatterMap.getValue(source.currency)
             source.displayBalance = formatter.format(source.balance).toString()
@@ -358,7 +356,7 @@ class UpsertTransactionScreenViewModel(
             val selectedMethod = state.value.selectedMethod
             val selectedSource = state.value.selectedSource
 
-            val time = ZonedDateTime.now(ZoneId.of("UTC")).toEpochMilli()
+            val time = ZonedDateTime.now(ZoneId.systemDefault())
 
             updateTransactionTitle(newTitle, time)
 
@@ -493,7 +491,7 @@ class UpsertTransactionScreenViewModel(
                         this.title = newTitle
                         this.description = newDescription
                         this.amount = state.value.amount
-                        this.time = state.value.dateTime.toEpochMilli()
+                        this.time = state.value.dateTime
                         this.type = state.value.type
                         this.category = latestCategory
                         this.method = latestMethod
@@ -507,7 +505,7 @@ class UpsertTransactionScreenViewModel(
                     it.title = newTitle
                     it.description = newDescription
                     it.amount = state.value.amount
-                    it.time = state.value.dateTime.toEpochMilli()
+                    it.time = state.value.dateTime
                     it.type = state.value.type
                     it.category = latestCategory
                     it.method = latestMethod
@@ -529,7 +527,7 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private suspend fun updateTemplate(time: Long) {
+    private suspend fun updateTemplate(time: ZonedDateTime) {
         realm.write {
             val template = query<TransactionTemplate>("uuid==$0", templateUuid).find().first()
             template.frequency += 1
@@ -537,7 +535,7 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private suspend fun updateTransactionTitle(title: String, time: Long) {
+    private suspend fun updateTransactionTitle(title: String, time: ZonedDateTime) {
         realm.write {
             val transactionTitle = query<TransactionTitle>("title == [c]$0", title.trim()).find()
             if (transactionTitle.isEmpty()) {
@@ -552,13 +550,17 @@ class UpsertTransactionScreenViewModel(
             } else {
                 findLatest(transactionTitle.first())?.also {
                     it.frequency += 1
-                    it.lastUsed
+                    it.lastUsed = time
                 }
             }
         }
     }
 
-    private suspend fun updateCategory(category: Category, frequency: Int, time: Long? = null) {
+    private suspend fun updateCategory(
+        category: Category,
+        frequency: Int,
+        time: ZonedDateTime? = null
+    ) {
         realm.write {
             findLatest(category)?.also {
                 it.frequency = frequency
@@ -570,7 +572,7 @@ class UpsertTransactionScreenViewModel(
     private suspend fun updateCounterParty(
         counterParty: CounterParty,
         frequency: Int,
-        time: Long? = null
+        time: ZonedDateTime? = null
     ) {
         realm.write {
             findLatest(counterParty)?.also {
@@ -580,7 +582,7 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private suspend fun updateMethod(method: Method, frequency: Int, time: Long? = null) {
+    private suspend fun updateMethod(method: Method, frequency: Int, time: ZonedDateTime? = null) {
         realm.write {
             findLatest(method)?.also {
                 it.frequency = frequency
@@ -593,7 +595,7 @@ class UpsertTransactionScreenViewModel(
         source: Source,
         amount: Double,
         frequency: Int,
-        time: Long? = null,
+        time: ZonedDateTime? = null,
         type: TransactionType
     ) {
         realm.write {
@@ -790,7 +792,7 @@ class UpsertTransactionScreenViewModel(
         val selectedSource = state.value.selectedSource
         val selectedType = state.value.type
 
-        val transactionDateTime = transaction.time.toZonedDateTime()
+        val transactionDateTime = transaction.time
         val selectedDateTime = state.value.dateTime
 
         val yearChanged = transactionDateTime.year != selectedDateTime.year

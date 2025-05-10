@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.max
+import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
@@ -63,10 +63,14 @@ class SettingsScreenViewModel(
                         .count()
                         .find()
                         .toInt()
-                    transactionTitle.lastUsed = this
+                    this
                         .query<Transaction>("title == $0", transactionTitle.title)
-                        .max<Long>("time")
-                        .find() ?: 0L
+                        .sort("time", Sort.DESCENDING)
+                        .first()
+                        .find()
+                        ?.let {
+                            transactionTitle.lastUsed = it.time
+                        }
                 }
 
                 categories.forEach { category ->
@@ -75,10 +79,14 @@ class SettingsScreenViewModel(
                         .count()
                         .find()
                         .toInt()
-                    category.lastUsed = this
+                    this
                         .query<Transaction>("category.uuid==$0", category.uuid)
-                        .max<Long>("time")
-                        .find() ?: 0L
+                        .sort("time", Sort.DESCENDING)
+                        .first()
+                        .find()
+                        ?.let {
+                            category.lastUsed = it.time
+                        }
                 }
                 counterParties.forEach { counterParty ->
                     counterParty.frequency = this
@@ -86,10 +94,14 @@ class SettingsScreenViewModel(
                         .count()
                         .find()
                         .toInt()
-                    counterParty.lastUsed = this
+                    this
                         .query<Transaction>("counterParty.uuid==$0", counterParty.uuid)
-                        .max<Long>("time")
-                        .find() ?: 0L
+                        .sort("time", Sort.DESCENDING)
+                        .first()
+                        .find()
+                        ?.let {
+                            counterParty.lastUsed = it.time
+                        }
                 }
                 methods.forEach { method ->
                     method.frequency = this
@@ -97,10 +109,14 @@ class SettingsScreenViewModel(
                         .count()
                         .find()
                         .toInt()
-                    method.lastUsed = this
+                    this
                         .query<Transaction>("method.uuid==$0", method.uuid)
-                        .max<Long>("time")
-                        .find() ?: 0L
+                        .sort("time", Sort.DESCENDING)
+                        .first()
+                        .find()
+                        ?.let {
+                            method.lastUsed = it.time
+                        }
                 }
                 sources.forEach { source ->
                     source.frequency = this
@@ -108,10 +124,14 @@ class SettingsScreenViewModel(
                         .count()
                         .find()
                         .toInt()
-                    source.lastUsed = this
+                    this
                         .query<Transaction>("source.uuid==$0", source.uuid)
-                        .max<Long>("time")
-                        .find() ?: 0L
+                        .sort("time", Sort.DESCENDING)
+                        .first()
+                        .find()
+                        ?.let {
+                            source.lastUsed = it.time
+                        }
                 }
             }
             result = Event.MetadataFixSuccess

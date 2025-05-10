@@ -21,22 +21,28 @@ import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -49,6 +55,12 @@ class TransactionTemplateScreenViewModel(
 
     private val _state = MutableStateFlow(TransactionTemplateScreenState())
     val state: StateFlow<TransactionTemplateScreenState> = _state.asStateFlow()
+
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
+
+    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
@@ -108,27 +120,43 @@ class TransactionTemplateScreenViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun getTemplates() = viewModelScope.launch {
-        state.flatMapLatest {
+        combine(
+            _searchState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions ->
+            Pair(searchText, sortOptions)
+        }.flatMapLatest { (searchText, sortOptions) ->
             realm.query<TransactionTemplate>(
-                if (it.searchText.isBlank()) {
+                if (searchText.isBlank()) {
                     TRUE_PREDICATE
                 } else {
-                    "name CONTAINS[c] '${it.searchText.trim()}'"
+                    "name CONTAINS[c] '${searchText.trim()}'"
                 }
             )
-                .sort(it.sortField, it.sortDirection)
+                .sort(sortOptions.sortField, sortOptions.sortDirection)
                 .asFlow()
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    templates = getTemplateWithIcons(
-                        changes.list,
-                        screenState.searchText
-                    ),
-                    loading = false,
-                    countString = numberFormatter.format(screenState.count).toString()
+                    templates = getTemplateWithIcons(changes.list, searchState.value),
+                    loading = false
                 )
             }
         }
@@ -138,6 +166,7 @@ class TransactionTemplateScreenViewModel(
         templates: List<TransactionTemplate>,
         searchText: String
     ): List<TransactionTemplateWithIcons> {
+        val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
         return templates.map { template ->
             val category = template.category
             val counterParty = template.counterParty
@@ -205,11 +234,11 @@ class TransactionTemplateScreenViewModel(
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (template.lastUsed > 0) {
+            if (template.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = template.lastUsed.toZonedDateTime()
+                        value = template.lastUsed
                             .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
                         icon = TablerIcons.History
                     )
@@ -245,16 +274,13 @@ class TransactionTemplateScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _state.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 
-    fun setSortInfo(field: String, direction: Sort) {
-        _state.update {
+    fun setSortOptions(field: String, direction: Sort) {
+        _sortOptionsState.update {
             it.copy(
                 sortDirection = direction,
                 sortField = field

@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.viewmodels.common
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
@@ -22,7 +21,6 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.ImportScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
 import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
 import jp.ikigai.cash.flow.data.dto.export.ExportData
@@ -39,19 +37,19 @@ import jp.ikigai.cash.flow.data.entity.temp.TempSource
 import jp.ikigai.cash.flow.data.entity.temp.TempTransaction
 import jp.ikigai.cash.flow.data.entity.temp.TempTransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenEnabledState
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenMainState
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSelectionState
-import jp.ikigai.cash.flow.utils.combineTenFlows
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getIconForCategory
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toEpochMilli
-import jp.ikigai.cash.flow.utils.toLocalDate
 import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -61,7 +59,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -69,7 +69,9 @@ import okio.buffer
 import okio.source
 import okio.use
 import java.io.InputStream
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -85,20 +87,26 @@ class ImportBackupScreenViewModel(
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
     private var loadDataJob: Job? = null
+    private var loadTransactionsJob: Job? = null
 
     //region StateFlows
 
-    private val _mainState = MutableStateFlow(ImportBackupScreenMainState())
-    val mainState: StateFlow<ImportBackupScreenMainState> = _mainState.asStateFlow()
+    private val _primaryState = MutableStateFlow(ImportBackupScreenPrimaryState())
+    val primaryState: StateFlow<ImportBackupScreenPrimaryState> = _primaryState.asStateFlow()
 
-    private val _selectionState = MutableStateFlow(ImportBackupScreenSelectionState())
-    val selectionState: StateFlow<ImportBackupScreenSelectionState> = _selectionState.asStateFlow()
+    private val _secondaryState = MutableStateFlow(ImportBackupScreenSecondaryState())
+    val secondaryState: StateFlow<ImportBackupScreenSecondaryState> = _secondaryState.asStateFlow()
 
-    private val _enabledState = MutableStateFlow(ImportBackupScreenEnabledState())
-    val enabledState: StateFlow<ImportBackupScreenEnabledState> = _enabledState.asStateFlow()
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _selectedTransactionsState = MutableStateFlow(emptySet<String>())
-    val selectedTransactionsState: StateFlow<Set<String>> = _selectedTransactionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsScreenState(Sort.DESCENDING, "time")
+    )
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+
+    private val _filtersState = MutableStateFlow(ImportBackupScreenFiltersState())
+    val filtersState: StateFlow<ImportBackupScreenFiltersState> = _filtersState.asStateFlow()
 
     //endregion
 
@@ -107,22 +115,41 @@ class ImportBackupScreenViewModel(
 
     //region Realm Queries
 
-    private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
-    private val tempCategoryQuery = realm.query<TempCategory>().sort("frequency", Sort.DESCENDING)
+    private val categoryQuery = realm
+        .query<Category>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val counterPartyQuery =
-        realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
-    private val tempCounterPartyQuery =
-        realm.query<TempCounterParty>().sort("frequency", Sort.DESCENDING)
+    private val tempCategoryQuery = realm
+        .query<TempCategory>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
-    private val tempMethodQuery = realm.query<TempMethod>().sort("frequency", Sort.DESCENDING)
+    private val counterPartyQuery = realm
+        .query<CounterParty>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val sourceQuery = realm.query<Source>().sort("frequency", Sort.DESCENDING)
-    private val tempSourceQuery = realm.query<TempSource>().sort("frequency", Sort.DESCENDING)
+    private val tempCounterPartyQuery = realm
+        .query<TempCounterParty>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val tempTransactionTemplatesQuery =
-        realm.query<TempTransactionTemplate>().sort("frequency", Sort.DESCENDING)
+    private val methodQuery = realm
+        .query<Method>()
+        .sort("frequency", Sort.DESCENDING)
+
+    private val tempMethodQuery = realm
+        .query<TempMethod>()
+        .sort("frequency", Sort.DESCENDING)
+
+    private val sourceQuery = realm
+        .query<Source>()
+        .sort("frequency", Sort.DESCENDING)
+
+    private val tempSourceQuery = realm
+        .query<TempSource>()
+        .sort("frequency", Sort.DESCENDING)
+
+    private val tempTransactionTemplatesQuery = realm
+        .query<TempTransactionTemplate>()
+        .sort("frequency", Sort.DESCENDING)
 
     //endregion
 
@@ -143,7 +170,7 @@ class ImportBackupScreenViewModel(
 
     @OptIn(ExperimentalStdlibApi::class)
     fun loadFile(inputStream: InputStream?) = viewModelScope.launch {
-        _mainState.update {
+        _primaryState.update {
             it.copy(
                 loading = true
             )
@@ -172,7 +199,7 @@ class ImportBackupScreenViewModel(
                                 name = category.name
                                 icon = category.iconName.getIconForCategory()
                                 frequency = category.frequency
-                                lastUsed = category.lastUsed
+                                lastUsed = category.lastUsed.toZonedDateTime()
                             }
                             val managedInstance = copyToRealm(tempCategory)
                             tempCategoryMap[tempCategory.uuid] = managedInstance
@@ -182,7 +209,7 @@ class ImportBackupScreenViewModel(
                                 uuid = counterParty.uuid
                                 name = counterParty.name
                                 frequency = counterParty.frequency
-                                lastUsed = counterParty.lastUsed
+                                lastUsed = counterParty.lastUsed.toZonedDateTime()
                             }
                             val managedInstance = copyToRealm(tempCounterParty)
                             tempCounterPartyMap[tempCounterParty.uuid] = managedInstance
@@ -192,7 +219,7 @@ class ImportBackupScreenViewModel(
                                 uuid = method.uuid
                                 name = method.name
                                 frequency = method.frequency
-                                lastUsed = method.lastUsed
+                                lastUsed = method.lastUsed.toZonedDateTime()
                             }
                             val managedInstance = copyToRealm(tempMethod)
                             tempMethodMap[tempMethod.uuid] = managedInstance
@@ -204,7 +231,7 @@ class ImportBackupScreenViewModel(
                                 currency = source.currency
                                 balance = source.balance
                                 frequency = source.frequency
-                                lastUsed = source.lastUsed
+                                lastUsed = source.lastUsed.toZonedDateTime()
                             }
                             val managedInstance = copyToRealm(tempSource)
                             tempSourceMap[tempSource.uuid] = managedInstance
@@ -219,7 +246,7 @@ class ImportBackupScreenViewModel(
                                     .find { transactionType -> transactionType.id == transaction.typeId }
                                     ?: TransactionType.DEBIT
                                 currency = transaction.currency
-                                time = transaction.time
+                                time = transaction.time.toZonedDateTime()
                                 category = tempCategoryMap[transaction.categoryUUID]
                                 counterParty = tempCounterPartyMap[transaction.counterPartyUUID]
                                 method = tempMethodMap[transaction.methodUUID]
@@ -242,23 +269,23 @@ class ImportBackupScreenViewModel(
                                 method = tempMethodMap[template.methodUUID]
                                 source = tempSourceMap[template.sourceUUID]
                                 frequency = template.frequency
-                                lastUsed = template.lastUsed
+                                lastUsed = template.lastUsed.toZonedDateTime()
                             }
                             copyToRealm(tempTemplate)
                         }
                     }
 
-                    _mainState.update {
+                    _primaryState.update {
                         it.copy(dataLoadComplete = true)
                     }
 
                     loadDataJob = loadData()
-                    updateEnabledState()
-                    updateSelectionState()
                 } catch (exception: Exception) {
                     _event.send(Event.InternalError)
-                    _mainState.update {
-                        it.copy(loading = false)
+                    _primaryState.update {
+                        it.copy(
+                            loading = false
+                        )
                     }
                 }
             }
@@ -266,177 +293,219 @@ class ImportBackupScreenViewModel(
     }
 
     private fun loadData() = viewModelScope.launch {
-        combineTenFlows(
-            categoryQuery.asFlow(),
-            counterPartyQuery.asFlow(),
-            methodQuery.asFlow(),
-            sourceQuery.asFlow(),
-            tempCategoryQuery.asFlow(),
-            tempCounterPartyQuery.asFlow(),
-            tempMethodQuery.asFlow(),
-            tempSourceQuery.asFlow(),
-            tempTransactionTemplatesQuery.asFlow(),
-            getTempTransactionQuery()
-        ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, tempCategoryChanges, tempCounterPartyChanges, tempMethodChanges, tempSourceChanges, tempTransactionTemplateChanges, tempTransactionChanges ->
-            val tempSources = tempSourceChanges.list.toMutableList()
-            val sources = sourceChanges.list.toMutableList()
+        val categories = categoryQuery.find()
+        val counterParties = counterPartyQuery.find()
+        val methods = methodQuery.find()
+        val sources = sourceQuery.find().toMutableList()
 
-            sources.forEach { source ->
-                val formatter = currencyFormatterMap.getValue(source.currency)
-                source.displayBalance = formatter.format(source.balance).toString()
+        val tempCategories = tempCategoryQuery.find()
+        val tempCounterParties = tempCounterPartyQuery.find()
+        val tempMethods = tempMethodQuery.find()
+        val tempSources = tempSourceQuery.find().toMutableList()
+        val tempTransactionTemplates = tempTransactionTemplatesQuery.find()
+
+        sources.forEach { source ->
+            val formatter = currencyFormatterMap.getValue(source.currency)
+            source.displayBalance = formatter.format(source.balance).toString()
+        }
+
+        tempSources.forEach { source ->
+            val formatter = currencyFormatterMap.getValue(source.currency)
+            source.displayBalance = formatter.format(source.balance).toString()
+        }
+
+        val conflictingTempCategories = tempCategories
+            .filter { tempCategory ->
+                val dbCategory =
+                    categories.find { it.name == tempCategory.name }
+                dbCategory != null
             }
+            .map { tempCategory -> tempCategory.uuid }
 
-            tempSources.forEach { source ->
-                val formatter = currencyFormatterMap.getValue(source.currency)
-                source.displayBalance = formatter.format(source.balance).toString()
+        val conflictingTempCounterParties = tempCounterParties
+            .filter { tempCounterParty ->
+                val dbCounterParty =
+                    counterParties.find { it.name == tempCounterParty.name }
+                dbCounterParty != null
             }
+            .map { tempCounterParty -> tempCounterParty.uuid }
 
-            ImportScreenFlows(
-                categories = categoryChanges.list,
-                counterParties = counterPartyChanges.list,
-                methods = methodChanges.list,
-                sources = sources,
-                tempCategories = tempCategoryChanges.list,
-                tempCounterParties = tempCounterPartyChanges.list,
-                tempMethods = tempMethodChanges.list,
+        val conflictingTempMethods = tempMethods
+            .filter { tempMethod ->
+                val dbMethod =
+                    methods.find { it.name == tempMethod.name }
+                dbMethod != null
+            }
+            .map { tempMethod -> tempMethod.uuid }
+
+        val conflictingTempSources = tempSources
+            .filter { tempSource ->
+                val dbSource =
+                    sources.find { it.name == tempSource.name }
+                dbSource != null
+            }
+            .map { tempSource -> tempSource.uuid }
+
+        val categoryMappings = tempCategories.associateBy(
+            { tempCategory ->
+                tempCategory.uuid
+            },
+            { tempCategory ->
+                val dbCategory = categories
+                    .find { category -> category.name == tempCategory.name }
+                dbCategory ?: Category()
+            }
+        )
+
+        val counterPartyMappings = tempCounterParties.associateBy(
+            { tempCounterParty ->
+                tempCounterParty.uuid
+            },
+            { tempCounterParty ->
+                val dbCounterParty = counterParties
+                    .find { counterParty -> counterParty.name == tempCounterParty.name }
+                dbCounterParty ?: CounterParty()
+            }
+        )
+
+        val methodMappings = tempMethods.associateBy(
+            { tempMethod ->
+                tempMethod.uuid
+            },
+            { tempMethod ->
+                val dbMethod = methods.find { method -> method.name == tempMethod.name }
+                dbMethod ?: Method()
+            }
+        )
+
+        val sourceMappings = tempSources.associateBy(
+            { tempSource ->
+                tempSource.uuid
+            },
+            { tempSource ->
+                val dbSource = sources.find { source -> source.name == tempSource.name }
+                dbSource ?: Source()
+            }
+        )
+
+        val currencySourceMap = sources.groupBy { source -> source.currency }
+
+        val selectedTempCategories = tempCategories
+            .map { it.uuid }
+            .toSet()
+
+        val selectedTempCounterParties = tempCounterParties
+            .map { it.uuid }
+            .toSet()
+
+        val selectedTempMethods = tempMethods
+            .map { it.uuid }
+            .toSet()
+
+        val selectedTempSources = tempSources
+            .map { it.uuid }
+            .toSet()
+
+        _primaryState.update {
+            it.copy(
+                dbCategories = categories,
+                tempCategories = tempCategories,
+                categoryMappings = categoryMappings,
+                conflictingTempCategories = conflictingTempCategories.toSet(),
+                selectedTempCategories = selectedTempCategories,
+                selectedTempCategoryCount = numberFormatter.format(selectedTempCategories.size)
+                    .toString(),
+                dbCounterParties = counterParties,
+                tempCounterParties = tempCounterParties,
+                counterPartyMappings = counterPartyMappings,
+                conflictingTempCounterParties = conflictingTempCounterParties.toSet(),
+                selectedTempCounterParties = selectedTempCounterParties,
+                selectedTempCounterPartyCount = numberFormatter.format(selectedTempCounterParties.size)
+                    .toString(),
+                dbMethods = methods,
+                tempMethods = tempMethods,
+                methodMappings = methodMappings,
+                conflictingTempMethods = conflictingTempMethods.toSet(),
+                selectedTempMethods = selectedTempMethods,
+                selectedTempMethodCount = numberFormatter.format(selectedTempMethods.size)
+                    .toString(),
+                currencySourceMap = currencySourceMap,
                 tempSources = tempSources,
-                tempTransactionTemplates = tempTransactionTemplateChanges.list,
-                tempTransactions = tempTransactionChanges.list
+                sourceMappings = sourceMappings,
+                conflictingTempSources = conflictingTempSources.toSet(),
+                selectedTempSources = selectedTempSources,
+                selectedTempSourceCount = numberFormatter.format(selectedTempSources.size)
+                    .toString(),
+                tempTransactionTemplates = tempTransactionTemplates,
+                tempTransactionTemplatesWithIcons = getTemplateWithIcons(
+                    templates = tempTransactionTemplates
+                )
             )
-        }.collectLatest { importScreenFlows ->
-            val conflictingTempCategories = importScreenFlows.tempCategories
-                .filter { tempCategory ->
-                    val dbCategory =
-                        importScreenFlows.categories.find { it.name == tempCategory.name }
-                    dbCategory != null
-                }
-                .map { tempCategory -> tempCategory.uuid }
+        }
 
-            val conflictingTempCounterParties = importScreenFlows.tempCounterParties
-                .filter { tempCounterParty ->
-                    val dbCounterParty =
-                        importScreenFlows.counterParties.find { it.name == tempCounterParty.name }
-                    dbCounterParty != null
-                }
-                .map { tempCounterParty -> tempCounterParty.uuid }
+        _filtersState.update {
+            it.copy(
+                selectedCurrencyCount = numberFormatter.format(it.selectedCurrencies.size)
+                    .toString()
+            )
+        }
 
-            val conflictingTempMethods = importScreenFlows.tempMethods
-                .filter { tempMethod ->
-                    val dbMethod =
-                        importScreenFlows.methods.find { it.name == tempMethod.name }
-                    dbMethod != null
-                }
-                .map { tempMethod -> tempMethod.uuid }
+        loadTransactionsJob = loadTransactions()
+        updateSecondaryState()
+    }
 
-            val conflictingTempSources = importScreenFlows.tempSources
-                .filter { tempSource ->
-                    val dbSource =
-                        importScreenFlows.sources.find { it.name == tempSource.name }
-                    dbSource != null
-                }
-                .map { tempSource -> tempSource.uuid }
-
-            val sourceMap = importScreenFlows.sources.groupBy { source -> source.currency }
-
-            _mainState.update {
-                val selectedTempCategories = getSelectedTempCategories(
-                    tempCategories = importScreenFlows.tempCategories,
-                    selectedTempCategories = it.selectedTempCategories
-                )
-                val categoryMappings = getCategoryMappings(
-                    dbCategories = importScreenFlows.categories,
-                    tempCategories = importScreenFlows.tempCategories,
-                    categoryMappings = it.categoryMappings
-                )
-
-                val selectedTempCounterParties = getSelectedTempCounterParties(
-                    tempCounterParties = importScreenFlows.tempCounterParties,
-                    selectedTempCounterParties = it.selectedTempCounterParties
-                )
-                val counterPartyMappings = getCounterPartyMappings(
-                    dbCounterParties = importScreenFlows.counterParties,
-                    tempCounterParties = importScreenFlows.tempCounterParties,
-                    counterPartyMappings = it.counterPartyMappings
-                )
-
-                val selectedTempMethods = getSelectedTempMethods(
-                    tempMethods = importScreenFlows.tempMethods,
-                    selectedTempMethods = it.selectedTempMethods
-                )
-                val methodMappings = getMethodMappings(
-                    dbMethods = importScreenFlows.methods,
-                    tempMethods = importScreenFlows.tempMethods,
-                    methodMappings = it.methodMappings
-                )
-
-                val selectedTempSources = getSelectedTempSources(
-                    tempSources = importScreenFlows.tempSources,
-                    selectedTempSources = it.selectedTempSources
-                )
-                val sourceMappings = getSourceMappings(
-                    dbSources = importScreenFlows.sources,
-                    tempSources = importScreenFlows.tempSources,
-                    sourceMappings = it.sourceMappings
-                )
-
-                val selectedCurrencies = it.selectedCurrencies.filter { entry -> entry.value }.keys
-                val selectedTempCategoryCount = numberFormatter.format(
-                    selectedTempCategories.filter { entry -> entry.value }.size
-                ).toString()
-                val selectedTempCounterPartyCount = numberFormatter.format(
-                    selectedTempCounterParties.filter { entry -> entry.value }.size
-                ).toString()
-                val selectedTempMethodCount = numberFormatter.format(
-                    selectedTempMethods.filter { entry -> entry.value }.size
-                ).toString()
-                val selectedTempSourceCount = numberFormatter.format(
-                    selectedTempSources.filter { entry -> entry.value }.size
-                ).toString()
-
-                val filteredTransactionsMap = importScreenFlows.tempTransactions.groupBy(
-                    keySelector = { tempTransaction -> tempTransaction.time.toLocalDate() },
-                    valueTransform = { tempTransaction ->
-                        getTempTransactionWithIcons(
-                            tempTransaction,
-                            it.searchText
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun loadTransactions() = viewModelScope.launch {
+        combine(
+            _searchState
+                .onEach {
+                    _primaryState.update {
+                        it.copy(
+                            loading = true
                         )
                     }
-                )
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _primaryState.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                },
+            _filtersState
+                .onEach {
+                    _primaryState.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions, filters ->
+            Triple(searchText, sortOptions, filters)
+        }.flatMapLatest { (searchText, sortOptions, filters) ->
+            getTempTransactionQuery(
+                searchText,
+                sortOptions,
+                filters
+            )
+        }.collectLatest { transactionChanges ->
+            val filteredTransactionsMap = transactionChanges.list.groupBy(
+                keySelector = { tempTransaction -> tempTransaction.time.toLocalDate() },
+                valueTransform = { tempTransaction ->
+                    getTempTransactionWithIcons(
+                        tempTransaction,
+                        searchState.value
+                    )
+                }
+            )
 
+            _primaryState.update {
                 it.copy(
-                    transactionsHashCode = importScreenFlows.tempTransactions.hashCode(),
-                    tempTransactions = importScreenFlows.tempTransactions,
+                    transactionsHashCode = transactionChanges.list.hashCode(),
+                    tempTransactions = transactionChanges.list,
                     filteredTransactions = filteredTransactionsMap,
-                    dbCategories = importScreenFlows.categories,
-                    tempCategories = importScreenFlows.tempCategories,
-                    selectedTempCategories = selectedTempCategories,
-                    selectedTempCategoryCount = selectedTempCategoryCount,
-                    conflictingTempCategories = conflictingTempCategories.toSet(),
-                    categoryMappings = categoryMappings,
-                    dbCounterParties = importScreenFlows.counterParties,
-                    tempCounterParties = importScreenFlows.tempCounterParties,
-                    selectedTempCounterParties = selectedTempCounterParties,
-                    selectedTempCounterPartyCount = selectedTempCounterPartyCount,
-                    conflictingTempCounterParties = conflictingTempCounterParties.toSet(),
-                    counterPartyMappings = counterPartyMappings,
-                    dbMethods = importScreenFlows.methods,
-                    tempMethods = importScreenFlows.tempMethods,
-                    methodMappings = methodMappings,
-                    conflictingTempMethods = conflictingTempMethods.toSet(),
-                    selectedTempMethods = selectedTempMethods,
-                    selectedTempMethodCount = selectedTempMethodCount,
-                    currencySourceMap = sourceMap,
-                    tempSources = importScreenFlows.tempSources,
-                    sourceMappings = sourceMappings,
-                    conflictingTempSources = conflictingTempSources.toSet(),
-                    selectedTempSources = selectedTempSources,
-                    selectedTempSourceCount = selectedTempSourceCount,
-                    tempTransactionTemplates = importScreenFlows.tempTransactionTemplates,
-                    tempTransactionTemplatesWithIcons = getTemplateWithIcons(
-                        templates = importScreenFlows.tempTransactionTemplates
-                    ),
-                    selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size)
-                        .toString(),
                     loading = false,
                     enabled = true
                 )
@@ -444,8 +513,8 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    private fun updateEnabledState() = viewModelScope.launch {
-        mainState.collectLatest { mainScreenState ->
+    private fun updateSecondaryState() = viewModelScope.launch {
+        primaryState.collectLatest { mainScreenState ->
             val enabledTempTransactions = getEnabledTempTransactions(
                 selectedTempCategories = mainScreenState.selectedTempCategories,
                 selectedTempCounterParties = mainScreenState.selectedTempCounterParties,
@@ -467,57 +536,23 @@ class ImportBackupScreenViewModel(
                 enabledTempTransactions = enabledTempTransactions
             )
 
-            _enabledState.update {
-                it.copy(
-                    enabledTempTransactions = enabledTempTransactions,
-                    enabledTempTransactionTemplates = enabledTempTransactionTemplates,
-                    enabledLocalDates = enabledLocalDates
-                )
-            }
-        }
-    }
-
-    private fun updateSelectionState() = viewModelScope.launch {
-        combine(
-            mainState,
-            enabledState,
-            selectedTransactionsState
-        ) { mainScreenState, enabledScreenState, selectedTransactionsScreenState ->
-            Triple(mainScreenState, enabledScreenState, selectedTransactionsScreenState)
-        }.collectLatest { (mainScreenState, enabledScreenState, selectedTransactions) ->
-            val selectedTransactionsCount = selectedTransactions
-                .filter { uuid -> enabledScreenState.enabledTempTransactions.contains(uuid) }
-                .size
-
-            val selectedTempTransactionTemplateCount =
-                mainScreenState.selectedTempTransactionTemplates
-                    .filter { uuid ->
-                        enabledScreenState.enabledTempTransactionTemplates.contains(
-                            uuid
-                        )
-                    }
-                    .size
-
             val selectedLocalDates = getSelectedLocalDates(
                 filteredTransactions = mainScreenState.filteredTransactions,
-                enabledTransactions = enabledScreenState.enabledTempTransactions,
-                selectedTransactions = selectedTransactions
+                enabledTransactions = enabledTempTransactions,
+                selectedTransactions = mainScreenState.selectedTempTransactions
             )
 
             val allSelected = getAllSelected(
                 filteredTransactions = mainScreenState.filteredTransactions,
-                enabledTransactions = enabledScreenState.enabledTempTransactions,
-                selectedTransactions = selectedTransactions
+                enabledTransactions = enabledTempTransactions,
+                selectedTransactions = mainScreenState.selectedTempTransactions
             )
 
-            _selectionState.update {
+            _secondaryState.update {
                 it.copy(
-                    selectedTransactionsCount = if (selectedTransactionsCount > 0) numberFormatter.format(
-                        selectedTransactionsCount
-                    ).toString() else "",
-                    selectedTempTransactionTemplateCount = numberFormatter.format(
-                        selectedTempTransactionTemplateCount
-                    ).toString(),
+                    enabledTempTransactions = enabledTempTransactions,
+                    enabledTempTransactionTemplates = enabledTempTransactionTemplates,
+                    enabledLocalDates = enabledLocalDates,
                     selectedLocalDates = selectedLocalDates,
                     allSelected = allSelected
                 )
@@ -527,7 +562,7 @@ class ImportBackupScreenViewModel(
 
     fun importData() = viewModelScope.launch {
         loadDataJob?.cancelAndJoin()
-        _mainState.update {
+        _primaryState.update {
             it.copy(
                 loading = true,
                 enabled = false
@@ -536,49 +571,47 @@ class ImportBackupScreenViewModel(
 
         var result: Event
 
-        val tempCategories = mainState.value.tempCategories
-        val selectedTempCategoryUUIDs = mainState.value.selectedTempCategories
-            .filter { entry -> entry.value }.keys
-        val categoryMappings = mainState.value.categoryMappings
+        val tempCategories = primaryState.value.tempCategories
+        val selectedTempCategoryUUIDs = primaryState.value.selectedTempCategories
+        val categoryMappings = primaryState.value.categoryMappings
             .filter { entry -> selectedTempCategoryUUIDs.contains(entry.key) }
             .toMutableMap()
 
-        val tempCounterParties = mainState.value.tempCounterParties
-        val selectedTempCounterPartyUUIDs = mainState.value.selectedTempCounterParties
-            .filter { entry -> entry.value }.keys
-        val counterPartyMappings = mainState.value.counterPartyMappings
+        val tempCounterParties = primaryState.value.tempCounterParties
+        val selectedTempCounterPartyUUIDs = primaryState.value.selectedTempCounterParties
+        val counterPartyMappings = primaryState.value.counterPartyMappings
             .filter { entry -> selectedTempCounterPartyUUIDs.contains(entry.key) }
             .toMutableMap()
 
-        val tempMethods = mainState.value.tempMethods
-        val selectedTempMethodUUIDs = mainState.value.selectedTempMethods
-            .filter { entry -> entry.value }.keys
-        val methodMappings = mainState.value.methodMappings
+        val tempMethods = primaryState.value.tempMethods
+        val selectedTempMethodUUIDs = primaryState.value.selectedTempMethods
+        val methodMappings = primaryState.value.methodMappings
             .filter { entry -> selectedTempMethodUUIDs.contains(entry.key) }
             .toMutableMap()
 
-        val tempSources = mainState.value.tempSources
-        val selectedTempSourceUUIDs = mainState.value.selectedTempSources
-            .filter { entry -> entry.value }.keys
-        val sourceMappings = mainState.value.sourceMappings
+        val tempSources = primaryState.value.tempSources
+        val selectedTempSourceUUIDs = primaryState.value.selectedTempSources
+        val sourceMappings = primaryState.value.sourceMappings
             .filter { entry -> selectedTempSourceUUIDs.contains(entry.key) }
             .toMutableMap()
-        val restoreBalanceSources = mainState.value.restoreBalanceSources
+        val restoreBalanceSources = primaryState.value.restoreBalanceSources
 
-        val enabledTempTransactionTemplateUUIDs = enabledState.value.enabledTempTransactionTemplates
-        val selectedTempTransactionTemplateUUIDs = mainState.value.selectedTempTransactionTemplates
-            .filter { uuid -> enabledTempTransactionTemplateUUIDs.contains(uuid) }
-        val tempTransactionTemplates = mainState.value.tempTransactionTemplates
+        val enabledTempTransactionTemplateUUIDs =
+            secondaryState.value.enabledTempTransactionTemplates
+        val selectedTempTransactionTemplateUUIDs =
+            primaryState.value.selectedTempTransactionTemplates
+                .filter { uuid -> enabledTempTransactionTemplateUUIDs.contains(uuid) }
+        val tempTransactionTemplates = primaryState.value.tempTransactionTemplates
             .filter { tempTransactionTemplate ->
                 selectedTempTransactionTemplateUUIDs.contains(
                     tempTransactionTemplate.uuid
                 )
             }
 
-        val enabledTempTransactionUUIDs = enabledState.value.enabledTempTransactions
-        val selectedTempTransactionUUIDs = _selectedTransactionsState.value
+        val enabledTempTransactionUUIDs = secondaryState.value.enabledTempTransactions
+        val selectedTempTransactionUUIDs = _primaryState.value.selectedTempTransactions
             .filter { uuid -> enabledTempTransactionUUIDs.contains(uuid) }
-        val tempTransactions = mainState.value.tempTransactions
+        val tempTransactions = primaryState.value.tempTransactions
             .filter { tempTransaction -> selectedTempTransactionUUIDs.contains(tempTransaction.uuid) }
 
         try {
@@ -645,9 +678,6 @@ class ImportBackupScreenViewModel(
                         if (tempCounterParty != null) {
                             val filteredTransactions = tempTransactions
                                 .filter { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterParty.uuid }
-                            Log.i(tempCounterParty.name, filteredTransactions
-                                .maxOf { tempTransaction -> tempTransaction.time }.toString()
-                            )
                             val counterParty = copyToRealm(
                                 CounterParty().apply {
                                     uuid = UUID.randomUUID().toString()
@@ -810,7 +840,7 @@ class ImportBackupScreenViewModel(
 
         _event.send(result)
 
-        _mainState.update {
+        _primaryState.update {
             it.copy(
                 loading = false
             )
@@ -819,24 +849,28 @@ class ImportBackupScreenViewModel(
 
     //region Transaction
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTempTransactionQuery(): Flow<ResultsChange<TempTransaction>> {
-        return mainState.flatMapLatest {
-            var queryString =
-                "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5"
-            if (it.searchText.isNotBlank()) {
-                queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
-            }
-            realm.query<TempTransaction>(
-                queryString,
-                it.startDate?.toEpochMilli() ?: 0L,
-                it.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
-                it.selectedCurrencies.filter { entry -> entry.value }.keys,
-                it.filterAmountMin,
-                if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
-                it.selectedTransactionTypes
-            ).sort("time", it.sortDirection).asFlow()
+    private fun getTempTransactionQuery(
+        searchText: String,
+        sortOptions: SortOptionsScreenState,
+        filters: ImportBackupScreenFiltersState
+    ): Flow<ResultsChange<TempTransaction>> {
+        var queryString =
+            "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5"
+        if (searchText.isNotBlank()) {
+            queryString += " && (title CONTAINS[c] '${searchText.trim()}' || description CONTAINS[c] '${searchText.trim()}')"
         }
+        return realm
+            .query<TempTransaction>(
+                queryString,
+                filters.startDate?.toEpochMilli() ?: 0L,
+                filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
+                filters.selectedCurrencies,
+                filters.filterAmountMin,
+                if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
+                filters.selectedTransactionTypes
+            )
+            .sort("time", sortOptions.sortDirection)
+            .asFlow()
     }
 
     private fun getTempTransactionWithIcons(
@@ -882,8 +916,7 @@ class ImportBackupScreenViewModel(
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
-                value = tempTransaction.time.toZonedDateTime()
-                    .format(DateTimeFormatter.ofPattern("hh:mm a")),
+                value = tempTransaction.time.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 resId = R.string.placeholder
             )
         )
@@ -900,19 +933,21 @@ class ImportBackupScreenViewModel(
     }
 
     private fun getEnabledTempTransactions(
-        selectedTempCategories: Map<String, Boolean>,
-        selectedTempCounterParties: Map<String, Boolean>,
-        selectedTempMethods: Map<String, Boolean>,
-        selectedTempSources: Map<String, Boolean>,
+        selectedTempCategories: Set<String>,
+        selectedTempCounterParties: Set<String>,
+        selectedTempMethods: Set<String>,
+        selectedTempSources: Set<String>,
         tempTransactions: List<TempTransaction>,
     ): Set<String> {
         return tempTransactions
             .filter { tempTransaction ->
-                val categoryValid = selectedTempCategories[tempTransaction.category?.uuid] == true
+                val categoryValid = selectedTempCategories.contains(tempTransaction.category?.uuid)
                 val counterPartyValid =
-                    tempTransaction.counterParty == null || selectedTempCounterParties[tempTransaction.counterParty?.uuid] == true
-                val methodValid = selectedTempMethods[tempTransaction.method?.uuid] == true
-                val sourceValid = selectedTempSources[tempTransaction.source?.uuid] == true
+                    tempTransaction.counterParty == null || selectedTempCounterParties.contains(
+                        tempTransaction.counterParty?.uuid
+                    )
+                val methodValid = selectedTempMethods.contains(tempTransaction.method?.uuid)
+                val sourceValid = selectedTempSources.contains(tempTransaction.source?.uuid)
                 categoryValid && counterPartyValid && methodValid && sourceValid
             }
             .map { tempTransaction -> tempTransaction.uuid }
@@ -972,22 +1007,30 @@ class ImportBackupScreenViewModel(
     //region Template
 
     private fun getEnabledTempTransactionTemplates(
-        selectedTempCategories: Map<String, Boolean>,
-        selectedTempCounterParties: Map<String, Boolean>,
-        selectedTempMethods: Map<String, Boolean>,
-        selectedTempSources: Map<String, Boolean>,
+        selectedTempCategories: Set<String>,
+        selectedTempCounterParties: Set<String>,
+        selectedTempMethods: Set<String>,
+        selectedTempSources: Set<String>,
         tempTransactionTemplates: List<TempTransactionTemplate>,
     ): Set<String> {
         return tempTransactionTemplates
             .filter { tempTransactionTemplate ->
                 val categoryValid =
-                    tempTransactionTemplate.category == null || selectedTempCategories[tempTransactionTemplate.category?.uuid] == true
+                    tempTransactionTemplate.category == null || selectedTempCategories.contains(
+                        tempTransactionTemplate.category?.uuid
+                    )
                 val counterPartyValid =
-                    tempTransactionTemplate.counterParty == null || selectedTempCounterParties[tempTransactionTemplate.counterParty?.uuid] == true
+                    tempTransactionTemplate.counterParty == null || selectedTempCounterParties.contains(
+                        tempTransactionTemplate.counterParty?.uuid
+                    )
                 val methodValid =
-                    tempTransactionTemplate.method == null || selectedTempMethods[tempTransactionTemplate.method?.uuid] == true
+                    tempTransactionTemplate.method == null || selectedTempMethods.contains(
+                        tempTransactionTemplate.method?.uuid
+                    )
                 val sourceValid =
-                    tempTransactionTemplate.source == null || selectedTempSources[tempTransactionTemplate.source?.uuid] == true
+                    tempTransactionTemplate.source == null || selectedTempSources.contains(
+                        tempTransactionTemplate.source?.uuid
+                    )
                 categoryValid && counterPartyValid && methodValid && sourceValid
             }
             .map { tempTransactionTemplate -> tempTransactionTemplate.uuid }
@@ -995,7 +1038,7 @@ class ImportBackupScreenViewModel(
     }
 
     fun toggleTransactionTemplateSelected(tempTransactionTemplateUUID: String) {
-        _mainState.update {
+        _primaryState.update {
             val selectedTempTransactionTemplates =
                 it.selectedTempTransactionTemplates.toMutableSet()
 
@@ -1006,7 +1049,10 @@ class ImportBackupScreenViewModel(
             }
 
             it.copy(
-                selectedTempTransactionTemplates = selectedTempTransactionTemplates
+                selectedTempTransactionTemplates = selectedTempTransactionTemplates,
+                selectedTempTransactionTemplateCount = numberFormatter.format(
+                    selectedTempTransactionTemplates.size
+                ).toString()
             )
         }
     }
@@ -1014,6 +1060,7 @@ class ImportBackupScreenViewModel(
     private fun getTemplateWithIcons(
         templates: List<TempTransactionTemplate>
     ): List<TransactionTemplateWithIcons> {
+        val hasBeenUsedComparator = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault())
         return templates.map { template ->
             val category = template.category
             val counterParty = template.counterParty
@@ -1081,12 +1128,11 @@ class ImportBackupScreenViewModel(
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (template.lastUsed > 0) {
+            if (template.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = template.lastUsed.toZonedDateTime()
-                            .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
+                        value = template.lastUsed.format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
                         icon = TablerIcons.History
                     )
                 )
@@ -1125,7 +1171,7 @@ class ImportBackupScreenViewModel(
     //region Category
 
     fun setCategoryMapping(tempCategoryUUID: String, dbCategory: Category) {
-        _mainState.update {
+        _primaryState.update {
             val categoryMappings = it.categoryMappings.toMutableMap()
             categoryMappings[tempCategoryUUID] = dbCategory
 
@@ -1136,50 +1182,21 @@ class ImportBackupScreenViewModel(
     }
 
     fun toggleCategorySelected(uuid: String) {
-        _mainState.update {
-            val selectedTempCategories = it.selectedTempCategories.toMutableMap()
-            selectedTempCategories[uuid] = !selectedTempCategories[uuid]!!
+        _primaryState.update {
+            val selectedTempCategories = it.selectedTempCategories.toMutableSet()
+
+            if (selectedTempCategories.contains(uuid)) {
+                selectedTempCategories.remove(uuid)
+            } else {
+                selectedTempCategories.add(uuid)
+            }
 
             it.copy(
-                selectedTempCategories = selectedTempCategories
+                selectedTempCategories = selectedTempCategories,
+                selectedTempCategoryCount = numberFormatter.format(selectedTempCategories.size)
+                    .toString()
             )
         }
-    }
-
-    private fun getSelectedTempCategories(
-        tempCategories: List<TempCategory>,
-        selectedTempCategories: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return tempCategories.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedTempCategories.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getCategoryMappings(
-        dbCategories: List<Category>,
-        tempCategories: List<TempCategory>,
-        categoryMappings: Map<String, Category>
-    ): Map<String, Category> {
-        return tempCategories.associateBy(
-            { tempCategory ->
-                tempCategory.uuid
-            },
-            { tempCategory ->
-                val mappedCategory = categoryMappings[tempCategory.uuid]
-                if (mappedCategory != null) {
-                    mappedCategory
-                } else {
-                    val dbCategory =
-                        dbCategories.find { category -> category.name == tempCategory.name }
-                    dbCategory ?: Category()
-                }
-            }
-        )
     }
 
     //endregion
@@ -1187,7 +1204,7 @@ class ImportBackupScreenViewModel(
     //region CounterParty
 
     fun setSelectedCounterParty(tempCounterPartyUUID: String, dbCounterParty: CounterParty) {
-        _mainState.update {
+        _primaryState.update {
             val counterPartyMappings = it.counterPartyMappings.toMutableMap()
             counterPartyMappings[tempCounterPartyUUID] = dbCounterParty
 
@@ -1198,50 +1215,21 @@ class ImportBackupScreenViewModel(
     }
 
     fun toggleCounterPartySelected(uuid: String) {
-        _mainState.update {
-            val selectedTempCounterParties = it.selectedTempCounterParties.toMutableMap()
-            selectedTempCounterParties[uuid] = !selectedTempCounterParties[uuid]!!
+        _primaryState.update {
+            val selectedTempCounterParties = it.selectedTempCounterParties.toMutableSet()
+
+            if (selectedTempCounterParties.contains(uuid)) {
+                selectedTempCounterParties.remove(uuid)
+            } else {
+                selectedTempCounterParties.add(uuid)
+            }
 
             it.copy(
-                selectedTempCounterParties = selectedTempCounterParties
+                selectedTempCounterParties = selectedTempCounterParties,
+                selectedTempCounterPartyCount = numberFormatter.format(selectedTempCounterParties.size)
+                    .toString()
             )
         }
-    }
-
-    private fun getSelectedTempCounterParties(
-        tempCounterParties: List<TempCounterParty>,
-        selectedTempCounterParties: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return tempCounterParties.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedTempCounterParties.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getCounterPartyMappings(
-        dbCounterParties: List<CounterParty>,
-        tempCounterParties: List<TempCounterParty>,
-        counterPartyMappings: Map<String, CounterParty>
-    ): Map<String, CounterParty> {
-        return tempCounterParties.associateBy(
-            { tempCounterParty ->
-                tempCounterParty.uuid
-            },
-            { tempCounterParty ->
-                val mappedCounterParty = counterPartyMappings[tempCounterParty.uuid]
-                if (mappedCounterParty != null) {
-                    mappedCounterParty
-                } else {
-                    val dbCounterParty =
-                        dbCounterParties.find { counterParty -> counterParty.name == tempCounterParty.name }
-                    dbCounterParty ?: CounterParty()
-                }
-            }
-        )
     }
 
     //endregion
@@ -1249,7 +1237,7 @@ class ImportBackupScreenViewModel(
     //region Method
 
     fun setSelectedMethod(tempMethodUUID: String, dbMethod: Method) {
-        _mainState.update {
+        _primaryState.update {
             val methodMappings = it.methodMappings.toMutableMap()
             methodMappings[tempMethodUUID] = dbMethod
 
@@ -1260,49 +1248,21 @@ class ImportBackupScreenViewModel(
     }
 
     fun toggleMethodSelected(uuid: String) {
-        _mainState.update {
-            val selectedTempMethods = it.selectedTempMethods.toMutableMap()
-            selectedTempMethods[uuid] = !selectedTempMethods[uuid]!!
+        _primaryState.update {
+            val selectedTempMethods = it.selectedTempMethods.toMutableSet()
+
+            if (selectedTempMethods.contains(uuid)) {
+                selectedTempMethods.remove(uuid)
+            } else {
+                selectedTempMethods.add(uuid)
+            }
 
             it.copy(
-                selectedTempMethods = selectedTempMethods
+                selectedTempMethods = selectedTempMethods,
+                selectedTempMethodCount = numberFormatter.format(selectedTempMethods.size)
+                    .toString()
             )
         }
-    }
-
-    private fun getSelectedTempMethods(
-        tempMethods: List<TempMethod>,
-        selectedTempMethods: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return tempMethods.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedTempMethods.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getMethodMappings(
-        dbMethods: List<Method>,
-        tempMethods: List<TempMethod>,
-        methodMappings: Map<String, Method>
-    ): Map<String, Method> {
-        return tempMethods.associateBy(
-            { tempMethod ->
-                tempMethod.uuid
-            },
-            { tempMethod ->
-                val mappedMethod = methodMappings[tempMethod.uuid]
-                if (mappedMethod != null) {
-                    mappedMethod
-                } else {
-                    val dbMethod = dbMethods.find { method -> method.name == tempMethod.name }
-                    dbMethod ?: Method()
-                }
-            }
-        )
     }
 
     //endregion
@@ -1310,7 +1270,7 @@ class ImportBackupScreenViewModel(
     //region Source
 
     fun setSelectedSource(tempSourceUUID: String, dbSource: Source) {
-        _mainState.update {
+        _primaryState.update {
             val sourceMappings = it.sourceMappings.toMutableMap()
             sourceMappings[tempSourceUUID] = dbSource
 
@@ -1325,18 +1285,25 @@ class ImportBackupScreenViewModel(
     }
 
     fun toggleSourceSelected(uuid: String) {
-        _mainState.update {
-            val selectedTempSources = it.selectedTempSources.toMutableMap()
-            selectedTempSources[uuid] = !selectedTempSources[uuid]!!
+        _primaryState.update {
+            val selectedTempSources = it.selectedTempSources.toMutableSet()
+
+            if (selectedTempSources.contains(uuid)) {
+                selectedTempSources.remove(uuid)
+            } else {
+                selectedTempSources.add(uuid)
+            }
 
             it.copy(
-                selectedTempSources = selectedTempSources
+                selectedTempSources = selectedTempSources,
+                selectedTempSourceCount = numberFormatter.format(selectedTempSources.size)
+                    .toString()
             )
         }
     }
 
     fun toggleRestoreBalance(tempSourceUUID: String) {
-        _mainState.update {
+        _primaryState.update {
             val restoreBalanceSources = it.restoreBalanceSources.toMutableSet()
 
             if (!restoreBalanceSources.contains(tempSourceUUID)) {
@@ -1358,59 +1325,23 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    private fun getSelectedTempSources(
-        tempSources: List<TempSource>,
-        selectedTempSources: Map<String, Boolean>
-    ): Map<String, Boolean> {
-        return tempSources.associateBy(
-            {
-                it.uuid
-            },
-            {
-                selectedTempSources.getOrDefault(it.uuid, true)
-            }
-        )
-    }
-
-    private fun getSourceMappings(
-        dbSources: List<Source>,
-        tempSources: List<TempSource>,
-        sourceMappings: Map<String, Source>
-    ): Map<String, Source> {
-        return tempSources.associateBy(
-            { tempSource ->
-                tempSource.uuid
-            },
-            { tempSource ->
-                val mappedSource = sourceMappings[tempSource.uuid]
-                if (mappedSource != null) {
-                    mappedSource
-                } else {
-                    val dbSource = dbSources.find { source -> source.name == tempSource.name }
-                    dbSource ?: Source()
-                }
-            }
-        )
-    }
-
     //endregion
 
     fun checkPageValidity(currentPage: Int) = viewModelScope.launch {
-        val state = _mainState.value
+        val mainState = _primaryState.value
         var eventToSend: Event? = null
         if (currentPage == 0) {
-            val atLeastOneRestoreCategorySelected =
-                state.selectedTempCategories.any { entry -> entry.value }
+            val atLeastOneRestoreCategorySelected = mainState.selectedTempCategories.isNotEmpty()
             if (atLeastOneRestoreCategorySelected) {
                 if (
-                    state.tempCategories
+                    mainState.tempCategories
                         .filter { tempCategory ->
-                            state.selectedTempCategories[tempCategory.uuid] == true && state.conflictingTempCategories.contains(
+                            mainState.selectedTempCategories.contains(tempCategory.uuid) && mainState.conflictingTempCategories.contains(
                                 tempCategory.uuid
                             )
                         }
                         .any { tempCategory ->
-                            val mappedCategory = state.categoryMappings[tempCategory.uuid]
+                            val mappedCategory = mainState.categoryMappings[tempCategory.uuid]
                             mappedCategory != null && mappedCategory.uuid.isEmpty()
                         }
                 ) {
@@ -1422,32 +1353,31 @@ class ImportBackupScreenViewModel(
         }
         if (
             currentPage == 1 &&
-            state.tempCounterParties
+            mainState.tempCounterParties
                 .filter { tempCounterParty ->
-                    state.selectedTempCounterParties[tempCounterParty.uuid] == true && state.conflictingTempCounterParties.contains(
+                    mainState.selectedTempCounterParties.contains(tempCounterParty.uuid) && mainState.conflictingTempCounterParties.contains(
                         tempCounterParty.uuid
                     )
                 }
                 .any { tempCounterParty ->
-                    val mappedCounterParty = state.counterPartyMappings[tempCounterParty.uuid]
+                    val mappedCounterParty = mainState.counterPartyMappings[tempCounterParty.uuid]
                     mappedCounterParty != null && mappedCounterParty.uuid.isEmpty()
                 }
         ) {
             eventToSend = Event.MappingInvalid
         }
         if (currentPage == 2) {
-            val atLeastOneRestoreMethodSelected =
-                state.selectedTempMethods.any { entry -> entry.value }
+            val atLeastOneRestoreMethodSelected = mainState.selectedTempMethods.isNotEmpty()
             if (atLeastOneRestoreMethodSelected) {
                 if (
-                    state.tempMethods
+                    mainState.tempMethods
                         .filter { tempMethod ->
-                            state.selectedTempMethods[tempMethod.uuid] == true && state.conflictingTempMethods.contains(
+                            mainState.selectedTempMethods.contains(tempMethod.uuid) && mainState.conflictingTempMethods.contains(
                                 tempMethod.uuid
                             )
                         }
                         .any { tempMethod ->
-                            val mappedMethod = state.methodMappings[tempMethod.uuid]
+                            val mappedMethod = mainState.methodMappings[tempMethod.uuid]
                             mappedMethod != null && mappedMethod.uuid.isEmpty()
                         }
                 ) {
@@ -1458,18 +1388,17 @@ class ImportBackupScreenViewModel(
             }
         }
         if (currentPage == 3) {
-            val atLeastOneRestoreSourceSelected =
-                state.selectedTempSources.any { entry -> entry.value }
+            val atLeastOneRestoreSourceSelected = mainState.selectedTempSources.isNotEmpty()
             if (atLeastOneRestoreSourceSelected) {
                 if (
-                    state.tempSources
+                    mainState.tempSources
                         .filter { tempSource ->
-                            state.selectedTempSources[tempSource.uuid] == true && state.conflictingTempSources.contains(
+                            mainState.selectedTempSources.contains(tempSource.uuid) && mainState.conflictingTempSources.contains(
                                 tempSource.uuid
                             )
                         }
                         .any { tempSource ->
-                            val mappedSource = state.sourceMappings[tempSource.uuid]
+                            val mappedSource = mainState.sourceMappings[tempSource.uuid]
                             mappedSource != null && mappedSource.uuid.isEmpty()
                         }
                 ) {
@@ -1486,62 +1415,79 @@ class ImportBackupScreenViewModel(
         localDateSelected: Boolean,
         transactions: List<TransactionWithIcons>
     ) {
-        _selectedTransactionsState.update {
-            val transactionUUIDs =
-                transactions.map { transactionWithIcons -> transactionWithIcons.uuid }.toSet()
-            val selectedTransactions = it.toMutableSet()
+        _primaryState.update {
+            val transactionUUIDs = transactions
+                .map { transactionWithIcons -> transactionWithIcons.uuid }
+                .toSet()
+
+            val selectedTempTransactions = it.selectedTempTransactions.toMutableSet()
+
             if (localDateSelected) {
-                selectedTransactions.removeAll(transactionUUIDs)
+                selectedTempTransactions.removeAll(transactionUUIDs)
             } else {
-                selectedTransactions.addAll(transactionUUIDs)
+                selectedTempTransactions.addAll(transactionUUIDs)
             }
-            selectedTransactions
+
+            it.copy(
+                selectedTempTransactions = selectedTempTransactions,
+                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
+                    .toString()
+            )
         }
     }
 
     fun toggleTransactionSelected(uuid: String) {
-        _selectedTransactionsState.update {
-            val selectedTransactions = it.toMutableSet()
-            if (selectedTransactions.contains(uuid)) {
-                selectedTransactions.remove(uuid)
+        _primaryState.update {
+            val selectedTempTransactions = it.selectedTempTransactions.toMutableSet()
+
+            if (selectedTempTransactions.contains(uuid)) {
+                selectedTempTransactions.remove(uuid)
             } else {
-                selectedTransactions.add(uuid)
+                selectedTempTransactions.add(uuid)
             }
-            selectedTransactions
+
+            it.copy(
+                selectedTempTransactions = selectedTempTransactions,
+                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
+                    .toString()
+            )
         }
     }
 
-    fun toggleSelection(
-        allSelected: Boolean,
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>
-    ) {
-        _selectedTransactionsState.update {
-            val selectedTransactions = it.toMutableSet()
+    fun toggleSelection(allSelected: Boolean) {
+        _primaryState.update {
+            val selectedTempTransactions = it.selectedTempTransactions.toMutableSet()
+
             if (allSelected) {
-                selectedTransactions.clear()
+                selectedTempTransactions.clear()
             } else {
-                val transactionUUIDs = filteredTransactions
+                val transactionUUIDs = it.filteredTransactions
                     .values
                     .flatten()
                     .map { transaction -> transaction.uuid }
 
-                selectedTransactions.addAll(transactionUUIDs)
+                selectedTempTransactions.addAll(transactionUUIDs)
             }
-            selectedTransactions
+
+            it.copy(
+                selectedTempTransactions = selectedTempTransactions,
+                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
+                    .toString()
+            )
         }
     }
 
-    fun setSelectedCurrencies(selectedCurrencies: Map<String, Boolean>) {
-        _mainState.update {
+    fun setSelectedCurrencies(selectedCurrencies: Set<String>) {
+        _filtersState.update {
             it.copy(
-                loading = true,
-                selectedCurrencies = selectedCurrencies
+                selectedCurrencies = selectedCurrencies,
+                selectedCurrencyCount = numberFormatter.format(selectedCurrencies.size).toString()
             )
         }
     }
 
     fun setStartDateAndEndDate(startDate: ZonedDateTime?, endDate: ZonedDateTime?) {
-        _mainState.update {
+        _filtersState.update {
             it.copy(
                 startDate = startDate,
                 endDate = endDate,
@@ -1551,26 +1497,23 @@ class ImportBackupScreenViewModel(
                     R.string.all_time_date_range_label
                 } else {
                     R.string.date_range_label
-                },
-                loading = true
+                }
             )
         }
     }
 
     fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
-        _mainState.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedTransactionTypes = selectedTransactionTypes
             )
         }
     }
 
     fun setSortDirection(sortDirection: Sort) {
-        _mainState.update {
+        _sortOptionsState.update {
             it.copy(
-                sortDirection = sortDirection,
-                loading = true
+                sortDirection = sortDirection
             )
         }
     }
@@ -1585,9 +1528,8 @@ class ImportBackupScreenViewModel(
         } else {
             "0+"
         }
-        _mainState.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 filterAmountMin = min,
                 filterAmountMax = max,
                 filterAmountRange = filterAmountRange
@@ -1596,18 +1538,15 @@ class ImportBackupScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _mainState.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 
     fun setLocale(locale: Locale?) {
         currencyFormatterMap = getCurrencyFormatterMap(locale)
         numberFormatter = getNumberFormatter(locale)
-        _mainState.update {
+        _primaryState.update {
             it.copy(
                 locale = locale
             )

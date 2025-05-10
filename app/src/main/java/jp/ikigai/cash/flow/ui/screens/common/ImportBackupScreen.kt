@@ -93,9 +93,10 @@ import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenEnabledState
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenMainState
-import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSelectionState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
+import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
@@ -105,7 +106,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.io.InputStream
-import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.Locale
 
@@ -116,11 +116,12 @@ fun ImportBackupScreen(
     setLocale: (Locale?) -> Unit,
     loadFile: (InputStream?) -> Unit,
     import: () -> Unit,
-    toggleSelection: (Boolean, Map<LocalDate, List<TransactionWithIcons>>) -> Unit,
+    toggleSelection: (Boolean) -> Unit,
     toggleTransactionSelected: (String) -> Unit,
     toggleLocalDateSelected: (Boolean, List<TransactionWithIcons>) -> Unit,
+    searchState: String,
     setSearchText: (String) -> Unit,
-    setSelectedCurrencies: (Map<String, Boolean>) -> Unit,
+    setSelectedCurrencies: (Set<String>) -> Unit,
     setStartDateAndEndDate: (ZonedDateTime?, ZonedDateTime?) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
     setSortDirection: (Sort) -> Unit,
@@ -137,10 +138,10 @@ fun ImportBackupScreen(
     toggleRestoreBalance: (String) -> Unit,
     checkPageValidity: (Int) -> Unit,
     events: Flow<Event?>,
-    mainState: ImportBackupScreenMainState,
-    enabledState: ImportBackupScreenEnabledState,
-    selectionState: ImportBackupScreenSelectionState,
-    selectedTransactionsState: Set<String>
+    primaryState: ImportBackupScreenPrimaryState,
+    secondaryState: ImportBackupScreenSecondaryState,
+    filtersState: ImportBackupScreenFiltersState,
+    sortOptionsState: SortOptionsScreenState
 ) {
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -169,259 +170,259 @@ fun ImportBackupScreen(
 
     val scrollScope = rememberCoroutineScope()
 
-    val enabled by remember(key1 = mainState.enabled) {
-        mutableStateOf(mainState.enabled)
+    val enabled by remember(key1 = primaryState.enabled) {
+        mutableStateOf(primaryState.enabled)
     }
 
-    val loading by remember(key1 = mainState.loading) {
-        mutableStateOf(mainState.loading)
+    val loading by remember(key1 = primaryState.loading) {
+        mutableStateOf(primaryState.loading)
     }
 
     var popupType by remember {
         mutableStateOf(PopupType.NONE)
     }
 
-    val dataLoadComplete by remember(key1 = mainState.dataLoadComplete) {
-        mutableStateOf(mainState.dataLoadComplete)
+    val dataLoadComplete by remember(key1 = primaryState.dataLoadComplete) {
+        mutableStateOf(primaryState.dataLoadComplete)
     }
 
-    val searchText by remember(key1 = mainState.searchText) {
-        mutableStateOf(mainState.searchText)
+    val searchText by remember(key1 = searchState) {
+        mutableStateOf(searchState)
     }
 
-    val currencies by remember(key1 = mainState.currencies) {
-        mutableStateOf(mainState.currencies)
+    val currencies by remember(key1 = primaryState.currencies) {
+        mutableStateOf(primaryState.currencies)
     }
 
-    val selectedCurrencies by remember(key1 = mainState.selectedCurrencies) {
-        mutableStateOf(mainState.selectedCurrencies)
+    val selectedCurrencies by remember(key1 = filtersState.selectedCurrencies) {
+        mutableStateOf(filtersState.selectedCurrencies)
     }
 
-    val selectedCurrencyCount by remember(key1 = mainState.selectedCurrencyCount) {
-        mutableStateOf(mainState.selectedCurrencyCount)
+    val selectedCurrencyCount by remember(key1 = filtersState.selectedCurrencyCount) {
+        mutableStateOf(filtersState.selectedCurrencyCount)
     }
 
-    val startDate by remember(key1 = mainState.startDate) {
-        mutableStateOf(mainState.startDate)
+    val startDate by remember(key1 = filtersState.startDate) {
+        mutableStateOf(filtersState.startDate)
     }
 
-    val startDateString by remember(key1 = mainState.startDateString) {
-        mutableStateOf(mainState.startDateString)
+    val startDateString by remember(key1 = filtersState.startDateString) {
+        mutableStateOf(filtersState.startDateString)
     }
 
-    val endDate by remember(key1 = mainState.endDate) {
-        mutableStateOf(mainState.endDate)
+    val endDate by remember(key1 = filtersState.endDate) {
+        mutableStateOf(filtersState.endDate)
     }
 
-    val endDateString by remember(key1 = mainState.endDateString) {
-        mutableStateOf(mainState.endDateString)
+    val endDateString by remember(key1 = filtersState.endDateString) {
+        mutableStateOf(filtersState.endDateString)
     }
 
-    val dateRangeStringRes by remember(key1 = mainState.dateRangeStringRes) {
-        mutableIntStateOf(mainState.dateRangeStringRes)
+    val dateRangeStringRes by remember(key1 = filtersState.dateRangeStringRes) {
+        mutableIntStateOf(filtersState.dateRangeStringRes)
     }
 
-    val sortDirection by remember(key1 = mainState.sortDirection) {
-        mutableStateOf(mainState.sortDirection)
+    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
+        mutableStateOf(sortOptionsState.sortDirection)
     }
 
     val transactions by remember(
-        key1 = mainState.filteredTransactions,
-        key2 = mainState.transactionsHashCode
+        key1 = primaryState.filteredTransactions,
+        key2 = primaryState.transactionsHashCode
     ) {
-        mutableStateOf(mainState.filteredTransactions)
+        mutableStateOf(primaryState.filteredTransactions)
     }
 
-    val enabledTempTransactions by remember(key1 = enabledState.enabledTempTransactions) {
-        mutableStateOf(enabledState.enabledTempTransactions)
+    val enabledTempTransactions by remember(key1 = secondaryState.enabledTempTransactions) {
+        mutableStateOf(secondaryState.enabledTempTransactions)
     }
 
-    val selectedTransactions by remember(key1 = selectedTransactionsState) {
-        mutableStateOf(selectedTransactionsState)
+    val selectedTransactions by remember(key1 = primaryState.selectedTempTransactions) {
+        mutableStateOf(primaryState.selectedTempTransactions)
     }
 
-    val selectedTransactionsCount by remember(key1 = selectionState.selectedTransactionsCount) {
-        mutableStateOf(selectionState.selectedTransactionsCount)
+    val selectedTransactionsCount by remember(key1 = primaryState.selectedTransactionsCount) {
+        mutableStateOf(primaryState.selectedTransactionsCount)
     }
 
-    val allSelected by remember(key1 = selectionState.allSelected) {
-        mutableStateOf(selectionState.allSelected)
+    val allSelected by remember(key1 = secondaryState.allSelected) {
+        mutableStateOf(secondaryState.allSelected)
     }
 
-    val enabledLocalDates by remember(key1 = enabledState.enabledLocalDates) {
-        mutableStateOf(enabledState.enabledLocalDates)
+    val enabledLocalDates by remember(key1 = secondaryState.enabledLocalDates) {
+        mutableStateOf(secondaryState.enabledLocalDates)
     }
 
-    val selectedLocalDates by remember(key1 = selectionState.selectedLocalDates) {
-        mutableStateOf(selectionState.selectedLocalDates)
+    val selectedLocalDates by remember(key1 = secondaryState.selectedLocalDates) {
+        mutableStateOf(secondaryState.selectedLocalDates)
     }
 
     //region Category State Variables
 
-    val tempCategories by remember(key1 = mainState.tempCategories) {
-        mutableStateOf(mainState.tempCategories)
+    val tempCategories by remember(key1 = primaryState.tempCategories) {
+        mutableStateOf(primaryState.tempCategories)
     }
 
-    val selectedTempCategories by remember(key1 = mainState.selectedTempCategories) {
-        mutableStateOf(mainState.selectedTempCategories)
+    val selectedTempCategories by remember(key1 = primaryState.selectedTempCategories) {
+        mutableStateOf(primaryState.selectedTempCategories)
     }
 
-    val selectedTempCategoryCount by remember(key1 = mainState.selectedTempCategoryCount) {
-        mutableStateOf(mainState.selectedTempCategoryCount)
+    val selectedTempCategoryCount by remember(key1 = primaryState.selectedTempCategoryCount) {
+        mutableStateOf(primaryState.selectedTempCategoryCount)
     }
 
     var selectedTempCategoryUUID by remember {
         mutableStateOf("")
     }
 
-    val conflictingTempCategories by remember(key1 = mainState.conflictingTempCategories) {
-        mutableStateOf(mainState.conflictingTempCategories)
+    val conflictingTempCategories by remember(key1 = primaryState.conflictingTempCategories) {
+        mutableStateOf(primaryState.conflictingTempCategories)
     }
 
-    val dbCategories by remember(key1 = mainState.dbCategories) {
-        mutableStateOf(mainState.dbCategories)
+    val dbCategories by remember(key1 = primaryState.dbCategories) {
+        mutableStateOf(primaryState.dbCategories)
     }
 
-    val categoryMappings by remember(key1 = mainState.categoryMappings) {
-        mutableStateOf(mainState.categoryMappings)
+    val categoryMappings by remember(key1 = primaryState.categoryMappings) {
+        mutableStateOf(primaryState.categoryMappings)
     }
 
     //endregion
 
     //region CounterParty State Variables
 
-    val tempCounterParties by remember(key1 = mainState.tempCounterParties) {
-        mutableStateOf(mainState.tempCounterParties)
+    val tempCounterParties by remember(key1 = primaryState.tempCounterParties) {
+        mutableStateOf(primaryState.tempCounterParties)
     }
 
-    val selectedTempCounterParties by remember(key1 = mainState.selectedTempCounterParties) {
-        mutableStateOf(mainState.selectedTempCounterParties)
+    val selectedTempCounterParties by remember(key1 = primaryState.selectedTempCounterParties) {
+        mutableStateOf(primaryState.selectedTempCounterParties)
     }
 
-    val selectedTempCounterPartyCount by remember(key1 = mainState.selectedTempCounterPartyCount) {
-        mutableStateOf(mainState.selectedTempCounterPartyCount)
+    val selectedTempCounterPartyCount by remember(key1 = primaryState.selectedTempCounterPartyCount) {
+        mutableStateOf(primaryState.selectedTempCounterPartyCount)
     }
 
     var selectedTempCounterPartyUUID by remember {
         mutableStateOf("")
     }
 
-    val conflictingTempCounterParties by remember(key1 = mainState.conflictingTempCounterParties) {
-        mutableStateOf(mainState.conflictingTempCounterParties)
+    val conflictingTempCounterParties by remember(key1 = primaryState.conflictingTempCounterParties) {
+        mutableStateOf(primaryState.conflictingTempCounterParties)
     }
 
-    val dbCounterParties by remember(key1 = mainState.dbCounterParties) {
-        mutableStateOf(mainState.dbCounterParties)
+    val dbCounterParties by remember(key1 = primaryState.dbCounterParties) {
+        mutableStateOf(primaryState.dbCounterParties)
     }
 
-    val counterPartyMappings by remember(key1 = mainState.counterPartyMappings) {
-        mutableStateOf(mainState.counterPartyMappings)
+    val counterPartyMappings by remember(key1 = primaryState.counterPartyMappings) {
+        mutableStateOf(primaryState.counterPartyMappings)
     }
 
     //endregion
 
     //region Method State Variables
 
-    val tempMethods by remember(key1 = mainState.tempMethods) {
-        mutableStateOf(mainState.tempMethods)
+    val tempMethods by remember(key1 = primaryState.tempMethods) {
+        mutableStateOf(primaryState.tempMethods)
     }
 
-    val selectedTempMethods by remember(key1 = mainState.selectedTempMethods) {
-        mutableStateOf(mainState.selectedTempMethods)
+    val selectedTempMethods by remember(key1 = primaryState.selectedTempMethods) {
+        mutableStateOf(primaryState.selectedTempMethods)
     }
 
-    val selectedTempMethodCount by remember(key1 = mainState.selectedTempMethodCount) {
-        mutableStateOf(mainState.selectedTempMethodCount)
+    val selectedTempMethodCount by remember(key1 = primaryState.selectedTempMethodCount) {
+        mutableStateOf(primaryState.selectedTempMethodCount)
     }
 
     var selectedTempMethodUUID by remember {
         mutableStateOf("")
     }
 
-    val conflictingTempMethods by remember(key1 = mainState.conflictingTempMethods) {
-        mutableStateOf(mainState.conflictingTempMethods)
+    val conflictingTempMethods by remember(key1 = primaryState.conflictingTempMethods) {
+        mutableStateOf(primaryState.conflictingTempMethods)
     }
 
-    val dbMethods by remember(key1 = mainState.dbMethods) {
-        mutableStateOf(mainState.dbMethods)
+    val dbMethods by remember(key1 = primaryState.dbMethods) {
+        mutableStateOf(primaryState.dbMethods)
     }
 
-    val methodMappings by remember(key1 = mainState.methodMappings) {
-        mutableStateOf(mainState.methodMappings)
+    val methodMappings by remember(key1 = primaryState.methodMappings) {
+        mutableStateOf(primaryState.methodMappings)
     }
 
     //endregion
 
     //region Source State Variables
 
-    val tempSources by remember(key1 = mainState.tempSources) {
-        mutableStateOf(mainState.tempSources)
+    val tempSources by remember(key1 = primaryState.tempSources) {
+        mutableStateOf(primaryState.tempSources)
     }
 
-    val selectedTempSources by remember(key1 = mainState.selectedTempSources) {
-        mutableStateOf(mainState.selectedTempSources)
+    val selectedTempSources by remember(key1 = primaryState.selectedTempSources) {
+        mutableStateOf(primaryState.selectedTempSources)
     }
 
-    val selectedTempSourceCount by remember(key1 = mainState.selectedTempSourceCount) {
-        mutableStateOf(mainState.selectedTempSourceCount)
+    val selectedTempSourceCount by remember(key1 = primaryState.selectedTempSourceCount) {
+        mutableStateOf(primaryState.selectedTempSourceCount)
     }
 
     var selectedTempSourceUUID by remember {
         mutableStateOf("")
     }
 
-    val restoreBalanceSources by remember(key1 = mainState.restoreBalanceSources) {
-        mutableStateOf(mainState.restoreBalanceSources)
+    val restoreBalanceSources by remember(key1 = primaryState.restoreBalanceSources) {
+        mutableStateOf(primaryState.restoreBalanceSources)
     }
 
-    val conflictingTempSources by remember(key1 = mainState.conflictingTempSources) {
-        mutableStateOf(mainState.conflictingTempSources)
+    val conflictingTempSources by remember(key1 = primaryState.conflictingTempSources) {
+        mutableStateOf(primaryState.conflictingTempSources)
     }
 
-    val currencySourceMap by remember(key1 = mainState.currencySourceMap) {
-        mutableStateOf(mainState.currencySourceMap)
+    val currencySourceMap by remember(key1 = primaryState.currencySourceMap) {
+        mutableStateOf(primaryState.currencySourceMap)
     }
 
-    val sourceMappings by remember(key1 = mainState.sourceMappings) {
-        mutableStateOf(mainState.sourceMappings)
+    val sourceMappings by remember(key1 = primaryState.sourceMappings) {
+        mutableStateOf(primaryState.sourceMappings)
     }
 
     //endregion
 
     //region Template State Variables
 
-    val tempTransactionTemplatesWithIcons by remember(key1 = mainState.tempTransactionTemplatesWithIcons) {
-        mutableStateOf(mainState.tempTransactionTemplatesWithIcons)
+    val tempTransactionTemplatesWithIcons by remember(key1 = primaryState.tempTransactionTemplatesWithIcons) {
+        mutableStateOf(primaryState.tempTransactionTemplatesWithIcons)
     }
 
-    val selectedTempTransactionTemplates by remember(key1 = mainState.selectedTempTransactionTemplates) {
-        mutableStateOf(mainState.selectedTempTransactionTemplates)
+    val selectedTempTransactionTemplates by remember(key1 = primaryState.selectedTempTransactionTemplates) {
+        mutableStateOf(primaryState.selectedTempTransactionTemplates)
     }
 
-    val selectedTempTransactionTemplateCount by remember(key1 = selectionState.selectedTempTransactionTemplateCount) {
-        mutableStateOf(selectionState.selectedTempTransactionTemplateCount)
+    val selectedTempTransactionTemplateCount by remember(key1 = primaryState.selectedTempTransactionTemplateCount) {
+        mutableStateOf(primaryState.selectedTempTransactionTemplateCount)
     }
 
-    val enabledTempTransactionTemplates by remember(key1 = enabledState.enabledTempTransactionTemplates) {
-        mutableStateOf(enabledState.enabledTempTransactionTemplates)
+    val enabledTempTransactionTemplates by remember(key1 = secondaryState.enabledTempTransactionTemplates) {
+        mutableStateOf(secondaryState.enabledTempTransactionTemplates)
     }
 
     //endregion
 
-    val selectedTransactionTypes by remember(key1 = mainState.selectedTransactionTypes) {
-        mutableStateOf(mainState.selectedTransactionTypes)
+    val selectedTransactionTypes by remember(key1 = filtersState.selectedTransactionTypes) {
+        mutableStateOf(filtersState.selectedTransactionTypes)
     }
 
-    val filterAmountMin by remember(key1 = mainState.filterAmountMin) {
-        mutableDoubleStateOf(mainState.filterAmountMin)
+    val filterAmountMin by remember(key1 = filtersState.filterAmountMin) {
+        mutableDoubleStateOf(filtersState.filterAmountMin)
     }
 
-    val filterAmountMax by remember(key1 = mainState.filterAmountMax) {
-        mutableDoubleStateOf(mainState.filterAmountMax)
+    val filterAmountMax by remember(key1 = filtersState.filterAmountMax) {
+        mutableDoubleStateOf(filtersState.filterAmountMax)
     }
 
-    val filterAmountRange by remember(key1 = mainState.filterAmountRange) {
-        mutableStateOf(mainState.filterAmountRange)
+    val filterAmountRange by remember(key1 = filtersState.filterAmountRange) {
+        mutableStateOf(filtersState.filterAmountRange)
     }
 
     val headerPagerState = rememberPagerState(
@@ -543,7 +544,7 @@ fun ImportBackupScreen(
 
                 PopupType.CURRENCY -> {
                     FilterCurrencyPopup(
-                        selectedCurrencyMap = selectedCurrencies,
+                        selectedCurrencyCodes = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
                         dismiss = hidePopup
@@ -734,7 +735,7 @@ fun ImportBackupScreen(
                     }
                 },
                 onToggleSelectClick = {
-                    toggleSelection(allSelected, transactions)
+                    toggleSelection(allSelected)
                 },
                 onCalendarClick = {
                     popupType = PopupType.DATE_RANGE
@@ -783,7 +784,7 @@ fun ImportBackupScreen(
                                     mappedCategory = categoryMappings[tempCategory.uuid]
                                         ?: Category(),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempCategories[tempCategory.uuid] == true,
+                                    selected = selectedTempCategories.contains(tempCategory.uuid),
                                     conflicting = conflictingTempCategories.contains(tempCategory.uuid),
                                     selectCategory = {
                                         selectedTempCategoryUUID = tempCategory.uuid
@@ -823,7 +824,7 @@ fun ImportBackupScreen(
                                     mappedCounterParty = counterPartyMappings[tempCounterParty.uuid]
                                         ?: CounterParty(),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempCounterParties[tempCounterParty.uuid] == true,
+                                    selected = selectedTempCounterParties.contains(tempCounterParty.uuid),
                                     conflicting = conflictingTempCounterParties.contains(
                                         tempCounterParty.uuid
                                     ),
@@ -867,7 +868,7 @@ fun ImportBackupScreen(
                                     tempMethod = tempMethod,
                                     mappedMethod = methodMappings[tempMethod.uuid] ?: Method(),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempMethods[tempMethod.uuid] == true,
+                                    selected = selectedTempMethods.contains(tempMethod.uuid),
                                     conflicting = conflictingTempMethods.contains(tempMethod.uuid),
                                     selectMethod = {
                                         selectedTempMethodUUID = tempMethod.uuid
@@ -906,7 +907,7 @@ fun ImportBackupScreen(
                                     tempSource = tempSource,
                                     mappedSource = sourceMappings[tempSource.uuid] ?: Source(),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempSources[tempSource.uuid] == true,
+                                    selected = selectedTempSources.contains(tempSource.uuid),
                                     restoreBalance = restoreBalanceSources.contains(tempSource.uuid),
                                     conflicting = conflictingTempSources.contains(tempSource.uuid),
                                     selectSource = {
@@ -1105,9 +1106,10 @@ fun ImportBackupScreenPreview() {
         setLocale = {},
         loadFile = {},
         import = {},
-        toggleSelection = { _, _ -> },
+        toggleSelection = {},
         toggleTransactionSelected = {},
         toggleLocalDateSelected = { _, _ -> },
+        searchState = "",
         setSearchText = {},
         setSelectedCurrencies = {},
         setStartDateAndEndDate = { _, _ -> },
@@ -1126,10 +1128,10 @@ fun ImportBackupScreenPreview() {
         toggleRestoreBalance = {},
         checkPageValidity = {},
         events = emptyList<Event>().asFlow(),
-        mainState = ImportBackupScreenMainState(),
-        enabledState = ImportBackupScreenEnabledState(),
-        selectionState = ImportBackupScreenSelectionState(),
-        selectedTransactionsState = emptySet()
+        primaryState = ImportBackupScreenPrimaryState(),
+        secondaryState = ImportBackupScreenSecondaryState(),
+        filtersState = ImportBackupScreenFiltersState(),
+        sortOptionsState = SortOptionsScreenState()
     )
 }
 
@@ -1138,10 +1140,11 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
         route = Routes.ImportBackup.route
     ) {
         val viewModel: ImportBackupScreenViewModel = koinViewModel()
-        val mainState by viewModel.mainState.collectAsState()
-        val enabledState by viewModel.enabledState.collectAsState()
-        val selectionState by viewModel.selectionState.collectAsState()
-        val selectedTransactionsState by viewModel.selectedTransactionsState.collectAsState()
+        val mainState by viewModel.primaryState.collectAsState()
+        val secondaryState by viewModel.secondaryState.collectAsState()
+        val searchState by viewModel.searchState.collectAsState()
+        val filtersState by viewModel.filtersState.collectAsState()
+        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
 
         ImportBackupScreen(
             navigateBack = {
@@ -1153,6 +1156,7 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
             toggleSelection = viewModel::toggleSelection,
             toggleTransactionSelected = viewModel::toggleTransactionSelected,
             toggleLocalDateSelected = viewModel::toggleLocalDateSelected,
+            searchState = searchState,
             setSearchText = viewModel::setSearchText,
             setSelectedCurrencies = viewModel::setSelectedCurrencies,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
@@ -1171,10 +1175,10 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
             toggleRestoreBalance = viewModel::toggleRestoreBalance,
             checkPageValidity = viewModel::checkPageValidity,
             events = viewModel.event,
-            mainState = mainState,
-            enabledState = enabledState,
-            selectionState = selectionState,
-            selectedTransactionsState = selectedTransactionsState
+            primaryState = mainState,
+            secondaryState = secondaryState,
+            filtersState = filtersState,
+            sortOptionsState = sortOptionsState
         )
     }
 }

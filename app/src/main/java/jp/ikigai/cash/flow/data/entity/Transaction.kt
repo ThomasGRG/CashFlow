@@ -2,9 +2,11 @@ package jp.ikigai.cash.flow.data.entity
 
 import android.icu.util.Currency
 import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.PersistedName
 import io.realm.kotlin.types.annotations.PrimaryKey
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.utils.toEpochMilli
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -28,7 +30,17 @@ class Transaction() : RealmObject {
         }
 
     var currency: String = Currency.getInstance("INR").currencyCode
-    var time: Long = ZonedDateTime.now(ZoneId.of("UTC")).toEpochMilli()
+
+    @PersistedName("time")
+    private var _time: Long = ZonedDateTime.now(ZoneId.systemDefault()).toEpochMilli()
+    var time: ZonedDateTime
+        get() {
+            return Instant.ofEpochMilli(_time).atZone(ZoneId.systemDefault())
+        }
+        set(value) {
+            _time = value.toInstant().toEpochMilli()
+        }
+
     var category: Category? = null
     var counterParty: CounterParty? = null
     var method: Method? = null

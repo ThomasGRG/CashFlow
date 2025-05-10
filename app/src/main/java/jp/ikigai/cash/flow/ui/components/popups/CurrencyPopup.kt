@@ -212,9 +212,9 @@ fun CurrencyPopup(
 
 @Composable
 fun FilterCurrencyPopup(
-    selectedCurrencyMap: Map<String, Boolean>,
+    selectedCurrencyCodes: Set<String>,
     currencies: List<CurrencyInfo>,
-    filter: (Map<String, Boolean>) -> Unit,
+    filter: (Set<String>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -277,7 +277,10 @@ fun FilterCurrencyPopup(
     }
 
     LaunchedEffect(Unit) {
-        selectedCurrencies.putAll(selectedCurrencyMap)
+        currencies.forEach { (_, currency) ->
+            selectedCurrencies[currency.currencyCode] =
+                selectedCurrencyCodes.contains(currency.currencyCode)
+        }
     }
 
     Column(
@@ -418,8 +421,10 @@ fun FilterCurrencyPopup(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    filter(
+                        selectedCurrencies.filter { entry -> entry.value }.keys
+                    )
                     dismiss()
-                    filter(selectedCurrencies)
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)

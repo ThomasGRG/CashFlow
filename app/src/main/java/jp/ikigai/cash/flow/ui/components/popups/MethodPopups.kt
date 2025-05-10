@@ -627,6 +627,243 @@ fun FilterMethodPopup(
     }
 }
 
+@Composable
+fun FilterMethodPopup(
+    selectedMethodUUIDs: Set<String>,
+    methods: List<Method>,
+    filter: (Set<String>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val methodList by remember {
+        mutableStateOf(
+            methods.map { method ->
+                Pair(method, getHighlightedString(method.name, ""))
+            }
+        )
+    }
+
+    var filteredMethodList by remember {
+        mutableStateOf(methodList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredMethodList = if (searchText.isBlank()) {
+            methodList
+        } else {
+            methodList
+                .filter {
+                    it.first.name.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                }
+        }
+    }
+
+    val selectedMethods = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedMethods.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredMethodList
+                .map { selectedMethods[it.first.uuid] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        methods.forEach { method ->
+            selectedMethods[method.uuid] = selectedMethodUUIDs.contains(method.uuid)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredMethodList,
+                key = { methodPair -> "method-${methodPair.first.uuid}" }
+            ) { methodPair ->
+                MultiSelectCard(
+                    checked = {
+                        selectedMethods.getOrDefault(methodPair.first.uuid, true)
+                    },
+                    label = methodPair.second,
+                    icon = Constants.DEFAULT_METHOD_ICON,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedMethods[methodPair.first.uuid] =
+                            !selectedMethods[methodPair.first.uuid]!!
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredMethodList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredMethodList.size
+                    filteredMethodList
+                        .map { category -> category.first.uuid }
+                        .forEach { uuid -> selectedMethods[uuid] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredMethodList.size
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    filter(
+                        selectedMethods.filter { entry -> entry.value }.keys
+                    )
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun SelectMethodPopupPreview() {

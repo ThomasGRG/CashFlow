@@ -61,6 +61,7 @@ import jp.ikigai.cash.flow.ui.components.cards.InfoCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CounterPartyScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.CounterPartyScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -73,8 +74,10 @@ fun CounterPartyScreen(
     navigateBack: () -> Unit,
     addNewCounterParty: () -> Unit,
     editCounterParty: (String) -> Unit,
+    searchState: String,
     setSearchText: (String) -> Unit,
-    setSortInfo: (String, Sort) -> Unit,
+    sortOptionsState: SortOptionsScreenState,
+    setSortOptions: (String, Sort) -> Unit,
     setLocale: (Locale?) -> Unit,
     state: CounterPartyScreenState
 ) {
@@ -109,8 +112,8 @@ fun CounterPartyScreen(
         mutableStateOf(state.countString)
     }
 
-    val searchText by remember(key1 = state.searchText) {
-        mutableStateOf(state.searchText)
+    val searchText by remember(key1 = searchState) {
+        mutableStateOf(searchState)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -131,18 +134,18 @@ fun CounterPartyScreen(
         stringResource(id = R.string.last_used_label) to "lastUsed"
     )
 
-    val sortOption by remember(key1 = state.sortField) {
-        mutableStateOf(state.sortField)
+    val sortOption by remember(key1 = sortOptionsState.sortField) {
+        mutableStateOf(sortOptionsState.sortField)
     }
 
-    val sortDirection by remember(key1 = state.sortDirection) {
-        mutableStateOf(state.sortDirection)
+    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
+        mutableStateOf(sortOptionsState.sortDirection)
     }
 
-    val sortIcon by remember(key1 = state.sortDirection, key2 = state.count) {
+    val sortIcon by remember(key1 = sortOptionsState.sortDirection, key2 = state.count) {
         mutableStateOf(
             if (state.count > 0) {
-                if (state.sortDirection == Sort.DESCENDING) {
+                if (sortOptionsState.sortDirection == Sort.DESCENDING) {
                     TablerIcons.SortDescending
                 } else {
                     TablerIcons.SortAscending
@@ -168,7 +171,7 @@ fun CounterPartyScreen(
                         selectedOption = sortOption,
                         selectedDirection = sortDirection,
                         options = sortOptions,
-                        sort = setSortInfo,
+                        sort = setSortOptions,
                         dismiss = hidePopup
                     )
                 }
@@ -301,7 +304,7 @@ fun CounterPartyScreen(
                         onClick = { uuid ->
                             resetOneHandMode()
                             editCounterParty(uuid)
-                        },
+                        }
                     )
                 }
             }
@@ -316,8 +319,10 @@ fun CounterPartyScreenPreview() {
         navigateBack = {},
         addNewCounterParty = {},
         editCounterParty = {},
+        searchState = "",
         setSearchText = {},
-        setSortInfo = { _, _ -> },
+        sortOptionsState = SortOptionsScreenState(),
+        setSortOptions = { _, _ -> },
         setLocale = {},
         state = CounterPartyScreenState()
     )
@@ -329,6 +334,8 @@ fun NavGraphBuilder.counterPartyScreen(navController: NavController) {
     ) {
         val viewModel: CounterPartyScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
+        val searchState by viewModel.searchState.collectAsState()
+        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
 
         CounterPartyScreen(
             navigateBack = {
@@ -344,8 +351,10 @@ fun NavGraphBuilder.counterPartyScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
+            searchState = searchState,
             setSearchText = viewModel::setSearchText,
-            setSortInfo = viewModel::setSortInfo,
+            sortOptionsState = sortOptionsState,
+            setSortOptions = viewModel::setSortOptions,
             setLocale = viewModel::setLocale,
             state = state
         )

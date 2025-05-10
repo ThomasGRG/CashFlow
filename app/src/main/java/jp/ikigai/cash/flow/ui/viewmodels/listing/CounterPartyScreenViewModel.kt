@@ -15,18 +15,24 @@ import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
 import jp.ikigai.cash.flow.data.entity.CounterParty
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CounterPartyScreenState
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -38,6 +44,12 @@ class CounterPartyScreenViewModel(
 
     private val _state = MutableStateFlow(CounterPartyScreenState())
     val state: StateFlow<CounterPartyScreenState> = _state.asStateFlow()
+
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
+
+    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
 
     init {
         getCounterParties()
@@ -60,30 +72,53 @@ class CounterPartyScreenViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun getCounterParties() = viewModelScope.launch {
-        state.flatMapLatest {
+        combine(
+            _searchState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions ->
+            Pair(searchText, sortOptions)
+        }.flatMapLatest { (searchText, sortOptions) ->
             realm.query<CounterParty>(
-                if (it.searchText.isBlank()) {
+                if (searchText.isBlank()) {
                     TRUE_PREDICATE
                 } else {
-                    "name CONTAINS[c] '${it.searchText.trim()}'"
+                    "name CONTAINS[c] '${searchText.trim()}'"
                 }
             )
-                .sort(it.sortField, it.sortDirection)
+                .sort(sortOptions.sortField, sortOptions.sortDirection)
                 .asFlow()
         }.collectLatest { changes ->
             _state.update { screenState ->
                 screenState.copy(
-                    counterParties = mapToDTO(changes.list, screenState.searchText),
-                    loading = false,
-                    countString = formatter.format(screenState.count).toString()
+                    counterParties = mapToDTO(changes.list, searchState.value),
+                    loading = false
                 )
             }
         }
     }
 
-    private fun mapToDTO(counterParties: List<CounterParty>, searchText: String): List<CommonListingDTO> {
+    private fun mapToDTO(
+        counterParties: List<CounterParty>,
+        searchText: String
+    ): List<CommonListingDTO> {
+        val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
         return counterParties.map { counterParty ->
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
@@ -93,11 +128,11 @@ class CounterPartyScreenViewModel(
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (counterParty.lastUsed > 0) {
+            if (counterParty.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = counterParty.lastUsed.toZonedDateTime()
+                        value = counterParty.lastUsed
                             .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
                         icon = TablerIcons.History
                     )
@@ -121,16 +156,13 @@ class CounterPartyScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _state.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 
-    fun setSortInfo(field: String, direction: Sort) {
-        _state.update {
+    fun setSortOptions(field: String, direction: Sort) {
+        _sortOptionsState.update {
             it.copy(
                 sortDirection = direction,
                 sortField = field

@@ -26,23 +26,27 @@ import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
-import jp.ikigai.cash.flow.utils.combineSevenFlows
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
+import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
+import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import jp.ikigai.cash.flow.utils.toEpochMilli
-import jp.ikigai.cash.flow.utils.toLocalDate
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,28 +71,50 @@ class TransactionsScreenViewModel(
     private val _state = MutableStateFlow(TransactionsScreenState())
     val state: StateFlow<TransactionsScreenState> = _state.asStateFlow()
 
+    private val _filtersState = MutableStateFlow(FiltersState())
+    val filtersState: StateFlow<FiltersState> = _filtersState.asStateFlow()
+
+    private val _searchState = MutableStateFlow("")
+    val searchState: StateFlow<String> = _searchState.asStateFlow()
+
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsScreenState(Sort.DESCENDING, "time")
+    )
+    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
-    private val templateQuery =
-        realm.query<TransactionTemplate>().sort("frequency", Sort.DESCENDING)
+    private val templateQuery = realm
+        .query<TransactionTemplate>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val sourceQuery = realm.query<Source>().sort("frequency", Sort.DESCENDING)
+    private val sourceQuery = realm
+        .query<Source>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
+    private val methodQuery = realm
+        .query<Method>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
+    private val counterPartyQuery = realm
+        .query<CounterParty>()
+        .sort("frequency", Sort.DESCENDING)
 
-    private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
+    private val categoryQuery = realm
+        .query<Category>()
+        .sort("frequency", Sort.DESCENDING)
 
     init {
-        _state.update {
+        _filtersState.update {
             it.copy(
                 startDateString = it.startDate.getDateString(datePattern),
                 endDateString = it.endDate.getDateString(datePattern)
             )
         }
         loadData()
+        loadBalance()
+        loadTransactions()
     }
 
     override fun onCleared() {
@@ -97,45 +123,40 @@ class TransactionsScreenViewModel(
         _event.close()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadData() = viewModelScope.launch {
-        combineSevenFlows(
+        combineFiveFlows(
             categoryQuery.asFlow(),
             counterPartyQuery.asFlow(),
             methodQuery.asFlow(),
             sourceQuery.asFlow(),
-            templateQuery.asFlow(),
-            state.flatMapLatest {
-                realm.query<Source>("currency==$0", it.selectedCurrency).asFlow()
-            },
-            getTransactionQuery()
-        ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, templateChanges, balanceChanges, transactionChanges ->
+            templateQuery.asFlow()
+        ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, templateChanges ->
             TransactionScreenFlows(
                 categories = categoryChanges.list,
                 counterParties = counterPartyChanges.list,
                 methods = methodChanges.list,
                 sources = sourceChanges.list,
-                templates = templateChanges.list,
-                balance = balanceChanges.list.sumOf { source -> source.balance },
-                transactions = transactionChanges.list,
+                templates = templateChanges.list
             )
         }.collectLatest { transactionScreenFlows ->
-            val incomeTransactions =
-                transactionScreenFlows.transactions.filter { it.type == TransactionType.CREDIT }
-            val income = incomeTransactions.sumOf { it.amount }
+            val sources = transactionScreenFlows.sources.toMutableList()
 
-            val expenseTransactions =
-                transactionScreenFlows.transactions.filter { it.type == TransactionType.DEBIT }
-            val expense = expenseTransactions.sumOf { it.amount }
+            sources.forEach { source ->
+                val formatter = currencyFormatterMap.getValue(source.currency)
+                source.displayBalance = formatter.format(source.balance).toString()
+            }
 
             _state.update {
-                val sources = transactionScreenFlows.sources.toMutableList()
+                it.copy(
+                    categories = transactionScreenFlows.categories,
+                    counterParties = transactionScreenFlows.counterParties,
+                    methods = transactionScreenFlows.methods,
+                    sources = sources,
+                    templates = mapToTemplateDTO(transactionScreenFlows.templates)
+                )
+            }
 
-                sources.forEach { source ->
-                    val formatter = currencyFormatterMap.getValue(source.currency)
-                    source.displayBalance = formatter.format(source.balance).toString()
-                }
-
+            _filtersState.update {
                 val selectedCategories = getSelectedCategories(
                     transactionScreenFlows.categories,
                     it.selectedCategories
@@ -160,10 +181,86 @@ class TransactionsScreenViewModel(
                 val selectedSourceCount = selectedSources.filter { entry -> entry.value }.size
 
                 it.copy(
-                    transactionsHashCode = transactionScreenFlows.transactions.hashCode(),
+                    selectedCategories = selectedCategories,
+                    selectedCategoryCount = numberFormatter.format(selectedCategoryCount)
+                        .toString(),
+                    selectedCounterParties = selectedCounterParties,
+                    selectedCounterPartyCount = numberFormatter.format(selectedCounterPartyCount)
+                        .toString(),
+                    selectedMethods = selectedMethods,
+                    selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
+                    selectedSources = selectedSources,
+                    selectedSourceCount = numberFormatter.format(selectedSourceCount).toString()
+                )
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun loadBalance() = viewModelScope.launch {
+        filtersState.flatMapLatest {
+            realm.query<Source>("currency==$0", it.selectedCurrency).asFlow()
+        }.collectLatest { sourceChanges ->
+            val totalBalance = sourceChanges.list.sumOf { source -> source.balance }
+            _state.update {
+                it.copy(
+                    balance = currencyFormatter.format(totalBalance).toString()
+                )
+            }
+        }
+    }
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private fun loadTransactions() = viewModelScope.launch {
+        combine(
+            _searchState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+                .debounce(300),
+            _sortOptionsState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                },
+            _filtersState
+                .onEach {
+                    _state.update {
+                        it.copy(
+                            loading = true
+                        )
+                    }
+                }
+        ) { searchText, sortOptions, filters ->
+            Triple(searchText, sortOptions, filters)
+        }.flatMapLatest { (searchText, sortOptions, filters) ->
+            getTransactionQuery(
+                searchText,
+                sortOptions,
+                filters
+            )
+        }.collectLatest { transactionChanges ->
+            val incomeTransactions = transactionChanges.list
+                .filter { it.type == TransactionType.CREDIT }
+            val income = incomeTransactions.sumOf { it.amount }
+
+            val expenseTransactions = transactionChanges.list
+                .filter { it.type == TransactionType.DEBIT }
+            val expense = expenseTransactions.sumOf { it.amount }
+
+            _state.update {
+                it.copy(
+                    transactionsHashCode = transactionChanges.list.hashCode(),
                     transactions = getTransactionsMap(
-                        transactionScreenFlows.transactions,
-                        it.searchText
+                        transactionChanges.list,
+                        searchState.value
                     ),
                     expenseTransactionsCount = numberFormatter.format(expenseTransactions.size)
                         .toString(),
@@ -171,23 +268,7 @@ class TransactionsScreenViewModel(
                     incomeTransactionsCount = numberFormatter.format(incomeTransactions.size)
                         .toString(),
                     income = currencyFormatter.format(income).toString(),
-                    loading = false,
-                    balance = currencyFormatter.format(transactionScreenFlows.balance).toString(),
-                    templates = mapToTemplateDTO(transactionScreenFlows.templates),
-                    categories = transactionScreenFlows.categories,
-                    selectedCategories = selectedCategories,
-                    selectedCategoryCount = numberFormatter.format(selectedCategoryCount)
-                        .toString(),
-                    counterParties = transactionScreenFlows.counterParties,
-                    selectedCounterParties = selectedCounterParties,
-                    selectedCounterPartyCount = numberFormatter.format(selectedCounterPartyCount)
-                        .toString(),
-                    methods = transactionScreenFlows.methods,
-                    selectedMethods = selectedMethods,
-                    selectedMethodCount = numberFormatter.format(selectedMethodCount).toString(),
-                    sources = sources,
-                    selectedSources = selectedSources,
-                    selectedSourceCount = numberFormatter.format(selectedSourceCount).toString(),
+                    loading = false
                 )
             }
         }
@@ -292,33 +373,37 @@ class TransactionsScreenViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTransactionQuery(): Flow<ResultsChange<Transaction>> {
-        return state.flatMapLatest {
-            var queryString =
-                "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
-            if (it.searchText.isNotBlank()) {
-                queryString += " && (title CONTAINS[c] '${it.searchText.trim()}' || description CONTAINS[c] '${it.searchText.trim()}')"
-            }
-            queryString += if (it.includeNoCounterPartyTransactions) {
-                " && (counterParty == nil || counterParty.uuid IN $9)"
-            } else {
-                " && counterParty.uuid IN $9"
-            }
-            realm.query<Transaction>(
-                queryString,
-                it.startDate.toEpochMilli(),
-                it.endDate.toEpochMilli(),
-                it.selectedCurrency,
-                it.filterAmountMin,
-                if (it.filterAmountMax <= it.filterAmountMin) Double.MAX_VALUE else it.filterAmountMax,
-                it.selectedTransactionTypes,
-                it.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
-                it.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
-                it.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
-                it.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys
-            ).sort("time", it.sortDirection).asFlow()
+    private fun getTransactionQuery(
+        searchText: String,
+        sortOptions: SortOptionsScreenState,
+        filters: FiltersState
+    ): Flow<ResultsChange<Transaction>> {
+        var queryString =
+            "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
+        if (searchText.isNotBlank()) {
+            queryString += " && (title CONTAINS[c] '${searchText.trim()}' || description CONTAINS[c] '${searchText.trim()}')"
         }
+        queryString += if (filters.includeNoCounterPartyTransactions) {
+            " && (counterParty == nil || counterParty.uuid IN $9)"
+        } else {
+            " && counterParty.uuid IN $9"
+        }
+        return realm
+            .query<Transaction>(
+                queryString,
+                filters.startDate.toEpochMilli(),
+                filters.endDate.toEpochMilli(),
+                filters.selectedCurrency,
+                filters.filterAmountMin,
+                if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
+                filters.selectedTransactionTypes,
+                filters.selectedCategories.filter { selectedCategory -> selectedCategory.value }.keys,
+                filters.selectedMethods.filter { selectedMethods -> selectedMethods.value }.keys,
+                filters.selectedSources.filter { selectedSources -> selectedSources.value }.keys,
+                filters.selectedCounterParties.filter { selectedCounterParties -> selectedCounterParties.value }.keys
+            )
+            .sort("time", sortOptions.sortDirection)
+            .asFlow()
     }
 
     private fun getTransactionsMap(
@@ -385,8 +470,7 @@ class TransactionsScreenViewModel(
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
-                value = transaction.time.toZonedDateTime()
-                    .format(DateTimeFormatter.ofPattern("hh:mm a")),
+                value = transaction.time.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 resId = R.string.placeholder
             )
         )
@@ -403,31 +487,28 @@ class TransactionsScreenViewModel(
     }
 
     fun setCurrency(currency: String) {
-        _state.update {
-            currencyFormatter = currencyFormatterMap.getValue(currency)
+        currencyFormatter = currencyFormatterMap.getValue(currency)
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedCurrency = currency
             )
         }
     }
 
     fun setStartDateAndEndDate(startDate: ZonedDateTime, endDate: ZonedDateTime) {
-        _state.update {
+        _filtersState.update {
             it.copy(
                 startDate = startDate,
                 endDate = endDate,
                 startDateString = startDate.getDateString(datePattern),
-                endDateString = endDate.getDateString(datePattern),
-                loading = true
+                endDateString = endDate.getDateString(datePattern)
             )
         }
     }
 
     fun setSelectedCategories(selectedCategories: Map<String, Boolean>) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedCategories = selectedCategories
             )
         }
@@ -437,9 +518,8 @@ class TransactionsScreenViewModel(
         includeTransactionsWithNoCounterParty: Boolean,
         selectedCounterParties: Map<String, Boolean>
     ) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedCounterParties = selectedCounterParties,
                 includeNoCounterPartyTransactions = includeTransactionsWithNoCounterParty
             )
@@ -447,36 +527,32 @@ class TransactionsScreenViewModel(
     }
 
     fun setSelectedMethods(selectedMethods: Map<String, Boolean>) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedMethods = selectedMethods
             )
         }
     }
 
     fun setSelectedSources(selectedSources: Map<String, Boolean>) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedSources = selectedSources
             )
         }
     }
 
     fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 selectedTransactionTypes = selectedTransactionTypes
             )
         }
     }
 
     fun setSortDirection(sortDirection: Sort) {
-        _state.update {
+        _sortOptionsState.update {
             it.copy(
-                loading = true,
                 sortDirection = sortDirection
             )
         }
@@ -492,9 +568,8 @@ class TransactionsScreenViewModel(
         } else {
             "0+"
         }
-        _state.update {
+        _filtersState.update {
             it.copy(
-                loading = true,
                 filterAmountMin = min,
                 filterAmountMax = max,
                 filterAmountRange = filterAmountRange
@@ -503,19 +578,16 @@ class TransactionsScreenViewModel(
     }
 
     fun setSearchText(searchText: String) {
-        _state.update {
-            it.copy(
-                loading = true,
-                searchText = searchText,
-            )
+        _searchState.update {
+            searchText
         }
     }
 
     fun setLocale(locale: Locale?) {
         numberFormatter = getNumberFormatter(locale)
         currencyFormatterMap = getCurrencyFormatterMap(locale)
+        currencyFormatter = currencyFormatterMap.getValue(filtersState.value.selectedCurrency)
         _state.update {
-            currencyFormatter = currencyFormatterMap.getValue(it.selectedCurrency)
             it.copy(
                 locale = locale
             )
@@ -528,7 +600,7 @@ class TransactionsScreenViewModel(
                 val latestTransaction =
                     query<Transaction>("uuid==$0", transactionUUID).first().find()
                 latestTransaction?.let {
-                    val currentTime = ZonedDateTime.now(ZoneId.of("UTC")).toEpochMilli()
+                    val currentTime = ZonedDateTime.now(ZoneId.systemDefault())
                     val latestCategory = findLatest(latestTransaction.category!!)?.also {
                         it.frequency += 1
                         it.lastUsed = currentTime

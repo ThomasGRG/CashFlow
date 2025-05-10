@@ -25,10 +25,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
-import compose.icons.tablericons.ArrowNarrowDown
-import compose.icons.tablericons.ArrowNarrowUp
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseExport
+import compose.icons.tablericons.SortAscending
+import compose.icons.tablericons.SortDescending
 import io.realm.kotlin.query.Sort
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
@@ -85,9 +85,9 @@ fun ExportTransactionsScreenRoundedBottomBar(
             ) {
                 Icon(
                     imageVector = if (sortDirection == Sort.DESCENDING) {
-                        TablerIcons.ArrowNarrowDown
+                        TablerIcons.SortDescending
                     } else {
-                        TablerIcons.ArrowNarrowUp
+                        TablerIcons.SortAscending
                     },
                     contentDescription = "sort direction icon"
                 )

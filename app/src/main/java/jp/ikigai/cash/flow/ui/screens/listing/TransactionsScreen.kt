@@ -86,7 +86,9 @@ import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.MoreOptionsPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTemplatePopup
-import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
+import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -102,6 +104,7 @@ fun TransactionsScreen(
     canAddTransaction: () -> Boolean,
     addTransaction: (String) -> Unit,
     editTransaction: (String) -> Unit,
+    searchState: String,
     setSearchText: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setCurrency: (String) -> Unit,
@@ -123,6 +126,8 @@ fun TransactionsScreen(
     openGithubPage: () -> Unit,
     events: Flow<Event>,
     state: TransactionsScreenState,
+    filtersState: FiltersState,
+    sortOptionsState: SortOptionsScreenState
 ) {
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
@@ -173,8 +178,8 @@ fun TransactionsScreen(
         mutableStateOf(PopupType.NONE)
     }
 
-    val searchText by remember(key1 = state.searchText) {
-        mutableStateOf(state.searchText)
+    val searchText by remember(key1 = searchState) {
+        mutableStateOf(searchState)
     }
 
     val loading by remember(key1 = state.loading) {
@@ -197,28 +202,28 @@ fun TransactionsScreen(
         mutableStateOf(state.balance)
     }
 
-    val selectedCurrency by remember(key1 = state.selectedCurrency) {
-        mutableStateOf(state.selectedCurrency)
+    val selectedCurrency by remember(key1 = filtersState.selectedCurrency) {
+        mutableStateOf(filtersState.selectedCurrency)
     }
 
-    val selectedCurrencySymbol by remember(key1 = state.selectedCurrency) {
-        mutableStateOf(Currency.getInstance(state.selectedCurrency).symbol)
+    val selectedCurrencySymbol by remember(key1 = filtersState.selectedCurrency) {
+        mutableStateOf(Currency.getInstance(filtersState.selectedCurrency).symbol)
     }
 
-    val startDate by remember(key1 = state.startDate) {
-        mutableStateOf(state.startDate)
+    val startDate by remember(key1 = filtersState.startDate) {
+        mutableStateOf(filtersState.startDate)
     }
 
-    val startDateString by remember(key1 = state.startDateString) {
-        mutableStateOf(state.startDateString)
+    val startDateString by remember(key1 = filtersState.startDateString) {
+        mutableStateOf(filtersState.startDateString)
     }
 
-    val endDate by remember(key1 = state.endDate) {
-        mutableStateOf(state.endDate)
+    val endDate by remember(key1 = filtersState.endDate) {
+        mutableStateOf(filtersState.endDate)
     }
 
-    val endDateString by remember(key1 = state.endDateString) {
-        mutableStateOf(state.endDateString)
+    val endDateString by remember(key1 = filtersState.endDateString) {
+        mutableStateOf(filtersState.endDateString)
     }
 
     val totalExpense by remember(key1 = state.expense) {
@@ -241,72 +246,72 @@ fun TransactionsScreen(
         mutableStateOf(state.categories)
     }
 
-    val selectedCategories by remember(key1 = state.selectedCategories) {
-        mutableStateOf(state.selectedCategories)
+    val selectedCategories by remember(key1 = filtersState.selectedCategories) {
+        mutableStateOf(filtersState.selectedCategories)
     }
 
-    val selectedCategoryCount by remember(key1 = state.selectedCategoryCount) {
-        mutableStateOf(state.selectedCategoryCount)
+    val selectedCategoryCount by remember(key1 = filtersState.selectedCategoryCount) {
+        mutableStateOf(filtersState.selectedCategoryCount)
     }
 
     val counterParties by remember(key1 = state.counterParties) {
         mutableStateOf(state.counterParties)
     }
 
-    val includeNoCounterPartyTransactions by remember(key1 = state.includeNoCounterPartyTransactions) {
-        mutableStateOf(state.includeNoCounterPartyTransactions)
+    val includeNoCounterPartyTransactions by remember(key1 = filtersState.includeNoCounterPartyTransactions) {
+        mutableStateOf(filtersState.includeNoCounterPartyTransactions)
     }
 
-    val selectedCounterParties by remember(key1 = state.selectedCounterParties) {
-        mutableStateOf(state.selectedCounterParties)
+    val selectedCounterParties by remember(key1 = filtersState.selectedCounterParties) {
+        mutableStateOf(filtersState.selectedCounterParties)
     }
 
-    val selectedCounterPartyCount by remember(key1 = state.selectedCounterPartyCount) {
-        mutableStateOf(state.selectedCounterPartyCount)
+    val selectedCounterPartyCount by remember(key1 = filtersState.selectedCounterPartyCount) {
+        mutableStateOf(filtersState.selectedCounterPartyCount)
     }
 
     val methods by remember(key1 = state.methods) {
         mutableStateOf(state.methods)
     }
 
-    val selectedMethods by remember(key1 = state.selectedMethods) {
-        mutableStateOf(state.selectedMethods)
+    val selectedMethods by remember(key1 = filtersState.selectedMethods) {
+        mutableStateOf(filtersState.selectedMethods)
     }
 
-    val selectedMethodCount by remember(key1 = state.selectedMethodCount) {
-        mutableStateOf(state.selectedMethodCount)
+    val selectedMethodCount by remember(key1 = filtersState.selectedMethodCount) {
+        mutableStateOf(filtersState.selectedMethodCount)
     }
 
     val sources by remember(key1 = state.sources) {
         mutableStateOf(state.sources)
     }
 
-    val selectedSources by remember(key1 = state.selectedSources) {
-        mutableStateOf(state.selectedSources)
+    val selectedSources by remember(key1 = filtersState.selectedSources) {
+        mutableStateOf(filtersState.selectedSources)
     }
 
-    val selectedSourceCount by remember(key1 = state.selectedSourceCount) {
-        mutableStateOf(state.selectedSourceCount)
+    val selectedSourceCount by remember(key1 = filtersState.selectedSourceCount) {
+        mutableStateOf(filtersState.selectedSourceCount)
     }
 
-    val selectedTransactionTypes by remember(key1 = state.selectedTransactionTypes) {
-        mutableStateOf(state.selectedTransactionTypes)
+    val selectedTransactionTypes by remember(key1 = filtersState.selectedTransactionTypes) {
+        mutableStateOf(filtersState.selectedTransactionTypes)
     }
 
-    val filterAmountMin by remember(key1 = state.filterAmountMin) {
-        mutableDoubleStateOf(state.filterAmountMin)
+    val filterAmountMin by remember(key1 = filtersState.filterAmountMin) {
+        mutableDoubleStateOf(filtersState.filterAmountMin)
     }
 
-    val filterAmountMax by remember(key1 = state.filterAmountMax) {
-        mutableDoubleStateOf(state.filterAmountMax)
+    val filterAmountMax by remember(key1 = filtersState.filterAmountMax) {
+        mutableDoubleStateOf(filtersState.filterAmountMax)
     }
 
-    val filterAmountRange by remember(key1 = state.filterAmountRange) {
-        mutableStateOf(state.filterAmountRange)
+    val filterAmountRange by remember(key1 = filtersState.filterAmountRange) {
+        mutableStateOf(filtersState.filterAmountRange)
     }
 
-    val sortDirection by remember(key1 = state.sortDirection) {
-        mutableStateOf(state.sortDirection)
+    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
+        mutableStateOf(sortOptionsState.sortDirection)
     }
 
     var selectedTransactionUUID by remember {
@@ -682,6 +687,7 @@ fun TransactionsScreenPreview() {
         canAddTransaction = { true },
         addTransaction = {},
         editTransaction = {},
+        searchState = "",
         setSearchText = {},
         setLocale = {},
         setCurrency = {},
@@ -702,7 +708,9 @@ fun TransactionsScreenPreview() {
         navigateToSettingsScreen = {},
         openGithubPage = {},
         events = emptyList<Event>().asFlow(),
-        state = TransactionsScreenState()
+        state = TransactionsScreenState(),
+        filtersState = FiltersState(),
+        sortOptionsState = SortOptionsScreenState()
     )
 }
 
@@ -737,6 +745,9 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         val uriHandler = LocalUriHandler.current
         val viewModel: TransactionsScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
+        val searchState by viewModel.searchState.collectAsState()
+        val filtersState by viewModel.filtersState.collectAsState()
+        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
 
         TransactionsScreen(
             canAddTransaction = viewModel::canAddTransaction,
@@ -750,6 +761,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
+            searchState = searchState,
             setSearchText = viewModel::setSearchText,
             setLocale = viewModel::setLocale,
             setCurrency = viewModel::setCurrency,
@@ -796,7 +808,9 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                 uriHandler.openUri("https://github.com/ThomasGRG/CashFlow/releases")
             },
             events = viewModel.event,
-            state = state
+            state = state,
+            filtersState = filtersState,
+            sortOptionsState = sortOptionsState
         )
     }
 }

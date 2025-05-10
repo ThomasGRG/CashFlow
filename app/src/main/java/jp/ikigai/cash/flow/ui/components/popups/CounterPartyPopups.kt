@@ -670,6 +670,280 @@ fun FilterCounterPartyPopup(
     }
 }
 
+@Composable
+fun FilterCounterPartyPopup(
+    selectedCounterPartyUUIDs: Set<String>,
+    includeTransactionsWithNoCounterParty: Boolean,
+    counterParties: List<CounterParty>,
+    filter: (Set<String>, Boolean) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val counterPartyList by remember {
+        mutableStateOf(
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.name, ""))
+            }
+        )
+    }
+
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
+        } else {
+            counterPartyList
+                .filter {
+                    it.first.name.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                }
+        }
+    }
+
+    var includeNoCounterPartyTransactions by remember(includeTransactionsWithNoCounterParty) {
+        mutableStateOf(includeTransactionsWithNoCounterParty)
+    }
+
+    val selectedCounterParties = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedCounterParties.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredCounterPartyList
+                .map { selectedCounterParties[it.first.uuid] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        counterParties.forEach { counterParty ->
+            selectedCounterParties[counterParty.uuid] =
+                selectedCounterPartyUUIDs.contains(counterParty.uuid)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 200.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredCounterPartyList,
+                key = { counterPartyPair -> "counterParty-${counterPartyPair.first.uuid}" }
+            ) { counterPartyPair ->
+                MultiSelectCard(
+                    checked = {
+                        selectedCounterParties.getOrDefault(counterPartyPair.first.uuid, true)
+                    },
+                    label = counterPartyPair.second,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedCounterParties[counterPartyPair.first.uuid] =
+                            !selectedCounterParties[counterPartyPair.first.uuid]!!
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    includeNoCounterPartyTransactions = !includeNoCounterPartyTransactions
+                }
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.no_counter_party_label),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .weight(1f, fill = false)
+            )
+            Switch(
+                checked = includeNoCounterPartyTransactions,
+                onCheckedChange = null,
+                thumbContent = {
+                    Icon(
+                        imageVector = if (includeNoCounterPartyTransactions) Icons.Filled.Check else Icons.Filled.Clear,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                    )
+                }
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
+                    filteredCounterPartyList
+                        .map { category -> category.first.uuid }
+                        .forEach { uuid -> selectedCounterParties[uuid] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredCounterPartyList.size
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    filter(
+                        selectedCounterParties.filter { entry -> entry.value }.keys,
+                        includeNoCounterPartyTransactions
+                    )
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0 || includeNoCounterPartyTransactions,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun SelectCounterPartyPopupPreview() {

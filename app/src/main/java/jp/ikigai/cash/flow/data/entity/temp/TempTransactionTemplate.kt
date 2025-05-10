@@ -1,8 +1,12 @@
 package jp.ikigai.cash.flow.data.entity.temp
 
 import io.realm.kotlin.types.RealmObject
+import io.realm.kotlin.types.annotations.PersistedName
 import io.realm.kotlin.types.annotations.PrimaryKey
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class TempTransactionTemplate() : RealmObject {
     @PrimaryKey
@@ -29,5 +33,14 @@ class TempTransactionTemplate() : RealmObject {
     var method: TempMethod? = null
     var source: TempSource? = null
     var frequency: Int = 0
-    var lastUsed: Long = 0L
+
+    @PersistedName("lastUsed")
+    private var _lastUsed: Long = 0L
+    var lastUsed: ZonedDateTime
+        get() {
+            return Instant.ofEpochMilli(_lastUsed).atZone(ZoneId.systemDefault())
+        }
+        set(value) {
+            _lastUsed = value.toInstant().toEpochMilli()
+        }
 }

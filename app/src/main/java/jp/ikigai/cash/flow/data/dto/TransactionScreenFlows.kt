@@ -4,7 +4,6 @@ import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.entity.CounterParty
 import jp.ikigai.cash.flow.data.entity.Method
 import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.entity.TransactionTemplate
 
 data class TransactionScreenFlows(
@@ -12,7 +11,5 @@ data class TransactionScreenFlows(
     val counterParties: List<CounterParty> = emptyList(),
     val methods: List<Method> = emptyList(),
     val sources: List<Source> = emptyList(),
-    val templates: List<TransactionTemplate> = emptyList(),
-    val balance: Double,
-    val transactions: List<Transaction> = emptyList()
+    val templates: List<TransactionTemplate> = emptyList()
 )

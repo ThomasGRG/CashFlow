@@ -630,6 +630,245 @@ fun FilterCategoryPopup(
     }
 }
 
+@Composable
+fun FilterCategoryPopup(
+    selectedCategoryUUIDs: Set<String>,
+    categories: List<Category>,
+    filter: (Set<String>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val categoryList by remember {
+        mutableStateOf(
+            categories.map { category ->
+                Pair(category, getHighlightedString(category.name, ""))
+            }
+        )
+    }
+
+    var filteredCategoryList by remember {
+        mutableStateOf(categoryList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredCategoryList = if (searchText.isBlank()) {
+            categoryList
+        } else {
+            categoryList
+                .filter {
+                    it.first.name.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                }
+        }
+    }
+
+    val selectedCategories = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedCategories.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredCategoryList
+                .map { selectedCategories[it.first.uuid] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        categories.forEach { category ->
+            selectedCategories[category.uuid] = selectedCategoryUUIDs.contains(category.uuid)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredCategoryList,
+                key = { categoryPair -> "category-${categoryPair.first.uuid}" }
+            ) { categoryPair ->
+                MultiSelectCard(
+                    checked = {
+                        selectedCategories.getOrDefault(categoryPair.first.uuid, true)
+                    },
+                    label = categoryPair.second,
+                    icon = categoryPair.first.icon,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedCategories[categoryPair.first.uuid] =
+                            !selectedCategories[categoryPair.first.uuid]!!
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.cancel_button_label)
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredCategoryList.size
+                    filteredCategoryList
+                        .map { category -> category.first.uuid }
+                        .forEach { uuid -> selectedCategories[uuid] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredCategoryList.size
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    filter(
+                        selectedCategories.filter { entry -> entry.value }.keys
+                    )
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun SelectCategoryPopupPreview() {

@@ -467,6 +467,251 @@ fun FilterSourcePopup(
     }
 }
 
+@Composable
+fun FilterSourcePopup(
+    selectedSourceUUIDs: Set<String>,
+    sources: List<Source>,
+    filter: (Set<String>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val sourceList by remember {
+        mutableStateOf(
+            sources.map { source ->
+                val highlightedString = getHighlightedString(source.name, "")
+                Pair(
+                    source,
+                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
+                )
+            }
+        )
+    }
+
+    var filteredSourceList by remember {
+        mutableStateOf(sourceList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredSourceList = if (searchText.isBlank()) {
+            sourceList
+        } else {
+            sourceList
+                .filter {
+                    it.first.name.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    val highlightedString = getHighlightedString(it.first.name, searchText)
+                    Pair(
+                        it.first,
+                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}")),
+                    )
+                }
+        }
+    }
+
+    val selectedSources = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedSources.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredSourceList
+                .map { selectedSources[it.first.uuid] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        sources.forEach { source ->
+            selectedSources[source.uuid] = selectedSourceUUIDs.contains(source.uuid)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+        ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {
+                    searchText = it
+                },
+                enabled = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester = focusRequester),
+                label = {
+                    Text(text = stringResource(id = R.string.search_field_label))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                ),
+                shape = RoundedCornerShape(14.dp),
+                interactionSource = interactionSource
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = 230.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredSourceList,
+                key = { sourcePair -> "source-${sourcePair.first.uuid}" }
+            ) { sourcePair ->
+                MultiSelectCard(
+                    checked = {
+                        selectedSources.getOrDefault(sourcePair.first.uuid, true)
+                    },
+                    label = sourcePair.second,
+                    icon = Constants.DEFAULT_SOURCE_ICON,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedSources[sourcePair.first.uuid] =
+                            !selectedSources[sourcePair.first.uuid]!!
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredSourceList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredSourceList.size
+                    filteredSourceList
+                        .map { category -> category.first.uuid }
+                        .forEach { uuid -> selectedSources[uuid] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredSourceList.size
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    filter(
+                        selectedSources.filter { entry -> entry.value }.keys
+                    )
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun SelectSourcePopupPreview() {

@@ -1,7 +1,6 @@
 package jp.ikigai.cash.flow.utils
 
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -78,8 +77,4 @@ fun ZonedDateTime.getDateString(pattern: String): String {
 
 fun ZonedDateTime.getTimeString(): String {
     return this.format(DateTimeFormatter.ofPattern("hh:mm a"))
-}
-
-fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 }

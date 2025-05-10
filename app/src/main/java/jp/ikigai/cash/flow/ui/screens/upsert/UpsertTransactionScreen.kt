@@ -83,7 +83,6 @@ import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
-import jp.ikigai.cash.flow.utils.toZonedDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -614,7 +613,7 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = date,
                     hasValueChanged = {
-                        val initialDate = transaction.time.toZonedDateTime().toLocalDate()
+                        val initialDate = transaction.time.toLocalDate()
                         transaction.uuid.isNotEmpty() && (!dateTime.toLocalDate()
                             .equals(initialDate))
                     },
@@ -636,7 +635,7 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = time,
                     hasValueChanged = {
-                        val initialDateTime = transaction.time.toZonedDateTime()
+                        val initialDateTime = transaction.time
                         transaction.uuid.isNotEmpty() && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
                     },
                     label = stringResource(id = R.string.time_field_label),
