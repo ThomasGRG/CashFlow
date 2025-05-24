@@ -25,23 +25,23 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.BuildingBank
 import compose.icons.tablericons.ChartLine
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.dto.AccountListingDTO
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.SourceListingDTO
 import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TransactionSourceCard(
+fun AccountCard(
     modifier: Modifier,
-    data: SourceListingDTO,
-    onClick: (String) -> Unit,
+    data: AccountListingDTO,
+    onClick: (Long) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
     ElevatedCard(
         onClick = {
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            onClick(data.uuid)
+            onClick(data.id)
         },
         modifier = modifier
             .fillMaxWidth(),
@@ -111,10 +111,10 @@ fun TransactionSourceCardPreview() {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        TransactionSourceCard(
+        AccountCard(
             modifier = Modifier,
-            data = SourceListingDTO(
-                uuid = "",
+            data = AccountListingDTO(
+                id = 0L,
                 annotatedName = AnnotatedString("Food & Drinks"),
                 icon = TablerIcons.BuildingBank,
                 currency = "INR",

@@ -34,25 +34,25 @@ fun NavGraphBuilder.animatedComposable(
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         exitTransition = {
             slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         popEnterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         popExitTransition = {
             slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         }
     ) {

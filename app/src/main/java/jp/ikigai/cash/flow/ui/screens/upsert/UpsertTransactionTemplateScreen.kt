@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,12 +48,12 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -60,10 +61,10 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectAccountPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
@@ -80,13 +81,14 @@ import java.util.Locale
 @Composable
 fun UpsertTransactionTemplateScreen(
     navigateBack: () -> Unit,
+    checkNameAlreadyInUse: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     setAmount: (String) -> Unit,
+    setSelectedAccount: (Account) -> Unit,
     setSelectedCategory: (Category) -> Unit,
     setSelectedCounterParty: (CounterParty) -> Unit,
     setSelectedMethod: (Method) -> Unit,
-    setSelectedSource: (Source) -> Unit,
     setTransactionType: (TransactionType) -> Unit,
     upsertTransactionTemplate: (String, String, String) -> Unit,
     deleteTransactionTemplate: () -> Unit,
@@ -139,6 +141,10 @@ fun UpsertTransactionTemplateScreen(
         }
     }
 
+    val accounts by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts)
+    }
+
     val categories by remember(key1 = state.categories) {
         mutableStateOf(state.categories)
     }
@@ -151,16 +157,17 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.methods)
     }
 
-    val sources by remember(key1 = state.sources) {
-        mutableStateOf(state.sources)
-    }
-
-    val transactionTemplateUuid by remember(key1 = state.transactionTemplate) {
-        mutableStateOf(state.transactionTemplate.uuid)
+    val transactionTemplateId by remember(key1 = state.transactionTemplate) {
+        mutableLongStateOf(state.transactionTemplate.id)
     }
 
     val name by remember(key1 = state.name) {
         mutableStateOf(state.name)
+    }
+
+    LaunchedEffect(key1 = state.name) {
+        delay(250L)
+        checkNameAlreadyInUse(state.name)
     }
 
     val nameValid by remember(key1 = state.nameValid) {
@@ -193,6 +200,10 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.displayAmount)
     }
 
+    val selectedAccount by remember(key1 = state.selectedAccount) {
+        mutableStateOf(state.selectedAccount)
+    }
+
     val selectedCategory by remember(key1 = state.selectedCategory) {
         mutableStateOf(state.selectedCategory)
     }
@@ -205,10 +216,6 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.selectedMethod)
     }
 
-    val selectedSource by remember(key1 = state.selectedSource) {
-        mutableStateOf(state.selectedSource)
-    }
-
     val transactionType by remember(key1 = state.type) {
         mutableStateOf(state.type)
     }
@@ -218,7 +225,7 @@ fun UpsertTransactionTemplateScreen(
     }
 
     BackHandler {
-        if (hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
+        if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -250,16 +257,10 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
-                        index = categories.indexOfFirst { it.uuid == selectedCategory.uuid }
+                        index = categories.indexOfFirst { it.id == selectedCategory.id }
                             .coerceAtLeast(0),
-                        selectedCategoryUUID = selectedCategory.uuid,
-                        setSelectedCategory = { category ->
-                            if (category.uuid == selectedCategory.uuid) {
-                                setSelectedCategory(Category())
-                            } else {
-                                setSelectedCategory(category)
-                            }
-                        },
+                        selectedCategoryId = selectedCategory.id,
+                        setSelectedCategory = setSelectedCategory,
                         categories = categories,
                         dismiss = hidePopup
                     )
@@ -267,9 +268,9 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
-                        index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
+                        index = counterParties.indexOfFirst { it.id == selectedCounterParty.id }
                             .coerceAtLeast(0),
-                        selectedCounterPartyUUID = selectedCounterParty.uuid,
+                        selectedCounterPartyId = selectedCounterParty.id,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
                         dismiss = hidePopup
@@ -278,34 +279,22 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.METHOD -> {
                     SelectMethodPopup(
-                        index = methods.indexOfFirst { it.uuid == selectedMethod.uuid }
+                        index = methods.indexOfFirst { it.id == selectedMethod.id }
                             .coerceAtLeast(0),
-                        selectedMethodUUID = selectedMethod.uuid,
-                        setSelectedMethod = { method ->
-                            if (method.uuid == selectedMethod.uuid) {
-                                setSelectedMethod(Method())
-                            } else {
-                                setSelectedMethod(method)
-                            }
-                        },
+                        selectedMethodId = selectedMethod.id,
+                        setSelectedMethod = setSelectedMethod,
                         methods = methods,
                         dismiss = hidePopup
                     )
                 }
 
-                PopupType.SOURCE -> {
-                    SelectSourcePopup(
-                        index = sources.indexOfFirst { it.uuid == selectedSource.uuid }
+                PopupType.ACCOUNT -> {
+                    SelectAccountPopup(
+                        index = accounts.indexOfFirst { it.id == selectedAccount.id }
                             .coerceAtLeast(0),
-                        selectedSourceUUID = selectedSource.uuid,
-                        setSelectedSource = { source ->
-                            if (source.uuid == selectedSource.uuid) {
-                                setSelectedSource(Source())
-                            } else {
-                                setSelectedSource(source)
-                            }
-                        },
-                        sources = sources,
+                        selectedAccountId = selectedAccount.id,
+                        setSelectedAccount = setSelectedAccount,
+                        accounts = accounts,
                         dismiss = hidePopup
                     )
                 }
@@ -339,7 +328,7 @@ fun UpsertTransactionTemplateScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (transactionTemplateUuid.isBlank()) {
+                    if (transactionTemplateId == 0L) {
                         Text(text = stringResource(id = R.string.create_template_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_template_label))
@@ -351,7 +340,7 @@ fun UpsertTransactionTemplateScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
+                    if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
                         popupType = PopupType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -373,7 +362,7 @@ fun UpsertTransactionTemplateScreen(
                         )
                     }
                 },
-                extraButtonIcon = if (transactionTemplateUuid.isNotBlank()) {
+                extraButtonIcon = if (transactionTemplateId > 0) {
                     {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
@@ -381,7 +370,7 @@ fun UpsertTransactionTemplateScreen(
                         )
                     }
                 } else null,
-                extraButtonAction = if (transactionTemplateUuid.isNotBlank() && enabled) {
+                extraButtonAction = if (transactionTemplateId > 0 && enabled) {
                     {
                         popupType = PopupType.CONFIRM_DELETE
                     }
@@ -565,22 +554,22 @@ fun UpsertTransactionTemplateScreen(
                 )
             }
             item(
-                key = "source",
+                key = "account",
                 contentType = "dropDown"
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = if (selectedSource.uuid.isNotEmpty()) "${selectedSource.name} - ${selectedSource.displayBalance}" else "",
-                    label = stringResource(id = R.string.source_field_label),
-                    placeHolder = stringResource(id = R.string.select_source_placeholder_label),
-                    leadingIcon = Constants.DEFAULT_SOURCE_ICON,
+                    value = if (selectedAccount.id > 0) "${selectedAccount.name} - ${selectedAccount.formattedBalance}" else "",
+                    label = stringResource(id = R.string.account_field_label),
+                    placeHolder = stringResource(id = R.string.select_account_placeholder_label),
+                    leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedSource(Source())
+                        setSelectedAccount(Account(currency = "INR"))
                     },
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.SOURCE
+                        popupType = PopupType.ACCOUNT
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -594,13 +583,14 @@ fun UpsertTransactionTemplateScreen(
 fun UpsertTransactionTemplateScreenPreview() {
     UpsertTransactionTemplateScreen(
         navigateBack = {},
+        checkNameAlreadyInUse = {},
         setLocale = {},
         setName = {},
         setAmount = {},
+        setSelectedAccount = {},
         setSelectedCategory = {},
         setSelectedCounterParty = {},
         setSelectedMethod = {},
-        setSelectedSource = {},
         setTransactionType = {},
         upsertTransactionTemplate = { _, _, _ -> },
         deleteTransactionTemplate = {},
@@ -615,8 +605,8 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
         Routes.UpsertTemplate.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         )
     ) {
@@ -627,13 +617,14 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             navigateBack = {
                 navController.popBackStack()
             },
+            checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setLocale = viewModel::setLocale,
             setName = viewModel::setName,
             setAmount = viewModel::setAmount,
+            setSelectedAccount = viewModel::setSelectedAccount,
             setSelectedCategory = viewModel::setSelectedCategory,
             setSelectedCounterParty = viewModel::setSelectedCounterParty,
             setSelectedMethod = viewModel::setSelectedMethod,
-            setSelectedSource = viewModel::setSelectedSource,
             setTransactionType = viewModel::setTransactionType,
             upsertTransactionTemplate = viewModel::upsertTransactionTemplate,
             deleteTransactionTemplate = viewModel::deleteTransactionTemplate,

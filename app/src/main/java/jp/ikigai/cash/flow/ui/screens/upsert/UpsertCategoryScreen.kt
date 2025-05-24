@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -79,7 +80,8 @@ import java.util.Locale
 @Composable
 fun UpsertCategoryScreen(
     navigateBack: () -> Unit,
-    migrateTransactions: (String) -> Unit,
+    migrateTransactions: (Long) -> Unit,
+    checkNameAlreadyInUse: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     setIcon: (ImageVector) -> Unit,
@@ -118,6 +120,11 @@ fun UpsertCategoryScreen(
         mutableStateOf(state.name)
     }
 
+    LaunchedEffect(key1 = state.name) {
+        delay(250L)
+        checkNameAlreadyInUse(state.name)
+    }
+
     val nameValid by remember(key1 = state.nameValid) {
         mutableStateOf(state.nameValid)
     }
@@ -131,11 +138,15 @@ fun UpsertCategoryScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableStateOf(state.transactionCount)
+        mutableIntStateOf(state.transactionCount)
     }
 
-    val categoryUuid by remember(key1 = state.category) {
-        mutableStateOf(state.category.uuid)
+    val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
+        mutableStateOf(state.formattedTransactionCount)
+    }
+
+    val categoryId by remember(key1 = state.category) {
+        mutableLongStateOf(state.category.id)
     }
 
     var popupType by remember {
@@ -167,7 +178,7 @@ fun UpsertCategoryScreen(
     }
 
     BackHandler {
-        if (state.category.name != state.name || state.category.icon != selectedIcon) {
+        if (enabled && (state.category.name != state.name || state.category.icon != selectedIcon)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -211,7 +222,7 @@ fun UpsertCategoryScreen(
                         message = stringResource(id = R.string.category_transactions_deletion_warning_label),
                         delete = deleteCategory,
                         migrate = {
-                            migrateTransactions(categoryUuid)
+                            migrateTransactions(categoryId)
                         },
                         dismiss = hidePopup
                     )
@@ -243,7 +254,7 @@ fun UpsertCategoryScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (categoryUuid.isBlank()) {
+                    if (categoryId == 0L) {
                         Text(text = stringResource(id = R.string.create_category_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_category_label))
@@ -253,7 +264,7 @@ fun UpsertCategoryScreen(
         },
         bottomBar = {
             Column {
-                if (transactionCount.isNotEmpty()) {
+                if (transactionCount > 0) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -262,7 +273,7 @@ fun UpsertCategoryScreen(
                         FilledTonalButton(
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                migrateTransactions(categoryUuid)
+                                migrateTransactions(categoryId)
                             },
                             contentPadding = PaddingValues(0.dp),
                             shape = MaterialTheme.shapes.small
@@ -270,7 +281,7 @@ fun UpsertCategoryScreen(
                             Text(
                                 text = stringResource(
                                     id = R.string.migrate_transactions_chip_label,
-                                    transactionCount
+                                    formattedTransactionCount
                                 ),
                                 modifier = Modifier.padding(10.dp),
                             )
@@ -280,7 +291,7 @@ fun UpsertCategoryScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.category.name != state.name || state.category.icon != selectedIcon) {
+                        if (enabled && (state.category.name != state.name || state.category.icon != selectedIcon)) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -298,7 +309,7 @@ fun UpsertCategoryScreen(
                             upsertCategory(selectedIcon, name.trim())
                         }
                     },
-                    extraButtonIcon = if (categoryUuid.isNotBlank()) {
+                    extraButtonIcon = if (categoryId > 0) {
                         {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
@@ -306,9 +317,9 @@ fun UpsertCategoryScreen(
                             )
                         }
                     } else null,
-                    extraButtonAction = if (categoryUuid.isNotBlank() && enabled) {
+                    extraButtonAction = if (categoryId > 0 && enabled) {
                         {
-                            popupType = if (transactionCount.isNotEmpty()) {
+                            popupType = if (transactionCount > 0) {
                                 PopupType.WARN_DELETE
                             } else {
                                 PopupType.CONFIRM_DELETE
@@ -383,6 +394,7 @@ fun UpsertCategoryScreenPreview() {
     UpsertCategoryScreen(
         navigateBack = {},
         migrateTransactions = {},
+        checkNameAlreadyInUse = {},
         setLocale = {},
         setName = {},
         setIcon = {},
@@ -398,8 +410,8 @@ fun NavGraphBuilder.upsertCategoryScreen(navController: NavController) {
         route = Routes.UpsertCategory.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         )
     ) {
@@ -410,11 +422,12 @@ fun NavGraphBuilder.upsertCategoryScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
-            migrateTransactions = { uuid ->
-                navController.navigate(Routes.MigrateCategory.getRoute(uuid)) {
+            migrateTransactions = { id ->
+                navController.navigate(Routes.MigrateCategory.getRoute(id)) {
                     launchSingleTop = true
                 }
             },
+            checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setLocale = viewModel::setLocale,
             setName = viewModel::setName,
             setIcon = viewModel::setIcon,

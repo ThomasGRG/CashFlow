@@ -34,19 +34,19 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 
 @Composable
 fun TransactionScreenRoundedBottomBar(
     selectedCurrencySymbol: String,
-    sortDirection: Sort,
+    sortFlags: Int,
     filterAmount: String,
+    selectedAccountCount: String,
     selectedCategoryCount: String,
     selectedCounterPartyCount: String,
     counterPartyFilterVisible: Boolean,
     selectedMethodCount: String,
-    selectedSourceCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
@@ -82,7 +82,7 @@ fun TransactionScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortDirection == Sort.DESCENDING) {
+                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending
@@ -183,8 +183,8 @@ fun TransactionScreenRoundedBottomBar(
             ) {
                 Text(
                     text = stringResource(
-                        id = R.string.source_filter_chip_label,
-                        selectedSourceCount
+                        id = R.string.account_filter_chip_label,
+                        selectedAccountCount
                     ),
                     modifier = Modifier.padding(10.dp),
                 )
@@ -271,13 +271,13 @@ fun TransactionScreenRoundedBottomBar(
 fun TransactionScreenRoundedBottomBarPreview() {
     TransactionScreenRoundedBottomBar(
         selectedCurrencySymbol = Currency.getInstance("INR").symbol,
-        sortDirection = Sort.DESCENDING,
+        sortFlags = QueryBuilder.DESCENDING,
         filterAmount = "3000+",
         counterPartyFilterVisible = true,
+        selectedAccountCount = "1",
         selectedCategoryCount = "1",
         selectedCounterPartyCount = "1",
         selectedMethodCount = "1",
-        selectedSourceCount = "1",
         selectedTransactionTypeCount = 2,
         onSortClick = {},
         onFilterByAmountClick = {},

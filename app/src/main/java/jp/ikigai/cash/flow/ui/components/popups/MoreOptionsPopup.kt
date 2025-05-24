@@ -152,7 +152,7 @@ fun MoreOptionsPopup(
                     contentDescription = TablerIcons.BuildingBank.name
                 )
                 Text(
-                    text = stringResource(id = R.string.sources_label),
+                    text = stringResource(id = R.string.accounts_label),
                     style = MaterialTheme.typography.titleMedium
                 )
             }

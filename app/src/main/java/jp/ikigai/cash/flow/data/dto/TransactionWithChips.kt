@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import jp.ikigai.cash.flow.data.Constants
 
-data class TransactionWithIcons(
-    val uuid: String = "",
+data class TransactionWithChips(
+    val id: Long = 0L,
     val annotatedTitle: AnnotatedString = AnnotatedString(""),
     val annotatedDescription: AnnotatedString = AnnotatedString(""),
     val amount: String,

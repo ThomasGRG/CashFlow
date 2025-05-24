@@ -33,14 +33,14 @@ import jp.ikigai.cash.flow.ui.components.common.CustomChip
 fun InfoCard(
     modifier: Modifier,
     data: CommonListingDTO,
-    onClick: (String) -> Unit,
+    onClick: (Long) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
     ElevatedCard(
         onClick = {
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            onClick(data.uuid)
+            onClick(data.id)
         },
         modifier = modifier
             .fillMaxWidth()
@@ -96,7 +96,7 @@ fun InfoCardPreview() {
         InfoCard(
             modifier = Modifier,
             data = CommonListingDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Food & Drinks"),
                 icon = TablerIcons.Archive,
                 chips = listOf(
@@ -117,7 +117,7 @@ fun InfoCardPreview() {
         InfoCard(
             modifier = Modifier,
             data = CommonListingDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Food & Drinks ae fef a efa ef ae gae gae afe"),
                 icon = TablerIcons.Archive,
                 chips = listOf(
@@ -138,7 +138,7 @@ fun InfoCardPreview() {
         InfoCard(
             modifier = Modifier,
             data = CommonListingDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Food & Drinksasdgefeadedawdawdesfaedaefgawdaefe"),
                 icon = TablerIcons.Archive,
                 chips = listOf(

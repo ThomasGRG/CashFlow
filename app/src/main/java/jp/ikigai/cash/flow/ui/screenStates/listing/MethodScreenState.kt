@@ -5,7 +5,7 @@ import java.util.Locale
 
 data class MethodScreenState(
     val methods: List<CommonListingDTO> = emptyList(),
-    val count: Long = 0,
+    val count: Int = 0,
     val countString: String = "",
     val loading: Boolean = true,
     val locale: Locale? = null

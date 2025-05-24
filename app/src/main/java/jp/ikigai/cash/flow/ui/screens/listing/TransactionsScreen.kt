@@ -42,6 +42,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,12 +65,14 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import io.realm.kotlin.query.Sort
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.BottomPopup
@@ -79,14 +83,14 @@ import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.CloneTransactionPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterAccountPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.MoreOptionsPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTemplatePopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
@@ -102,21 +106,21 @@ import java.util.Locale
 @Composable
 fun TransactionsScreen(
     canAddTransaction: () -> Boolean,
-    addTransaction: (String) -> Unit,
-    editTransaction: (String) -> Unit,
+    addTransaction: (Long) -> Unit,
+    editTransaction: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setCurrency: (String) -> Unit,
     setStartDateAndEndDate: (ZonedDateTime, ZonedDateTime) -> Unit,
-    setSelectedCategories: (Map<String, Boolean>) -> Unit,
-    setSelectedCounterParties: (Boolean, Map<String, Boolean>) -> Unit,
-    setSelectedMethods: (Map<String, Boolean>) -> Unit,
-    setSelectedSources: (Map<String, Boolean>) -> Unit,
+    setSelectedAccounts: (Map<Long, Boolean>) -> Unit,
+    setSelectedCategories: (Map<Long, Boolean>) -> Unit,
+    setSelectedCounterParties: (Map<Long, Boolean>) -> Unit,
+    setSelectedMethods: (Map<Long, Boolean>) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
-    setSortDirection: (Sort) -> Unit,
+    setSortFlags: (Int) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
-    cloneTransaction: (String, Boolean) -> Unit,
+    cloneTransaction: (Long, Boolean) -> Unit,
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
@@ -127,7 +131,7 @@ fun TransactionsScreen(
     events: Flow<Event>,
     state: TransactionsScreenState,
     filtersState: FiltersState,
-    sortOptionsState: SortOptionsScreenState
+    sortOptionsState: SortOptionsState<Transaction>
 ) {
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
@@ -242,6 +246,18 @@ fun TransactionsScreen(
         mutableStateOf(state.incomeTransactionsCount)
     }
 
+    val accounts by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts)
+    }
+
+    val selectedAccounts by remember(key1 = filtersState.selectedAccounts) {
+        mutableStateOf(filtersState.selectedAccounts)
+    }
+
+    val selectedAccountCount by remember(key1 = filtersState.selectedAccountCount) {
+        mutableStateOf(filtersState.selectedAccountCount)
+    }
+
     val categories by remember(key1 = state.categories) {
         mutableStateOf(state.categories)
     }
@@ -256,10 +272,6 @@ fun TransactionsScreen(
 
     val counterParties by remember(key1 = state.counterParties) {
         mutableStateOf(state.counterParties)
-    }
-
-    val includeNoCounterPartyTransactions by remember(key1 = filtersState.includeNoCounterPartyTransactions) {
-        mutableStateOf(filtersState.includeNoCounterPartyTransactions)
     }
 
     val selectedCounterParties by remember(key1 = filtersState.selectedCounterParties) {
@@ -282,18 +294,6 @@ fun TransactionsScreen(
         mutableStateOf(filtersState.selectedMethodCount)
     }
 
-    val sources by remember(key1 = state.sources) {
-        mutableStateOf(state.sources)
-    }
-
-    val selectedSources by remember(key1 = filtersState.selectedSources) {
-        mutableStateOf(filtersState.selectedSources)
-    }
-
-    val selectedSourceCount by remember(key1 = filtersState.selectedSourceCount) {
-        mutableStateOf(filtersState.selectedSourceCount)
-    }
-
     val selectedTransactionTypes by remember(key1 = filtersState.selectedTransactionTypes) {
         mutableStateOf(filtersState.selectedTransactionTypes)
     }
@@ -310,12 +310,12 @@ fun TransactionsScreen(
         mutableStateOf(filtersState.filterAmountRange)
     }
 
-    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
-        mutableStateOf(sortOptionsState.sortDirection)
+    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
+        mutableIntStateOf(sortOptionsState.sortFlags)
     }
 
-    var selectedTransactionUUID by remember {
-        mutableStateOf("")
+    var selectedTransactionId by remember {
+        mutableLongStateOf(0L)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -347,18 +347,18 @@ fun TransactionsScreen(
                 TransactionScreenRoundedBottomBar(
                     selectedCurrencySymbol = selectedCurrencySymbol,
                     filterAmount = filterAmountRange,
-                    sortDirection = sortDirection,
+                    sortFlags = sortFlags,
+                    selectedAccountCount = selectedAccountCount,
                     selectedCategoryCount = selectedCategoryCount,
                     selectedCounterPartyCount = selectedCounterPartyCount,
                     counterPartyFilterVisible = counterParties.isNotEmpty(),
                     selectedMethodCount = selectedMethodCount,
-                    selectedSourceCount = selectedSourceCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
                     onSortClick = {
-                        if (sortDirection == Sort.DESCENDING) {
-                            setSortDirection(Sort.ASCENDING)
+                        if (sortFlags == QueryBuilder.DESCENDING) {
+                            setSortFlags(0)
                         } else {
-                            setSortDirection(Sort.DESCENDING)
+                            setSortFlags(QueryBuilder.DESCENDING)
                         }
                     },
                     onFilterByAmountClick = {
@@ -377,7 +377,7 @@ fun TransactionsScreen(
                         popupType = PopupType.METHOD
                     },
                     onFilterBySourceClick = {
-                        popupType = PopupType.SOURCE
+                        popupType = PopupType.ACCOUNT
                     },
                     onCurrencyClick = {
                         popupType = PopupType.CURRENCY
@@ -388,7 +388,7 @@ fun TransactionsScreen(
                     addTransaction = {
                         if (canAddTransaction()) {
                             if (templates.isEmpty()) {
-                                addTransaction("")
+                                addTransaction(0L)
                             } else {
                                 popupType = PopupType.TEMPLATES
                             }
@@ -508,17 +508,17 @@ fun TransactionsScreen(
                             }
                             items(
                                 items = it.value.transactions,
-                                key = { transactionWithIcons -> transactionWithIcons.uuid }
-                            ) { transactionWithIcons ->
+                                key = { transactionWithChips -> transactionWithChips.id }
+                            ) { transactionWithChips ->
                                 TransactionCard(
-                                    transactionWithIcons = transactionWithIcons,
-                                    onClick = {
+                                    transactionWithChips = transactionWithChips,
+                                    onClick = { id ->
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        editTransaction(transactionWithIcons.uuid)
+                                        editTransaction(id)
                                     },
-                                    onLongClick = {
+                                    onLongClick = { id ->
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        selectedTransactionUUID = transactionWithIcons.uuid
+                                        selectedTransactionId = id
                                         popupType = PopupType.CLONE_TRANSACTION
                                     },
                                     modifier = Modifier.animateItem()
@@ -622,7 +622,6 @@ fun TransactionsScreen(
 
                     PopupType.COUNTERPARTY -> {
                         FilterCounterPartyPopup(
-                            includeTransactionsWithNoCounterParty = includeNoCounterPartyTransactions,
                             selectedCounterPartyMap = selectedCounterParties,
                             filter = setSelectedCounterParties,
                             counterParties = counterParties,
@@ -639,11 +638,11 @@ fun TransactionsScreen(
                         )
                     }
 
-                    PopupType.SOURCE -> {
-                        FilterSourcePopup(
-                            selectedSourcesMap = selectedSources,
-                            filter = setSelectedSources,
-                            sources = sources,
+                    PopupType.ACCOUNT -> {
+                        FilterAccountPopup(
+                            selectedAccountsMap = selectedAccounts,
+                            filter = setSelectedAccounts,
+                            accounts = accounts,
                             dismiss = hidePopup
                         )
                     }
@@ -667,7 +666,7 @@ fun TransactionsScreen(
                     PopupType.CLONE_TRANSACTION -> {
                         CloneTransactionPopup(
                             cloneTransaction = { setCurrentDateTime ->
-                                cloneTransaction(selectedTransactionUUID, setCurrentDateTime)
+                                cloneTransaction(selectedTransactionId, setCurrentDateTime)
                             },
                             dismiss = hidePopup
                         )
@@ -692,12 +691,12 @@ fun TransactionsScreenPreview() {
         setLocale = {},
         setCurrency = {},
         setStartDateAndEndDate = { _, _ -> },
+        setSelectedAccounts = {},
         setSelectedCategories = {},
-        setSelectedCounterParties = { _, _ -> },
+        setSelectedCounterParties = {},
         setSelectedMethods = {},
-        setSelectedSources = {},
         setSelectedTransactionTypes = {},
-        setSortDirection = {},
+        setSortFlags = {},
         filterByAmount = { _, _ -> },
         cloneTransaction = { _, _ -> },
         navigateToCategoriesScreen = {},
@@ -710,7 +709,7 @@ fun TransactionsScreenPreview() {
         events = emptyList<Event>().asFlow(),
         state = TransactionsScreenState(),
         filtersState = FiltersState(),
-        sortOptionsState = SortOptionsScreenState()
+        sortOptionsState = SortOptionsState(sortField = Transaction_.time)
     )
 }
 
@@ -720,25 +719,25 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         enterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         exitTransition = {
             slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         popEnterTransition = {
             slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         },
         popExitTransition = {
             slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.tweenDuration)
+                animationSpec = tween(Constants.TWEEN_DURATION)
             )
         }
     ) {
@@ -766,12 +765,12 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             setLocale = viewModel::setLocale,
             setCurrency = viewModel::setCurrency,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
+            setSelectedAccounts = viewModel::setSelectedAccounts,
             setSelectedCategories = viewModel::setSelectedCategories,
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
-            setSelectedSources = viewModel::setSelectedSources,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
-            setSortDirection = viewModel::setSortDirection,
+            setSortFlags = viewModel::setSortFlags,
             filterByAmount = viewModel::setFilterAmounts,
             cloneTransaction = viewModel::cloneTransaction,
             navigateToMethodsScreen = {
@@ -780,7 +779,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                 }
             },
             navigateToSourcesScreen = {
-                navController.navigate(Routes.Sources.route) {
+                navController.navigate(Routes.Accounts.route) {
                     launchSingleTop = true
                 }
             },

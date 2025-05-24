@@ -48,22 +48,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.entity.Source
+import jp.ikigai.cash.flow.data.store.entity.Account
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
 
 @Composable
-fun SelectSourcePopup(
+fun SelectAccountPopup(
     index: Int,
-    selectedSourceUUID: String,
-    setSelectedSource: (Source) -> Unit,
-    sources: List<Source>,
+    selectedAccountId: Long,
+    setSelectedAccount: (Account) -> Unit,
+    accounts: List<Account>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -83,20 +82,20 @@ fun SelectSourcePopup(
         mutableStateOf("")
     }
 
-    val sourceList by remember {
+    val accountList by remember {
         mutableStateOf(
-            sources.map { source ->
-                val highlightedString = getHighlightedString(source.name, "")
+            accounts.map { account ->
+                val highlightedString = getHighlightedString(account.name, "")
                 Pair(
-                    source,
-                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
+                    account,
+                    highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
                 )
             }
         )
     }
 
-    var filteredSourceList by remember {
-        mutableStateOf(sourceList)
+    var filteredAccountList by remember {
+        mutableStateOf(accountList)
     }
 
     val listState = rememberLazyListState()
@@ -106,10 +105,10 @@ fun SelectSourcePopup(
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredSourceList = if (searchText.isBlank()) {
-            sourceList
+        filteredAccountList = if (searchText.isBlank()) {
+            accountList
         } else {
-            sourceList
+            accountList
                 .filter {
                     it.first.name.contains(
                         searchText,
@@ -120,7 +119,7 @@ fun SelectSourcePopup(
                     val highlightedString = getHighlightedString(it.first.name, searchText)
                     Pair(
                         it.first,
-                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}"))
+                        highlightedString.plus(AnnotatedString(" - ${it.first.formattedBalance}"))
                     )
                 }
         }
@@ -172,17 +171,17 @@ fun SelectSourcePopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredSourceList,
-                key = { sourcePair -> "source-${sourcePair.first.uuid}" }
-            ) { sourcePair ->
+                items = filteredAccountList,
+                key = { (account, _) -> "account-${account.id}" }
+            ) { (account, annotatedName) ->
                 SelectableCard(
-                    checked = { sourcePair.first.uuid == selectedSourceUUID },
-                    label = sourcePair.second,
-                    icon = Constants.DEFAULT_SOURCE_ICON,
+                    checked = { account.id == selectedAccountId },
+                    label = annotatedName,
+                    icon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
-                        setSelectedSource(sourcePair.first)
+                        setSelectedAccount(account)
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -227,10 +226,10 @@ fun SelectSourcePopup(
 }
 
 @Composable
-fun FilterSourcePopup(
-    selectedSourcesMap: Map<String, Boolean>,
-    sources: List<Source>,
-    filter: (Map<String, Boolean>) -> Unit,
+fun FilterAccountPopup(
+    selectedAccountsMap: Map<Long, Boolean>,
+    accounts: List<Account>,
+    filter: (Map<Long, Boolean>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -250,64 +249,64 @@ fun FilterSourcePopup(
         mutableStateOf("")
     }
 
-    val sourceList by remember {
+    val accountList by remember {
         mutableStateOf(
-            sources.map { source ->
-                val highlightedString = getHighlightedString(source.name, "")
+            accounts.map { account ->
+                val highlightedString = getHighlightedString(account.name, "")
                 Pair(
-                    source,
-                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
+                    account,
+                    highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
                 )
             }
         )
     }
 
-    var filteredSourceList by remember {
-        mutableStateOf(sourceList)
+    var filteredAccountList by remember {
+        mutableStateOf(accountList)
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredSourceList = if (searchText.isBlank()) {
-            sourceList
+        filteredAccountList = if (searchText.isBlank()) {
+            accountList
         } else {
-            sourceList
-                .filter {
-                    it.first.name.contains(
+            accountList
+                .filter { (account, _) ->
+                    account.name.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map {
-                    val highlightedString = getHighlightedString(it.first.name, searchText)
+                .map { (account, _) ->
+                    val highlightedString = getHighlightedString(account.name, searchText)
                     Pair(
-                        it.first,
-                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}")),
+                        account,
+                        highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}")),
                     )
                 }
         }
     }
 
-    val selectedSources = remember {
-        mutableStateMapOf<String, Boolean>()
+    val selectedAccounts = remember {
+        mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
         derivedStateOf {
-            selectedSources.filter { it.value }.size
+            selectedAccounts.filter { it.value }.size
         }
     }
 
     val filteredListSelectedCount by remember {
         derivedStateOf {
-            filteredSourceList
-                .map { selectedSources[it.first.uuid] }
+            filteredAccountList
+                .map { (account, _) -> selectedAccounts[account.id] }
                 .filter { it == true }
                 .size
         }
     }
 
     LaunchedEffect(Unit) {
-        selectedSources.putAll(selectedSourcesMap)
+        selectedAccounts.putAll(selectedAccountsMap)
     }
 
     Column(
@@ -355,24 +354,23 @@ fun FilterSourcePopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredSourceList,
-                key = { sourcePair -> "source-${sourcePair.first.uuid}" }
-            ) { sourcePair ->
+                items = filteredAccountList,
+                key = { (account, _) -> "account-${account.id}" }
+            ) { (account, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedSources.getOrDefault(sourcePair.first.uuid, true)
+                        selectedAccounts.getOrDefault(account.id, true)
                     },
-                    label = sourcePair.second,
-                    icon = Constants.DEFAULT_SOURCE_ICON,
+                    label = annotatedName,
+                    icon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedSources[sourcePair.first.uuid] =
-                            !selectedSources[sourcePair.first.uuid]!!
+                        selectedAccounts[account.id] = !selectedAccounts[account.id]!!
                     },
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredSourceList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -413,10 +411,10 @@ fun FilterSourcePopup(
             FilledTonalIconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val allSelected = filteredListSelectedCount == filteredSourceList.size
-                    filteredSourceList
-                        .map { category -> category.first.uuid }
-                        .forEach { uuid -> selectedSources[uuid] = !allSelected }
+                    val allSelected = filteredListSelectedCount == filteredAccountList.size
+                    filteredAccountList
+                        .map { (account, _) -> account.id }
+                        .forEach { id -> selectedAccounts[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -424,7 +422,7 @@ fun FilterSourcePopup(
                 shape = RoundedCornerShape(35)
             ) {
                 AnimatedToggleSelectIcon(
-                    deselectVisible = filteredListSelectedCount == filteredSourceList.size
+                    deselectVisible = filteredListSelectedCount == filteredAccountList.size
                 )
             }
             FilledTonalIconButton(
@@ -447,7 +445,7 @@ fun FilterSourcePopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    filter(selectedSources)
+                    filter(selectedAccounts)
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -468,10 +466,10 @@ fun FilterSourcePopup(
 }
 
 @Composable
-fun FilterSourcePopup(
-    selectedSourceUUIDs: Set<String>,
-    sources: List<Source>,
-    filter: (Set<String>) -> Unit,
+fun FilterAccountPopup(
+    selectedAccountIds: Set<Long>,
+    accounts: List<Account>,
+    filter: (Set<Long>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -491,65 +489,65 @@ fun FilterSourcePopup(
         mutableStateOf("")
     }
 
-    val sourceList by remember {
+    val accountList by remember {
         mutableStateOf(
-            sources.map { source ->
-                val highlightedString = getHighlightedString(source.name, "")
+            accounts.map { account ->
+                val highlightedString = getHighlightedString(account.name, "")
                 Pair(
-                    source,
-                    highlightedString.plus(AnnotatedString(" - ${source.displayBalance}"))
+                    account,
+                    highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
                 )
             }
         )
     }
 
-    var filteredSourceList by remember {
-        mutableStateOf(sourceList)
+    var filteredAccountList by remember {
+        mutableStateOf(accountList)
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredSourceList = if (searchText.isBlank()) {
-            sourceList
+        filteredAccountList = if (searchText.isBlank()) {
+            accountList
         } else {
-            sourceList
-                .filter {
-                    it.first.name.contains(
+            accountList
+                .filter { (account, _) ->
+                    account.name.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map {
-                    val highlightedString = getHighlightedString(it.first.name, searchText)
+                .map { (account, _) ->
+                    val highlightedString = getHighlightedString(account.name, searchText)
                     Pair(
-                        it.first,
-                        highlightedString.plus(AnnotatedString(" - ${it.first.displayBalance}")),
+                        account,
+                        highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}")),
                     )
                 }
         }
     }
 
-    val selectedSources = remember {
-        mutableStateMapOf<String, Boolean>()
+    val selectedAccounts = remember {
+        mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
         derivedStateOf {
-            selectedSources.filter { it.value }.size
+            selectedAccounts.filter { it.value }.size
         }
     }
 
     val filteredListSelectedCount by remember {
         derivedStateOf {
-            filteredSourceList
-                .map { selectedSources[it.first.uuid] }
+            filteredAccountList
+                .map { (account, _) -> selectedAccounts[account.id] }
                 .filter { it == true }
                 .size
         }
     }
 
     LaunchedEffect(Unit) {
-        sources.forEach { source ->
-            selectedSources[source.uuid] = selectedSourceUUIDs.contains(source.uuid)
+        accounts.forEach { account ->
+            selectedAccounts[account.id] = selectedAccountIds.contains(account.id)
         }
     }
 
@@ -598,24 +596,23 @@ fun FilterSourcePopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredSourceList,
-                key = { sourcePair -> "source-${sourcePair.first.uuid}" }
-            ) { sourcePair ->
+                items = filteredAccountList,
+                key = { (account, _) -> "account-${account.id}" }
+            ) { (account, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedSources.getOrDefault(sourcePair.first.uuid, true)
+                        selectedAccounts.getOrDefault(account.id, true)
                     },
-                    label = sourcePair.second,
-                    icon = Constants.DEFAULT_SOURCE_ICON,
-                    onClick = {
+                    label = annotatedName,
+                    icon = Constants.DEFAULT_ACCOUNT_ICON,
+                    onClick = { newCheckState ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedSources[sourcePair.first.uuid] =
-                            !selectedSources[sourcePair.first.uuid]!!
+                        selectedAccounts[account.id] = newCheckState
                     },
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredSourceList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -656,10 +653,10 @@ fun FilterSourcePopup(
             FilledTonalIconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val allSelected = filteredListSelectedCount == filteredSourceList.size
-                    filteredSourceList
-                        .map { category -> category.first.uuid }
-                        .forEach { uuid -> selectedSources[uuid] = !allSelected }
+                    val allSelected = filteredListSelectedCount == filteredAccountList.size
+                    filteredAccountList
+                        .map { (account, _) -> account.id }
+                        .forEach { id -> selectedAccounts[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -667,7 +664,7 @@ fun FilterSourcePopup(
                 shape = RoundedCornerShape(35)
             ) {
                 AnimatedToggleSelectIcon(
-                    deselectVisible = filteredListSelectedCount == filteredSourceList.size
+                    deselectVisible = filteredListSelectedCount == filteredAccountList.size
                 )
             }
             FilledTonalIconButton(
@@ -690,7 +687,7 @@ fun FilterSourcePopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     filter(
-                        selectedSources.filter { entry -> entry.value }.keys
+                        selectedAccounts.filter { entry -> entry.value }.keys
                     )
                     dismiss()
                 },
@@ -710,41 +707,4 @@ fun FilterSourcePopup(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun SelectSourcePopupPreview() {
-    SelectSourcePopup(
-        index = 1,
-        selectedSourceUUID = "asd",
-        setSelectedSource = {},
-        sources = listOf(
-            Source().apply {
-                uuid = "asd"
-                name = "Shopping"
-                balance = 937.00
-                currency = "INR"
-            },
-            Source().apply {
-                uuid = "asdfrg"
-                name = "Transportation"
-                balance = 937.65
-                currency = "INR"
-            },
-            Source().apply {
-                uuid = "iurwuef"
-                name = "Personal Care"
-                balance = 937.65
-                currency = "INR"
-            },
-            Source().apply {
-                uuid = "iurwueadfegf"
-                name = "Food & Drinks"
-                balance = 937.65
-                currency = "INR"
-            }
-        ),
-        dismiss = {}
-    )
 }

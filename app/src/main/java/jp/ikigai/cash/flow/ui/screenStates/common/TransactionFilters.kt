@@ -6,15 +6,15 @@ import jp.ikigai.cash.flow.data.Constants
 import java.time.ZonedDateTime
 
 data class TransactionFilters(
-    val selectedCategories: Set<String> = emptySet(),
+    val selectedAccounts: Set<Long> = emptySet(),
+    val selectedAccountCount: String = "0",
+    val selectedCategories: Set<Long> = emptySet(),
     val selectedCategoryCount: String = "0",
-    val selectedCounterParties: Set<String> = emptySet(),
+    val selectedCounterParties: Set<Long> = emptySet(),
     val selectedCounterPartyCount: String = "0",
     val includeNoCounterPartyTransactions: Boolean = true,
-    val selectedMethods: Set<String> = emptySet(),
+    val selectedMethods: Set<Long> = emptySet(),
     val selectedMethodCount: String = "0",
-    val selectedSources: Set<String> = emptySet(),
-    val selectedSourceCount: String = "0",
     val selectedTransactionTypes: List<Int> = listOf(1, 2),
     val filterAmountMin: Double = 0.0,
     val filterAmountMax: Double = 0.0,

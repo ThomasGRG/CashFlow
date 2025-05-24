@@ -3,19 +3,23 @@ package jp.ikigai.cash.flow.ui.viewmodels.upsert
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.ext.query
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -24,22 +28,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
-import java.util.UUID
 
 class UpsertMethodScreenViewModel(
     savedStateHandle: SavedStateHandle,
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
 
-    private val methodUuid: String = checkNotNull(savedStateHandle["id"])
+    private val methodId: Long = checkNotNull(savedStateHandle["id"])
 
     private var getMethodJob: Job? = null
 
@@ -49,8 +51,16 @@ class UpsertMethodScreenViewModel(
     private val _state = MutableStateFlow(UpsertMethodScreenState())
     val state: StateFlow<UpsertMethodScreenState> = _state.asStateFlow()
 
+    private val accountBox: Box<Account> = store.boxFor()
+    private val methodBox: Box<Method> = store.boxFor()
+    private val transactionBox: Box<Transaction> = store.boxFor()
+
+    private val nameAlreadyInUseQuery = methodBox
+        .query(Method_.name.equal("", QueryBuilder.StringOrder.CASE_INSENSITIVE))
+        .build()
+
     init {
-        if (methodUuid.isNotBlank()) {
+        if (methodId > 0) {
             getMethodJob = getMethod()
             getTransactionCount()
         } else {
@@ -61,30 +71,40 @@ class UpsertMethodScreenViewModel(
                 )
             }
         }
-        checkNameAlreadyInUse()
     }
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
+        nameAlreadyInUseQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTransactionCount() = viewModelScope.launch {
-        realm.query<Transaction>("method.uuid == $0", methodUuid).count().asFlow()
-            .collectLatest { count ->
+        val transactionCountQuery = transactionBox
+            .query(Transaction_.methodId.equal(methodId))
+            .build()
+
+        transactionCountQuery
+            .flow()
+            .onCompletion {
+                transactionCountQuery.close()
+            }
+            .collectLatest { transactions ->
                 _state.update {
                     it.copy(
-                        transactionCount = if (count > 0) numberFormatter.format(count)
-                            .toString() else ""
+                        transactionCount = transactions.size,
+                        formattedTransactionCount = numberFormatter.format(transactions.size)
+                            .toString()
                     )
                 }
             }
     }
 
     private fun getMethod() = viewModelScope.launch {
-        realm.query<Method>("uuid == $0", methodUuid).asFlow().collectLatest { changes ->
-            val method = changes.list.first()
+        val getMethodQuery = methodBox.query(Method_.id.equal(methodId)).build()
+
+        getMethodQuery.findUnique()?.let { method ->
             _state.update {
                 it.copy(
                     method = method,
@@ -94,31 +114,31 @@ class UpsertMethodScreenViewModel(
                 )
             }
         }
+
+        getMethodQuery.close()
     }
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun checkNameAlreadyInUse() = viewModelScope.launch {
-        state
-            .debounce(250L)
-            .flatMapLatest { screenState ->
-                val searchName =
-                    if (screenState.name.isNotBlank() && screenState.name.trim() != screenState.method.name) {
-                        screenState.name.trim()
-                    } else {
-                        ""
+    fun checkNameAlreadyInUse(name: String) = viewModelScope.launch {
+        if (name.isNotBlank() && name.trim() != state.value.method.name) {
+            nameAlreadyInUseQuery
+                .setParameter(Method_.name, name.trim())
+                .count()
+                .let { count ->
+                    _state.update {
+                        it.copy(
+                            nameValid = if (count > 0) false else it.nameValid,
+                            nameErrorStringRes = if (count > 0) R.string.name_in_use_label else R.string.name_empty_error_label,
+                            loading = false
+                        )
                     }
-                realm.query<Method>("name == [c]$0", searchName)
-                    .count()
-                    .asFlow()
-            }.collectLatest { count ->
-                _state.update {
-                    it.copy(
-                        nameValid = if (count > 0) false else it.nameValid,
-                        nameErrorStringRes = if (count > 0) R.string.name_in_use_label else R.string.name_empty_error_label,
-                        loading = false
-                    )
                 }
+        } else {
+            _state.update {
+                it.copy(
+                    loading = false
+                )
             }
+        }
     }
 
     fun setName(name: String) {
@@ -142,7 +162,6 @@ class UpsertMethodScreenViewModel(
     }
 
     fun upsertMethod(newName: String) = viewModelScope.launch {
-        val method = state.value.method
         if (newName.isBlank()) {
             _state.update {
                 it.copy(
@@ -161,27 +180,19 @@ class UpsertMethodScreenViewModel(
                 )
             }
 
-            val result = realm.write {
-                if (method.uuid.isBlank()) {
-                    copyToRealm(
-                        instance = method.apply {
-                            uuid = UUID.randomUUID().toString()
-                            name = newName
-                        },
-                        updatePolicy = UpdatePolicy.ALL
-                    )
-                } else {
-                    findLatest(method)?.also {
-                        it.name = newName
-                    }
-                }
-            }
+            val method = state.value.method
 
-            if (result != null) {
+            try {
+                methodBox.put(
+                    method.copy(
+                        name = newName
+                    )
+                )
                 _event.send(Event.SaveSuccess)
-            } else {
+            } catch (e: Exception) {
                 _event.send(Event.InternalError)
             }
+
             _state.update {
                 it.copy(
                     loading = false
@@ -191,7 +202,7 @@ class UpsertMethodScreenViewModel(
     }
 
     fun deleteMethod() = viewModelScope.launch {
-        if (methodUuid.isNotBlank()) {
+        if (methodId > 0) {
             getMethodJob?.cancelAndJoin()
             _state.update {
                 it.copy(
@@ -200,25 +211,44 @@ class UpsertMethodScreenViewModel(
                 )
             }
 
-            val method = state.value.method
-            realm.write {
-                this.query<Transaction>("method.uuid == $0", methodUuid).find()
-                    .groupBy { transaction -> transaction.source!! }
-                    .forEach { (source, transactions) ->
-                        var newBalance = source.balance
-                        transactions.forEach { transaction ->
-                            if (transaction.type == TransactionType.CREDIT) {
-                                newBalance -= transaction.amount
-                            } else {
-                                newBalance += transaction.amount
-                            }
-                            delete(transaction)
+            val transactionsQuery = transactionBox
+                .query(Transaction_.methodId.equal(methodId))
+                .build()
+
+            val transactions = transactionsQuery.find()
+
+            transactionsQuery.close()
+
+            val accounts: MutableList<Account> = mutableListOf()
+
+            transactions
+                .groupBy { transaction -> transaction.account.target }
+                .forEach { (account, transactions) ->
+                    var newBalance = account.balance
+                    transactions.forEach { transaction ->
+                        if (transaction.type == TransactionType.CREDIT) {
+                            newBalance -= transaction.amount
+                        } else {
+                            newBalance += transaction.amount
                         }
-                        source.balance = newBalance
                     }
-                findLatest(method)?.also {
-                    delete(it)
+                    accounts.add(
+                        account.copy(
+                            balance = newBalance
+                        )
+                    )
                 }
+
+            transactionBox.remove(transactions)
+
+            accountBox.put(accounts)
+
+            val deleted = methodBox.remove(methodId)
+
+            if (deleted) {
+                _event.send(Event.DeleteSuccess)
+            } else {
+                _event.send(Event.InternalError)
             }
 
             _state.update {
@@ -226,7 +256,6 @@ class UpsertMethodScreenViewModel(
                     loading = false
                 )
             }
-            _event.send(Event.DeleteSuccess)
         }
     }
 }

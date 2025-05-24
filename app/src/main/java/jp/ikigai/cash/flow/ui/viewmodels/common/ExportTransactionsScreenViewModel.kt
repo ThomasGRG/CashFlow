@@ -7,30 +7,36 @@ import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.notifications.ResultsChange
-import io.realm.kotlin.query.Sort
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
+import jp.ikigai.cash.flow.data.dto.TransactionWithChips
+import jp.ikigai.cash.flow.data.dto.export.AccountExport
 import jp.ikigai.cash.flow.data.dto.export.CategoryExport
 import jp.ikigai.cash.flow.data.dto.export.CommonExport
 import jp.ikigai.cash.flow.data.dto.export.ExportData
-import jp.ikigai.cash.flow.data.dto.export.SourceExport
 import jp.ikigai.cash.flow.data.dto.export.TemplateExport
 import jp.ikigai.cash.flow.data.dto.export.TransactionExport
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Account_
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.screenStates.common.ExportTransactionsScreenState
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
@@ -50,6 +56,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -64,7 +71,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class ExportTransactionsScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private val datePattern = "dd-LLL-yyyy"
@@ -85,20 +92,31 @@ class ExportTransactionsScreenViewModel(
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
     private val _sortOptionsState = MutableStateFlow(
-        SortOptionsScreenState(Sort.DESCENDING, "time")
+        SortOptionsState<Transaction>(
+            sortField = Transaction_.time
+        )
     )
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    val sortOptionsState: StateFlow<SortOptionsState<Transaction>> =
+        _sortOptionsState.asStateFlow()
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
-    private val sourceQuery = realm.query<Source>().sort("frequency", Sort.DESCENDING)
+    private val accountBox: Box<Account> = store.boxFor()
+    private val categoryBox: Box<Category> = store.boxFor()
+    private val counterPartyBox: Box<CounterParty> = store.boxFor()
+    private val methodBox: Box<Method> = store.boxFor()
+    private val templateBox: Box<TransactionTemplate> = store.boxFor()
+    private val transactionBox: Box<Transaction> = store.boxFor()
 
-    private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
+    private val accountQuery = accountBox.query().orderDesc(Account_.frequency).build()
 
-    private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
+    private val categoryQuery = categoryBox.query().orderDesc(Category_.frequency).build()
 
-    private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
+    private val counterPartyQuery =
+        counterPartyBox.query().orderDesc(CounterParty_.frequency).build()
+
+    private val methodQuery = methodBox.query().orderDesc(Method_.frequency).build()
 
     init {
         loadDataJob = loadData()
@@ -106,37 +124,42 @@ class ExportTransactionsScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
+        accountQuery.close()
+        categoryQuery.close()
+        counterPartyQuery.close()
+        methodQuery.close()
     }
 
     private fun loadData() = viewModelScope.launch {
+        val accounts = accountQuery.find().map { account ->
+            val formatter = currencyFormatterMap.getValue(account.currency)
+            account.copy(
+                formattedBalance = formatter.format(account.balance).toString()
+            )
+        }
         val categories = categoryQuery.find()
         val counterParties = counterPartyQuery.find()
         val methods = methodQuery.find()
-        val sources = sourceQuery.find().toMutableList()
-
-        sources.forEach { source ->
-            val formatter = currencyFormatterMap.getValue(source.currency)
-            source.displayBalance = formatter.format(source.balance).toString()
-        }
 
         _state.update {
             it.copy(
+                accounts = accounts,
                 categories = categories,
                 counterParties = counterParties,
-                methods = methods,
-                sources = sources
+                methods = methods
             )
         }
 
-        val selectedCategories = categories.map { it.uuid }.toSet()
-        val selectedCounterParties = counterParties.map { it.uuid }.toSet()
-        val selectedMethods = methods.map { it.uuid }.toSet()
-        val selectedSources = sources.map { it.uuid }.toSet()
+        val selectedAccounts = accounts.map { it.id }.toSet()
+        val selectedCategories = categories.map { it.id }.toSet()
+        val selectedCounterParties = counterParties.map { it.id }.toSet()
+        val selectedMethods = methods.map { it.id }.toSet()
 
         _filtersState.update { filters ->
             filters.copy(
+                selectedAccounts = selectedAccounts,
+                selectedAccountCount = numberFormatter.format(selectedAccounts.size).toString(),
                 selectedCategories = selectedCategories,
                 selectedCategoryCount = numberFormatter.format(selectedCategories.size).toString(),
                 selectedCounterParties = selectedCounterParties,
@@ -144,8 +167,6 @@ class ExportTransactionsScreenViewModel(
                     .toString(),
                 selectedMethods = selectedMethods,
                 selectedMethodCount = numberFormatter.format(selectedMethods.size).toString(),
-                selectedSources = selectedSources,
-                selectedSourceCount = numberFormatter.format(selectedSources.size).toString(),
                 selectedCurrencyCount = numberFormatter.format(filters.selectedCurrencies.size)
                     .toString()
             )
@@ -190,15 +211,15 @@ class ExportTransactionsScreenViewModel(
                 sortOptions,
                 filters
             )
-        }.collectLatest { transactionChanges ->
+        }.collectLatest { transactions ->
             val transactionsMap = getTransactionsMap(
-                transactionChanges.list,
+                transactions,
                 searchState.value
             )
 
             _state.update {
                 it.copy(
-                    transactionsHashCode = transactionChanges.list.hashCode(),
+                    transactionsHashCode = transactions.hashCode(),
                     filteredTransactions = transactionsMap,
                     selectedLocalDates = getSelectedLocalDates(
                         transactionsMap,
@@ -216,85 +237,135 @@ class ExportTransactionsScreenViewModel(
     }
 
     private fun getSelectedLocalDates(
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>,
-        selectedTransactions: Set<String>
+        filteredTransactions: Map<LocalDate, List<TransactionWithChips>>,
+        selectedTransactions: Set<Long>
     ): Set<LocalDate> {
         return filteredTransactions
             .filter { entry ->
-                val transactionUUIDs =
-                    entry.value.map { transactionWithIcons -> transactionWithIcons.uuid }
-                transactionUUIDs.all { uuid -> selectedTransactions.contains(uuid) }
+                val transactionIds =
+                    entry.value.map { transactionWithChips -> transactionWithChips.id }
+                transactionIds.all { id -> selectedTransactions.contains(id) }
             }
             .keys
     }
 
     private fun getAllSelected(
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>,
-        selectedTransactions: Set<String>
+        filteredTransactions: Map<LocalDate, List<TransactionWithChips>>,
+        selectedTransactions: Set<Long>
     ): Boolean {
         return filteredTransactions
             .values
             .flatten()
-            .map { transaction -> transaction.uuid }
-            .all { uuid -> selectedTransactions.contains(uuid) }
+            .map { transactionWithChips -> transactionWithChips.id }
+            .all { id -> selectedTransactions.contains(id) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTransactionQuery(
         searchText: String,
-        sortOptions: SortOptionsScreenState,
+        sortOptions: SortOptionsState<Transaction>,
         filters: TransactionFilters
-    ): Flow<ResultsChange<Transaction>> {
-        var queryString =
-            "time >= $0 && time <= $1 && currency IN $2 && amount >= $3 && amount <= $4 && typeId IN $5 && category.uuid IN $6 && method.uuid IN $7 && source.uuid IN $8"
-        if (searchText.isNotBlank()) {
-            queryString += " && (title CONTAINS[c] '${searchText.trim()}' || description CONTAINS[c] '${searchText.trim()}')"
-        }
-        queryString += if (filters.includeNoCounterPartyTransactions) {
-            " && (counterParty == nil || counterParty.uuid IN $9)"
+    ): Flow<MutableList<Transaction>> {
+        val selectedCounterPartyIds = if (filters.includeNoCounterPartyTransactions) {
+            filters.selectedCounterParties + 0L
         } else {
-            " && counterParty.uuid IN $9"
+            filters.selectedCounterParties
         }
-        return realm
-            .query<Transaction>(
-                queryString,
-                filters.startDate?.toEpochMilli() ?: 0L,
-                filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
-                filters.selectedCurrencies,
-                filters.filterAmountMin,
-                if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
-                filters.selectedTransactionTypes,
-                filters.selectedCategories,
-                filters.selectedMethods,
-                filters.selectedSources,
-                filters.selectedCounterParties
+        val transactionQueryBuilder = transactionBox
+            .query(
+                Transaction_.time.between(
+                    filters.startDate?.toEpochMilli() ?: 0L,
+                    filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE
+                )
+                    .and(
+                        Transaction_.currency.oneOf(filters.selectedCurrencies.toTypedArray())
+                    )
+                    .and(
+                        Transaction_.amount.between(
+                            filters.filterAmountMin,
+                            if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax
+                        )
+                    )
+                    .and(
+                        Transaction_.type.oneOf(
+                            filters.selectedTransactionTypes.toIntArray()
+                        )
+                    )
+                    .and(
+                        Transaction_.accountId.oneOf(
+                            filters.selectedAccounts.toLongArray()
+                        )
+                    )
+                    .and(
+                        Transaction_.categoryId.oneOf(
+                            filters.selectedCategories.toLongArray()
+                        )
+                    )
+                    .and(
+                        Transaction_.counterPartyId.oneOf(
+                            selectedCounterPartyIds.toLongArray()
+                        )
+                    )
+                    .and(
+                        Transaction_.methodId.oneOf(
+                            filters.selectedMethods.toLongArray()
+                        )
+                    )
             )
-            .sort("time", sortOptions.sortDirection)
-            .asFlow()
+        val query = if (searchText.isNotBlank()) {
+            transactionQueryBuilder
+                .and()
+                .apply(
+                    Transaction_.title.contains(
+                        searchText.trim(),
+                        QueryBuilder.StringOrder.CASE_INSENSITIVE
+                    )
+                        .or(
+                            Transaction_.description.contains(
+                                searchText.trim(),
+                                QueryBuilder.StringOrder.CASE_INSENSITIVE
+                            )
+                        )
+                )
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+        } else {
+            transactionQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+        }
+        return query.flow().onCompletion {
+            query.close()
+        }
     }
 
     private fun getTransactionsMap(
         transactions: List<Transaction>,
         searchText: String
-    ): Map<LocalDate, List<TransactionWithIcons>> {
+    ): Map<LocalDate, List<TransactionWithChips>> {
         val transactionsMap = transactions.groupBy { it.time.toLocalDate() }
-        val transactionDetailsMap = mutableMapOf<LocalDate, List<TransactionWithIcons>>()
+        val transactionDetailsMap = mutableMapOf<LocalDate, List<TransactionWithChips>>()
         transactionsMap.forEach { (localDate, transactionsList) ->
-            transactionDetailsMap[localDate] =
-                transactionsList.map { getTransactionWithIcons(it, searchText) }
+            transactionDetailsMap[localDate] = transactionsList.map {
+                getTransactionWithChips(it, searchText)
+            }
         }
         return transactionDetailsMap
     }
 
-    private fun getTransactionWithIcons(
+    private fun getTransactionWithChips(
         transaction: Transaction,
         searchText: String
-    ): TransactionWithIcons {
-        val category = transaction.category!!
-        val counterParty = transaction.counterParty
-        val method = transaction.method!!
-        val source = transaction.source!!
-        val currencyFormatter = currencyFormatterMap.getValue(source.currency)
+    ): TransactionWithChips {
+        val account = transaction.account.target
+        val category = transaction.category.target
+        val counterParty = transaction.counterParty.target
+        val method = transaction.method.target
+
+        val currencyFormatter = currencyFormatterMap.getValue(account.currency)
+
         val chips: MutableList<ChipInfo> = mutableListOf()
+
         if (counterParty != null) {
             chips.add(
                 ChipInfo(
@@ -320,8 +391,8 @@ class ExportTransactionsScreenViewModel(
         )
         chips.add(
             ChipInfo(
-                icon = Constants.DEFAULT_SOURCE_ICON,
-                value = source.name,
+                icon = Constants.DEFAULT_ACCOUNT_ICON,
+                value = account.name,
                 resId = R.string.placeholder
             )
         )
@@ -332,8 +403,8 @@ class ExportTransactionsScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        return TransactionWithIcons(
-            uuid = transaction.uuid,
+        return TransactionWithChips(
+            id = transaction.id,
             annotatedTitle = getHighlightedString(transaction.title, searchText),
             annotatedDescription = getHighlightedString(transaction.description, searchText),
             amount = currencyFormatter.format(transaction.amount).toString(),
@@ -360,24 +431,24 @@ class ExportTransactionsScreenViewModel(
         val exportTemplates = if (includeTemplates) getExportTemplates() else emptyList()
         val exportTransactions = getExportTransactions(state.value.selectedTransactions)
         val exportCategories = getExportCategories(
-            exportTransactions.map { it.categoryUUID }.toSet()
+            exportTransactions.map { it.categoryId }.toSet()
         )
         val exportCounterParties = getExportCounterParties(
-            exportTransactions.mapNotNull { it.counterPartyUUID }.toSet()
+            exportTransactions.map { it.counterPartyId }.filter { it > 0 }.toSet()
         )
         val exportMethods = getExportMethods(
-            exportTransactions.map { it.methodUUID }.toSet()
+            exportTransactions.map { it.methodId }.toSet()
         )
-        val exportSources = getExportSources(
-            exportTransactions.map { it.sourceUUID }.toSet()
+        val exportAccounts = getExportAccounts(
+            exportTransactions.map { it.accountId }.toSet()
         )
 
         val exportData = ExportData(
             transactions = exportTransactions,
+            accounts = exportAccounts,
             categories = exportCategories,
             counterParties = exportCounterParties,
             methods = exportMethods,
-            sources = exportSources,
             templates = exportTemplates
         )
 
@@ -402,91 +473,73 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
-    private fun getExportTransactions(
-        selectedTransactions: Set<String>
-    ): List<TransactionExport> {
-        return realm.query<Transaction>("uuid IN $0", selectedTransactions).find().map {
+    private fun getExportTransactions(selectedTransactionIds: Set<Long>): List<TransactionExport> {
+        val getTransactionQuery = transactionBox
+            .query(
+                Transaction_.id.oneOf(selectedTransactionIds.toLongArray())
+            )
+            .build()
+
+        val transactions = getTransactionQuery.find()
+
+        getTransactionQuery.close()
+
+        return transactions.map {
             TransactionExport(
-                uuid = it.uuid,
+                id = it.id,
                 title = it.title,
                 description = it.description,
                 amount = it.amount,
                 typeId = it.type.id,
                 currency = it.currency,
                 time = it.time.toEpochMilli(),
-                categoryUUID = it.category!!.uuid,
-                counterPartyUUID = it.counterParty?.uuid,
-                methodUUID = it.method!!.uuid,
-                sourceUUID = it.source!!.uuid,
+                accountId = it.account.targetId,
+                categoryId = it.category.targetId,
+                counterPartyId = it.counterParty.targetId,
+                methodId = it.method.targetId
             )
         }
     }
 
     private fun getExportTemplates(): List<TemplateExport> {
-        return realm.query<TransactionTemplate>().find().map {
+        val getTemplateQuery = templateBox.query().build()
+
+        val templates = getTemplateQuery.find()
+
+        getTemplateQuery.close()
+
+        return templates.map {
             TemplateExport(
-                uuid = it.uuid,
+                id = it.id,
                 name = it.name,
                 title = it.title,
                 description = it.description,
                 amount = it.amount,
                 typeId = it.type.id,
-                categoryUUID = it.category?.uuid,
-                counterPartyUUID = it.counterParty?.uuid,
-                methodUUID = it.method?.uuid,
-                sourceUUID = it.source?.uuid,
-                frequency = it.frequency,
-                lastUsed = it.lastUsed.toEpochMilli(),
-            )
-        }
-    }
-
-    private fun getExportCategories(
-        categoryUUIDs: Set<String>
-    ): List<CategoryExport> {
-        return realm.query<Category>("uuid IN $0", categoryUUIDs).find().map {
-            CategoryExport(
-                uuid = it.uuid,
-                name = it.name,
-                frequency = it.frequency,
-                iconName = it.icon.name,
-                lastUsed = it.lastUsed.toEpochMilli()
-            )
-        }
-    }
-
-    private fun getExportCounterParties(
-        counterPartyUUIDs: Set<String>
-    ): List<CommonExport> {
-        return realm.query<CounterParty>("uuid IN $0", counterPartyUUIDs).find().map {
-            CommonExport(
-                uuid = it.uuid,
-                name = it.name,
+                accountId = it.account.targetId,
+                categoryId = it.category.targetId,
+                counterPartyId = it.counterParty.targetId,
+                methodId = it.method.targetId,
                 frequency = it.frequency,
                 lastUsed = it.lastUsed.toEpochMilli()
             )
         }
     }
 
-    private fun getExportMethods(
-        methodUUIDs: Set<String>
-    ): List<CommonExport> {
-        return realm.query<Method>("uuid IN $0", methodUUIDs).find().map {
-            CommonExport(
-                uuid = it.uuid,
-                name = it.name,
-                frequency = it.frequency,
-                lastUsed = it.lastUsed.toEpochMilli()
+    private fun getExportAccounts(accountIds: Set<Long>): List<AccountExport> {
+        val getAccountQuery = accountBox
+            .query(
+                Account_.id.oneOf(accountIds.toLongArray())
             )
-        }
-    }
+            .build()
 
-    private fun getExportSources(
-        sourceUUIDs: Set<String>
-    ): List<SourceExport> {
-        return realm.query<Source>("uuid IN $0", sourceUUIDs).find().map {
-            SourceExport(
-                uuid = it.uuid,
+        val accounts = getAccountQuery.find()
+
+        getAccountQuery.close()
+
+        return accounts.map {
+            AccountExport(
+                id = it.id,
                 name = it.name,
                 frequency = it.frequency,
                 lastUsed = it.lastUsed.toEpochMilli(),
@@ -496,11 +549,75 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
+    private fun getExportCategories(categoryIds: Set<Long>): List<CategoryExport> {
+        val getCategoryQuery = categoryBox
+            .query(
+                Category_.id.oneOf(categoryIds.toLongArray())
+            )
+            .build()
+
+        val categories = getCategoryQuery.find()
+
+        getCategoryQuery.close()
+
+        return categories.map {
+            CategoryExport(
+                id = it.id,
+                name = it.name,
+                frequency = it.frequency,
+                iconName = it.icon.name,
+                lastUsed = it.lastUsed.toEpochMilli()
+            )
+        }
+    }
+
+    private fun getExportCounterParties(counterPartyIds: Set<Long>): List<CommonExport> {
+        val getCounterPartyQuery = counterPartyBox
+            .query(
+                CounterParty_.id.oneOf(counterPartyIds.toLongArray())
+            )
+            .build()
+
+        val counterParties = getCounterPartyQuery.find()
+
+        getCounterPartyQuery.close()
+
+        return counterParties.map {
+            CommonExport(
+                id = it.id,
+                name = it.name,
+                frequency = it.frequency,
+                lastUsed = it.lastUsed.toEpochMilli()
+            )
+        }
+    }
+
+    private fun getExportMethods(methodIds: Set<Long>): List<CommonExport> {
+        val getMethodQuery = methodBox
+            .query(
+                Method_.id.oneOf(methodIds.toLongArray())
+            )
+            .build()
+
+        val methods = getMethodQuery.find()
+
+        getMethodQuery.close()
+
+        return methods.map {
+            CommonExport(
+                id = it.id,
+                name = it.name,
+                frequency = it.frequency,
+                lastUsed = it.lastUsed.toEpochMilli()
+            )
+        }
+    }
+
     fun toggleLocalDateSelected(localDate: LocalDate) {
         _state.update {
-            val transactionUUIDs = it.filteredTransactions
+            val transactionIds = it.filteredTransactions
                 .getOrDefault(localDate, emptyList())
-                .map { transaction -> transaction.uuid }
+                .map { transactionWithChips -> transactionWithChips.id }
                 .toSet()
 
             val selectedLocalDates = it.selectedLocalDates.toMutableSet()
@@ -508,10 +625,10 @@ class ExportTransactionsScreenViewModel(
 
             if (it.selectedLocalDates.contains(localDate)) {
                 selectedLocalDates.remove(localDate)
-                selectedTransactions.removeAll(transactionUUIDs)
+                selectedTransactions.removeAll(transactionIds)
             } else {
                 selectedLocalDates.add(localDate)
-                selectedTransactions.addAll(transactionUUIDs)
+                selectedTransactions.addAll(transactionIds)
             }
 
             it.copy(
@@ -525,14 +642,14 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
-    fun toggleTransactionSelected(uuid: String) {
+    fun toggleTransactionSelected(id: Long) {
         _state.update {
             val selectedTransactions = it.selectedTransactions.toMutableSet()
 
-            if (selectedTransactions.contains(uuid)) {
-                selectedTransactions.remove(uuid)
+            if (selectedTransactions.contains(id)) {
+                selectedTransactions.remove(id)
             } else {
-                selectedTransactions.add(uuid)
+                selectedTransactions.add(id)
             }
 
             it.copy(
@@ -556,11 +673,11 @@ class ExportTransactionsScreenViewModel(
             if (it.allSelected) {
                 selectedTransactions.clear()
             } else {
-                val transactionUUIDs = it.filteredTransactions
+                val transactionIds = it.filteredTransactions
                     .values
                     .flatten()
-                    .map { transaction -> transaction.uuid }
-                selectedTransactions.addAll(transactionUUIDs)
+                    .map { transactionWithChips -> transactionWithChips.id }
+                selectedTransactions.addAll(transactionIds)
             }
 
             it.copy(
@@ -599,7 +716,16 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
-    fun setSelectedCategories(selectedCategories: Set<String>) {
+    fun setSelectedAccounts(selectedAccounts: Set<Long>) {
+        _filtersState.update {
+            it.copy(
+                selectedAccounts = selectedAccounts,
+                selectedAccountCount = numberFormatter.format(selectedAccounts.size).toString()
+            )
+        }
+    }
+
+    fun setSelectedCategories(selectedCategories: Set<Long>) {
         _filtersState.update {
             it.copy(
                 selectedCategories = selectedCategories,
@@ -609,33 +735,24 @@ class ExportTransactionsScreenViewModel(
     }
 
     fun setSelectedCounterParties(
-        selectedCounterParties: Set<String>,
-        includeTransactionsWithNoCounterParty: Boolean
+        selectedCounterParties: Set<Long>,
+        includeNoCounterPartyTransactions: Boolean
     ) {
         _filtersState.update {
             it.copy(
                 selectedCounterParties = selectedCounterParties,
                 selectedCounterPartyCount = numberFormatter.format(selectedCounterParties.size)
                     .toString(),
-                includeNoCounterPartyTransactions = includeTransactionsWithNoCounterParty
+                includeNoCounterPartyTransactions = includeNoCounterPartyTransactions
             )
         }
     }
 
-    fun setSelectedMethods(selectedMethods: Set<String>) {
+    fun setSelectedMethods(selectedMethods: Set<Long>) {
         _filtersState.update {
             it.copy(
                 selectedMethods = selectedMethods,
                 selectedMethodCount = numberFormatter.format(selectedMethods.size).toString()
-            )
-        }
-    }
-
-    fun setSelectedSources(selectedSources: Set<String>) {
-        _filtersState.update {
-            it.copy(
-                selectedSources = selectedSources,
-                selectedSourceCount = numberFormatter.format(selectedSources.size).toString()
             )
         }
     }
@@ -648,10 +765,10 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
-    fun setSortDirection(sortDirection: Sort) {
+    fun setSortFlags(sortFlags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = sortDirection
+                sortFlags = sortFlags
             )
         }
     }

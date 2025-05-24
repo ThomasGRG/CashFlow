@@ -47,12 +47,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import compose.icons.TablerIcons
-import compose.icons.tablericons.Archive
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
@@ -61,7 +58,7 @@ import jp.ikigai.cash.flow.utils.getHighlightedString
 @Composable
 fun SelectCategoryPopup(
     index: Int,
-    selectedCategoryUUID: String,
+    selectedCategoryId: Long,
     setSelectedCategory: (Category) -> Unit,
     categories: List<Category>,
     dismiss: () -> Unit,
@@ -165,16 +162,16 @@ fun SelectCategoryPopup(
         ) {
             items(
                 items = filteredCategoryList,
-                key = { categoryPair -> "category-${categoryPair.first.uuid}" }
-            ) { categoryPair ->
+                key = { (category, _) -> "category-${category.id}" }
+            ) { (category, annotatedName) ->
                 SelectableCard(
-                    checked = { categoryPair.first.uuid == selectedCategoryUUID },
-                    label = categoryPair.second,
-                    icon = categoryPair.first.icon,
+                    checked = { category.id == selectedCategoryId },
+                    label = annotatedName,
+                    icon = category.icon,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
-                        setSelectedCategory(categoryPair.first)
+                        setSelectedCategory(category)
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -259,14 +256,14 @@ fun MigrateCategoryPopup(
             categoryList
         } else {
             categoryList
-                .filter {
-                    it.first.name.contains(
+                .filter { (category, _) ->
+                    category.name.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
-                .map {
-                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                .map { (category, _) ->
+                    Pair(category, getHighlightedString(category.name, searchText))
                 }
         }
     }
@@ -321,15 +318,15 @@ fun MigrateCategoryPopup(
         ) {
             items(
                 items = filteredCategoryList,
-                key = { categoryPair -> "category-${categoryPair.first.uuid}" }
-            ) { categoryPair ->
+                key = { (category, _) -> "category-${category.id}" }
+            ) { (category, annotatedName) ->
                 SelectableCard(
-                    checked = { categoryPair.first.uuid == selectedCategory.uuid },
-                    label = categoryPair.second,
-                    icon = categoryPair.first.icon,
+                    checked = { category.id == selectedCategory.id },
+                    label = annotatedName,
+                    icon = category.icon,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategory = categoryPair.first
+                        selectedCategory = category
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -381,7 +378,7 @@ fun MigrateCategoryPopup(
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCategory.uuid.isNotEmpty(),
+                enabled = selectedCategory.id > 0,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -397,9 +394,9 @@ fun MigrateCategoryPopup(
 
 @Composable
 fun FilterCategoryPopup(
-    selectedCategoryMap: Map<String, Boolean>,
+    selectedCategoryMap: Map<Long, Boolean>,
     categories: List<Category>,
-    filter: (Map<String, Boolean>) -> Unit,
+    filter: (Map<Long, Boolean>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -436,20 +433,20 @@ fun FilterCategoryPopup(
             categoryList
         } else {
             categoryList
-                .filter {
-                    it.first.name.contains(
+                .filter { (category, _) ->
+                    category.name.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map {
-                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                .map { (category, _) ->
+                    Pair(category, getHighlightedString(category.name, searchText))
                 }
         }
     }
 
     val selectedCategories = remember {
-        mutableStateMapOf<String, Boolean>()
+        mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
@@ -461,7 +458,7 @@ fun FilterCategoryPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredCategoryList
-                .map { selectedCategories[it.first.uuid] }
+                .map { (category, _) -> selectedCategories[category.id] }
                 .filter { it == true }
                 .size
         }
@@ -517,18 +514,17 @@ fun FilterCategoryPopup(
         ) {
             items(
                 items = filteredCategoryList,
-                key = { categoryPair -> "category-${categoryPair.first.uuid}" }
-            ) { categoryPair ->
+                key = { (category, _) -> "category-${category.id}" }
+            ) { (category, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedCategories.getOrDefault(categoryPair.first.uuid, true)
+                        selectedCategories.getOrDefault(category.id, true)
                     },
-                    label = categoryPair.second,
-                    icon = categoryPair.first.icon,
+                    label = annotatedName,
+                    icon = category.icon,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategories[categoryPair.first.uuid] =
-                            !selectedCategories[categoryPair.first.uuid]!!
+                        selectedCategories[category.id] = !selectedCategories[category.id]!!
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -578,8 +574,8 @@ fun FilterCategoryPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredCategoryList.size
                     filteredCategoryList
-                        .map { category -> category.first.uuid }
-                        .forEach { uuid -> selectedCategories[uuid] = !allSelected }
+                        .map { (category, _) -> category.id }
+                        .forEach { id -> selectedCategories[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -632,9 +628,9 @@ fun FilterCategoryPopup(
 
 @Composable
 fun FilterCategoryPopup(
-    selectedCategoryUUIDs: Set<String>,
+    selectedCategoryIds: Set<Long>,
     categories: List<Category>,
-    filter: (Set<String>) -> Unit,
+    filter: (Set<Long>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -671,20 +667,20 @@ fun FilterCategoryPopup(
             categoryList
         } else {
             categoryList
-                .filter {
-                    it.first.name.contains(
+                .filter { (category, _) ->
+                    category.name.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map {
-                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                .map { (category, _) ->
+                    Pair(category, getHighlightedString(category.name, searchText))
                 }
         }
     }
 
     val selectedCategories = remember {
-        mutableStateMapOf<String, Boolean>()
+        mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
@@ -696,7 +692,7 @@ fun FilterCategoryPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredCategoryList
-                .map { selectedCategories[it.first.uuid] }
+                .map { (category, _) -> selectedCategories[category.id] }
                 .filter { it == true }
                 .size
         }
@@ -704,7 +700,7 @@ fun FilterCategoryPopup(
 
     LaunchedEffect(Unit) {
         categories.forEach { category ->
-            selectedCategories[category.uuid] = selectedCategoryUUIDs.contains(category.uuid)
+            selectedCategories[category.id] = selectedCategoryIds.contains(category.id)
         }
     }
 
@@ -754,18 +750,17 @@ fun FilterCategoryPopup(
         ) {
             items(
                 items = filteredCategoryList,
-                key = { categoryPair -> "category-${categoryPair.first.uuid}" }
-            ) { categoryPair ->
+                key = { (category, _) -> "category-${category.id}" }
+            ) { (category, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedCategories.getOrDefault(categoryPair.first.uuid, true)
+                        selectedCategories.getOrDefault(category.id, true)
                     },
-                    label = categoryPair.second,
-                    icon = categoryPair.first.icon,
-                    onClick = {
+                    label = annotatedName,
+                    icon = category.icon,
+                    onClick = { newCheckState ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategories[categoryPair.first.uuid] =
-                            !selectedCategories[categoryPair.first.uuid]!!
+                        selectedCategories[category.id] = newCheckState
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -815,8 +810,8 @@ fun FilterCategoryPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredCategoryList.size
                     filteredCategoryList
-                        .map { category -> category.first.uuid }
-                        .forEach { uuid -> selectedCategories[uuid] = !allSelected }
+                        .map { (category, _) -> category.id }
+                        .forEach { id -> selectedCategories[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -867,37 +862,4 @@ fun FilterCategoryPopup(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun SelectCategoryPopupPreview() {
-    SelectCategoryPopup(
-        index = 1,
-        selectedCategoryUUID = "asd",
-        setSelectedCategory = {},
-        categories = listOf(
-            Category().apply {
-                uuid = "asd"
-                name = "Shopping"
-                icon = TablerIcons.Archive
-            },
-            Category().apply {
-                uuid = "asdfrg"
-                name = "Transportation"
-                icon = TablerIcons.Archive
-            },
-            Category().apply {
-                uuid = "iurwuef"
-                name = "Personal Care"
-                icon = TablerIcons.Archive
-            },
-            Category().apply {
-                uuid = "iurwueadfegf"
-                name = "Food & Drinks"
-                icon = TablerIcons.Archive
-            }
-        ),
-        dismiss = {}
-    )
 }

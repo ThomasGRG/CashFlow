@@ -29,7 +29,7 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseExport
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -40,14 +40,14 @@ fun ExportTransactionsScreenRoundedBottomBar(
     enabled: Boolean,
     exportEnabled: Boolean,
     allSelected: Boolean,
-    sortDirection: Sort,
+    sortFlags: Int,
     filterAmount: String,
     selectedCurrencyCount: String,
+    selectedAccountCount: String,
     selectedCategoryCount: String,
-    counterPartyFilterVisible: Boolean,
     selectedCounterPartyCount: String,
+    counterPartyFilterVisible: Boolean,
     selectedMethodCount: String,
-    selectedSourceCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
@@ -84,7 +84,7 @@ fun ExportTransactionsScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortDirection == Sort.DESCENDING) {
+                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending
@@ -208,8 +208,8 @@ fun ExportTransactionsScreenRoundedBottomBar(
             ) {
                 Text(
                     text = stringResource(
-                        id = R.string.source_filter_chip_label,
-                        selectedSourceCount
+                        id = R.string.account_filter_chip_label,
+                        selectedAccountCount
                     ),
                     modifier = Modifier.padding(10.dp),
                 )

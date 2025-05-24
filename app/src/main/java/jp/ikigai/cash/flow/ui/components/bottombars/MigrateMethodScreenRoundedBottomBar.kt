@@ -31,7 +31,7 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.Replace
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -42,13 +42,13 @@ fun MigrateMethodScreenRoundedBottomBar(
     enabled: Boolean,
     migrateEnabled: Boolean,
     allSelected: Boolean,
-    sortDirection: Sort,
+    sortFlags: Int,
     filterAmount: String,
     selectedCurrencyCount: String,
+    selectedAccountCount: String,
     selectedCategoryCount: String,
-    counterPartyFilterVisible: Boolean,
     selectedCounterPartyCount: String,
-    selectedSourceCount: String,
+    counterPartyFilterVisible: Boolean,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
@@ -84,7 +84,7 @@ fun MigrateMethodScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortDirection == Sort.DESCENDING) {
+                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending
@@ -191,8 +191,8 @@ fun MigrateMethodScreenRoundedBottomBar(
             ) {
                 Text(
                     text = stringResource(
-                        id = R.string.source_filter_chip_label,
-                        selectedSourceCount
+                        id = R.string.account_filter_chip_label,
+                        selectedAccountCount
                     ),
                     modifier = Modifier.padding(10.dp),
                 )
@@ -293,13 +293,13 @@ fun MigrateMethodScreenRoundedBottomBarPreview() {
             enabled = true,
             migrateEnabled = true,
             allSelected = true,
-            sortDirection = Sort.DESCENDING,
+            sortFlags = QueryBuilder.DESCENDING,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
+            selectedAccountCount = "1",
             selectedCategoryCount = "1",
-            counterPartyFilterVisible = true,
             selectedCounterPartyCount = "1",
-            selectedSourceCount = "1",
+            counterPartyFilterVisible = true,
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},
@@ -318,13 +318,13 @@ fun MigrateMethodScreenRoundedBottomBarPreview() {
             enabled = false,
             migrateEnabled = false,
             allSelected = false,
-            sortDirection = Sort.DESCENDING,
+            sortFlags = QueryBuilder.DESCENDING,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
+            selectedAccountCount = "1",
             selectedCategoryCount = "1",
-            counterPartyFilterVisible = true,
             selectedCounterPartyCount = "1",
-            selectedSourceCount = "1",
+            counterPartyFilterVisible = true,
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},

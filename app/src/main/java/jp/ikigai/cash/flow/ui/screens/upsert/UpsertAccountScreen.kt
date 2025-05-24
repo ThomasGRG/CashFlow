@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -59,8 +60,8 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
-import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertSourceScreenState
-import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertSourceScreenViewModel
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
+import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertAccountScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
@@ -71,14 +72,15 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UpsertSourceScreen(
+fun UpsertAccountScreen(
     navigateBack: () -> Unit,
+    checkNameAlreadyInUse: (String) -> Unit,
     setName: (String) -> Unit,
     upsertTransactionSource: (String, String, Double) -> Unit,
     deleteSource: () -> Unit,
     hasChanges: (String, String) -> Boolean,
     events: Flow<Event>,
-    state: UpsertSourceScreenState,
+    state: UpsertAccountScreenState,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -98,6 +100,11 @@ fun UpsertSourceScreen(
         mutableStateOf(state.name)
     }
 
+    LaunchedEffect(key1 = state.name) {
+        delay(250L)
+        checkNameAlreadyInUse(state.name)
+    }
+
     val nameValid by remember(key1 = state.nameValid) {
         mutableStateOf(state.nameValid)
     }
@@ -110,9 +117,9 @@ fun UpsertSourceScreen(
         mutableStateOf(state.hasTransactions)
     }
 
-    var balanceFieldValue by rememberSaveable(state.source, saver = TextFieldValueSaver) {
+    var balanceFieldValue by rememberSaveable(state.account, saver = TextFieldValueSaver) {
         mutableStateOf(
-            TextFieldValue(state.source.balance.toString())
+            TextFieldValue(state.account.balance.toString())
         )
     }
 
@@ -120,20 +127,20 @@ fun UpsertSourceScreen(
         mutableStateOf(true)
     }
 
-    val sourceUuid by remember(key1 = state.source) {
-        mutableStateOf(state.source.uuid)
+    val accountId by remember(key1 = state.account) {
+        mutableLongStateOf(state.account.id)
     }
 
-    val source by remember(key1 = state.source) {
-        mutableStateOf(state.source)
+    val account by remember(key1 = state.account) {
+        mutableStateOf(state.account)
     }
 
     val currencies by remember(key1 = state.currencies) {
         mutableStateOf(state.currencies)
     }
 
-    var selectedCurrency by rememberSaveable(state.source) {
-        mutableStateOf(state.source.currency)
+    var selectedCurrency by rememberSaveable(state.account) {
+        mutableStateOf(state.account.currency)
     }
 
     var popupType by remember {
@@ -165,7 +172,7 @@ fun UpsertSourceScreen(
     }
 
     BackHandler {
-        if (hasChanges(balanceFieldValue.text, selectedCurrency)) {
+        if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -209,7 +216,7 @@ fun UpsertSourceScreen(
 
                 PopupType.CONFIRM_DELETE -> {
                     ConfirmDeletePopup(
-                        message = stringResource(id = R.string.delete_source_confirmation_label),
+                        message = stringResource(id = R.string.delete_account_confirmation_label),
                         dismiss = hidePopup,
                         delete = deleteSource
                     )
@@ -217,7 +224,7 @@ fun UpsertSourceScreen(
 
                 PopupType.WARN_DELETE -> {
                     ConfirmDeletePopup(
-                        message = stringResource(id = R.string.source_transactions_deletion_warning_label),
+                        message = stringResource(id = R.string.account_transactions_deletion_warning_label),
                         dismiss = hidePopup,
                         delete = deleteSource
                     )
@@ -234,10 +241,10 @@ fun UpsertSourceScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (sourceUuid.isBlank()) {
-                        Text(text = stringResource(id = R.string.create_source_label))
+                    if (accountId == 0L) {
+                        Text(text = stringResource(id = R.string.create_account_label))
                     } else {
-                        Text(text = stringResource(id = R.string.update_source_label))
+                        Text(text = stringResource(id = R.string.update_account_label))
                     }
                 }
             )
@@ -246,7 +253,7 @@ fun UpsertSourceScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (hasChanges(balanceFieldValue.text, selectedCurrency)) {
+                    if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
                         popupType = PopupType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -268,7 +275,7 @@ fun UpsertSourceScreen(
                         )
                     }
                 },
-                extraButtonIcon = if (sourceUuid.isNotBlank()) {
+                extraButtonIcon = if (accountId > 0) {
                     {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
@@ -276,7 +283,7 @@ fun UpsertSourceScreen(
                         )
                     }
                 } else null,
-                extraButtonAction = if (sourceUuid.isNotBlank() && enabled) {
+                extraButtonAction = if (accountId > 0 && enabled) {
                     {
                         popupType = if (hasTransactions) {
                             PopupType.WARN_DELETE
@@ -300,7 +307,7 @@ fun UpsertSourceScreen(
         ) {
             OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
-                imageVector = Constants.DEFAULT_SOURCE_ICON,
+                imageVector = Constants.DEFAULT_ACCOUNT_ICON,
                 contentDescription = "default source icon",
                 modifier = Modifier
                     .size(120.dp),
@@ -314,10 +321,10 @@ fun UpsertSourceScreen(
                 enabled = enabled,
                 value = name,
                 onValueChange = setName,
-                hasValueChanged = { source.uuid.isNotEmpty() && source.name != name },
+                hasValueChanged = { account.id > 0 && account.name != name },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = stringResource(id = R.string.name_field_label),
-                placeHolder = stringResource(id = R.string.source_name_placeholder_label),
+                placeHolder = stringResource(id = R.string.account_name_placeholder_label),
                 icon = TablerIcons.Typography,
                 iconDescription = "name icon",
                 isError = !nameValid,
@@ -339,7 +346,7 @@ fun UpsertSourceScreen(
                 },
                 hasValueChanged = {
                     val newBalance = balanceFieldValue.text.toDoubleOrNull()
-                    source.uuid.isNotEmpty() && newBalance != null && newBalance != source.balance
+                    account.id > 0 && newBalance != null && newBalance != account.balance
                 },
                 enabled = enabled,
                 label = stringResource(id = R.string.balance_field_label),
@@ -362,7 +369,7 @@ fun UpsertSourceScreen(
                 enabled = enabled,
                 value = selectedCurrency,
                 hasValueChanged = {
-                    source.uuid.isNotEmpty() && source.currency != selectedCurrency
+                    account.id > 0 && account.currency != selectedCurrency
                 },
                 label = stringResource(id = R.string.currency_label),
                 placeHolder = "",
@@ -379,34 +386,36 @@ fun UpsertSourceScreen(
 @Preview
 @Composable
 fun UpsertSourceScreenPreview() {
-    UpsertSourceScreen(
+    UpsertAccountScreen(
         navigateBack = {},
+        checkNameAlreadyInUse = {},
         setName = {},
         upsertTransactionSource = { _, _, _ -> },
         deleteSource = {},
         hasChanges = { _, _ -> false },
         events = emptyList<Event>().asFlow(),
-        state = UpsertSourceScreenState()
+        state = UpsertAccountScreenState()
     )
 }
 
-fun NavGraphBuilder.upsertSourceScreen(navController: NavController) {
+fun NavGraphBuilder.upsertAccountScreen(navController: NavController) {
     animatedComposable(
-        Routes.UpsertSource.route,
+        Routes.UpsertAccount.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         ),
     ) {
-        val viewModel: UpsertSourceScreenViewModel = koinViewModel()
+        val viewModel: UpsertAccountScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
 
-        UpsertSourceScreen(
+        UpsertAccountScreen(
             navigateBack = {
                 navController.popBackStack()
             },
+            checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setName = viewModel::setName,
             upsertTransactionSource = viewModel::upsertSource,
             deleteSource = viewModel::deleteSource,

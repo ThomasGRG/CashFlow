@@ -5,16 +5,19 @@ import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.History
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
-import io.realm.kotlin.query.TRUE_PREDICATE
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.Property
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CategoryScreenState
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -27,6 +30,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,7 +40,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class CategoryScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var formatter = getNumberFormatter()
@@ -47,25 +51,34 @@ class CategoryScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsState<Category>(
+            sortField = Category_.lastUsed
+        )
+    )
+    val sortOptionsState: StateFlow<SortOptionsState<Category>> = _sortOptionsState.asStateFlow()
+
+    private val categoryBox: Box<Category> = store.boxFor()
+
+    private val categoryCountQuery = categoryBox.query().build()
 
     init {
         getCategories()
-        getCategoryCount()
+        getCount()
     }
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
+        categoryCountQuery.close()
     }
 
-    private fun getCategoryCount() = viewModelScope.launch {
-        realm.query<Category>().count().asFlow().collectLatest { count ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun getCount() = viewModelScope.launch {
+        categoryCountQuery.flow().collectLatest { categories ->
             _state.update {
                 it.copy(
-                    count = count,
-                    countString = formatter.format(count).toString()
+                    count = categories.size,
+                    countString = formatter.format(categories.size).toString()
                 )
             }
         }
@@ -94,19 +107,27 @@ class CategoryScreenViewModel(
         ) { searchText, sortOptions ->
             Pair(searchText, sortOptions)
         }.flatMapLatest { (searchText, sortOptions) ->
-            realm.query<Category>(
-                if (searchText.isBlank()) {
-                    TRUE_PREDICATE
-                } else {
-                    "name CONTAINS[c] '${searchText.trim()}'"
-                }
-            )
-                .sort(sortOptions.sortField, sortOptions.sortDirection)
-                .asFlow()
-        }.collectLatest { changes ->
+            val categoryQueryBuilder = if (searchText.isBlank()) {
+                categoryBox.query()
+            } else {
+                categoryBox
+                    .query(
+                        Category_.name.contains(
+                            searchText,
+                            QueryBuilder.StringOrder.CASE_INSENSITIVE
+                        )
+                    )
+            }
+            val query = categoryQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+            query.flow().onCompletion {
+                query.close()
+            }
+        }.collectLatest { categories ->
             _state.update { screenState ->
                 screenState.copy(
-                    categories = mapToDTO(changes.list, searchState.value),
+                    categories = mapToDTO(categories, searchState.value),
                     loading = false
                 )
             }
@@ -143,7 +164,7 @@ class CategoryScreenViewModel(
                 )
             }
             CommonListingDTO(
-                uuid = category.uuid,
+                id = category.id,
                 annotatedName = getHighlightedString(category.name, searchText),
                 icon = category.icon,
                 chips = chips
@@ -157,10 +178,10 @@ class CategoryScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: String, direction: Sort) {
+    fun setSortOptions(field: Property<Category>, flags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = direction,
+                sortFlags = flags,
                 sortField = field
             )
         }

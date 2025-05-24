@@ -31,7 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,34 +52,37 @@ import androidx.navigation.NavGraphBuilder
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.Property
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Account_
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
-import jp.ikigai.cash.flow.ui.components.cards.TransactionSourceCard
+import jp.ikigai.cash.flow.ui.components.cards.AccountCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
-import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
-import jp.ikigai.cash.flow.ui.viewmodels.listing.SourceScreenViewModel
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.screenStates.listing.AccountScreenState
+import jp.ikigai.cash.flow.ui.viewmodels.listing.AccountScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SourceScreen(
+fun AccountScreen(
     navigateBack: () -> Unit,
     addNewTransactionSource: () -> Unit,
-    editTransactionSource: (String) -> Unit,
+    editTransactionSource: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
-    sortOptionsState: SortOptionsScreenState,
-    setSortOptions: (String, Sort) -> Unit,
+    sortOptionsState: SortOptionsState<Account>,
+    setSortOptions: (Property<Account>, Int) -> Unit,
     setLocale: (Locale?) -> Unit,
-    state: SourceScreenState
+    state: AccountScreenState
 ) {
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -105,7 +108,7 @@ fun SourceScreen(
     }
 
     val count by remember(key1 = state.count) {
-        mutableLongStateOf(state.count)
+        mutableIntStateOf(state.count)
     }
 
     val countString by remember(key1 = state.countString) {
@@ -120,8 +123,8 @@ fun SourceScreen(
         mutableStateOf(state.loading)
     }
 
-    val sources by remember(key1 = state.sources) {
-        mutableStateOf(state.sources)
+    val accounts by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts)
     }
 
     var popupType by remember {
@@ -129,24 +132,24 @@ fun SourceScreen(
     }
 
     val sortOptions = mapOf(
-        stringResource(id = R.string.name_field_label) to "name",
-        stringResource(id = R.string.balance_field_label) to "balance",
-        stringResource(id = R.string.frequency_label) to "frequency",
-        stringResource(id = R.string.last_used_label) to "lastUsed"
+        stringResource(id = R.string.name_field_label) to Account_.name,
+        stringResource(id = R.string.balance_field_label) to Account_.balance,
+        stringResource(id = R.string.frequency_label) to Account_.frequency,
+        stringResource(id = R.string.last_used_label) to Account_.lastUsed
     )
 
-    val sortOption by remember(key1 = sortOptionsState.sortField) {
+    val sortField by remember(key1 = sortOptionsState.sortField) {
         mutableStateOf(sortOptionsState.sortField)
     }
 
-    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
-        mutableStateOf(sortOptionsState.sortDirection)
+    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
+        mutableIntStateOf(sortOptionsState.sortFlags)
     }
 
-    val sortIcon by remember(key1 = sortOptionsState.sortDirection, key2 = state.count) {
+    val sortIcon by remember(key1 = sortOptionsState.sortFlags, key2 = state.count) {
         mutableStateOf(
             if (state.count > 0) {
-                if (sortOptionsState.sortDirection == Sort.DESCENDING) {
+                if (sortOptionsState.sortFlags == QueryBuilder.DESCENDING) {
                     TablerIcons.SortDescending
                 } else {
                     TablerIcons.SortAscending
@@ -155,8 +158,8 @@ fun SourceScreen(
         )
     }
 
-    val showEmptyPlaceholder by remember(key1 = state.sources) {
-        mutableStateOf(state.sources.isEmpty())
+    val showEmptyPlaceholder by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts.isEmpty())
     }
 
     OneHandModeScaffold(
@@ -169,8 +172,8 @@ fun SourceScreen(
             when (popupType) {
                 PopupType.SORT -> {
                     SortOptionsPopup(
-                        selectedOption = sortOption,
-                        selectedDirection = sortDirection,
+                        selectedField = sortField,
+                        selectedDirection = sortFlags,
                         options = sortOptions,
                         sort = setSortOptions,
                         dismiss = hidePopup
@@ -184,8 +187,8 @@ fun SourceScreen(
             popupType = PopupType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0L) {
-            stringResource(id = R.string.sources_screen_empty_placeholder_label)
+        emptyPlaceholderText = if (count == 0) {
+            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
         },
@@ -193,9 +196,9 @@ fun SourceScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(text = stringResource(id = R.string.sources_label))
+                        Text(text = stringResource(id = R.string.accounts_label))
                         Text(
-                            text = stringResource(id = R.string.source_count_label, countString),
+                            text = stringResource(id = R.string.account_count_label, countString),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )
@@ -293,15 +296,15 @@ fun SourceScreen(
                     OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
                 }
                 items(
-                    items = sources,
-                    key = { source -> source.uuid }
-                ) { source ->
-                    TransactionSourceCard(
+                    items = accounts,
+                    key = { account -> account.id }
+                ) { account ->
+                    AccountCard(
                         modifier = Modifier.animateItem(),
-                        data = source,
-                        onClick = { uuid ->
+                        data = account,
+                        onClick = { id ->
                             resetOneHandMode()
-                            editTransactionSource(uuid)
+                            editTransactionSource(id)
                         }
                     )
                 }
@@ -313,39 +316,39 @@ fun SourceScreen(
 @Preview
 @Composable
 fun SourceScreenPreview() {
-    SourceScreen(
+    AccountScreen(
         navigateBack = {},
         addNewTransactionSource = {},
         editTransactionSource = {},
         searchState = "",
         setSearchText = {},
-        sortOptionsState = SortOptionsScreenState(),
+        sortOptionsState = SortOptionsState(sortField = Account_.lastUsed),
         setSortOptions = { _, _ -> },
         setLocale = {},
-        state = SourceScreenState()
+        state = AccountScreenState()
     )
 }
 
 fun NavGraphBuilder.sourceScreen(navController: NavController) {
     animatedComposable(
-        Routes.Sources.route
+        Routes.Accounts.route
     ) {
-        val viewModel: SourceScreenViewModel = koinViewModel()
+        val viewModel: AccountScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
         val sortOptionsState by viewModel.sortOptionsState.collectAsState()
 
-        SourceScreen(
+        AccountScreen(
             navigateBack = {
                 navController.popBackStack()
             },
             addNewTransactionSource = {
-                navController.navigate(Routes.UpsertSource.getRoute()) {
+                navController.navigate(Routes.UpsertAccount.getRoute()) {
                     launchSingleTop = true
                 }
             },
-            editTransactionSource = { uuid ->
-                navController.navigate(Routes.UpsertSource.getRoute(uuid)) {
+            editTransactionSource = { id ->
+                navController.navigate(Routes.UpsertAccount.getRoute(id)) {
                     launchSingleTop = true
                 }
             },

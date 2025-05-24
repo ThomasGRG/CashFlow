@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.data.store.entity
 import io.objectbox.annotation.Convert
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
+import io.objectbox.annotation.Unique
 import io.objectbox.relation.ToOne
 import jp.ikigai.cash.flow.data.converters.TransactionTypeConverter
 import jp.ikigai.cash.flow.data.converters.ZonedDateTimeConverter
@@ -16,6 +17,7 @@ data class TransactionTemplate(
     @Id
     var id: Long = 0L,
 
+    @Unique
     var name: String = "",
     var title: String = "",
     var description: String = "",

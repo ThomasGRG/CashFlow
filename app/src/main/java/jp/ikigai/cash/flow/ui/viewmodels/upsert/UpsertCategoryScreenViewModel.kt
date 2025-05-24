@@ -4,19 +4,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.ext.query
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.Transaction
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.utils.getNumberFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -25,22 +29,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
-import java.util.UUID
 
 class UpsertCategoryScreenViewModel(
     savedStateHandle: SavedStateHandle,
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
 
-    private val categoryUuid: String = checkNotNull(savedStateHandle["id"])
+    private val categoryId: Long = checkNotNull(savedStateHandle["id"])
 
     private var getCategoryJob: Job? = null
 
@@ -50,8 +52,16 @@ class UpsertCategoryScreenViewModel(
     private val _state = MutableStateFlow(UpsertCategoryScreenState())
     val state: StateFlow<UpsertCategoryScreenState> = _state.asStateFlow()
 
+    private val accountBox: Box<Account> = store.boxFor()
+    private val categoryBox: Box<Category> = store.boxFor()
+    private val transactionBox: Box<Transaction> = store.boxFor()
+
+    private val nameAlreadyInUseQuery = categoryBox
+        .query(Category_.name.equal("", QueryBuilder.StringOrder.CASE_INSENSITIVE))
+        .build()
+
     init {
-        if (categoryUuid.isNotBlank()) {
+        if (categoryId > 0) {
             getCategoryJob = getCategory()
             getTransactionCount()
         } else {
@@ -62,31 +72,41 @@ class UpsertCategoryScreenViewModel(
                 )
             }
         }
-        checkNameAlreadyInUse()
     }
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
+        nameAlreadyInUseQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTransactionCount() = viewModelScope.launch {
-        realm.query<Transaction>("category.uuid == $0", categoryUuid).count().asFlow()
-            .collectLatest { count ->
+        val transactionCountQuery = transactionBox
+            .query(Transaction_.categoryId.equal(categoryId))
+            .build()
+
+        transactionCountQuery
+            .flow()
+            .onCompletion {
+                transactionCountQuery.close()
+            }
+            .collectLatest { transactions ->
                 _state.update {
                     it.copy(
-                        transactionCount = if (count > 0) numberFormatter.format(count)
-                            .toString() else ""
+                        transactionCount = transactions.size,
+                        formattedTransactionCount = numberFormatter.format(transactions.size)
+                            .toString()
                     )
                 }
             }
     }
 
     private fun getCategory() = viewModelScope.launch {
-        realm.query<Category>("uuid == $0", categoryUuid).asFlow().collectLatest { changes ->
+        val getCategoryQuery = categoryBox.query(Category_.id.equal(categoryId)).build()
+
+        getCategoryQuery.findUnique()?.let { category ->
             _state.update {
-                val category = changes.list.first()
                 it.copy(
                     category = category,
                     name = category.name,
@@ -96,31 +116,31 @@ class UpsertCategoryScreenViewModel(
                 )
             }
         }
+
+        getCategoryQuery.close()
     }
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun checkNameAlreadyInUse() = viewModelScope.launch {
-        state
-            .debounce(250L)
-            .flatMapLatest { screenState ->
-                val searchName =
-                    if (screenState.name.isNotBlank() && screenState.name.trim() != screenState.category.name) {
-                        screenState.name.trim()
-                    } else {
-                        ""
+    fun checkNameAlreadyInUse(name: String) = viewModelScope.launch {
+        if (name.isNotBlank() && name.trim() != state.value.category.name) {
+            nameAlreadyInUseQuery
+                .setParameter(Category_.name, name.trim())
+                .count()
+                .let { count ->
+                    _state.update {
+                        it.copy(
+                            nameValid = if (count > 0) false else it.nameValid,
+                            nameErrorStringRes = if (count > 0) R.string.name_in_use_label else R.string.name_empty_error_label,
+                            loading = false
+                        )
                     }
-                realm.query<Category>("name == [c]$0", searchName)
-                    .count()
-                    .asFlow()
-            }.collectLatest { count ->
-                _state.update {
-                    it.copy(
-                        nameValid = if (count > 0) false else it.nameValid,
-                        nameErrorStringRes = if (count > 0) R.string.name_in_use_label else R.string.name_empty_error_label,
-                        loading = false
-                    )
                 }
+        } else {
+            _state.update {
+                it.copy(
+                    loading = false
+                )
             }
+        }
     }
 
     fun setName(name: String) {
@@ -152,7 +172,6 @@ class UpsertCategoryScreenViewModel(
     }
 
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
-        val category = state.value.category
         if (newName.isBlank()) {
             _state.update {
                 it.copy(
@@ -171,27 +190,17 @@ class UpsertCategoryScreenViewModel(
                 )
             }
 
-            val result = realm.write {
-                if (category.uuid.isBlank()) {
-                    copyToRealm(
-                        instance = category.apply {
-                            uuid = UUID.randomUUID().toString()
-                            icon = newIcon
-                            name = newName
-                        },
-                        updatePolicy = UpdatePolicy.ALL
-                    )
-                } else {
-                    findLatest(category)?.also {
-                        it.icon = newIcon
-                        it.name = newName
-                    }
-                }
-            }
+            val category = state.value.category
 
-            if (result != null) {
+            try {
+                categoryBox.put(
+                    category.copy(
+                        name = newName,
+                        icon = newIcon
+                    )
+                )
                 _event.send(Event.SaveSuccess)
-            } else {
+            } catch (e: Exception) {
                 _event.send(Event.InternalError)
             }
 
@@ -204,7 +213,7 @@ class UpsertCategoryScreenViewModel(
     }
 
     fun deleteCategory() = viewModelScope.launch {
-        if (categoryUuid.isNotBlank()) {
+        if (categoryId > 0) {
             getCategoryJob?.cancelAndJoin()
             _state.update {
                 it.copy(
@@ -213,25 +222,44 @@ class UpsertCategoryScreenViewModel(
                 )
             }
 
-            val category = state.value.category
-            realm.write {
-                this.query<Transaction>("category.uuid == $0", categoryUuid).find()
-                    .groupBy { transaction -> transaction.source!! }
-                    .forEach { (source, transactions) ->
-                        var newBalance = source.balance
-                        transactions.forEach { transaction ->
-                            if (transaction.type == TransactionType.CREDIT) {
-                                newBalance -= transaction.amount
-                            } else {
-                                newBalance += transaction.amount
-                            }
-                            delete(transaction)
+            val transactionsQuery = transactionBox
+                .query(Transaction_.categoryId.equal(categoryId))
+                .build()
+
+            val transactions = transactionsQuery.find()
+
+            transactionsQuery.close()
+
+            val accounts: MutableList<Account> = mutableListOf()
+
+            transactions
+                .groupBy { transaction -> transaction.account.target }
+                .forEach { (account, transactions) ->
+                    var newBalance = account.balance
+                    transactions.forEach { transaction ->
+                        if (transaction.type == TransactionType.CREDIT) {
+                            newBalance -= transaction.amount
+                        } else {
+                            newBalance += transaction.amount
                         }
-                        source.balance = newBalance
                     }
-                findLatest(category)?.also {
-                    delete(it)
+                    accounts.add(
+                        account.copy(
+                            balance = newBalance
+                        )
+                    )
                 }
+
+            transactionBox.remove(transactions)
+
+            accountBox.put(accounts)
+
+            val deleted = categoryBox.remove(categoryId)
+
+            if (deleted) {
+                _event.send(Event.DeleteSuccess)
+            } else {
+                _event.send(Event.InternalError)
             }
 
             _state.update {
@@ -239,7 +267,6 @@ class UpsertCategoryScreenViewModel(
                     loading = false
                 )
             }
-            _event.send(Event.DeleteSuccess)
         }
     }
 }

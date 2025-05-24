@@ -5,28 +5,36 @@ import android.os.Looper
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionFlows
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Account_
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
+import jp.ikigai.cash.flow.data.store.entity.TransactionTitle
+import jp.ikigai.cash.flow.data.store.entity.TransactionTitle_
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.combineSixFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getTimeString
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -38,20 +46,20 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
-import java.util.UUID
 
 class UpsertTransactionScreenViewModel(
     savedStateHandle: SavedStateHandle,
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private val datePattern = "EEEE, dd-LLL-yyyy"
 
-    private val transactionUuid: String = checkNotNull(savedStateHandle["id"])
-    private val templateUuid: String = checkNotNull(savedStateHandle["templateId"])
+    private val transactionId: Long = checkNotNull(savedStateHandle["id"])
+    private val templateId: Long = checkNotNull(savedStateHandle["templateId"])
 
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
@@ -72,7 +80,11 @@ class UpsertTransactionScreenViewModel(
     private var loadDataJob: Job? = null
 
     private var previousBalance = 0.0
-    private var previousSource: Source? = null
+    private var previousAccount: Account? = null
+
+    private var previousCategory: Category? = null
+    private var previousCounterparty: CounterParty? = null
+    private var previousMethod: Method? = null
 
     private val _state = MutableStateFlow(UpsertTransactionScreenState())
     val state: StateFlow<UpsertTransactionScreenState> = _state.asStateFlow()
@@ -80,16 +92,46 @@ class UpsertTransactionScreenViewModel(
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
-    private val sourceQuery = realm.query<Source>().sort("frequency", Sort.DESCENDING)
+    private val accountBox: Box<Account> = store.boxFor()
+    private val categoryBox: Box<Category> = store.boxFor()
+    private val counterPartyBox: Box<CounterParty> = store.boxFor()
+    private val methodBox: Box<Method> = store.boxFor()
+    private val transactionBox: Box<Transaction> = store.boxFor()
+    private val templateBox: Box<TransactionTemplate> = store.boxFor()
+    private val titleBox: Box<TransactionTitle> = store.boxFor()
 
-    private val methodQuery = realm.query<Method>().sort("frequency", Sort.DESCENDING)
+    private val accountQuery = accountBox
+        .query()
+        .orderDesc(Account_.frequency)
+        .build()
 
-    private val counterPartyQuery = realm.query<CounterParty>().sort("frequency", Sort.DESCENDING)
+    private val categoryQuery = categoryBox
+        .query()
+        .orderDesc(Category_.frequency)
+        .build()
 
-    private val categoryQuery = realm.query<Category>().sort("frequency", Sort.DESCENDING)
+    private val counterPartyQuery = counterPartyBox
+        .query()
+        .orderDesc(CounterParty_.frequency)
+        .build()
 
-    private val transactionTitleQuery =
-        realm.query<TransactionTitle>().sort("frequency", Sort.DESCENDING)
+    private val methodQuery = methodBox
+        .query()
+        .orderDesc(Method_.frequency)
+        .build()
+
+    private val templateQuery = templateBox
+        .query(TransactionTemplate_.id.equal(0L))
+        .build()
+
+    private val transactionQuery = transactionBox
+        .query(Transaction_.id.equal(0L))
+        .build()
+
+    private val transactionTitleQuery = titleBox
+        .query()
+        .orderDesc(TransactionTitle_.frequency)
+        .build()
 
     init {
         scheduleNextUpdate()
@@ -98,9 +140,15 @@ class UpsertTransactionScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
         handler.removeCallbacks(updateCurrentTime)
+        accountQuery.close()
+        categoryQuery.close()
+        counterPartyQuery.close()
+        methodQuery.close()
+        templateQuery.close()
+        transactionQuery.close()
+        transactionTitleQuery.close()
     }
 
     private fun scheduleNextUpdate() {
@@ -110,59 +158,60 @@ class UpsertTransactionScreenViewModel(
         handler.postDelayed(updateCurrentTime, delay)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadData() = viewModelScope.launch {
-        val flows = if (transactionUuid.isNotBlank()) {
+        val flows = if (transactionId > 0) {
             combineSixFlows(
-                categoryQuery.asFlow(),
-                counterPartyQuery.asFlow(),
-                methodQuery.asFlow(),
-                sourceQuery.asFlow(),
-                transactionTitleQuery.asFlow(),
-                realm.query<Transaction>("uuid==$0", transactionUuid).asFlow()
-            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges, transactionChanges ->
+                accountQuery.flow(),
+                categoryQuery.flow(),
+                counterPartyQuery.flow(),
+                methodQuery.flow(),
+                transactionTitleQuery.flow(),
+                transactionQuery.setParameter(Transaction_.id, transactionId).flow()
+            ) { accounts, categories, counterParties, methods, titles, transactions ->
                 UpsertTransactionFlows(
-                    categories = categoryChanges.list,
-                    counterParties = counterPartyChanges.list,
-                    methods = methodChanges.list,
-                    sources = sourceChanges.list,
-                    transactionTitles = transactionTitleChanges.list,
-                    transaction = transactionChanges.list.first(),
-                    transactionTemplate = null,
+                    accounts = accounts,
+                    categories = categories,
+                    counterParties = counterParties,
+                    methods = methods,
+                    transactionTitles = titles,
+                    transaction = transactions.first(),
+                    transactionTemplate = null
                 )
             }
-        } else if (templateUuid.isNotBlank()) {
+        } else if (templateId > 0) {
             combineSixFlows(
-                categoryQuery.asFlow(),
-                counterPartyQuery.asFlow(),
-                methodQuery.asFlow(),
-                sourceQuery.asFlow(),
-                transactionTitleQuery.asFlow(),
-                realm.query<TransactionTemplate>("uuid==$0", templateUuid).asFlow()
-            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges, templateChanges ->
+                accountQuery.flow(),
+                categoryQuery.flow(),
+                counterPartyQuery.flow(),
+                methodQuery.flow(),
+                transactionTitleQuery.flow(),
+                templateQuery.setParameter(TransactionTemplate_.id, templateId).flow()
+            ) { accounts, categories, counterParties, methods, titles, templates ->
                 UpsertTransactionFlows(
-                    categories = categoryChanges.list,
-                    counterParties = counterPartyChanges.list,
-                    methods = methodChanges.list,
-                    sources = sourceChanges.list,
-                    transactionTitles = transactionTitleChanges.list,
+                    accounts = accounts,
+                    categories = categories,
+                    counterParties = counterParties,
+                    methods = methods,
+                    transactionTitles = titles,
                     transaction = null,
-                    transactionTemplate = templateChanges.list.first(),
+                    transactionTemplate = templates.first()
                 )
             }
         } else {
             combineFiveFlows(
-                categoryQuery.asFlow(),
-                counterPartyQuery.asFlow(),
-                methodQuery.asFlow(),
-                sourceQuery.asFlow(),
-                transactionTitleQuery.asFlow()
-            ) { categoryChanges, counterPartyChanges, methodChanges, sourceChanges, transactionTitleChanges ->
+                accountQuery.flow(),
+                categoryQuery.flow(),
+                counterPartyQuery.flow(),
+                methodQuery.flow(),
+                transactionTitleQuery.flow()
+            ) { accounts, categories, counterParties, methods, titles ->
                 UpsertTransactionFlows(
-                    categories = categoryChanges.list,
-                    counterParties = counterPartyChanges.list,
-                    methods = methodChanges.list,
-                    sources = sourceChanges.list,
-                    transactionTitles = transactionTitleChanges.list,
+                    accounts = accounts,
+                    categories = categories,
+                    counterParties = counterParties,
+                    methods = methods,
+                    transactionTitles = titles,
                     transaction = null,
                     transactionTemplate = null,
                 )
@@ -172,11 +221,11 @@ class UpsertTransactionScreenViewModel(
             if (upsertTransactionFlows.transaction == null && upsertTransactionFlows.transactionTemplate == null) {
                 _state.update {
                     it.copy(
-                        transactionTitles = upsertTransactionFlows.transactionTitles,
+                        accounts = getAccountsWithFormattedBalance(upsertTransactionFlows.accounts),
                         categories = upsertTransactionFlows.categories,
                         counterParties = upsertTransactionFlows.counterParties,
                         methods = upsertTransactionFlows.methods,
-                        sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources),
+                        transactionTitles = upsertTransactionFlows.transactionTitles,
                         dateString = it.dateTime.getDateString(datePattern),
                         timeString = it.dateTime.getTimeString(),
                         loading = false,
@@ -198,27 +247,36 @@ class UpsertTransactionScreenViewModel(
         transaction: Transaction,
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
+        previousAccount = transaction.account.target
+
+        val currency = transaction.account.target.currency
+        val currentBalance = transaction.account.target.balance
+        previousBalance = if (transaction.type == TransactionType.DEBIT) {
+            currentBalance + transaction.amount
+        } else {
+            currentBalance - transaction.amount
+        }
+
+        previousCategory = transaction.category.target
+        previousCounterparty = transaction.counterParty.target
+        previousMethod = transaction.method.target
+
         _state.update {
             val dateTime = transaction.time
-            val source = transaction.source!!
-            val formatter = currencyFormatterMap.getValue(source.currency)
-            source.displayBalance = formatter.format(source.balance).toString()
-            previousSource = transaction.source
-            previousBalance = if (transaction.type == TransactionType.DEBIT) {
-                source.balance + transaction.amount
-            } else {
-                source.balance - transaction.amount
-            }
+            val account = transaction.account.target.copy(
+                formattedBalance = currencyFormatterMap.getValue(currency).format(currentBalance)
+                    .toString()
+            )
             it.copy(
-                transactionTitles = upsertTransactionFlows.transactionTitles,
+                accounts = getAccountsWithFormattedBalance(upsertTransactionFlows.accounts),
+                selectedAccount = account,
                 categories = upsertTransactionFlows.categories,
-                selectedCategory = transaction.category!!,
+                selectedCategory = transaction.category.target,
                 counterParties = upsertTransactionFlows.counterParties,
-                selectedCounterParty = transaction.counterParty ?: it.selectedCounterParty,
+                selectedCounterParty = transaction.counterParty.target ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
-                selectedMethod = transaction.method!!,
-                sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources),
-                selectedSource = source,
+                selectedMethod = transaction.method.target,
+                transactionTitles = upsertTransactionFlows.transactionTitles,
                 transaction = transaction,
                 title = transaction.title,
                 dateTime = dateTime,
@@ -238,25 +296,24 @@ class UpsertTransactionScreenViewModel(
         upsertTransactionFlows: UpsertTransactionFlows
     ) {
         _state.update {
-            val sources = getDisplayBalanceUpdatedSources(upsertTransactionFlows.sources)
-            val selectedSource =
-                sources.find { source -> source.uuid == transactionTemplate.source?.uuid }
-                    ?: it.selectedSource
+            val accounts = getAccountsWithFormattedBalance(upsertTransactionFlows.accounts)
+            val selectedAccount = accounts.find { account ->
+                account.id == transactionTemplate.account.targetId
+            } ?: it.selectedAccount
             it.copy(
-                transactionTitles = upsertTransactionFlows.transactionTitles,
+                accounts = accounts,
+                selectedAccount = selectedAccount,
                 categories = upsertTransactionFlows.categories,
-                selectedCategory = transactionTemplate.category
-                    ?: it.selectedCategory,
+                selectedCategory = transactionTemplate.category.target ?: it.selectedCategory,
                 counterParties = upsertTransactionFlows.counterParties,
-                selectedCounterParty = transactionTemplate.counterParty ?: it.selectedCounterParty,
+                selectedCounterParty = transactionTemplate.counterParty.target
+                    ?: it.selectedCounterParty,
                 methods = upsertTransactionFlows.methods,
-                selectedMethod = transactionTemplate.method
-                    ?: it.selectedMethod,
-                sources = sources,
-                selectedSource = selectedSource,
-                transaction = Transaction(
-                    transactionTemplate.title,
-                    transactionTemplate.description
+                selectedMethod = transactionTemplate.method.target ?: it.selectedMethod,
+                transactionTitles = upsertTransactionFlows.transactionTitles,
+                transaction = it.transaction.copy(
+                    title = transactionTemplate.title,
+                    description = transactionTemplate.description
                 ),
                 dateString = it.dateTime.getDateString(datePattern),
                 timeString = it.dateTime.getTimeString(),
@@ -270,15 +327,13 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private fun getDisplayBalanceUpdatedSources(sourceList: List<Source>): List<Source> {
-        val sources = sourceList.toMutableList()
-
-        sources.forEach { source ->
-            val formatter = currencyFormatterMap.getValue(source.currency)
-            source.displayBalance = formatter.format(source.balance).toString()
+    private fun getAccountsWithFormattedBalance(accounts: List<Account>): List<Account> {
+        return accounts.map { account ->
+            val formatter = currencyFormatterMap.getValue(account.currency)
+            account.copy(
+                formattedBalance = formatter.format(account.balance).toString()
+            )
         }
-
-        return sources
     }
 
     private fun isFormValid(): Boolean {
@@ -286,55 +341,55 @@ class UpsertTransactionScreenViewModel(
         val amountValid = amount > 0.0
 
         val titleValid = state.value.title.isNotBlank()
-        val categoryValid = state.value.selectedCategory.uuid.isNotEmpty()
-        val methodValid = state.value.selectedMethod.uuid.isNotEmpty()
+        val categoryValid = state.value.selectedCategory.id > 0
+        val methodValid = state.value.selectedMethod.id > 0
 
-        val selectedSource = state.value.selectedSource
-        var sourceValid = true
-        var sourceErrorStringRes = R.string.field_required_error_label
-        if (selectedSource.uuid.isNotEmpty()) {
-            if (state.value.type == TransactionType.DEBIT && amount > selectedSource.balance) {
-                sourceValid = false
-                sourceErrorStringRes = R.string.not_enough_balance_error_label
+        val selectedAccount = state.value.selectedAccount
+        var accountValid = true
+        var accountErrorStringRes = R.string.field_required_error_label
+        if (selectedAccount.id > 0) {
+            if (state.value.type == TransactionType.DEBIT && amount > selectedAccount.balance) {
+                accountValid = false
+                accountErrorStringRes = R.string.not_enough_balance_error_label
             }
         } else {
-            sourceValid = false
+            accountValid = false
         }
 
         val timeValid = isTimeValid(selectedDateTime = state.value.dateTime)
 
         _state.update {
             it.copy(
-                titleValid = titleValid,
+                accountValid = accountValid,
                 amountValid = amountValid,
                 categoryValid = categoryValid,
                 methodValid = methodValid,
-                sourceValid = sourceValid,
-                sourceErrorStringRes = sourceErrorStringRes,
-                timeValid = timeValid
+                accountErrorStringRes = accountErrorStringRes,
+                timeValid = timeValid,
+                titleValid = titleValid
             )
         }
 
-        return amountValid && categoryValid && methodValid && sourceValid && titleValid && timeValid
+        return amountValid && categoryValid && methodValid && accountValid && titleValid && timeValid
     }
 
     private fun hasSufficientBalance(
         amount: Double,
         type: TransactionType,
-        source: Source
+        account: Account
     ) {
-        var sourceValid = true
-        var sourceErrorStringRes = R.string.field_required_error_label
+        var accountValid = true
+        var accountErrorStringRes = R.string.field_required_error_label
         if (type == TransactionType.DEBIT) {
-            if (amount > 0.0 && source.uuid.isNotBlank() && amount > source.balance) {
-                sourceValid = false
-                sourceErrorStringRes = R.string.not_enough_balance_error_label
+            if (amount > 0.0 && account.id > 0 && amount > account.balance) {
+                accountValid = false
+                accountErrorStringRes = R.string.not_enough_balance_error_label
             }
         }
         _state.update {
             it.copy(
-                sourceValid = sourceValid,
-                sourceErrorStringRes = sourceErrorStringRes
+                accountValid = accountValid,
+                accountErrorStringRes = accountErrorStringRes
             )
         }
     }
@@ -351,33 +406,83 @@ class UpsertTransactionScreenViewModel(
             }
 
             val transaction = state.value.transaction
+            val selectedAccount = state.value.selectedAccount
             val selectedCategory = state.value.selectedCategory
             val selectedCounterParty = state.value.selectedCounterParty
             val selectedMethod = state.value.selectedMethod
-            val selectedSource = state.value.selectedSource
+            val selectedType = state.value.type
+            val transactionAmount = state.value.amount
 
             val time = ZonedDateTime.now(ZoneId.systemDefault())
 
-            updateTransactionTitle(newTitle, time)
+            createOrUpdateTransactionTitle(newTitle, time)
 
-            if (templateUuid.isNotBlank()) {
+            if (templateId > 0) {
                 updateTemplate(time)
             }
 
-            if (transactionUuid.isNotBlank()) {
-                updateSource(
-                    source = selectedSource,
-                    amount = state.value.amount,
-                    frequency = selectedSource.frequency,
-                    time = time,
-                    type = state.value.type
+            if (transactionId > 0) {
+                val accountBalance = if (selectedAccount.id == previousAccount?.id) {
+                    previousBalance
+                } else {
+                    selectedAccount.balance
+                }
+                updateAccount(
+                    account = selectedAccount,
+                    balance = if (selectedType == TransactionType.DEBIT) {
+                        accountBalance - transactionAmount
+                    } else {
+                        accountBalance + transactionAmount
+                    },
+                    frequency = selectedAccount.frequency,
+                    time = time
                 )
-                if (selectedSource.uuid != previousSource!!.uuid) {
-                    realm.write {
-                        findLatest(previousSource!!)?.also {
-                            it.frequency -= 1
-                            it.balance = previousBalance
-                        }
+                if (selectedAccount.id != previousAccount?.id) {
+                    previousAccount?.let { account ->
+                        updateAccount(
+                            account = account,
+                            balance = previousBalance,
+                            frequency = account.frequency - 1
+                        )
+                    }
+                }
+                previousCategory?.let { oldCategory ->
+                    if (selectedCategory.id != oldCategory.id) {
+                        updateCategory(
+                            category = selectedCategory,
+                            frequency = selectedCategory.frequency + 1,
+                            time = time
+                        )
+                        updateCategory(
+                            category = oldCategory,
+                            frequency = oldCategory.frequency - 1
+                        )
+                    }
+                }
+                previousCounterparty?.let { oldCounterParty ->
+                    if (selectedCounterParty.id != oldCounterParty.id) {
+                        updateCounterParty(
+                            counterParty = selectedCounterParty,
+                            frequency = selectedCounterParty.frequency + 1,
+                            time = time
+                        )
+                        updateCounterParty(
+                            counterParty = oldCounterParty,
+                            frequency = oldCounterParty.frequency - 1
+                        )
+                    }
+                }
+                previousMethod?.let { oldMethod ->
+                    if (selectedMethod.id != oldMethod.id) {
+                        updateMethod(
+                            method = selectedMethod,
+                            frequency = selectedMethod.frequency + 1,
+                            time = time
+                        )
+                        updateMethod(
+                            method = oldMethod,
+                            frequency = oldMethod.frequency - 1
+                        )
                     }
                 }
             } else {
@@ -386,7 +491,7 @@ class UpsertTransactionScreenViewModel(
                     frequency = selectedCategory.frequency + 1,
                     time = time
                 )
-                if (selectedCounterParty.uuid.isNotBlank()) {
+                if (selectedCounterParty.id > 0) {
                     updateCounterParty(
                         counterParty = selectedCounterParty,
                         frequency = selectedCounterParty.frequency + 1,
@@ -398,28 +503,31 @@ class UpsertTransactionScreenViewModel(
                     frequency = selectedMethod.frequency + 1,
                     time = time
                 )
-                updateSource(
-                    source = selectedSource,
-                    amount = state.value.amount,
-                    frequency = selectedSource.frequency + 1,
-                    time = time,
-                    type = state.value.type
+                updateAccount(
+                    account = selectedAccount,
+                    balance = if (selectedType == TransactionType.DEBIT) {
+                        selectedAccount.balance - transactionAmount
+                    } else {
+                        selectedAccount.balance + transactionAmount
+                    },
+                    frequency = selectedAccount.frequency + 1,
+                    time = time
                 )
             }
             updateTransaction(
                 transaction = transaction,
                 newTitle = newTitle,
                 newDescription = newDescription,
+                account = selectedAccount,
                 category = selectedCategory,
                 counterParty = selectedCounterParty,
-                method = selectedMethod,
-                source = selectedSource
+                method = selectedMethod
             )
         }
     }
 
     fun deleteTransaction() = viewModelScope.launch {
-        if (transactionUuid.isNotBlank()) {
+        if (transactionId > 0) {
             loadDataJob?.cancelAndJoin()
             _state.update {
                 it.copy(
@@ -429,10 +537,10 @@ class UpsertTransactionScreenViewModel(
             }
 
             val transaction = state.value.transaction
-            val category = transaction.category!!
-            val counterParty = transaction.counterParty
-            val method = transaction.method!!
-            val source = transaction.source!!
+            val account = transaction.account.target
+            val category = transaction.category.target
+            val counterParty = transaction.counterParty.target
+            val method = transaction.method.target
 
             updateCategory(
                 category = category,
@@ -448,16 +556,20 @@ class UpsertTransactionScreenViewModel(
                 method = method,
                 frequency = method.frequency - 1,
             )
-            realm.write {
-                findLatest(source)?.also {
-                    it.frequency -= 1
-                    it.balance = previousBalance
-                }
-            }
-            realm.write {
-                findLatest(transaction)?.also {
-                    delete(it)
-                }
+            updateAccount(
+                account = account,
+                balance = previousBalance,
+                frequency = account.frequency - 1
+            )
+
+            updateOrDeleteTransactionTitle(transaction.title)
+
+            val deleted = transactionBox.remove(transactionId)
+
+            if (deleted) {
+                _event.send(Event.DeleteSuccess)
+            } else {
+                _event.send(Event.InternalError)
             }
 
             _state.update {
@@ -465,7 +577,6 @@ class UpsertTransactionScreenViewModel(
                     loading = false
                 )
             }
-            _event.send(Event.DeleteSuccess)
         }
     }
 
@@ -473,53 +584,32 @@ class UpsertTransactionScreenViewModel(
         transaction: Transaction,
         newTitle: String,
         newDescription: String,
+        account: Account,
         category: Category,
         counterParty: CounterParty,
-        method: Method,
-        source: Source
+        method: Method
     ) {
-        val result = realm.write {
-            val latestCategory = findLatest(category)
-            val latestCounterParty =
-                if (counterParty.uuid.isNotBlank()) findLatest(counterParty) else null
-            val latestMethod = findLatest(method)
-            val latestSource = findLatest(source)
-            if (transactionUuid.isBlank()) {
-                copyToRealm(
-                    instance = transaction.apply {
-                        this.uuid = UUID.randomUUID().toString()
-                        this.title = newTitle
-                        this.description = newDescription
-                        this.amount = state.value.amount
-                        this.time = state.value.dateTime
-                        this.type = state.value.type
-                        this.category = latestCategory
-                        this.method = latestMethod
-                        this.source = latestSource
-                        this.counterParty = latestCounterParty
-                    },
-                    updatePolicy = UpdatePolicy.ALL
-                )
-            } else {
-                findLatest(transaction)?.also {
-                    it.title = newTitle
-                    it.description = newDescription
-                    it.amount = state.value.amount
-                    it.time = state.value.dateTime
-                    it.type = state.value.type
-                    it.category = latestCategory
-                    it.method = latestMethod
-                    it.source = latestSource
-                    it.counterParty = latestCounterParty
-                }
-            }
-        }
+        val transactionToUpsert = transaction.copy(
+            title = newTitle,
+            description = newDescription,
+            amount = state.value.amount,
+            time = state.value.dateTime,
+            type = state.value.type,
+            currency = account.currency
+        )
 
-        if (result != null) {
+        transactionToUpsert.account.target = account
+        transactionToUpsert.category.target = category
+        transactionToUpsert.counterParty.target = counterParty
+        transactionToUpsert.method.target = method
+
+        try {
+            transactionBox.put(transactionToUpsert)
             _event.send(Event.SaveSuccess)
-        } else {
+        } catch (e: Exception) {
             _event.send(Event.InternalError)
         }
+
         _state.update {
             it.copy(
                 loading = false
@@ -527,109 +617,183 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    private suspend fun updateTemplate(time: ZonedDateTime) {
-        realm.write {
-            val template = query<TransactionTemplate>("uuid==$0", templateUuid).find().first()
-            template.frequency += 1
-            template.lastUsed = time
-        }
+    private fun updateTemplate(time: ZonedDateTime) {
+        val getTemplateQuery = templateBox
+            .query(TransactionTemplate_.id.equal(templateId))
+            .build()
+
+        getTemplateQuery.findUnique()
+            ?.let {
+                templateBox.put(
+                    it.copy(
+                        frequency = it.frequency + 1,
+                        lastUsed = time
+                    )
+                )
+            }
+
+        getTemplateQuery.close()
     }
 
-    private suspend fun updateTransactionTitle(title: String, time: ZonedDateTime) {
-        realm.write {
-            val transactionTitle = query<TransactionTitle>("title == [c]$0", title.trim()).find()
-            if (transactionTitle.isEmpty()) {
-                copyToRealm(
-                    instance = TransactionTitle().apply {
-                        uuid = UUID.randomUUID().toString()
-                        this.title = title
-                        frequency = 1
+    private fun createOrUpdateTransactionTitle(
+        title: String,
+        time: ZonedDateTime,
+        frequency: Int? = null
+    ) {
+        val getTransactionTitleQuery = titleBox
+            .query(TransactionTitle_.title.equal(title))
+            .build()
+
+        getTransactionTitleQuery.findUnique().let { transactionTitle ->
+            if (transactionTitle != null) {
+                titleBox.put(
+                    transactionTitle.copy(
+                        frequency = frequency ?: (transactionTitle.frequency + 1),
                         lastUsed = time
-                    }
+                    )
                 )
             } else {
-                findLatest(transactionTitle.first())?.also {
-                    it.frequency += 1
-                    it.lastUsed = time
-                }
+                titleBox.put(
+                    TransactionTitle(
+                        title = title,
+                        frequency = 1,
+                        lastUsed = time
+                    )
+                )
             }
         }
+
+        getTransactionTitleQuery.close()
     }
 
-    private suspend fun updateCategory(
+    private fun updateOrDeleteTransactionTitle(title: String) {
+        val getTransactionsQuery = transactionBox
+            .query(
+                Transaction_.title.equal(title)
+                    .and(
+                        Transaction_.id.notEqual(transactionId)
+                    )
+            )
+            .orderDesc(Transaction_.time)
+            .build()
+
+        getTransactionsQuery.find().let { transactions ->
+            if (transactions.isNotEmpty()) {
+                createOrUpdateTransactionTitle(title, transactions[0].time, transactions.size)
+            } else {
+                val transactionTitleQuery = titleBox
+                    .query(TransactionTitle_.title.equal(title))
+                    .build()
+
+                transactionTitleQuery.remove()
+
+                transactionTitleQuery.close()
+            }
+        }
+
+        getTransactionsQuery.close()
+    }
+
+    private fun updateCategory(
         category: Category,
         frequency: Int,
         time: ZonedDateTime? = null
     ) {
-        realm.write {
-            findLatest(category)?.also {
-                it.frequency = frequency
-                it.lastUsed = time ?: it.lastUsed
-            }
-        }
+        val lastUsedQuery = transactionBox
+            .query(Transaction_.categoryId.equal(category.id))
+            .orderDesc(Transaction_.time)
+            .build()
+
+        val lastUsed = time ?: lastUsedQuery.findFirst()?.time
+
+        lastUsedQuery.close()
+
+        categoryBox.put(
+            category.copy(
+                frequency = frequency,
+                lastUsed = lastUsed ?: ZonedDateTime.ofInstant(
+                    Instant.EPOCH,
+                    ZoneId.systemDefault()
+                )
+            )
+        )
     }
 
-    private suspend fun updateCounterParty(
+    private fun updateCounterParty(
         counterParty: CounterParty,
         frequency: Int,
         time: ZonedDateTime? = null
     ) {
-        realm.write {
-            findLatest(counterParty)?.also {
-                it.frequency = frequency
-                it.lastUsed = time ?: it.lastUsed
-            }
-        }
+        val lastUsedQuery = transactionBox
+            .query(Transaction_.counterPartyId.equal(counterParty.id))
+            .orderDesc(Transaction_.time)
+            .build()
+
+        val lastUsed = time ?: lastUsedQuery.findFirst()?.time
+
+        lastUsedQuery.close()
+
+        counterPartyBox.put(
+            counterParty.copy(
+                frequency = frequency,
+                lastUsed = lastUsed ?: ZonedDateTime.ofInstant(
+                    Instant.EPOCH,
+                    ZoneId.systemDefault()
+                )
+            )
+        )
     }
 
-    private suspend fun updateMethod(method: Method, frequency: Int, time: ZonedDateTime? = null) {
-        realm.write {
-            findLatest(method)?.also {
-                it.frequency = frequency
-                it.lastUsed = time ?: it.lastUsed
-            }
-        }
-    }
-
-    private suspend fun updateSource(
-        source: Source,
-        amount: Double,
+    private fun updateMethod(
+        method: Method,
         frequency: Int,
-        time: ZonedDateTime? = null,
-        type: TransactionType
+        time: ZonedDateTime? = null
     ) {
-        realm.write {
-            val currentSourceBalance: Double
-            if (transactionUuid.isNotBlank()) {
-                if (previousSource!!.uuid != source.uuid) {
-                    findLatest(previousSource!!)?.also {
-                        it.balance = previousBalance
-                    }
-                    currentSourceBalance = if (type == TransactionType.DEBIT) {
-                        source.balance - amount
-                    } else {
-                        source.balance + amount
-                    }
-                } else {
-                    currentSourceBalance = if (type == TransactionType.DEBIT) {
-                        previousBalance - amount
-                    } else {
-                        previousBalance + amount
-                    }
-                }
-            } else {
-                currentSourceBalance = if (type == TransactionType.DEBIT) {
-                    source.balance - amount
-                } else {
-                    source.balance + amount
-                }
-            }
-            findLatest(source)?.also {
-                it.frequency = frequency
-                it.lastUsed = time ?: it.lastUsed
-                it.balance = currentSourceBalance
-            }
-        }
+        val lastUsedQuery = transactionBox
+            .query(Transaction_.methodId.equal(method.id))
+            .orderDesc(Transaction_.time)
+            .build()
+
+        val lastUsed = time ?: lastUsedQuery.findFirst()?.time
+
+        lastUsedQuery.close()
+
+        methodBox.put(
+            method.copy(
+                frequency = frequency,
+                lastUsed = lastUsed ?: ZonedDateTime.ofInstant(
+                    Instant.EPOCH,
+                    ZoneId.systemDefault()
+                )
+            )
+        )
+    }
+
+    private fun updateAccount(
+        account: Account,
+        balance: Double,
+        frequency: Int,
+        time: ZonedDateTime? = null
+    ) {
+        val lastUsedQuery = transactionBox
+            .query(Transaction_.accountId.equal(account.id))
+            .orderDesc(Transaction_.time)
+            .build()
+
+        val lastUsed = time ?: lastUsedQuery.findFirst()?.time
+
+        lastUsedQuery.close()
+
+        accountBox.put(
+            account.copy(
+                balance = balance,
+                frequency = frequency,
+                lastUsed = lastUsed ?: ZonedDateTime.ofInstant(
+                    Instant.EPOCH,
+                    ZoneId.systemDefault()
+                )
+            )
+        )
     }
 
     fun setAmount(amountString: String) {
@@ -648,7 +812,7 @@ class UpsertTransactionScreenViewModel(
             hasSufficientBalance(
                 amount = newAmount,
                 type = screenState.type,
-                source = screenState.selectedSource
+                account = screenState.selectedAccount
             )
             screenState.copy(
                 amount = newAmount,
@@ -711,6 +875,22 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
+    fun setSelectedAccount(account: Account) {
+        _state.update { screenState ->
+            hasSufficientBalance(
+                screenState.amount,
+                screenState.type,
+                account
+            )
+            screenState.copy(
+                selectedAccount = account,
+                transaction = screenState.transaction.copy(
+                    currency = account.currency
+                )
+            )
+        }
+    }
+
     fun setSelectedCategory(category: Category) {
         _state.update {
             it.copy(
@@ -737,28 +917,12 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    fun setSelectedSource(source: Source) {
-        _state.update { screenState ->
-            hasSufficientBalance(
-                screenState.amount,
-                screenState.type,
-                source
-            )
-            screenState.copy(
-                selectedSource = source,
-                transaction = screenState.transaction.apply {
-                    currency = source.currency
-                }
-            )
-        }
-    }
-
     fun setTransactionType(transactionType: TransactionType) {
         _state.update { screenState ->
             hasSufficientBalance(
                 screenState.amount,
                 transactionType,
-                screenState.selectedSource
+                screenState.selectedAccount
             )
             screenState.copy(
                 type = transactionType
@@ -786,10 +950,10 @@ class UpsertTransactionScreenViewModel(
 
     fun hasChanges(description: String): Boolean {
         val transaction = state.value.transaction
+        val selectedAccount = state.value.selectedAccount
         val selectedCategory = state.value.selectedCategory
         val selectedCounterParty = state.value.selectedCounterParty
         val selectedMethod = state.value.selectedMethod
-        val selectedSource = state.value.selectedSource
         val selectedType = state.value.type
 
         val transactionDateTime = transaction.time
@@ -807,13 +971,12 @@ class UpsertTransactionScreenViewModel(
         val titleChanged = transaction.title != state.value.title
         val descriptionChanged = transaction.description != description
         val amountChanged = transaction.amount != state.value.amount
-        val categoryChanged = (transaction.category?.uuid ?: "") != selectedCategory.uuid
-        val counterPartyChanged =
-            (transaction.counterParty?.uuid ?: "") != selectedCounterParty.uuid
-        val methodChanged = (transaction.method?.uuid ?: "") != selectedMethod.uuid
-        val sourceChanged = (transaction.source?.uuid ?: "") != selectedSource.uuid
+        val accountChanged = transaction.account.targetId != selectedAccount.id
+        val categoryChanged = transaction.category.targetId != selectedCategory.id
+        val counterPartyChanged = transaction.counterParty.targetId != selectedCounterParty.id
+        val methodChanged = transaction.method.targetId != selectedMethod.id
         val typeChanged = transaction.type.id != selectedType.id
 
-        return titleChanged || descriptionChanged || amountChanged || dateChanged || timeChanged || categoryChanged || counterPartyChanged || methodChanged || sourceChanged || typeChanged
+        return titleChanged || descriptionChanged || amountChanged || dateChanged || timeChanged || categoryChanged || counterPartyChanged || methodChanged || accountChanged || typeChanged
     }
 }

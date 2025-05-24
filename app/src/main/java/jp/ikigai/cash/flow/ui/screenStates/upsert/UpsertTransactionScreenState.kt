@@ -2,13 +2,13 @@ package jp.ikigai.cash.flow.ui.screenStates.upsert
 
 import androidx.annotation.StringRes
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.TransactionTitle
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
@@ -25,6 +25,10 @@ data class UpsertTransactionScreenState(
     val timeString: String = "",
     val timeValid: Boolean = true,
     val type: TransactionType = TransactionType.DEBIT,
+    val accounts: List<Account> = emptyList(),
+    val selectedAccount: Account = Account(),
+    val accountValid: Boolean = true,
+    @StringRes val accountErrorStringRes: Int = R.string.field_required_error_label,
     val categories: List<Category> = emptyList(),
     val selectedCategory: Category = Category(),
     val categoryValid: Boolean = true,
@@ -33,10 +37,6 @@ data class UpsertTransactionScreenState(
     val methods: List<Method> = emptyList(),
     val selectedMethod: Method = Method(),
     val methodValid: Boolean = true,
-    val sources: List<Source> = emptyList(),
-    val selectedSource: Source = Source(),
-    val sourceValid: Boolean = true,
-    @StringRes val sourceErrorStringRes: Int = R.string.field_required_error_label,
     val transactionTitles: List<TransactionTitle> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,

@@ -29,14 +29,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.temp.TempCategory
-import jp.ikigai.cash.flow.data.entity.temp.TempCounterParty
-import jp.ikigai.cash.flow.data.entity.temp.TempMethod
-import jp.ikigai.cash.flow.data.entity.temp.TempSource
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.temp.TempAccount
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCategory
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCounterParty
+import jp.ikigai.cash.flow.data.store.entity.temp.TempMethod
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 
 @Composable
@@ -104,11 +104,11 @@ fun MapCategoryCard(
                 onClick = selectCategory,
                 placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedCategory.uuid.isEmpty(),
+                isError = selected && conflicting && mappedCategory.id == 0L,
                 errorHint = stringResource(id = R.string.category_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCategory.uuid.isEmpty()
+                visible = selected && !conflicting && mappedCategory.id == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_category_label),
@@ -188,11 +188,11 @@ fun MapCounterPartyCard(
                 onClick = selectCounterParty,
                 placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedCounterParty.uuid.isEmpty(),
+                isError = selected && conflicting && mappedCounterParty.id == 0L,
                 errorHint = stringResource(id = R.string.counter_party_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCounterParty.uuid.isEmpty()
+                visible = selected && !conflicting && mappedCounterParty.id == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_counterParty_label),
@@ -272,11 +272,11 @@ fun MapMethodCard(
                 onClick = selectMethod,
                 placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedMethod.uuid.isEmpty(),
+                isError = selected && conflicting && mappedMethod.id == 0L,
                 errorHint = stringResource(id = R.string.method_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedMethod.uuid.isEmpty()
+                visible = selected && !conflicting && mappedMethod.id == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_method_label),
@@ -292,10 +292,10 @@ fun MapMethodCard(
 }
 
 @Composable
-fun MapSourceCard(
+fun MapAccountCard(
     modifier: Modifier = Modifier,
-    tempSource: TempSource,
-    mappedSource: Source,
+    tempAccount: TempAccount,
+    mappedAccount: Account,
     selected: Boolean,
     conflicting: Boolean,
     restoreBalance: Boolean,
@@ -310,7 +310,7 @@ fun MapSourceCard(
     )
 
     val switchAlpha by animateFloatAsState(
-        targetValue = if (selected && mappedSource.uuid.isNotEmpty()) 1f else 0.38f,
+        targetValue = if (selected && mappedAccount.id > 0) 1f else 0.38f,
         label = "animated alpha"
     )
 
@@ -334,7 +334,7 @@ fun MapSourceCard(
                     .padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = tempSource.name,
+                    text = tempAccount.name,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
                         .alpha(alpha)
@@ -354,14 +354,14 @@ fun MapSourceCard(
                     .alpha(alpha)
             )
             AnimatedVisibility(
-                visible = mappedSource.uuid.isNotEmpty() && tempSource.balance != mappedSource.balance
+                visible = mappedAccount.id > 0 && tempAccount.balance != mappedAccount.balance
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(
                             onClick = toggleRestoreBalance,
-                            enabled = selected && mappedSource.uuid.isNotEmpty()
+                            enabled = selected && mappedAccount.id > 0
                         )
                         .padding(start = 6.dp, top = 2.dp, end = 6.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -369,8 +369,8 @@ fun MapSourceCard(
                 ) {
                     Text(
                         text = stringResource(
-                            id = R.string.update_source_balance_to_label,
-                            tempSource.displayBalance
+                            id = R.string.update_account_balance_to_label,
+                            tempAccount.formattedBalance
                         ),
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = switchAlpha),
                         modifier = Modifier
@@ -380,7 +380,7 @@ fun MapSourceCard(
                     Switch(
                         checked = restoreBalance,
                         onCheckedChange = null,
-                        enabled = selected && mappedSource.uuid.isNotEmpty(),
+                        enabled = selected && mappedAccount.id > 0,
                         thumbContent = {
                             Icon(
                                 imageVector = if (restoreBalance) Icons.Filled.Check else Icons.Filled.Clear,
@@ -392,23 +392,23 @@ fun MapSourceCard(
                 }
             }
             CustomOutlinedButton(
-                value = if (mappedSource.uuid.isNotEmpty()) "${mappedSource.name} - ${mappedSource.displayBalance}" else "",
-                leadingIcon = Constants.DEFAULT_SOURCE_ICON,
+                value = if (mappedAccount.id > 0) "${mappedAccount.name} - ${mappedAccount.formattedBalance}" else "",
+                leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedSource,
                 enabled = selected,
                 label = stringResource(id = R.string.map_to_field_label),
                 onClick = selectSource,
-                placeHolder = stringResource(id = R.string.select_source_placeholder_label),
+                placeHolder = stringResource(id = R.string.select_account_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedSource.uuid.isEmpty(),
-                errorHint = stringResource(id = R.string.source_exists_error_label)
+                isError = selected && conflicting && mappedAccount.id == 0L,
+                errorHint = stringResource(id = R.string.account_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedSource.uuid.isEmpty()
+                visible = selected && !conflicting && mappedAccount.id == 0L
             ) {
                 Text(
-                    text = stringResource(id = R.string.new_source_label),
+                    text = stringResource(id = R.string.new_account_label),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()

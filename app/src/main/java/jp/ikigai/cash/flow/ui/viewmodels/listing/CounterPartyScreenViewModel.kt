@@ -5,17 +5,20 @@ import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.History
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
-import io.realm.kotlin.query.TRUE_PREDICATE
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.Property
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CounterPartyScreenState
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -28,6 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,7 +41,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class CounterPartyScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var formatter = getNumberFormatter()
@@ -48,8 +52,17 @@ class CounterPartyScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsState<CounterParty>(
+            sortField = CounterParty_.lastUsed
+        )
+    )
+    val sortOptionsState: StateFlow<SortOptionsState<CounterParty>> =
+        _sortOptionsState.asStateFlow()
+
+    private val counterPartyBox: Box<CounterParty> = store.boxFor()
+
+    private val counterPartyCountQuery = counterPartyBox.query().build()
 
     init {
         getCounterParties()
@@ -58,15 +71,16 @@ class CounterPartyScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
+        counterPartyCountQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getCount() = viewModelScope.launch {
-        realm.query<CounterParty>().count().asFlow().collectLatest { count ->
+        counterPartyCountQuery.flow().collectLatest { counterParties ->
             _state.update {
                 it.copy(
-                    count = count,
-                    countString = formatter.format(count).toString()
+                    count = counterParties.size,
+                    countString = formatter.format(counterParties.size).toString()
                 )
             }
         }
@@ -95,19 +109,29 @@ class CounterPartyScreenViewModel(
         ) { searchText, sortOptions ->
             Pair(searchText, sortOptions)
         }.flatMapLatest { (searchText, sortOptions) ->
-            realm.query<CounterParty>(
-                if (searchText.isBlank()) {
-                    TRUE_PREDICATE
-                } else {
-                    "name CONTAINS[c] '${searchText.trim()}'"
-                }
-            )
-                .sort(sortOptions.sortField, sortOptions.sortDirection)
-                .asFlow()
-        }.collectLatest { changes ->
+            val counterPartyQueryBuilder = if (searchText.isBlank()) {
+                counterPartyBox.query()
+            } else {
+                counterPartyBox
+                    .query(
+                        CounterParty_.name.contains(
+                            searchText,
+                            QueryBuilder.StringOrder.CASE_INSENSITIVE
+                        )
+                    )
+            }
+
+            val query = counterPartyQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+
+            query.flow().onCompletion {
+                query.close()
+            }
+        }.collectLatest { counterParties ->
             _state.update { screenState ->
                 screenState.copy(
-                    counterParties = mapToDTO(changes.list, searchState.value),
+                    counterParties = mapToDTO(counterParties, searchState.value),
                     loading = false
                 )
             }
@@ -147,7 +171,7 @@ class CounterPartyScreenViewModel(
                 )
             }
             CommonListingDTO(
-                uuid = counterParty.uuid,
+                id = counterParty.id,
                 annotatedName = getHighlightedString(counterParty.name, searchText),
                 icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                 chips = chips
@@ -161,10 +185,10 @@ class CounterPartyScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: String, direction: Sort) {
+    fun setSortOptions(field: Property<CounterParty>, flags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = direction,
+                sortFlags = flags,
                 sortField = field
             )
         }

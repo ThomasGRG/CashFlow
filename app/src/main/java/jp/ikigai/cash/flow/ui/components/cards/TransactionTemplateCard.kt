@@ -1,9 +1,7 @@
 package jp.ikigai.cash.flow.ui.components.cards
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -29,32 +27,25 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
+import jp.ikigai.cash.flow.data.dto.TemplateWithChips
 import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TransactionTemplateCard(
-    transactionTemplateWithIcons: TransactionTemplateWithIcons,
+    templateWithChips: TemplateWithChips,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onClick: (Long) -> Unit
 ) {
     val haptics = LocalHapticFeedback.current
 
     ElevatedCard(
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick(templateWithChips.id)
+        },
         modifier = modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClick()
-                },
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick()
-                }
-            ),
     ) {
         Column(
             modifier = Modifier
@@ -64,13 +55,13 @@ fun TransactionTemplateCard(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = transactionTemplateWithIcons.annotatedName,
+                text = templateWithChips.annotatedName,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
             )
-            if (transactionTemplateWithIcons.amount.isNotBlank()) {
+            if (templateWithChips.amount.isNotBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -78,13 +69,13 @@ fun TransactionTemplateCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(
-                        imageVector = transactionTemplateWithIcons.typeIcon,
+                        imageVector = templateWithChips.typeIcon,
                         contentDescription = "type icon",
-                        tint = transactionTemplateWithIcons.typeIconColor,
+                        tint = templateWithChips.typeIconColor,
                         modifier = Modifier.size(30.dp)
                     )
                     Text(
-                        text = transactionTemplateWithIcons.amount,
+                        text = templateWithChips.amount,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -97,7 +88,7 @@ fun TransactionTemplateCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
                 verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
-                transactionTemplateWithIcons.chips.forEach {
+                templateWithChips.chips.forEach {
                     CustomChip(
                         icon = it.icon,
                         label = stringResource(id = it.resId, it.value)
@@ -113,7 +104,7 @@ fun TransactionTemplateCard(
 fun TransactionTemplateCard(
     checked: Boolean,
     enabled: Boolean,
-    transactionTemplateWithIcons: TransactionTemplateWithIcons,
+    templateWithChips: TemplateWithChips,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -123,7 +114,7 @@ fun TransactionTemplateCard(
 
     val animatedIconColor by animateColorAsState(
         targetValue = if (enabled) {
-            transactionTemplateWithIcons.typeIconColor
+            templateWithChips.typeIconColor
         } else {
             MaterialTheme.colorScheme.onBackground.copy(0.38f)
         },
@@ -151,7 +142,7 @@ fun TransactionTemplateCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = transactionTemplateWithIcons.annotatedName,
+                    text = templateWithChips.annotatedName,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -165,24 +156,26 @@ fun TransactionTemplateCard(
                     modifier = Modifier.padding(start = 10.dp, top = 5.dp)
                 )
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = transactionTemplateWithIcons.typeIcon,
-                    contentDescription = "type icon",
-                    tint = animatedIconColor,
-                    modifier = Modifier.size(30.dp)
-                )
-                Text(
-                    text = transactionTemplateWithIcons.amount,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.alpha(alpha)
-                )
+            if (templateWithChips.amount.isNotBlank()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = templateWithChips.typeIcon,
+                        contentDescription = "type icon",
+                        tint = animatedIconColor,
+                        modifier = Modifier.size(30.dp)
+                    )
+                    Text(
+                        text = templateWithChips.amount,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.alpha(alpha)
+                    )
+                }
             }
             FlowRow(
                 modifier = Modifier
@@ -191,7 +184,7 @@ fun TransactionTemplateCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
                 verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
-                transactionTemplateWithIcons.chips.forEach {
+                templateWithChips.chips.forEach {
                     CustomChip(
                         enabled = enabled,
                         icon = it.icon,

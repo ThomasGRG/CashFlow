@@ -6,20 +6,15 @@ import androidx.lifecycle.viewModelScope
 import io.objectbox.Box
 import io.objectbox.BoxStore
 import io.objectbox.kotlin.boxFor
-import io.objectbox.kotlin.flow
 import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.data.store.DataStore
 import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.data.store.entity.Account_
 import jp.ikigai.cash.flow.data.store.entity.Transaction
 import jp.ikigai.cash.flow.data.store.entity.Transaction_
-import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCounterPartyScreenState
-import jp.ikigai.cash.flow.utils.getNumberFormatter
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -27,42 +22,36 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-class UpsertCounterPartyScreenViewModel(
+class UpsertAccountScreenViewModel(
     savedStateHandle: SavedStateHandle,
     store: BoxStore = DataStore.store
 ) : ViewModel() {
 
-    private var numberFormatter = getNumberFormatter()
+    private val accountId: Long = checkNotNull(savedStateHandle["id"])
 
-    private val counterPartyId: Long = checkNotNull(savedStateHandle["id"])
-
-    private var getCounterPartyJob: Job? = null
+    private var getAccountJob: Job? = null
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
-    private val _state = MutableStateFlow(UpsertCounterPartyScreenState())
-    val state: StateFlow<UpsertCounterPartyScreenState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(UpsertAccountScreenState())
+    val state: StateFlow<UpsertAccountScreenState> = _state.asStateFlow()
 
     private val accountBox: Box<Account> = store.boxFor()
-    private val counterPartyBox: Box<CounterParty> = store.boxFor()
     private val transactionBox: Box<Transaction> = store.boxFor()
 
-    private val nameAlreadyInUseQuery = counterPartyBox
-        .query(CounterParty_.name.equal("", QueryBuilder.StringOrder.CASE_INSENSITIVE))
+    private val nameAlreadyInUseQuery = accountBox
+        .query(Account_.name.equal("", QueryBuilder.StringOrder.CASE_INSENSITIVE))
         .build()
 
     init {
-        if (counterPartyId > 0) {
-            getCounterPartyJob = getCounterParty()
-            getTransactionCount()
+        if (accountId > 0) {
+            getAccountJob = getAccount()
+            checkTransactionCount()
         } else {
             _state.update {
                 it.copy(
@@ -79,51 +68,44 @@ class UpsertCounterPartyScreenViewModel(
         nameAlreadyInUseQuery.close()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTransactionCount() = viewModelScope.launch {
+    private fun checkTransactionCount() = viewModelScope.launch {
         val transactionCountQuery = transactionBox
-            .query(Transaction_.counterPartyId.equal(counterPartyId))
+            .query(Transaction_.accountId.equal(accountId))
             .build()
 
-        transactionCountQuery
-            .flow()
-            .onCompletion {
-                transactionCountQuery.close()
-            }
-            .collectLatest { transactions ->
+        transactionCountQuery.count()
+            .let { count ->
                 _state.update {
                     it.copy(
-                        transactionCount = transactions.size,
-                        formattedTransactionCount = numberFormatter.format(transactions.size)
-                            .toString()
+                        hasTransactions = count > 0
                     )
                 }
             }
+
+        transactionCountQuery.close()
     }
 
-    private fun getCounterParty() = viewModelScope.launch {
-        val getCounterPartyQuery =
-            counterPartyBox.query(CounterParty_.id.equal(counterPartyId)).build()
+    private fun getAccount() = viewModelScope.launch {
+        val getAccountQuery = accountBox.query(Account_.id.equal(accountId)).build()
 
-        getCounterPartyQuery.findUnique()
-            ?.let { counterParty ->
-                _state.update {
-                    it.copy(
-                        counterParty = counterParty,
-                        name = counterParty.name,
-                        loading = false,
-                        enabled = true
-                    )
-                }
+        getAccountQuery.findUnique()?.let { account ->
+            _state.update {
+                it.copy(
+                    account = account,
+                    name = account.name,
+                    loading = false,
+                    enabled = true
+                )
             }
+        }
 
-        getCounterPartyQuery.close()
+        getAccountQuery.close()
     }
 
     fun checkNameAlreadyInUse(name: String) = viewModelScope.launch {
-        if (name.isNotBlank() && name.trim() != state.value.counterParty.name) {
+        if (name.isNotBlank() && name.trim() != state.value.account.name) {
             nameAlreadyInUseQuery
-                .setParameter(CounterParty_.name, name)
+                .setParameter(Account_.name, name.trim())
                 .count()
                 .let { count ->
                     _state.update {
@@ -154,16 +136,11 @@ class UpsertCounterPartyScreenViewModel(
         }
     }
 
-    fun setLocale(locale: Locale?) {
-        numberFormatter = getNumberFormatter(locale)
-        _state.update {
-            it.copy(
-                locale = locale
-            )
-        }
-    }
-
-    fun upsertCounterParty(newName: String) = viewModelScope.launch {
+    fun upsertSource(
+        newName: String,
+        newCurrency: String,
+        newBalance: Double
+    ) = viewModelScope.launch {
         if (newName.isBlank()) {
             _state.update {
                 it.copy(
@@ -174,7 +151,7 @@ class UpsertCounterPartyScreenViewModel(
             return@launch
         }
         if (state.value.nameValid && !state.value.loading) {
-            getCounterPartyJob?.cancel()
+            getAccountJob?.cancel()
             _state.update {
                 it.copy(
                     loading = true,
@@ -182,12 +159,14 @@ class UpsertCounterPartyScreenViewModel(
                 )
             }
 
-            val counterParty = state.value.counterParty
+            val account = state.value.account
 
             try {
-                counterPartyBox.put(
-                    counterParty.copy(
-                        name = newName
+                accountBox.put(
+                    account.copy(
+                        name = newName,
+                        currency = newCurrency,
+                        balance = newBalance
                     )
                 )
                 _event.send(Event.SaveSuccess)
@@ -203,9 +182,9 @@ class UpsertCounterPartyScreenViewModel(
         }
     }
 
-    fun deleteCounterParty() = viewModelScope.launch {
-        if (counterPartyId > 0) {
-            getCounterPartyJob?.cancelAndJoin()
+    fun deleteSource() = viewModelScope.launch {
+        if (accountId > 0) {
+            getAccountJob?.cancelAndJoin()
             _state.update {
                 it.copy(
                     loading = true,
@@ -214,38 +193,16 @@ class UpsertCounterPartyScreenViewModel(
             }
 
             val transactionsQuery = transactionBox
-                .query(Transaction_.counterPartyId.equal(counterPartyId))
+                .query(Transaction_.accountId.equal(accountId))
                 .build()
 
             val transactions = transactionsQuery.find()
 
             transactionsQuery.close()
 
-            val accounts: MutableList<Account> = mutableListOf()
-
-            transactions
-                .groupBy { transaction -> transaction.account.target }
-                .forEach { (account, transactions) ->
-                    var newBalance = account.balance
-                    transactions.forEach { transaction ->
-                        if (transaction.type == TransactionType.CREDIT) {
-                            newBalance -= transaction.amount
-                        } else {
-                            newBalance += transaction.amount
-                        }
-                    }
-                    accounts.add(
-                        account.copy(
-                            balance = newBalance
-                        )
-                    )
-                }
-
             transactionBox.remove(transactions)
 
-            accountBox.put(accounts)
-
-            val deleted = counterPartyBox.remove(counterPartyId)
+            val deleted = accountBox.remove(accountId)
 
             if (deleted) {
                 _event.send(Event.DeleteSuccess)
@@ -259,5 +216,19 @@ class UpsertCounterPartyScreenViewModel(
                 )
             }
         }
+    }
+
+    fun hasChanges(
+        balanceString: String,
+        selectedCurrency: String
+    ): Boolean {
+        val balance = balanceString.toDoubleOrNull()
+        val account = state.value.account
+
+        val nameChanged = account.name != state.value.name
+        val balanceChanged = balance == null || account.balance != balance
+        val currencyChanged = account.currency != selectedCurrency
+
+        return nameChanged || balanceChanged || currencyChanged
     }
 }

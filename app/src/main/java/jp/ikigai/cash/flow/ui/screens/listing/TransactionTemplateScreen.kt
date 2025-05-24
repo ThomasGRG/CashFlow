@@ -31,7 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,17 +52,20 @@ import androidx.navigation.NavGraphBuilder
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.Property
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -78,11 +81,11 @@ import java.util.Locale
 fun TransactionTemplateScreen(
     navigateBack: () -> Unit,
     addNewTransactionTemplate: () -> Unit,
-    editTransactionTemplate: (String) -> Unit,
+    editTransactionTemplate: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
-    sortOptionsState: SortOptionsScreenState,
-    setSortOptions: (String, Sort) -> Unit,
+    sortOptionsState: SortOptionsState<TransactionTemplate>,
+    setSortOptions: (Property<TransactionTemplate>, Int) -> Unit,
     setLocale: (Locale?) -> Unit,
     events: Flow<Event>,
     state: TransactionTemplateScreenState
@@ -132,7 +135,7 @@ fun TransactionTemplateScreen(
     }
 
     val count by remember(key1 = state.count) {
-        mutableLongStateOf(state.count)
+        mutableIntStateOf(state.count)
     }
 
     val countString by remember(key1 = state.countString) {
@@ -152,23 +155,23 @@ fun TransactionTemplateScreen(
     }
 
     val sortOptions = mapOf(
-        stringResource(id = R.string.name_field_label) to "name",
-        stringResource(id = R.string.frequency_label) to "frequency",
-        stringResource(id = R.string.last_used_label) to "lastUsed"
+        stringResource(id = R.string.name_field_label) to TransactionTemplate_.name,
+        stringResource(id = R.string.frequency_label) to TransactionTemplate_.frequency,
+        stringResource(id = R.string.last_used_label) to TransactionTemplate_.lastUsed
     )
 
-    val sortOption by remember(key1 = sortOptionsState.sortField) {
+    val sortField by remember(key1 = sortOptionsState.sortField) {
         mutableStateOf(sortOptionsState.sortField)
     }
 
-    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
-        mutableStateOf(sortOptionsState.sortDirection)
+    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
+        mutableIntStateOf(sortOptionsState.sortFlags)
     }
 
-    val sortIcon by remember(key1 = sortOptionsState.sortDirection, key2 = state.count) {
+    val sortIcon by remember(key1 = sortOptionsState.sortFlags, key2 = state.count) {
         mutableStateOf(
             if (state.count > 0) {
-                if (sortOptionsState.sortDirection == Sort.DESCENDING) {
+                if (sortOptionsState.sortFlags == QueryBuilder.DESCENDING) {
                     TablerIcons.SortDescending
                 } else {
                     TablerIcons.SortAscending
@@ -199,8 +202,8 @@ fun TransactionTemplateScreen(
             when (popupType) {
                 PopupType.SORT -> {
                     SortOptionsPopup(
-                        selectedOption = sortOption,
-                        selectedDirection = sortDirection,
+                        selectedField = sortField,
+                        selectedDirection = sortFlags,
                         options = sortOptions,
                         sort = setSortOptions,
                         dismiss = hidePopup
@@ -214,7 +217,7 @@ fun TransactionTemplateScreen(
             popupType = PopupType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0L) {
+        emptyPlaceholderText = if (count == 0) {
             stringResource(id = R.string.templates_screen_empty_placeholder_label)
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
@@ -327,17 +330,14 @@ fun TransactionTemplateScreen(
                 }
                 items(
                     items = templates,
-                    key = { template -> template.uuid }
+                    key = { template -> template.id }
                 ) { transactionTemplate ->
                     TransactionTemplateCard(
                         modifier = Modifier.animateItem(),
-                        transactionTemplateWithIcons = transactionTemplate,
-                        onClick = {
+                        templateWithChips = transactionTemplate,
+                        onClick = { id ->
                             resetOneHandMode()
-                            editTransactionTemplate(transactionTemplate.uuid)
-                        },
-                        onLongClick = {
-                            resetOneHandMode()
+                            editTransactionTemplate(id)
                         }
                     )
                 }
@@ -355,7 +355,7 @@ fun TransactionTemplateScreenPreview() {
         editTransactionTemplate = {},
         searchState = "",
         setSearchText = {},
-        sortOptionsState = SortOptionsScreenState(),
+        sortOptionsState = SortOptionsState(sortField = TransactionTemplate_.lastUsed),
         setSortOptions = { _, _ -> },
         setLocale = {},
         events = emptyList<Event>().asFlow(),
@@ -383,8 +383,8 @@ fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
                     }
                 }
             },
-            editTransactionTemplate = { uuid ->
-                navController.navigate(Routes.UpsertTemplate.getRoute(uuid)) {
+            editTransactionTemplate = { id ->
+                navController.navigate(Routes.UpsertTemplate.getRoute(id)) {
                     launchSingleTop = true
                 }
             },

@@ -5,18 +5,21 @@ import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.History
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
-import io.realm.kotlin.query.TRUE_PREDICATE
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.Property
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
+import jp.ikigai.cash.flow.data.dto.AccountListingDTO
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.SourceListingDTO
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
-import jp.ikigai.cash.flow.ui.screenStates.listing.SourceScreenState
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Account_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.screenStates.listing.AccountScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,21 +41,29 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class SourceScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+class AccountScreenViewModel(
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
-    private val _state = MutableStateFlow(SourceScreenState())
-    val state: StateFlow<SourceScreenState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(AccountScreenState())
+    val state: StateFlow<AccountScreenState> = _state.asStateFlow()
 
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsState<Account>(
+            sortField = Account_.lastUsed
+        )
+    )
+    val sortOptionsState: StateFlow<SortOptionsState<Account>> = _sortOptionsState.asStateFlow()
+
+    private val accountBox: Box<Account> = store.boxFor()
+
+    private val accountCountQuery = accountBox.query().build()
 
     init {
         getSources()
@@ -60,15 +72,16 @@ class SourceScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
+        accountCountQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getCount() = viewModelScope.launch {
-        realm.query<Source>().count().asFlow().collectLatest { count ->
+        accountCountQuery.flow().collectLatest { accounts ->
             _state.update {
                 it.copy(
-                    count = count,
-                    countString = numberFormatter.format(count).toString()
+                    count = accounts.size,
+                    countString = numberFormatter.format(accounts.size).toString()
                 )
             }
         }
@@ -97,27 +110,32 @@ class SourceScreenViewModel(
         ) { searchText, sortOptions ->
             Pair(searchText, sortOptions)
         }.flatMapLatest { (searchText, sortOptions) ->
-            val query = realm.query<Source>(
-                if (searchText.isBlank()) {
-                    TRUE_PREDICATE
-                } else {
-                    "name CONTAINS[c] '${searchText.trim()}'"
-                }
-            )
-            if (sortOptions.sortField == "balance") {
-                query.sort(
-                    Pair("currency", Sort.ASCENDING),
-                    Pair(sortOptions.sortField, sortOptions.sortDirection)
-                ).asFlow()
+            val accountQueryBuilder = if (searchText.isBlank()) {
+                accountBox.query()
             } else {
-                query.sort(
-                    Pair(sortOptions.sortField, sortOptions.sortDirection)
-                ).asFlow()
+                accountBox
+                    .query(
+                        Account_.name.contains(
+                            searchText,
+                            QueryBuilder.StringOrder.CASE_INSENSITIVE
+                        )
+                    )
             }
-        }.collectLatest { changes ->
+            if (sortOptions.sortField == Account_.balance) {
+                accountQueryBuilder
+                    .order(Account_.currency)
+                    .order(sortOptions.sortField, sortOptions.sortFlags)
+            } else {
+                accountQueryBuilder.order(sortOptions.sortField, sortOptions.sortFlags)
+            }
+            val query = accountQueryBuilder.build()
+            query.flow().onCompletion {
+                query.close()
+            }
+        }.collectLatest { accounts ->
             _state.update { screenState ->
                 screenState.copy(
-                    sources = mapToDTO(changes.list, searchState.value),
+                    accounts = mapToDTO(accounts, searchState.value),
                     loading = false
                 )
             }
@@ -125,25 +143,25 @@ class SourceScreenViewModel(
     }
 
     private fun mapToDTO(
-        sources: List<Source>,
+        accounts: List<Account>,
         searchText: String
-    ): List<SourceListingDTO> {
+    ): List<AccountListingDTO> {
         val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
-        return sources.map { source ->
-            val currencyFormatter = currencyFormatterMap.getValue(source.currency)
+        return accounts.map { account ->
+            val currencyFormatter = currencyFormatterMap.getValue(account.currency)
             val chips: MutableList<ChipInfo> = mutableListOf()
             chips.add(
                 ChipInfo(
                     resId = R.string.frequency_of_use_label,
-                    value = numberFormatter.format(source.frequency).toString(),
+                    value = numberFormatter.format(account.frequency).toString(),
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (source.lastUsed > hasBeenUsedComparator) {
+            if (account.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = source.lastUsed
+                        value = account.lastUsed
                             .format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
                         icon = TablerIcons.History
                     )
@@ -157,12 +175,12 @@ class SourceScreenViewModel(
                     )
                 )
             }
-            SourceListingDTO(
-                uuid = source.uuid,
-                annotatedName = getHighlightedString(source.name, searchText),
-                icon = Constants.DEFAULT_SOURCE_ICON,
-                currency = source.currency,
-                balance = currencyFormatter.format(source.balance).toString(),
+            AccountListingDTO(
+                id = account.id,
+                annotatedName = getHighlightedString(account.name, searchText),
+                icon = Constants.DEFAULT_ACCOUNT_ICON,
+                currency = account.currency,
+                balance = currencyFormatter.format(account.balance).toString(),
                 chips = chips
             )
         }
@@ -174,10 +192,10 @@ class SourceScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: String, direction: Sort) {
+    fun setSortOptions(field: Property<Account>, flags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = direction,
+                sortFlags = flags,
                 sortField = field
             )
         }

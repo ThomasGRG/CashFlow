@@ -5,17 +5,20 @@ import androidx.lifecycle.viewModelScope
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.History
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
-import io.realm.kotlin.query.TRUE_PREDICATE
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.Property
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.MethodScreenState
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
@@ -28,6 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,7 +41,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MethodScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var formatter = getNumberFormatter()
@@ -48,8 +52,16 @@ class MethodScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsState<Method>(
+            sortField = Method_.lastUsed
+        )
+    )
+    val sortOptionsState: StateFlow<SortOptionsState<Method>> = _sortOptionsState.asStateFlow()
+
+    private val methodBox: Box<Method> = store.boxFor()
+
+    private val methodCountQuery = methodBox.query().build()
 
     init {
         getMethods()
@@ -58,15 +70,16 @@ class MethodScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
+        methodCountQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getCount() = viewModelScope.launch {
-        realm.query<Method>().count().asFlow().collectLatest { count ->
+        methodCountQuery.flow().collectLatest { methods ->
             _state.update {
                 it.copy(
-                    count = count,
-                    countString = formatter.format(count).toString()
+                    count = methods.size,
+                    countString = formatter.format(methods.size).toString()
                 )
             }
         }
@@ -95,19 +108,29 @@ class MethodScreenViewModel(
         ) { searchText, sortOptions ->
             Pair(searchText, sortOptions)
         }.flatMapLatest { (searchText, sortOptions) ->
-            realm.query<Method>(
-                if (searchText.isBlank()) {
-                    TRUE_PREDICATE
-                } else {
-                    "name CONTAINS[c] '${searchText.trim()}'"
-                }
-            )
-                .sort(sortOptions.sortField, sortOptions.sortDirection)
-                .asFlow()
-        }.collectLatest { changes ->
+            val methodQueryBuilder = if (searchText.isBlank()) {
+                methodBox.query()
+            } else {
+                methodBox
+                    .query(
+                        Method_.name.contains(
+                            searchText,
+                            QueryBuilder.StringOrder.CASE_INSENSITIVE
+                        )
+                    )
+            }
+
+            val query = methodQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+
+            query.flow().onCompletion {
+                query.close()
+            }
+        }.collectLatest { methods ->
             _state.update { screenState ->
                 screenState.copy(
-                    methods = mapToDTO(changes.list, searchState.value),
+                    methods = mapToDTO(methods, searchState.value),
                     loading = false,
                 )
             }
@@ -144,7 +167,7 @@ class MethodScreenViewModel(
                 )
             }
             CommonListingDTO(
-                uuid = method.uuid,
+                id = method.id,
                 annotatedName = getHighlightedString(method.name, searchText),
                 icon = Constants.DEFAULT_METHOD_ICON,
                 chips = chips
@@ -158,10 +181,10 @@ class MethodScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: String, direction: Sort) {
+    fun setSortOptions(field: Property<Method>, flags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = direction,
+                sortFlags = flags,
                 sortField = field
             )
         }

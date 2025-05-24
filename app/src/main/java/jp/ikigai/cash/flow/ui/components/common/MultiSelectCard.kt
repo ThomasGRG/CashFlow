@@ -27,11 +27,13 @@ import compose.icons.tablericons.BuildingBank
 fun MultiSelectCard(
     checked: () -> Boolean,
     label: AnnotatedString,
-    onClick: () -> Unit,
+    onClick: (Boolean) -> Unit,
     modifier: Modifier
 ) {
     OutlinedCard(
-        onClick = onClick,
+        onClick = {
+            onClick(!checked())
+        },
         colors = CardDefaults.outlinedCardColors(
             containerColor = Color.Transparent
         ),
@@ -60,11 +62,13 @@ fun MultiSelectCard(
     label: AnnotatedString,
     icon: ImageVector,
     iconTint: Color = MaterialTheme.colorScheme.onBackground,
-    onClick: () -> Unit,
+    onClick: (Boolean) -> Unit,
     modifier: Modifier
 ) {
     OutlinedCard(
-        onClick = onClick,
+        onClick = {
+            onClick(!checked())
+        },
         colors = CardDefaults.outlinedCardColors(
             containerColor = Color.Transparent
         ),

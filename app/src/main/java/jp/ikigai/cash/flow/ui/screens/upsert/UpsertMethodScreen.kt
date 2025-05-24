@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,7 +75,8 @@ import java.util.Locale
 @Composable
 fun UpsertMethodScreen(
     navigateBack: () -> Unit,
-    migrateTransactions: (String) -> Unit,
+    migrateTransactions: (Long) -> Unit,
+    checkNameAlreadyInUse: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     upsertMethod: (String) -> Unit,
@@ -112,6 +114,11 @@ fun UpsertMethodScreen(
         mutableStateOf(state.name)
     }
 
+    LaunchedEffect(key1 = state.name) {
+        delay(250L)
+        checkNameAlreadyInUse(state.name)
+    }
+
     val nameValid by remember(key1 = state.nameValid) {
         mutableStateOf(state.nameValid)
     }
@@ -121,11 +128,15 @@ fun UpsertMethodScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableStateOf(state.transactionCount)
+        mutableIntStateOf(state.transactionCount)
     }
 
-    val methodUuid by remember(key1 = state.method) {
-        mutableStateOf(state.method.uuid)
+    val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
+        mutableStateOf(state.formattedTransactionCount)
+    }
+
+    val methodId by remember(key1 = state.method) {
+        mutableLongStateOf(state.method.id)
     }
 
     var popupType by remember {
@@ -157,7 +168,7 @@ fun UpsertMethodScreen(
     }
 
     BackHandler {
-        if (state.method.name != state.name) {
+        if (enabled && state.method.name != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -192,7 +203,7 @@ fun UpsertMethodScreen(
                         message = stringResource(id = R.string.method_transactions_deletion_warning_label),
                         delete = deleteMethod,
                         migrate = {
-                            migrateTransactions(methodUuid)
+                            migrateTransactions(methodId)
                         },
                         dismiss = hidePopup
                     )
@@ -217,7 +228,7 @@ fun UpsertMethodScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (methodUuid.isBlank()) {
+                    if (methodId == 0L) {
                         Text(text = stringResource(id = R.string.create_method_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_method_label))
@@ -227,7 +238,7 @@ fun UpsertMethodScreen(
         },
         bottomBar = {
             Column {
-                if (transactionCount.isNotEmpty()) {
+                if (transactionCount > 0) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -236,7 +247,7 @@ fun UpsertMethodScreen(
                         FilledTonalButton(
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                migrateTransactions(methodUuid)
+                                migrateTransactions(methodId)
                             },
                             contentPadding = PaddingValues(0.dp),
                             shape = MaterialTheme.shapes.small
@@ -244,7 +255,7 @@ fun UpsertMethodScreen(
                             Text(
                                 text = stringResource(
                                     id = R.string.migrate_transactions_chip_label,
-                                    transactionCount
+                                    formattedTransactionCount
                                 ),
                                 modifier = Modifier.padding(10.dp),
                             )
@@ -254,7 +265,7 @@ fun UpsertMethodScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.method.name != state.name) {
+                        if (enabled && state.method.name != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -272,7 +283,7 @@ fun UpsertMethodScreen(
                             upsertMethod(name.trim())
                         }
                     },
-                    extraButtonIcon = if (methodUuid.isNotBlank()) {
+                    extraButtonIcon = if (methodId > 0) {
                         {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
@@ -280,9 +291,9 @@ fun UpsertMethodScreen(
                             )
                         }
                     } else null,
-                    extraButtonAction = if (methodUuid.isNotBlank() && enabled) {
+                    extraButtonAction = if (methodId > 0 && enabled) {
                         {
-                            popupType = if (transactionCount.isNotEmpty()) {
+                            popupType = if (transactionCount > 0) {
                                 PopupType.WARN_DELETE
                             } else {
                                 PopupType.CONFIRM_DELETE
@@ -292,7 +303,7 @@ fun UpsertMethodScreen(
                 )
             }
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) { oneHandModeBoxHeight, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -344,6 +355,7 @@ fun UpsertMethodScreenPreview() {
     UpsertMethodScreen(
         navigateBack = {},
         migrateTransactions = {},
+        checkNameAlreadyInUse = {},
         setName = {},
         setLocale = {},
         upsertMethod = {},
@@ -358,8 +370,8 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
         Routes.UpsertMethod.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         )
     ) {
@@ -370,11 +382,12 @@ fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
-            migrateTransactions = { uuid ->
-                navController.navigate(Routes.MigrateMethod.getRoute(uuid)) {
+            migrateTransactions = { id ->
+                navController.navigate(Routes.MigrateMethod.getRoute(id)) {
                     launchSingleTop = true
                 }
             },
+            checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertMethod = viewModel::upsertMethod,

@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -59,12 +60,12 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -73,10 +74,10 @@ import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.components.popups.DatePickerPopup
+import jp.ikigai.cash.flow.ui.components.popups.SelectAccountPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.TimePickerPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
@@ -103,10 +104,10 @@ fun UpsertTransactionScreen(
     setAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
     setTime: (ZonedDateTime) -> Unit,
+    setSelectedAccount: (Account) -> Unit,
     setSelectedCategory: (Category) -> Unit,
     setSelectedCounterParty: (CounterParty) -> Unit,
     setSelectedMethod: (Method) -> Unit,
-    setSelectedSource: (Source) -> Unit,
     setTransactionType: (TransactionType) -> Unit,
     upsertTransaction: (String, String) -> Unit,
     deleteTransaction: () -> Unit,
@@ -177,6 +178,22 @@ fun UpsertTransactionScreen(
         }
     }
 
+    val accounts by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts)
+    }
+
+    val selectedAccount by remember(key1 = state.selectedAccount) {
+        mutableStateOf(state.selectedAccount)
+    }
+
+    val accountValid by remember(key1 = state.accountValid) {
+        mutableStateOf(state.accountValid)
+    }
+
+    val accountErrorStringRes by remember(key1 = state.accountErrorStringRes) {
+        mutableIntStateOf(state.accountErrorStringRes)
+    }
+
     val categories by remember(key1 = state.categories) {
         mutableStateOf(state.categories)
     }
@@ -209,28 +226,12 @@ fun UpsertTransactionScreen(
         mutableStateOf(state.methodValid)
     }
 
-    val sources by remember(key1 = state.sources) {
-        mutableStateOf(state.sources)
-    }
-
-    val selectedSource by remember(key1 = state.selectedSource) {
-        mutableStateOf(state.selectedSource)
-    }
-
-    val sourceValid by remember(key1 = state.sourceValid) {
-        mutableStateOf(state.sourceValid)
-    }
-
-    val sourceErrorStringRes by remember(key1 = state.sourceErrorStringRes) {
-        mutableIntStateOf(state.sourceErrorStringRes)
-    }
-
     val transactionType by remember(key1 = state.type) {
         mutableStateOf(state.type)
     }
 
-    val transactionUuid by remember(key1 = state.transaction) {
-        mutableStateOf(state.transaction.uuid)
+    val transactionId by remember(key1 = state.transaction) {
+        mutableLongStateOf(state.transaction.id)
     }
 
     val transaction by remember(key1 = state.transaction) {
@@ -293,7 +294,7 @@ fun UpsertTransactionScreen(
     }
 
     BackHandler {
-        if (hasChanges(descriptionFieldValue.text)) {
+        if (enabled && hasChanges(descriptionFieldValue.text)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -342,9 +343,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
-                        index = categories.indexOfFirst { it.uuid == selectedCategory.uuid }
+                        index = categories.indexOfFirst { it.id == selectedCategory.id }
                             .coerceAtLeast(0),
-                        selectedCategoryUUID = selectedCategory.uuid,
+                        selectedCategoryId = selectedCategory.id,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
                         dismiss = hidePopup
@@ -353,9 +354,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
-                        index = counterParties.indexOfFirst { it.uuid == selectedCounterParty.uuid }
+                        index = counterParties.indexOfFirst { it.id == selectedCounterParty.id }
                             .coerceAtLeast(0),
-                        selectedCounterPartyUUID = selectedCounterParty.uuid,
+                        selectedCounterPartyId = selectedCounterParty.id,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
                         dismiss = hidePopup
@@ -364,22 +365,22 @@ fun UpsertTransactionScreen(
 
                 PopupType.METHOD -> {
                     SelectMethodPopup(
-                        index = methods.indexOfFirst { it.uuid == selectedMethod.uuid }
+                        index = methods.indexOfFirst { it.id == selectedMethod.id }
                             .coerceAtLeast(0),
-                        selectedMethodUUID = selectedMethod.uuid,
+                        selectedMethodId = selectedMethod.id,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
                         dismiss = hidePopup
                     )
                 }
 
-                PopupType.SOURCE -> {
-                    SelectSourcePopup(
-                        index = sources.indexOfFirst { it.uuid == selectedSource.uuid }
+                PopupType.ACCOUNT -> {
+                    SelectAccountPopup(
+                        index = accounts.indexOfFirst { it.id == selectedAccount.id }
                             .coerceAtLeast(0),
-                        selectedSourceUUID = selectedSource.uuid,
-                        setSelectedSource = setSelectedSource,
-                        sources = sources,
+                        selectedAccountId = selectedAccount.id,
+                        setSelectedAccount = setSelectedAccount,
+                        accounts = accounts,
                         dismiss = hidePopup
                     )
                 }
@@ -411,7 +412,7 @@ fun UpsertTransactionScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (transactionUuid.isBlank()) {
+                    if (transactionId == 0L) {
                         Text(text = stringResource(id = R.string.create_transaction_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_transaction_label))
@@ -423,7 +424,7 @@ fun UpsertTransactionScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (hasChanges(descriptionFieldValue.text)) {
+                    if (enabled && hasChanges(descriptionFieldValue.text)) {
                         popupType = PopupType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -441,7 +442,7 @@ fun UpsertTransactionScreen(
                         upsertTransaction(title, descriptionFieldValue.text)
                     }
                 },
-                extraButtonIcon = if (transactionUuid.isNotBlank()) {
+                extraButtonIcon = if (transactionId > 0) {
                     {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
@@ -449,7 +450,7 @@ fun UpsertTransactionScreen(
                         )
                     }
                 } else null,
-                extraButtonAction = if (transactionUuid.isNotBlank() && enabled) {
+                extraButtonAction = if (transactionId > 0 && enabled) {
                     { popupType = PopupType.CONFIRM_DELETE }
                 } else null
             )
@@ -544,7 +545,7 @@ fun UpsertTransactionScreen(
                     value = descriptionFieldValue,
                     onValueChange = { descriptionFieldValue = it },
                     hasValueChanged = {
-                        transaction.uuid.isNotEmpty() && transaction.description != descriptionFieldValue.text
+                        transaction.id > 0 && transaction.description != descriptionFieldValue.text
                     },
                     enabled = enabled,
                     label = stringResource(id = R.string.description_field_label),
@@ -570,7 +571,7 @@ fun UpsertTransactionScreen(
                     onValueChange = setAmount,
                     hasValueChanged = {
                         val newAmount = amount.toDoubleOrNull()
-                        newAmount != null && newAmount > 0 && transaction.uuid.isNotEmpty() && newAmount != transaction.amount
+                        newAmount != null && newAmount > 0 && transaction.id > 0 && newAmount != transaction.amount
                     },
                     enabled = enabled,
                     label = stringResource(id = R.string.amount_label),
@@ -594,7 +595,7 @@ fun UpsertTransactionScreen(
                     value = stringResource(id = transactionType.label),
                     label = stringResource(id = R.string.transaction_type_field_label),
                     hasValueChanged = {
-                        transaction.uuid.isNotEmpty() && transactionType != transaction.type
+                        transaction.id > 0 && transactionType != transaction.type
                     },
                     placeHolder = "",
                     leadingIcon = transactionType.icon,
@@ -614,7 +615,7 @@ fun UpsertTransactionScreen(
                     value = date,
                     hasValueChanged = {
                         val initialDate = transaction.time.toLocalDate()
-                        transaction.uuid.isNotEmpty() && (!dateTime.toLocalDate()
+                        transaction.id > 0 && (!dateTime.toLocalDate()
                             .equals(initialDate))
                     },
                     label = stringResource(id = R.string.date_field_label),
@@ -636,7 +637,7 @@ fun UpsertTransactionScreen(
                     value = time,
                     hasValueChanged = {
                         val initialDateTime = transaction.time
-                        transaction.uuid.isNotEmpty() && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
+                        transaction.id > 0 && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
                     },
                     label = stringResource(id = R.string.time_field_label),
                     placeHolder = "",
@@ -658,7 +659,7 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = selectedCategory.name,
                     hasValueChanged = {
-                        transaction.uuid.isNotEmpty() && transaction.category?.uuid != selectedCategory.uuid
+                        transaction.id > 0 && transaction.category.targetId != selectedCategory.id
                     },
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
@@ -680,15 +681,15 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = selectedCounterParty.name,
                     hasValueChanged = {
-                        if (transaction.uuid.isNotEmpty()) {
-                            if (transaction.counterParty != null && selectedCounterParty.uuid.isEmpty()) {
+                        if (transaction.id > 0) {
+                            if (transaction.counterParty.targetId > 0 && selectedCounterParty.id == 0L) {
                                 true
-                            } else if (transaction.counterParty == null && selectedCounterParty.uuid.isNotEmpty()) {
+                            } else if (transaction.counterParty.targetId == 0L && selectedCounterParty.id > 0) {
                                 true
-                            } else if (transaction.counterParty == null && selectedCounterParty.uuid.isEmpty()) {
+                            } else if (transaction.counterParty.targetId == 0L && selectedCounterParty.id == 0L) {
                                 false
                             } else {
-                                transaction.counterParty?.uuid != selectedCounterParty.uuid
+                                transaction.counterParty.targetId != selectedCounterParty.id
                             }
                         } else {
                             false
@@ -716,7 +717,7 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = selectedMethod.name,
                     hasValueChanged = {
-                        transaction.uuid.isNotEmpty() && transaction.method?.uuid != selectedMethod.uuid
+                        transaction.id > 0 && transaction.method.targetId != selectedMethod.id
                     },
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
@@ -731,23 +732,23 @@ fun UpsertTransactionScreen(
                 )
             }
             item(
-                key = "source",
+                key = "account",
                 contentType = "drop-down"
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = if (selectedSource.uuid.isNotEmpty()) "${selectedSource.name} - ${selectedSource.displayBalance}" else "",
+                    value = if (selectedAccount.id > 0) "${selectedAccount.name} - ${selectedAccount.formattedBalance}" else "",
                     hasValueChanged = {
-                        transaction.uuid.isNotEmpty() && transaction.source?.uuid != selectedSource.uuid
+                        transaction.id > 0 && transaction.account.targetId != selectedAccount.id
                     },
-                    label = stringResource(id = R.string.source_field_label),
-                    placeHolder = stringResource(id = R.string.select_source_placeholder_label),
-                    isError = !sourceValid,
-                    errorHint = stringResource(id = sourceErrorStringRes),
-                    leadingIcon = Constants.DEFAULT_SOURCE_ICON,
+                    label = stringResource(id = R.string.account_field_label),
+                    placeHolder = stringResource(id = R.string.select_account_placeholder_label),
+                    isError = !accountValid,
+                    errorHint = stringResource(id = accountErrorStringRes),
+                    leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.SOURCE
+                        popupType = PopupType.ACCOUNT
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -769,7 +770,7 @@ fun UpsertTransactionScreenPreview() {
         setSelectedCategory = {},
         setSelectedCounterParty = {},
         setSelectedMethod = {},
-        setSelectedSource = {},
+        setSelectedAccount = {},
         setTransactionType = {},
         upsertTransaction = { _, _ -> },
         deleteTransaction = {},
@@ -785,12 +786,12 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
         Routes.UpsertTransaction.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             },
             navArgument("templateId") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         )
     ) {
@@ -806,10 +807,10 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             setAmount = viewModel::setAmount,
             setDate = viewModel::setDate,
             setTime = viewModel::setTime,
+            setSelectedAccount = viewModel::setSelectedAccount,
             setSelectedCategory = viewModel::setSelectedCategory,
             setSelectedCounterParty = viewModel::setSelectedCounterParty,
             setSelectedMethod = viewModel::setSelectedMethod,
-            setSelectedSource = viewModel::setSelectedSource,
             setTransactionType = viewModel::setTransactionType,
             upsertTransaction = viewModel::upsertTransaction,
             deleteTransaction = viewModel::deleteTransaction,

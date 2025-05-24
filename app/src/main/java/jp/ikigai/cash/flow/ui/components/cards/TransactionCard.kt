@@ -33,23 +33,27 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
+import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun TransactionCard(
-    transactionWithIcons: TransactionWithIcons,
+    transactionWithChips: TransactionWithChips,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onClick: (Long) -> Unit,
+    onLongClick: (Long) -> Unit,
 ) {
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
+                onClick = {
+                    onClick(transactionWithChips.id)
+                },
+                onLongClick = {
+                    onLongClick(transactionWithChips.id)
+                }
             ),
     ) {
         Column(
@@ -60,15 +64,15 @@ fun TransactionCard(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = transactionWithIcons.annotatedTitle,
+                text = transactionWithChips.annotatedTitle,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
             )
-            if (transactionWithIcons.annotatedDescription.text.isNotBlank()) {
+            if (transactionWithChips.annotatedDescription.text.isNotBlank()) {
                 Text(
-                    text = transactionWithIcons.annotatedDescription,
+                    text = transactionWithChips.annotatedDescription,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -82,13 +86,13 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    imageVector = transactionWithIcons.typeIcon,
+                    imageVector = transactionWithChips.typeIcon,
                     contentDescription = "type icon",
-                    tint = transactionWithIcons.typeIconColor,
+                    tint = transactionWithChips.typeIconColor,
                     modifier = Modifier.size(30.dp)
                 )
                 Text(
-                    text = transactionWithIcons.amount,
+                    text = transactionWithChips.amount,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -100,7 +104,7 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
                 verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
-                transactionWithIcons.chips.forEach {
+                transactionWithChips.chips.forEach {
                     CustomChip(
                         icon = it.icon,
                         label = stringResource(id = it.resId, it.value)
@@ -116,7 +120,7 @@ fun TransactionCard(
 fun TransactionCard(
     checked: Boolean,
     enabled: Boolean,
-    transactionWithIcons: TransactionWithIcons,
+    transactionWithChips: TransactionWithChips,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -131,7 +135,7 @@ fun TransactionCard(
 
     val animatedIconColor by animateColorAsState(
         targetValue = if (enabled) {
-            transactionWithIcons.typeIconColor
+            transactionWithChips.typeIconColor
         } else {
             MaterialTheme.colorScheme.onBackground.copy(0.38f)
         },
@@ -160,7 +164,7 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = transactionWithIcons.annotatedTitle,
+                    text = transactionWithChips.annotatedTitle,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -174,9 +178,9 @@ fun TransactionCard(
                     modifier = Modifier.padding(start = 10.dp, top = 5.dp)
                 )
             }
-            if (transactionWithIcons.annotatedDescription.text.isNotBlank()) {
+            if (transactionWithChips.annotatedDescription.text.isNotBlank()) {
                 Text(
-                    text = transactionWithIcons.annotatedDescription,
+                    text = transactionWithChips.annotatedDescription,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -190,13 +194,13 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    imageVector = transactionWithIcons.typeIcon,
+                    imageVector = transactionWithChips.typeIcon,
                     contentDescription = "type icon",
                     tint = animatedIconColor,
                     modifier = Modifier.size(30.dp)
                 )
                 Text(
-                    text = transactionWithIcons.amount,
+                    text = transactionWithChips.amount,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.alpha(alpha)
@@ -209,7 +213,7 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Start),
                 verticalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.Top)
             ) {
-                transactionWithIcons.chips.forEach {
+                transactionWithChips.chips.forEach {
                     CustomChip(
                         enabled = enabled,
                         icon = it.icon,
@@ -237,7 +241,7 @@ fun TransactionCardPreview() {
             TransactionCard(
                 checked = false,
                 enabled = true,
-                transactionWithIcons = TransactionWithIcons(
+                transactionWithChips = TransactionWithChips(
                     annotatedTitle = AnnotatedString("Test askjdef anedkufb awindas uifb urnit"),
                     annotatedDescription = AnnotatedString("Desc"),
                     amount = "423.09",
@@ -255,7 +259,7 @@ fun TransactionCardPreview() {
             TransactionCard(
                 checked = false,
                 enabled = false,
-                transactionWithIcons = TransactionWithIcons(
+                transactionWithChips = TransactionWithChips(
                     annotatedTitle = AnnotatedString("Test askjdef anedkufb awindas uifb urnit"),
                     annotatedDescription = AnnotatedString("Desc"),
                     amount = "423.09",
@@ -275,7 +279,7 @@ fun TransactionCardPreview() {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             TransactionCard(
-                transactionWithIcons = TransactionWithIcons(
+                transactionWithChips = TransactionWithChips(
                     annotatedTitle = AnnotatedString("Test"),
                     annotatedDescription = AnnotatedString("Desc"),
                     amount = "423.09",
@@ -293,7 +297,7 @@ fun TransactionCardPreview() {
             TransactionCard(
                 checked = true,
                 enabled = true,
-                transactionWithIcons = TransactionWithIcons(
+                transactionWithChips = TransactionWithChips(
                     annotatedTitle = AnnotatedString("Test askjdef anedkufb awindas uifb urnit"),
                     annotatedDescription = AnnotatedString("Desc"),
                     amount = "423.09",
@@ -311,7 +315,7 @@ fun TransactionCardPreview() {
             TransactionCard(
                 checked = true,
                 enabled = false,
-                transactionWithIcons = TransactionWithIcons(
+                transactionWithChips = TransactionWithChips(
                     annotatedTitle = AnnotatedString("Test askjdef anedkufb awindas uifb urnit"),
                     annotatedDescription = AnnotatedString("Desc"),
                     amount = "423.09",

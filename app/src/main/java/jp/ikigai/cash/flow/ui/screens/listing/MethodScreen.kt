@@ -31,7 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,16 +52,19 @@ import androidx.navigation.NavGraphBuilder
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.realm.kotlin.query.Sort
+import io.objectbox.Property
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.InfoCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.MethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.MethodScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -73,11 +76,11 @@ import java.util.Locale
 fun MethodScreen(
     navigateBack: () -> Unit,
     addNewTransactionMethod: () -> Unit,
-    editTransactionMethod: (String) -> Unit,
+    editTransactionMethod: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
-    sortOptionsState: SortOptionsScreenState,
-    setSortOptions: (String, Sort) -> Unit,
+    sortOptionsState: SortOptionsState<Method>,
+    setSortOptions: (Property<Method>, Int) -> Unit,
     setLocale: (Locale?) -> Unit,
     state: MethodScreenState
 ) {
@@ -105,7 +108,7 @@ fun MethodScreen(
     }
 
     val count by remember(key1 = state.count) {
-        mutableLongStateOf(state.count)
+        mutableIntStateOf(state.count)
     }
 
     val countString by remember(key1 = state.countString) {
@@ -129,23 +132,23 @@ fun MethodScreen(
     }
 
     val sortOptions = mapOf(
-        stringResource(id = R.string.name_field_label) to "name",
-        stringResource(id = R.string.frequency_label) to "frequency",
-        stringResource(id = R.string.last_used_label) to "lastUsed"
+        stringResource(id = R.string.name_field_label) to Method_.name,
+        stringResource(id = R.string.frequency_label) to Method_.frequency,
+        stringResource(id = R.string.last_used_label) to Method_.lastUsed
     )
 
-    val sortOption by remember(key1 = sortOptionsState.sortField) {
+    val sortField by remember(key1 = sortOptionsState.sortField) {
         mutableStateOf(sortOptionsState.sortField)
     }
 
-    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
-        mutableStateOf(sortOptionsState.sortDirection)
+    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
+        mutableIntStateOf(sortOptionsState.sortFlags)
     }
 
-    val sortIcon by remember(key1 = sortOptionsState.sortDirection, key2 = state.count) {
+    val sortIcon by remember(key1 = sortOptionsState.sortFlags, key2 = state.count) {
         mutableStateOf(
             if (state.count > 0) {
-                if (sortOptionsState.sortDirection == Sort.DESCENDING) {
+                if (sortOptionsState.sortFlags == QueryBuilder.DESCENDING) {
                     TablerIcons.SortDescending
                 } else {
                     TablerIcons.SortAscending
@@ -168,8 +171,8 @@ fun MethodScreen(
             when (popupType) {
                 PopupType.SORT -> {
                     SortOptionsPopup(
-                        selectedOption = sortOption,
-                        selectedDirection = sortDirection,
+                        selectedField = sortField,
+                        selectedDirection = sortFlags,
                         options = sortOptions,
                         sort = setSortOptions,
                         dismiss = hidePopup
@@ -183,7 +186,7 @@ fun MethodScreen(
             popupType = PopupType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0L) {
+        emptyPlaceholderText = if (count == 0) {
             stringResource(id = R.string.methods_screen_empty_placeholder_label)
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
@@ -293,14 +296,14 @@ fun MethodScreen(
                 }
                 items(
                     items = methods,
-                    key = { method -> method.uuid }
+                    key = { method -> method.id }
                 ) { method ->
                     InfoCard(
                         modifier = Modifier.animateItem(),
                         data = method,
-                        onClick = { uuid ->
+                        onClick = { id ->
                             resetOneHandMode()
-                            editTransactionMethod(uuid)
+                            editTransactionMethod(id)
                         }
                     )
                 }
@@ -318,7 +321,7 @@ fun MethodScreenPreview() {
         editTransactionMethod = {},
         searchState = "",
         setSearchText = {},
-        sortOptionsState = SortOptionsScreenState(),
+        sortOptionsState = SortOptionsState(sortField = Method_.lastUsed),
         setSortOptions = { _, _ -> },
         setLocale = {},
         state = MethodScreenState()
@@ -343,8 +346,8 @@ fun NavGraphBuilder.methodScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            editTransactionMethod = { uuid ->
-                navController.navigate(Routes.UpsertMethod.getRoute(uuid)) {
+            editTransactionMethod = { id ->
+                navController.navigate(Routes.UpsertMethod.getRoute(id)) {
                     launchSingleTop = true
                 }
             },

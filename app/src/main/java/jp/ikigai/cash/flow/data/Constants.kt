@@ -12,7 +12,7 @@ import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 
 object Constants {
 
-    const val tweenDuration = 350
+    const val TWEEN_DURATION = 350
 
     const val WAIT_DIALOG_MINIMUM_SCREEN_TIME = 500L
 
@@ -40,5 +40,5 @@ object Constants {
     val DEFAULT_CATEGORY_ICON = TablerIcons.Archive
     val DEFAULT_COUNTERPARTY_ICON = TablerIcons.Users
     val DEFAULT_METHOD_ICON = TablerIcons.CreditCard
-    val DEFAULT_SOURCE_ICON = TablerIcons.BuildingBank
+    val DEFAULT_ACCOUNT_ICON = TablerIcons.BuildingBank
 }

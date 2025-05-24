@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import jp.ikigai.cash.flow.data.Constants
 
-data class TransactionTemplateWithIcons(
-    val uuid: String = "",
+data class TemplateWithChips(
+    val id: Long = 0L,
     val annotatedName: AnnotatedString = AnnotatedString(""),
     val amount: String = "",
     val typeIcon: ImageVector = Constants.DEFAULT_TYPE_ICON,

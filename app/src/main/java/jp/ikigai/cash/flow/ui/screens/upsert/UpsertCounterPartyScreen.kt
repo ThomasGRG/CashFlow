@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -74,7 +75,8 @@ import java.util.Locale
 @Composable
 fun UpsertCounterPartyScreen(
     navigateBack: () -> Unit,
-    migrateTransactions: (String) -> Unit,
+    migrateTransactions: (Long) -> Unit,
+    checkNameAlreadyInUse: (String) -> Unit,
     setName: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     upsertCounterParty: (String) -> Unit,
@@ -112,6 +114,11 @@ fun UpsertCounterPartyScreen(
         mutableStateOf(state.name)
     }
 
+    LaunchedEffect(key1 = state.name) {
+        delay(250L)
+        checkNameAlreadyInUse(state.name)
+    }
+
     val nameValid by remember(key1 = state.nameValid) {
         mutableStateOf(state.nameValid)
     }
@@ -121,11 +128,15 @@ fun UpsertCounterPartyScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableStateOf(state.transactionCount)
+        mutableIntStateOf(state.transactionCount)
     }
 
-    val counterPartyUuid by remember(key1 = state.counterParty) {
-        mutableStateOf(state.counterParty.uuid)
+    val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
+        mutableStateOf(state.formattedTransactionCount)
+    }
+
+    val counterPartyId by remember(key1 = state.counterParty) {
+        mutableLongStateOf(state.counterParty.id)
     }
 
     var popupType by remember {
@@ -157,7 +168,7 @@ fun UpsertCounterPartyScreen(
     }
 
     BackHandler {
-        if (state.counterParty.name != state.name) {
+        if (enabled && state.counterParty.name != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -195,7 +206,7 @@ fun UpsertCounterPartyScreen(
                         message = stringResource(id = R.string.counter_party_transactions_deletion_warning_label),
                         delete = deleteCounterParty,
                         migrate = {
-                            migrateTransactions(counterPartyUuid)
+                            migrateTransactions(counterPartyId)
                         },
                         dismiss = {
                             hidePopup()
@@ -226,7 +237,7 @@ fun UpsertCounterPartyScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    if (counterPartyUuid.isBlank()) {
+                    if (counterPartyId == 0L) {
                         Text(text = stringResource(id = R.string.create_counter_party_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_counter_party_label))
@@ -236,7 +247,7 @@ fun UpsertCounterPartyScreen(
         },
         bottomBar = {
             Column {
-                if (transactionCount.isNotEmpty()) {
+                if (transactionCount > 0) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -245,7 +256,7 @@ fun UpsertCounterPartyScreen(
                         FilledTonalButton(
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                migrateTransactions(counterPartyUuid)
+                                migrateTransactions(counterPartyId)
                             },
                             contentPadding = PaddingValues(0.dp),
                             shape = MaterialTheme.shapes.small
@@ -253,7 +264,7 @@ fun UpsertCounterPartyScreen(
                             Text(
                                 text = stringResource(
                                     id = R.string.migrate_transactions_chip_label,
-                                    transactionCount
+                                    formattedTransactionCount
                                 ),
                                 modifier = Modifier.padding(10.dp),
                             )
@@ -263,7 +274,7 @@ fun UpsertCounterPartyScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (state.counterParty.name != state.name) {
+                        if (enabled && state.counterParty.name != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
@@ -281,7 +292,7 @@ fun UpsertCounterPartyScreen(
                             upsertCounterParty(name.trim())
                         }
                     },
-                    extraButtonIcon = if (counterPartyUuid.isNotBlank()) {
+                    extraButtonIcon = if (counterPartyId > 0) {
                         {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,
@@ -289,9 +300,9 @@ fun UpsertCounterPartyScreen(
                             )
                         }
                     } else null,
-                    extraButtonAction = if (counterPartyUuid.isNotBlank() && enabled) {
+                    extraButtonAction = if (counterPartyId > 0 && enabled) {
                         {
-                            popupType = if (transactionCount.isNotEmpty()) {
+                            popupType = if (transactionCount > 0) {
                                 PopupType.WARN_DELETE
                             } else {
                                 PopupType.CONFIRM_DELETE
@@ -301,7 +312,7 @@ fun UpsertCounterPartyScreen(
                 )
             }
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) { oneHandModeBoxHeight, _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -353,6 +364,7 @@ fun UpsertCounterPartyScreenPreview() {
     UpsertCounterPartyScreen(
         navigateBack = {},
         migrateTransactions = {},
+        checkNameAlreadyInUse = {},
         setName = {},
         setLocale = {},
         upsertCounterParty = {},
@@ -367,8 +379,8 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
         Routes.UpsertCounterParty.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                defaultValue = 0L
+                type = NavType.LongType
             }
         )
     ) {
@@ -379,11 +391,12 @@ fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
             navigateBack = {
                 navController.popBackStack()
             },
-            migrateTransactions = { uuid ->
-                navController.navigate(Routes.MigrateCounterParty.getRoute(uuid)) {
+            migrateTransactions = { id ->
+                navController.navigate(Routes.MigrateCounterParty.getRoute(id)) {
                     launchSingleTop = true
                 }
             },
+            checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setName = viewModel::setName,
             setLocale = viewModel::setLocale,
             upsertCounterParty = viewModel::upsertCounterParty,

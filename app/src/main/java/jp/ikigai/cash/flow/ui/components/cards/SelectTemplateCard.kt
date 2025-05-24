@@ -23,12 +23,12 @@ import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 @Composable
 fun SelectTemplateCard(
     data: SelectTemplateInfoDTO,
-    onClick: (String) -> Unit,
+    onClick: (Long) -> Unit,
     modifier: Modifier
 ) {
     OutlinedCard(
         onClick = {
-            onClick(data.uuid)
+            onClick(data.id)
         },
         colors = CardDefaults.outlinedCardColors(
             containerColor = Color.Transparent
@@ -69,7 +69,7 @@ fun SelectTemplateCardPreview() {
     Column {
         SelectTemplateCard(
             data = SelectTemplateInfoDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Test"),
                 frequency = "3,246"
             ),
@@ -80,7 +80,7 @@ fun SelectTemplateCardPreview() {
         )
         SelectTemplateCard(
             data = SelectTemplateInfoDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Test oinaduoebnou andioa enoifnda oie niaeoaoie"),
                 frequency = "3.2k"
             ),
@@ -91,7 +91,7 @@ fun SelectTemplateCardPreview() {
         )
         SelectTemplateCard(
             data = SelectTemplateInfoDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Test"),
                 frequency = "0"
             ),
@@ -102,7 +102,7 @@ fun SelectTemplateCardPreview() {
         )
         SelectTemplateCard(
             data = SelectTemplateInfoDTO(
-                uuid = "",
+                id = 0L,
                 annotatedName = AnnotatedString("Test ajnduane uaoi noien doai naoi adaw wadwa"),
                 frequency = "34"
             ),

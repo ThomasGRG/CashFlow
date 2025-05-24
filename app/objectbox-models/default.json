@@ -328,7 +328,7 @@
           "indexId": "9:6614175258765062782",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Account"
+          "relationTarget": "TempAccount"
         },
         {
           "id": "9:5349597290575307441",
@@ -336,7 +336,7 @@
           "indexId": "10:5928702006358675069",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Category"
+          "relationTarget": "TempCategory"
         },
         {
           "id": "10:2948610772110682371",
@@ -344,7 +344,7 @@
           "indexId": "11:7627978180825753414",
           "type": 11,
           "flags": 520,
-          "relationTarget": "CounterParty"
+          "relationTarget": "TempCounterParty"
         },
         {
           "id": "11:6747583083024285391",
@@ -352,7 +352,7 @@
           "indexId": "12:3160050944827316504",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Method"
+          "relationTarget": "TempMethod"
         }
       ],
       "relations": []
@@ -409,7 +409,7 @@
           "indexId": "13:3782854855105706968",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Account"
+          "relationTarget": "TempAccount"
         },
         {
           "id": "10:8494601657504895616",
@@ -417,7 +417,7 @@
           "indexId": "14:6778475813092360465",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Category"
+          "relationTarget": "TempCategory"
         },
         {
           "id": "11:2040722993694940572",
@@ -425,7 +425,7 @@
           "indexId": "15:1986782137950940059",
           "type": 11,
           "flags": 520,
-          "relationTarget": "CounterParty"
+          "relationTarget": "TempCounterParty"
         },
         {
           "id": "12:8953851571720960250",
@@ -433,7 +433,7 @@
           "indexId": "16:8655219679402295923",
           "type": 11,
           "flags": 520,
-          "relationTarget": "Method"
+          "relationTarget": "TempMethod"
         }
       ],
       "relations": []
@@ -528,7 +528,9 @@
         {
           "id": "2:1779098429902287494",
           "name": "name",
-          "type": 9
+          "indexId": "25:7580429313279816854",
+          "type": 9,
+          "flags": 2080
         },
         {
           "id": "3:6838647616016733330",
@@ -609,7 +611,9 @@
         {
           "id": "2:3572248973660735216",
           "name": "title",
-          "type": 9
+          "indexId": "26:1803290883391241019",
+          "type": 9,
+          "flags": 2080
         },
         {
           "id": "3:8464928343392419581",
@@ -626,7 +630,7 @@
     }
   ],
   "lastEntityId": "13:519889918871550083",
-  "lastIndexId": "24:3257380331312831722",
+  "lastIndexId": "26:1803290883391241019",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

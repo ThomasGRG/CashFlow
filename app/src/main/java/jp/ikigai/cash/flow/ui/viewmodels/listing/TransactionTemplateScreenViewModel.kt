@@ -7,21 +7,24 @@ import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.History
 import compose.icons.tablericons.Typography
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
-import io.realm.kotlin.query.TRUE_PREDICATE
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.Property
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.TransactionTemplate
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.data.dto.TemplateWithChips
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -37,6 +40,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -47,7 +51,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class TransactionTemplateScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
+    store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
@@ -59,11 +63,23 @@ class TransactionTemplateScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(SortOptionsScreenState())
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    private val _sortOptionsState = MutableStateFlow(
+        SortOptionsState<TransactionTemplate>(
+            sortField = TransactionTemplate_.lastUsed
+        )
+    )
+    val sortOptionsState: StateFlow<SortOptionsState<TransactionTemplate>> =
+        _sortOptionsState.asStateFlow()
+
+    private val accountBox: Box<Account> = store.boxFor()
+    private val categoryBox: Box<Category> = store.boxFor()
+    private val methodBox: Box<Method> = store.boxFor()
+    private val templateBox: Box<TransactionTemplate> = store.boxFor()
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
+
+    private val templateCountQuery = templateBox.query().build()
 
     init {
         getTemplates()
@@ -72,49 +88,50 @@ class TransactionTemplateScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
+        templateCountQuery.close()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getCount() = viewModelScope.launch {
-        realm.query<TransactionTemplate>().count().asFlow().collectLatest { count ->
+        templateCountQuery.flow().collectLatest { templates ->
             _state.update {
                 it.copy(
-                    count = count,
-                    countString = numberFormatter.format(count).toString()
+                    count = templates.size,
+                    countString = numberFormatter.format(templates.size).toString()
                 )
             }
         }
     }
 
     fun canAddTransaction(): Boolean {
-        val sourceEmpty = realm.query<Source>().count().find() == 0L
-        val categoryEmpty = realm.query<Category>().count().find() == 0L
-        val methodEmpty = realm.query<Method>().count().find() == 0L
-        val canAddTransaction = !sourceEmpty && !categoryEmpty && !methodEmpty
+        val accountEmpty = accountBox.isEmpty
+        val categoryEmpty = categoryBox.isEmpty
+        val methodEmpty = methodBox.isEmpty
+        val canAddTransaction = !accountEmpty && !categoryEmpty && !methodEmpty
         if (!canAddTransaction) {
-            showToastBarForRequiredFields(sourceEmpty, methodEmpty, categoryEmpty)
+            showToastBarForRequiredFields(accountEmpty, methodEmpty, categoryEmpty)
         }
         return canAddTransaction
     }
 
     private fun showToastBarForRequiredFields(
-        sourceEmpty: Boolean,
+        accountEmpty: Boolean,
         methodEmpty: Boolean,
         categoryEmpty: Boolean
     ) = viewModelScope.launch {
-        if (sourceEmpty && methodEmpty && categoryEmpty) {
-            _event.send(Event.CategoryMethodSourceRequired)
-        } else if (sourceEmpty && methodEmpty) {
-            _event.send(Event.MethodSourceRequired)
+        if (accountEmpty && methodEmpty && categoryEmpty) {
+            _event.send(Event.AccountCategoryMethodRequired)
+        } else if (accountEmpty && methodEmpty) {
+            _event.send(Event.AccountMethodRequired)
         } else if (categoryEmpty && methodEmpty) {
             _event.send(Event.CategoryMethodRequired)
-        } else if (categoryEmpty && sourceEmpty) {
-            _event.send(Event.CategorySourceRequired)
+        } else if (categoryEmpty && accountEmpty) {
+            _event.send(Event.AccountCategoryRequired)
         } else if (categoryEmpty) {
             _event.send(Event.CategoryRequired)
-        } else if (sourceEmpty) {
-            _event.send(Event.SourceRequired)
+        } else if (accountEmpty) {
+            _event.send(Event.AccountRequired)
         } else if (methodEmpty) {
             _event.send(Event.MethodRequired)
         }
@@ -143,19 +160,29 @@ class TransactionTemplateScreenViewModel(
         ) { searchText, sortOptions ->
             Pair(searchText, sortOptions)
         }.flatMapLatest { (searchText, sortOptions) ->
-            realm.query<TransactionTemplate>(
-                if (searchText.isBlank()) {
-                    TRUE_PREDICATE
-                } else {
-                    "name CONTAINS[c] '${searchText.trim()}'"
-                }
-            )
-                .sort(sortOptions.sortField, sortOptions.sortDirection)
-                .asFlow()
-        }.collectLatest { changes ->
+            val templateQueryBuilder = if (searchText.isBlank()) {
+                templateBox.query()
+            } else {
+                templateBox
+                    .query(
+                        TransactionTemplate_.name.contains(
+                            searchText,
+                            QueryBuilder.StringOrder.CASE_INSENSITIVE
+                        )
+                    )
+            }
+
+            val query = templateQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+
+            query.flow().onCompletion {
+                query.close()
+            }
+        }.collectLatest { templates ->
             _state.update { screenState ->
                 screenState.copy(
-                    templates = getTemplateWithIcons(changes.list, searchState.value),
+                    templates = getTemplateWithIcons(templates, searchState.value),
                     loading = false
                 )
             }
@@ -165,14 +192,16 @@ class TransactionTemplateScreenViewModel(
     private fun getTemplateWithIcons(
         templates: List<TransactionTemplate>,
         searchText: String
-    ): List<TransactionTemplateWithIcons> {
+    ): List<TemplateWithChips> {
         val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
         return templates.map { template ->
-            val category = template.category
-            val counterParty = template.counterParty
-            val method = template.method
-            val source = template.source
+            val account = template.account.target
+            val category = template.category.target
+            val counterParty = template.counterParty.target
+            val method = template.method.target
+
             val chips: MutableList<ChipInfo> = mutableListOf()
+
             if (template.title.isNotEmpty()) {
                 chips.add(
                     ChipInfo(
@@ -218,12 +247,12 @@ class TransactionTemplateScreenViewModel(
                     )
                 )
             }
-            if (source != null) {
+            if (account != null) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.placeholder,
-                        value = source.name,
-                        icon = Constants.DEFAULT_SOURCE_ICON
+                        value = account.name,
+                        icon = Constants.DEFAULT_ACCOUNT_ICON
                     )
                 )
             }
@@ -253,17 +282,14 @@ class TransactionTemplateScreenViewModel(
                 )
             }
             val formattedAmount = if (template.amount > 0) {
-                if (source != null) {
-                    currencyFormatterMap.getValue(source.currency).format(template.amount)
-                        .toString()
-                } else {
-                    numberFormatter.format(template.amount).toString()
-                }
+                val currencyFormatter = currencyFormatterMap[account?.currency]
+                currencyFormatter?.format(template.amount)?.toString()
+                    ?: numberFormatter.format(template.amount).toString()
             } else {
                 ""
             }
-            TransactionTemplateWithIcons(
-                uuid = template.uuid,
+            TemplateWithChips(
+                id = template.id,
                 annotatedName = getHighlightedString(template.name, searchText),
                 amount = formattedAmount,
                 typeIcon = template.type.icon,
@@ -279,10 +305,10 @@ class TransactionTemplateScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: String, direction: Sort) {
+    fun setSortOptions(field: Property<TransactionTemplate>, flags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = direction,
+                sortFlags = flags,
                 sortField = field
             )
         }

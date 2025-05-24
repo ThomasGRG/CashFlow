@@ -1,16 +1,16 @@
 package jp.ikigai.cash.flow.data.dto.export
 
 data class TemplateExport(
-    val uuid: String,
+    val id: Long,
     val name: String,
     val title: String,
     val description: String,
     val amount: Double,
     val typeId: Int,
-    val categoryUUID: String?,
-    val counterPartyUUID: String?,
-    val methodUUID: String?,
-    val sourceUUID: String?,
+    val accountId: Long,
+    val categoryId: Long,
+    val counterPartyId: Long,
+    val methodId: Long,
     val frequency: Int,
     val lastUsed: Long,
 )

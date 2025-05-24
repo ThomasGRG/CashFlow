@@ -9,57 +9,57 @@ sealed class Routes(val route: String) {
 
     object Transactions: Routes("transactions")
     object UpsertTransaction: Routes("upsertTransaction?id={id}&templateId={templateId}") {
-        fun getRoute(id: String = "", templateId: String = ""): String {
+        fun getRoute(id: Long = 0L, templateId: Long = 0L): String {
             return "upsertTransaction?id=${id}&templateId=${templateId}"
         }
     }
 
     object CounterParties: Routes("counterParties")
     object UpsertCounterParty: Routes("upsertCounterParty?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long = 0L): String {
             return "upsertCounterParty?id=${id}"
         }
     }
     object MigrateCounterParty : Routes("migrateCounterParty?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long): String {
             return "migrateCounterParty?id=${id}"
         }
     }
 
-    object Sources: Routes("sources")
-    object UpsertSource: Routes("upsertSource?id={id}") {
-        fun getRoute(id: String = ""): String {
-            return "upsertSource?id=${id}"
+    object Accounts : Routes("accounts")
+    object UpsertAccount : Routes("upsertAccount?id={id}") {
+        fun getRoute(id: Long = 0L): String {
+            return "upsertAccount?id=${id}"
         }
     }
 
     object Methods: Routes("methods")
     object UpsertMethod: Routes("upsertMethod?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long = 0L): String {
             return "upsertMethod?id=${id}"
         }
     }
     object MigrateMethod : Routes("migrateMethod?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long): String {
             return "migrateMethod?id=${id}"
         }
     }
 
     object Categories: Routes("categories")
     object UpsertCategory: Routes("upsertCategory?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long = 0L): String {
             return "upsertCategory?id=${id}"
         }
     }
     object MigrateCategory : Routes("migrateCategory?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long): String {
             return "migrateCategory?id=${id}"
         }
     }
 
     object Templates: Routes("templates")
     object UpsertTemplate: Routes("upsertTemplate?id={id}") {
-        fun getRoute(id: String = ""): String {
+        fun getRoute(id: Long = 0L): String {
             return "upsertTemplate?id=${id}"
         }
     }

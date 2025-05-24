@@ -11,33 +11,44 @@ import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.History
 import compose.icons.tablericons.Typography
-import io.realm.kotlin.MutableRealm
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.notifications.ResultsChange
-import io.realm.kotlin.query.Sort
+import io.objectbox.Box
+import io.objectbox.BoxStore
+import io.objectbox.exception.UniqueViolationException
+import io.objectbox.kotlin.boxFor
+import io.objectbox.kotlin.flow
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.dto.TransactionTemplateWithIcons
-import jp.ikigai.cash.flow.data.dto.TransactionWithIcons
+import jp.ikigai.cash.flow.data.dto.TemplateWithChips
+import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.dto.export.ExportData
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.entity.temp.TempCategory
-import jp.ikigai.cash.flow.data.entity.temp.TempCounterParty
-import jp.ikigai.cash.flow.data.entity.temp.TempMethod
-import jp.ikigai.cash.flow.data.entity.temp.TempSource
-import jp.ikigai.cash.flow.data.entity.temp.TempTransaction
-import jp.ikigai.cash.flow.data.entity.temp.TempTransactionTemplate
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.data.store.DataStore
+import jp.ikigai.cash.flow.data.store.entity.Account
+import jp.ikigai.cash.flow.data.store.entity.Account_
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
+import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.data.store.entity.Method
+import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.temp.TempAccount
+import jp.ikigai.cash.flow.data.store.entity.temp.TempAccount_
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCategory
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCategory_
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCounterParty
+import jp.ikigai.cash.flow.data.store.entity.temp.TempCounterParty_
+import jp.ikigai.cash.flow.data.store.entity.temp.TempMethod
+import jp.ikigai.cash.flow.data.store.entity.temp.TempMethod_
+import jp.ikigai.cash.flow.data.store.entity.temp.TempTransaction
+import jp.ikigai.cash.flow.data.store.entity.temp.TempTransactionTemplate
+import jp.ikigai.cash.flow.data.store.entity.temp.TempTransactionTemplate_
+import jp.ikigai.cash.flow.data.store.entity.temp.TempTransaction_
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
@@ -61,6 +72,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -75,10 +87,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.UUID
+import kotlin.random.Random
 
 class ImportBackupScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config)
+    private val store: BoxStore = DataStore.store
 ) : ViewModel() {
 
     private val datePattern = "dd-LLL-yyyy"
@@ -101,9 +113,12 @@ class ImportBackupScreenViewModel(
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
     private val _sortOptionsState = MutableStateFlow(
-        SortOptionsScreenState(Sort.DESCENDING, "time")
+        SortOptionsState<TempTransaction>(
+            sortField = TempTransaction_.time
+        )
     )
-    val sortOptionsState: StateFlow<SortOptionsScreenState> = _sortOptionsState.asStateFlow()
+    val sortOptionsState: StateFlow<SortOptionsState<TempTransaction>> =
+        _sortOptionsState.asStateFlow()
 
     private val _filtersState = MutableStateFlow(ImportBackupScreenFiltersState())
     val filtersState: StateFlow<ImportBackupScreenFiltersState> = _filtersState.asStateFlow()
@@ -113,59 +128,98 @@ class ImportBackupScreenViewModel(
     private val _event: Channel<Event?> = Channel(Int.MAX_VALUE)
     val event: Flow<Event?> = _event.receiveAsFlow()
 
-    //region Realm Queries
+    //region Boxes
 
-    private val categoryQuery = realm
-        .query<Category>()
-        .sort("frequency", Sort.DESCENDING)
+    private val accountBox: Box<Account> = store.boxFor()
+    private val tempAccountBox: Box<TempAccount> = store.boxFor()
 
-    private val tempCategoryQuery = realm
-        .query<TempCategory>()
-        .sort("frequency", Sort.DESCENDING)
+    private val categoryBox: Box<Category> = store.boxFor()
+    private val tempCategoryBox: Box<TempCategory> = store.boxFor()
 
-    private val counterPartyQuery = realm
-        .query<CounterParty>()
-        .sort("frequency", Sort.DESCENDING)
+    private val counterPartyBox: Box<CounterParty> = store.boxFor()
+    private val tempCounterPartyBox: Box<TempCounterParty> = store.boxFor()
 
-    private val tempCounterPartyQuery = realm
-        .query<TempCounterParty>()
-        .sort("frequency", Sort.DESCENDING)
+    private val methodBox: Box<Method> = store.boxFor()
+    private val tempMethodBox: Box<TempMethod> = store.boxFor()
 
-    private val methodQuery = realm
-        .query<Method>()
-        .sort("frequency", Sort.DESCENDING)
+    private val templateBox: Box<TransactionTemplate> = store.boxFor()
+    private val tempTemplateBox: Box<TempTransactionTemplate> = store.boxFor()
 
-    private val tempMethodQuery = realm
-        .query<TempMethod>()
-        .sort("frequency", Sort.DESCENDING)
+    private val transactionBox: Box<Transaction> = store.boxFor()
+    private val tempTransactionBox: Box<TempTransaction> = store.boxFor()
 
-    private val sourceQuery = realm
-        .query<Source>()
-        .sort("frequency", Sort.DESCENDING)
+    //endregion
 
-    private val tempSourceQuery = realm
-        .query<TempSource>()
-        .sort("frequency", Sort.DESCENDING)
+    //region Queries
 
-    private val tempTransactionTemplatesQuery = realm
-        .query<TempTransactionTemplate>()
-        .sort("frequency", Sort.DESCENDING)
+    private val accountQuery = accountBox
+        .query()
+        .orderDesc(Account_.frequency)
+        .build()
+
+    private val tempAccountQuery = tempAccountBox
+        .query()
+        .orderDesc(TempAccount_.frequency)
+        .build()
+
+    private val categoryQuery = categoryBox
+        .query()
+        .orderDesc(Category_.frequency)
+        .build()
+
+    private val tempCategoryQuery = tempCategoryBox
+        .query()
+        .orderDesc(TempCategory_.frequency)
+        .build()
+
+    private val counterPartyQuery = counterPartyBox
+        .query()
+        .orderDesc(CounterParty_.frequency)
+        .build()
+
+    private val tempCounterPartyQuery = tempCounterPartyBox
+        .query()
+        .orderDesc(TempCounterParty_.frequency)
+        .build()
+
+    private val methodQuery = methodBox
+        .query()
+        .orderDesc(Method_.frequency)
+        .build()
+
+    private val tempMethodQuery = tempMethodBox
+        .query()
+        .orderDesc(TempMethod_.frequency)
+        .build()
+
+    private val tempTransactionTemplatesQuery = tempTemplateBox
+        .query()
+        .orderDesc(TempTransactionTemplate_.frequency)
+        .build()
 
     //endregion
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
+        accountQuery.close()
+        tempAccountQuery.close()
+        categoryQuery.close()
+        tempCategoryQuery.close()
+        counterPartyQuery.close()
+        tempCounterPartyQuery.close()
+        methodQuery.close()
+        tempMethodQuery.close()
+        tempTransactionTemplatesQuery.close()
     }
 
-    private fun MutableRealm.clearTempData() {
-        delete(TempCategory::class)
-        delete(TempCounterParty::class)
-        delete(TempMethod::class)
-        delete(TempSource::class)
-        delete(TempTransactionTemplate::class)
-        delete(TempTransaction::class)
+    private fun clearTempData() {
+        tempAccountBox.removeAll()
+        tempCategoryBox.removeAll()
+        tempCounterPartyBox.removeAll()
+        tempMethodBox.removeAll()
+        tempTemplateBox.removeAll()
+        tempTransactionBox.removeAll()
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -184,94 +238,95 @@ class ImportBackupScreenViewModel(
                 try {
                     val data = adapter.fromJson(bufferedSource)
 
-                    realm.write {
+                    val tempAccountMap: MutableMap<Long, Long> = mutableMapOf()
+                    val tempCategoryMap: MutableMap<Long, Long> = mutableMapOf()
+                    val tempCounterPartyMap: MutableMap<Long, Long> = mutableMapOf()
+                    val tempMethodMap: MutableMap<Long, Long> = mutableMapOf()
+
+                    store.runInTx {
                         clearTempData()
 
-                        val tempCategoryMap: MutableMap<String, TempCategory> = mutableMapOf()
-                        val tempCounterPartyMap: MutableMap<String, TempCounterParty> =
-                            mutableMapOf()
-                        val tempMethodMap: MutableMap<String, TempMethod> = mutableMapOf()
-                        val tempSourceMap: MutableMap<String, TempSource> = mutableMapOf()
+                        data?.accounts?.forEach { account ->
+                            val tempAccount = TempAccount(
+                                name = account.name,
+                                currency = account.currency,
+                                balance = account.balance,
+                                frequency = account.frequency,
+                                lastUsed = account.lastUsed.toZonedDateTime()
+                            )
+                            tempAccountMap[account.id] = tempAccountBox.put(tempAccount)
+                        }
 
                         data?.categories?.forEach { category ->
-                            val tempCategory = TempCategory().apply {
-                                uuid = category.uuid
-                                name = category.name
-                                icon = category.iconName.getIconForCategory()
-                                frequency = category.frequency
+                            val tempCategory = TempCategory(
+                                name = category.name,
+                                icon = category.iconName.getIconForCategory(),
+                                frequency = category.frequency,
                                 lastUsed = category.lastUsed.toZonedDateTime()
-                            }
-                            val managedInstance = copyToRealm(tempCategory)
-                            tempCategoryMap[tempCategory.uuid] = managedInstance
+                            )
+                            tempCategoryMap[category.id] = tempCategoryBox.put(tempCategory)
                         }
+
                         data?.counterParties?.forEach { counterParty ->
-                            val tempCounterParty = TempCounterParty().apply {
-                                uuid = counterParty.uuid
-                                name = counterParty.name
-                                frequency = counterParty.frequency
+                            val tempCounterParty = TempCounterParty(
+                                name = counterParty.name,
+                                frequency = counterParty.frequency,
                                 lastUsed = counterParty.lastUsed.toZonedDateTime()
-                            }
-                            val managedInstance = copyToRealm(tempCounterParty)
-                            tempCounterPartyMap[tempCounterParty.uuid] = managedInstance
+                            )
+                            tempCounterPartyMap[counterParty.id] =
+                                tempCounterPartyBox.put(tempCounterParty)
                         }
+
                         data?.methods?.forEach { method ->
-                            val tempMethod = TempMethod().apply {
-                                uuid = method.uuid
-                                name = method.name
-                                frequency = method.frequency
+                            val tempMethod = TempMethod(
+                                name = method.name,
+                                frequency = method.frequency,
                                 lastUsed = method.lastUsed.toZonedDateTime()
-                            }
-                            val managedInstance = copyToRealm(tempMethod)
-                            tempMethodMap[tempMethod.uuid] = managedInstance
+                            )
+                            tempMethodMap[method.id] = tempMethodBox.put(tempMethod)
                         }
-                        data?.sources?.forEach { source ->
-                            val tempSource = TempSource().apply {
-                                uuid = source.uuid
-                                name = source.name
-                                currency = source.currency
-                                balance = source.balance
-                                frequency = source.frequency
-                                lastUsed = source.lastUsed.toZonedDateTime()
-                            }
-                            val managedInstance = copyToRealm(tempSource)
-                            tempSourceMap[tempSource.uuid] = managedInstance
-                        }
+
                         data?.transactions?.forEach { transaction ->
-                            val tempTransaction = TempTransaction().apply {
-                                uuid = transaction.uuid
-                                title = transaction.title
-                                description = transaction.description
-                                amount = transaction.amount
+                            val tempTransaction = TempTransaction(
+                                title = transaction.title,
+                                description = transaction.description,
+                                amount = transaction.amount,
                                 type = TransactionType.values()
                                     .find { transactionType -> transactionType.id == transaction.typeId }
-                                    ?: TransactionType.DEBIT
-                                currency = transaction.currency
+                                    ?: TransactionType.DEBIT,
+                                currency = transaction.currency,
                                 time = transaction.time.toZonedDateTime()
-                                category = tempCategoryMap[transaction.categoryUUID]
-                                counterParty = tempCounterPartyMap[transaction.counterPartyUUID]
-                                method = tempMethodMap[transaction.methodUUID]
-                                source = tempSourceMap[transaction.sourceUUID]
-                            }
-                            copyToRealm(tempTransaction)
+                            )
+                            tempTransaction.account.targetId =
+                                tempAccountMap[transaction.accountId] ?: 0L
+                            tempTransaction.category.targetId =
+                                tempCategoryMap[transaction.categoryId] ?: 0L
+                            tempTransaction.counterParty.targetId =
+                                tempCounterPartyMap[transaction.counterPartyId] ?: 0L
+                            tempTransaction.method.targetId =
+                                tempMethodMap[transaction.methodId] ?: 0L
+                            tempTransactionBox.put(tempTransaction)
                         }
+
                         data?.templates?.forEach { template ->
-                            val tempTemplate = TempTransactionTemplate().apply {
-                                uuid = template.uuid
-                                name = template.name
-                                title = template.title
-                                description = template.description
-                                amount = template.amount
+                            val tempTemplate = TempTransactionTemplate(
+                                name = template.name,
+                                title = template.title,
+                                description = template.description,
+                                amount = template.amount,
                                 type = TransactionType.values()
                                     .find { transactionType -> transactionType.id == template.typeId }
-                                    ?: TransactionType.DEBIT
-                                category = tempCategoryMap[template.categoryUUID]
-                                counterParty = tempCounterPartyMap[template.counterPartyUUID]
-                                method = tempMethodMap[template.methodUUID]
-                                source = tempSourceMap[template.sourceUUID]
-                                frequency = template.frequency
+                                    ?: TransactionType.DEBIT,
+                                frequency = template.frequency,
                                 lastUsed = template.lastUsed.toZonedDateTime()
-                            }
-                            copyToRealm(tempTemplate)
+                            )
+                            tempTemplate.account.targetId = tempAccountMap[template.accountId] ?: 0L
+                            tempTemplate.category.targetId =
+                                tempCategoryMap[template.categoryId] ?: 0L
+                            tempTemplate.counterParty.targetId =
+                                tempCounterPartyMap[template.counterPartyId] ?: 0L
+                            tempTemplate.method.targetId = tempMethodMap[template.methodId] ?: 0L
+                            tempTemplateBox.put(tempTemplate)
                         }
                     }
 
@@ -293,121 +348,130 @@ class ImportBackupScreenViewModel(
     }
 
     private fun loadData() = viewModelScope.launch {
+        val accounts = accountQuery.find().map { account ->
+            val formatter = currencyFormatterMap.getValue(account.currency)
+            account.copy(
+                formattedBalance = formatter.format(account.balance).toString()
+            )
+        }
         val categories = categoryQuery.find()
         val counterParties = counterPartyQuery.find()
         val methods = methodQuery.find()
-        val sources = sourceQuery.find().toMutableList()
 
+        val tempAccounts = tempAccountQuery.find().map { tempAccount ->
+            val formatter = currencyFormatterMap.getValue(tempAccount.currency)
+            tempAccount.copy(
+                formattedBalance = formatter.format(tempAccount.balance).toString()
+            )
+        }
         val tempCategories = tempCategoryQuery.find()
         val tempCounterParties = tempCounterPartyQuery.find()
         val tempMethods = tempMethodQuery.find()
-        val tempSources = tempSourceQuery.find().toMutableList()
         val tempTransactionTemplates = tempTransactionTemplatesQuery.find()
 
-        sources.forEach { source ->
-            val formatter = currencyFormatterMap.getValue(source.currency)
-            source.displayBalance = formatter.format(source.balance).toString()
-        }
-
-        tempSources.forEach { source ->
-            val formatter = currencyFormatterMap.getValue(source.currency)
-            source.displayBalance = formatter.format(source.balance).toString()
-        }
+        val conflictingTempAccounts = tempAccounts
+            .filter { tempAccount ->
+                val dbAccount = accounts.find { it.name == tempAccount.name }
+                dbAccount != null
+            }
+            .map { tempAccount -> tempAccount.id }
 
         val conflictingTempCategories = tempCategories
             .filter { tempCategory ->
-                val dbCategory =
-                    categories.find { it.name == tempCategory.name }
+                val dbCategory = categories.find { it.name == tempCategory.name }
                 dbCategory != null
             }
-            .map { tempCategory -> tempCategory.uuid }
+            .map { tempCategory -> tempCategory.id }
 
         val conflictingTempCounterParties = tempCounterParties
             .filter { tempCounterParty ->
-                val dbCounterParty =
-                    counterParties.find { it.name == tempCounterParty.name }
+                val dbCounterParty = counterParties.find { it.name == tempCounterParty.name }
                 dbCounterParty != null
             }
-            .map { tempCounterParty -> tempCounterParty.uuid }
+            .map { tempCounterParty -> tempCounterParty.id }
 
         val conflictingTempMethods = tempMethods
             .filter { tempMethod ->
-                val dbMethod =
-                    methods.find { it.name == tempMethod.name }
+                val dbMethod = methods.find { it.name == tempMethod.name }
                 dbMethod != null
             }
-            .map { tempMethod -> tempMethod.uuid }
+            .map { tempMethod -> tempMethod.id }
 
-        val conflictingTempSources = tempSources
-            .filter { tempSource ->
-                val dbSource =
-                    sources.find { it.name == tempSource.name }
-                dbSource != null
+        val accountMappings = tempAccounts.associateBy(
+            { tempAccount ->
+                tempAccount.id
+            },
+            { tempAccount ->
+                val dbAccount = accounts.find { account ->
+                    account.name == tempAccount.name
+                }
+                dbAccount ?: Account()
             }
-            .map { tempSource -> tempSource.uuid }
+        )
 
         val categoryMappings = tempCategories.associateBy(
             { tempCategory ->
-                tempCategory.uuid
+                tempCategory.id
             },
             { tempCategory ->
-                val dbCategory = categories
-                    .find { category -> category.name == tempCategory.name }
+                val dbCategory = categories.find { category ->
+                    category.name == tempCategory.name
+                }
                 dbCategory ?: Category()
             }
         )
 
         val counterPartyMappings = tempCounterParties.associateBy(
             { tempCounterParty ->
-                tempCounterParty.uuid
+                tempCounterParty.id
             },
             { tempCounterParty ->
-                val dbCounterParty = counterParties
-                    .find { counterParty -> counterParty.name == tempCounterParty.name }
+                val dbCounterParty = counterParties.find { counterParty ->
+                    counterParty.name == tempCounterParty.name
+                }
                 dbCounterParty ?: CounterParty()
             }
         )
 
         val methodMappings = tempMethods.associateBy(
             { tempMethod ->
-                tempMethod.uuid
+                tempMethod.id
             },
             { tempMethod ->
-                val dbMethod = methods.find { method -> method.name == tempMethod.name }
+                val dbMethod = methods.find { method ->
+                    method.name == tempMethod.name
+                }
                 dbMethod ?: Method()
             }
         )
 
-        val sourceMappings = tempSources.associateBy(
-            { tempSource ->
-                tempSource.uuid
-            },
-            { tempSource ->
-                val dbSource = sources.find { source -> source.name == tempSource.name }
-                dbSource ?: Source()
-            }
-        )
+        val currencyAccountMap = accounts.groupBy { account -> account.currency }
 
-        val currencySourceMap = sources.groupBy { source -> source.currency }
+        val selectedTempAccounts = tempAccounts
+            .map { it.id }
+            .toSet()
 
         val selectedTempCategories = tempCategories
-            .map { it.uuid }
+            .map { it.id }
             .toSet()
 
         val selectedTempCounterParties = tempCounterParties
-            .map { it.uuid }
+            .map { it.id }
             .toSet()
 
         val selectedTempMethods = tempMethods
-            .map { it.uuid }
-            .toSet()
-
-        val selectedTempSources = tempSources
-            .map { it.uuid }
+            .map { it.id }
             .toSet()
 
         _primaryState.update {
             it.copy(
+                tempAccounts = tempAccounts,
+                accountMappings = accountMappings,
+                conflictingTempAccounts = conflictingTempAccounts.toSet(),
+                selectedTempAccounts = selectedTempAccounts,
+                selectedTempAccountCount = numberFormatter.format(selectedTempAccounts.size)
+                    .toString(),
+                currencyAccountMap = currencyAccountMap,
                 dbCategories = categories,
                 tempCategories = tempCategories,
                 categoryMappings = categoryMappings,
@@ -429,16 +493,9 @@ class ImportBackupScreenViewModel(
                 selectedTempMethods = selectedTempMethods,
                 selectedTempMethodCount = numberFormatter.format(selectedTempMethods.size)
                     .toString(),
-                currencySourceMap = currencySourceMap,
-                tempSources = tempSources,
-                sourceMappings = sourceMappings,
-                conflictingTempSources = conflictingTempSources.toSet(),
-                selectedTempSources = selectedTempSources,
-                selectedTempSourceCount = numberFormatter.format(selectedTempSources.size)
-                    .toString(),
                 tempTransactionTemplates = tempTransactionTemplates,
                 tempTransactionTemplatesWithIcons = getTemplateWithIcons(
-                    templates = tempTransactionTemplates
+                    tempTransactionTemplates = tempTransactionTemplates
                 )
             )
         }
@@ -490,11 +547,11 @@ class ImportBackupScreenViewModel(
                 sortOptions,
                 filters
             )
-        }.collectLatest { transactionChanges ->
-            val filteredTransactionsMap = transactionChanges.list.groupBy(
+        }.collectLatest { tempTransactions ->
+            val filteredTransactionsMap = tempTransactions.groupBy(
                 keySelector = { tempTransaction -> tempTransaction.time.toLocalDate() },
                 valueTransform = { tempTransaction ->
-                    getTempTransactionWithIcons(
+                    getTempTransactionWithChips(
                         tempTransaction,
                         searchState.value
                     )
@@ -503,8 +560,8 @@ class ImportBackupScreenViewModel(
 
             _primaryState.update {
                 it.copy(
-                    transactionsHashCode = transactionChanges.list.hashCode(),
-                    tempTransactions = transactionChanges.list,
+                    transactionsHashCode = tempTransactions.hashCode(),
+                    tempTransactions = tempTransactions,
                     filteredTransactions = filteredTransactionsMap,
                     loading = false,
                     enabled = true
@@ -516,18 +573,18 @@ class ImportBackupScreenViewModel(
     private fun updateSecondaryState() = viewModelScope.launch {
         primaryState.collectLatest { mainScreenState ->
             val enabledTempTransactions = getEnabledTempTransactions(
+                selectedTempAccounts = mainScreenState.selectedTempAccounts,
                 selectedTempCategories = mainScreenState.selectedTempCategories,
                 selectedTempCounterParties = mainScreenState.selectedTempCounterParties,
                 selectedTempMethods = mainScreenState.selectedTempMethods,
-                selectedTempSources = mainScreenState.selectedTempSources,
                 tempTransactions = mainScreenState.tempTransactions
             )
 
             val enabledTempTransactionTemplates = getEnabledTempTransactionTemplates(
+                selectedTempAccounts = mainScreenState.selectedTempAccounts,
                 selectedTempCategories = mainScreenState.selectedTempCategories,
                 selectedTempCounterParties = mainScreenState.selectedTempCounterParties,
                 selectedTempMethods = mainScreenState.selectedTempMethods,
-                selectedTempSources = mainScreenState.selectedTempSources,
                 tempTransactionTemplates = mainScreenState.tempTransactionTemplates
             )
 
@@ -548,10 +605,27 @@ class ImportBackupScreenViewModel(
                 selectedTransactions = mainScreenState.selectedTempTransactions
             )
 
+            val selectedTransactionsCount = mainScreenState.selectedTempTransactions.count { id ->
+                enabledTempTransactions.contains(id)
+            }
+
+            val selectedTempTransactionTemplateCount =
+                mainScreenState.selectedTempTransactionTemplates.count { id ->
+                    enabledTempTransactionTemplates.contains(id)
+                }
+
             _secondaryState.update {
                 it.copy(
                     enabledTempTransactions = enabledTempTransactions,
+                    selectedTransactionsCount = if (selectedTransactionsCount > 0) {
+                        numberFormatter.format(selectedTransactionsCount).toString()
+                    } else {
+                        ""
+                    },
                     enabledTempTransactionTemplates = enabledTempTransactionTemplates,
+                    selectedTempTransactionTemplateCount = numberFormatter
+                        .format(selectedTempTransactionTemplateCount)
+                        .toString(),
                     enabledLocalDates = enabledLocalDates,
                     selectedLocalDates = selectedLocalDates,
                     allSelected = allSelected
@@ -562,6 +636,7 @@ class ImportBackupScreenViewModel(
 
     fun importData() = viewModelScope.launch {
         loadDataJob?.cancelAndJoin()
+        loadTransactionsJob?.cancelAndJoin()
         _primaryState.update {
             it.copy(
                 loading = true,
@@ -572,267 +647,314 @@ class ImportBackupScreenViewModel(
         var result: Event
 
         val tempCategories = primaryState.value.tempCategories
-        val selectedTempCategoryUUIDs = primaryState.value.selectedTempCategories
+        val selectedTempCategoryIds = primaryState.value.selectedTempCategories
         val categoryMappings = primaryState.value.categoryMappings
-            .filter { entry -> selectedTempCategoryUUIDs.contains(entry.key) }
+            .filter { entry -> selectedTempCategoryIds.contains(entry.key) }
             .toMutableMap()
 
         val tempCounterParties = primaryState.value.tempCounterParties
-        val selectedTempCounterPartyUUIDs = primaryState.value.selectedTempCounterParties
+        val selectedTempCounterPartyIds = primaryState.value.selectedTempCounterParties
         val counterPartyMappings = primaryState.value.counterPartyMappings
-            .filter { entry -> selectedTempCounterPartyUUIDs.contains(entry.key) }
+            .filter { entry -> selectedTempCounterPartyIds.contains(entry.key) }
             .toMutableMap()
 
         val tempMethods = primaryState.value.tempMethods
-        val selectedTempMethodUUIDs = primaryState.value.selectedTempMethods
+        val selectedTempMethodIds = primaryState.value.selectedTempMethods
         val methodMappings = primaryState.value.methodMappings
-            .filter { entry -> selectedTempMethodUUIDs.contains(entry.key) }
+            .filter { entry -> selectedTempMethodIds.contains(entry.key) }
             .toMutableMap()
 
-        val tempSources = primaryState.value.tempSources
-        val selectedTempSourceUUIDs = primaryState.value.selectedTempSources
-        val sourceMappings = primaryState.value.sourceMappings
-            .filter { entry -> selectedTempSourceUUIDs.contains(entry.key) }
+        val tempAccounts = primaryState.value.tempAccounts
+        val selectedTempAccountIds = primaryState.value.selectedTempAccounts
+        val accountMappings = primaryState.value.accountMappings
+            .filter { entry -> selectedTempAccountIds.contains(entry.key) }
             .toMutableMap()
-        val restoreBalanceSources = primaryState.value.restoreBalanceSources
+        val restoreBalanceAccounts = primaryState.value.restoreBalanceAccounts
 
-        val enabledTempTransactionTemplateUUIDs =
+        val enabledTempTransactionTemplateIds =
             secondaryState.value.enabledTempTransactionTemplates
-        val selectedTempTransactionTemplateUUIDs =
+        val selectedTempTransactionTemplateIds =
             primaryState.value.selectedTempTransactionTemplates
-                .filter { uuid -> enabledTempTransactionTemplateUUIDs.contains(uuid) }
+                .filter { id -> enabledTempTransactionTemplateIds.contains(id) }
         val tempTransactionTemplates = primaryState.value.tempTransactionTemplates
             .filter { tempTransactionTemplate ->
-                selectedTempTransactionTemplateUUIDs.contains(
-                    tempTransactionTemplate.uuid
+                selectedTempTransactionTemplateIds.contains(
+                    tempTransactionTemplate.id
                 )
             }
 
-        val enabledTempTransactionUUIDs = secondaryState.value.enabledTempTransactions
-        val selectedTempTransactionUUIDs = _primaryState.value.selectedTempTransactions
-            .filter { uuid -> enabledTempTransactionUUIDs.contains(uuid) }
+        val enabledTempTransactionIds = secondaryState.value.enabledTempTransactions
+        val selectedTempTransactionIds = _primaryState.value.selectedTempTransactions
+            .filter { id -> enabledTempTransactionIds.contains(id) }
         val tempTransactions = primaryState.value.tempTransactions
-            .filter { tempTransaction -> selectedTempTransactionUUIDs.contains(tempTransaction.uuid) }
+            .filter { tempTransaction -> selectedTempTransactionIds.contains(tempTransaction.id) }
+
+        val epoch = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault())
 
         try {
-            realm.write {
+            val renameRequiredTemplates = mutableListOf<TransactionTemplate>()
+
+            tempTransactionTemplates.forEach { tempTransactionTemplate ->
+                val account = accountMappings[tempTransactionTemplate.account.targetId]
+                val category = categoryMappings[tempTransactionTemplate.category.targetId]
+                val counterParty =
+                    counterPartyMappings[tempTransactionTemplate.counterParty.targetId]
+                val method = methodMappings[tempTransactionTemplate.method.targetId]
+
+                val template = TransactionTemplate(
+                    name = tempTransactionTemplate.name,
+                    title = tempTransactionTemplate.title,
+                    description = tempTransactionTemplate.description,
+                    amount = tempTransactionTemplate.amount,
+                    type = tempTransactionTemplate.type,
+                    frequency = tempTransactionTemplate.frequency,
+                    lastUsed = tempTransactionTemplate.lastUsed
+                )
+
+                template.account.target = account
+                template.category.target = category
+                template.counterParty.target = counterParty
+                template.method.target = method
+
+                try {
+                    templateBox.put(template)
+                } catch (exception: UniqueViolationException) {
+                    renameRequiredTemplates.add(template)
+                }
+            }
+
+            store.runInTx {
                 categoryMappings
                     .entries
-                    .filter { (_, category) -> category.uuid.isNotEmpty() }
-                    .distinctBy { (_, category) -> category.uuid }
-                    .forEach { (tempCategoryUUID, category) ->
-                        val filteredTransactions = tempTransactions
-                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempCategoryUUID }
-                        findLatest(category)?.also {
-                            it.frequency += filteredTransactions.size
-                            it.lastUsed = maxOf(
-                                it.lastUsed,
-                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
-                            )
+                    .filter { (_, category) -> category.id > 0 }
+                    .distinctBy { (_, category) -> category.id }
+                    .forEach { (tempCategoryId, category) ->
+                        val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                            tempTransaction.category.targetId == tempCategoryId
                         }
+                        categoryBox.put(
+                            category.copy(
+                                frequency = category.frequency + filteredTransactions.size,
+                                lastUsed = maxOf(
+                                    category.lastUsed,
+                                    filteredTransactions.maxOfOrNull { tempTransaction ->
+                                        tempTransaction.time
+                                    } ?: epoch
+                                )
+                            )
+                        )
                     }
 
                 categoryMappings
-                    .filter { entry -> entry.value.uuid.isEmpty() }
-                    .forEach { entry ->
-                        val tempCategory =
-                            tempCategories.find { tempCategory -> tempCategory.uuid == entry.key }
+                    .filter { (_, category) -> category.id == 0L }
+                    .forEach { (tempCategoryId, _) ->
+                        val tempCategory = tempCategories.find { tempCategory ->
+                            tempCategory.id == tempCategoryId
+                        }
                         if (tempCategory != null) {
-                            val filteredTransactions = tempTransactions
-                                .filter { tempTransaction -> tempTransaction.category?.uuid == tempCategory.uuid }
-                            val category = copyToRealm(
-                                Category().apply {
-                                    uuid = UUID.randomUUID().toString()
-                                    name = tempCategory.name
-                                    icon = tempCategory.icon
-                                    frequency = filteredTransactions.size
-                                    lastUsed = filteredTransactions
-                                        .maxOf { tempTransaction -> tempTransaction.time }
-                                }
-                            )
-                            categoryMappings[tempCategory.uuid] = category
-                        }
-                    }
-
-                counterPartyMappings
-                    .entries
-                    .filter { (_, counterParty) -> counterParty.uuid.isNotEmpty() }
-                    .distinctBy { (_, counterParty) -> counterParty.uuid }
-                    .forEach { (tempCounterPartyUUID, counterParty) ->
-                        val filteredTransactions = tempTransactions
-                            .filter { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterPartyUUID }
-                        findLatest(counterParty)?.also {
-                            it.frequency += filteredTransactions.size
-                            it.lastUsed = maxOf(
-                                it.lastUsed,
-                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
-                            )
-                        }
-                    }
-
-                counterPartyMappings
-                    .filter { entry -> entry.value.uuid.isEmpty() }
-                    .forEach { entry ->
-                        val tempCounterParty =
-                            tempCounterParties.find { tempCounterParty -> tempCounterParty.uuid == entry.key }
-                        if (tempCounterParty != null) {
-                            val filteredTransactions = tempTransactions
-                                .filter { tempTransaction -> tempTransaction.counterParty?.uuid == tempCounterParty.uuid }
-                            val counterParty = copyToRealm(
-                                CounterParty().apply {
-                                    uuid = UUID.randomUUID().toString()
-                                    name = tempCounterParty.name
-                                    frequency = filteredTransactions.size
-                                    lastUsed = filteredTransactions
-                                        .maxOf { tempTransaction -> tempTransaction.time }
-                                }
-                            )
-                            counterPartyMappings[tempCounterParty.uuid] = counterParty
-                        }
-                    }
-
-                methodMappings
-                    .entries
-                    .filter { (_, method) -> method.uuid.isNotEmpty() }
-                    .distinctBy { (_, method) -> method.uuid }
-                    .forEach { (tempMethodUUID, method) ->
-                        val filteredTransactions = tempTransactions
-                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempMethodUUID }
-                        findLatest(method)?.also {
-                            it.frequency += filteredTransactions.size
-                            it.lastUsed = maxOf(
-                                it.lastUsed,
-                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
-                            )
-                        }
-                    }
-
-                methodMappings
-                    .filter { entry -> entry.value.uuid.isEmpty() }
-                    .forEach { entry ->
-                        val tempMethod =
-                            tempMethods.find { tempMethod -> tempMethod.uuid == entry.key }
-                        if (tempMethod != null) {
-                            val filteredTransactions = tempTransactions
-                                .filter { tempTransaction -> tempTransaction.method?.uuid == tempMethod.uuid }
-                            val method = copyToRealm(
-                                Method().apply {
-                                    uuid = UUID.randomUUID().toString()
-                                    name = tempMethod.name
-                                    frequency = filteredTransactions.size
-                                    lastUsed = filteredTransactions
-                                        .maxOf { tempTransaction -> tempTransaction.time }
-                                }
-                            )
-                            methodMappings[tempMethod.uuid] = method
-                        }
-                    }
-
-                sourceMappings
-                    .entries
-                    .filter { (_, source) -> source.uuid.isNotEmpty() }
-                    .distinctBy { (_, source) -> source.uuid }
-                    .forEach { (tempSourceUUID, source) ->
-                        val filteredTransactions = tempTransactions
-                            .filter { tempTransaction -> tempTransaction.category?.uuid == tempSourceUUID }
-                        findLatest(source)?.also {
-                            it.frequency += filteredTransactions.size
-                            it.lastUsed = maxOf(
-                                it.lastUsed,
-                                filteredTransactions.maxOf { tempTransaction -> tempTransaction.time }
-                            )
-                        }
-                    }
-
-                sourceMappings
-                    .filter { entry -> restoreBalanceSources.contains(entry.key) }
-                    .forEach { entry ->
-                        val tempSource =
-                            tempSources.find { tempSource -> tempSource.uuid == entry.key }
-                        if (tempSource != null) {
-                            findLatest(entry.value)?.also {
-                                it.balance = tempSource.balance
+                            val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                                tempTransaction.category.targetId == tempCategory.id
                             }
-                        }
-                    }
-
-                sourceMappings
-                    .filter { entry -> entry.value.uuid.isEmpty() }
-                    .forEach { entry ->
-                        val tempSource =
-                            tempSources.find { tempSource -> tempSource.uuid == entry.key }
-                        if (tempSource != null) {
-                            val filteredTransactions = tempTransactions
-                                .filter { tempTransaction -> tempTransaction.source?.uuid == tempSource.uuid }
-                            val source = copyToRealm(
-                                Source().apply {
-                                    uuid = UUID.randomUUID().toString()
-                                    name = tempSource.name
-                                    balance = tempSource.balance
-                                    currency = tempSource.currency
-                                    frequency = filteredTransactions.size
-                                    lastUsed = filteredTransactions
-                                        .maxOf { tempTransaction -> tempTransaction.time }
-                                }
+                            val category = Category(
+                                name = tempCategory.name,
+                                icon = tempCategory.icon,
+                                frequency = filteredTransactions.size,
+                                lastUsed = filteredTransactions.maxOfOrNull { tempTransaction ->
+                                    tempTransaction.time
+                                } ?: epoch
                             )
-                            sourceMappings[tempSource.uuid] = source
+                            categoryMappings[tempCategory.id] = category.copy(
+                                id = categoryBox.put(category)
+                            )
                         }
                     }
 
-                tempTransactionTemplates.forEach { tempTransactionTemplate ->
-                    val category = categoryMappings[tempTransactionTemplate.category?.uuid]
-                    val counterParty =
-                        counterPartyMappings[tempTransactionTemplate.counterParty?.uuid]
-                    val method = methodMappings[tempTransactionTemplate.method?.uuid]
-                    val source = sourceMappings[tempTransactionTemplate.source?.uuid]
-
-                    copyToRealm(
-                        TransactionTemplate().apply {
-                            this.uuid = UUID.randomUUID().toString()
-                            this.name = tempTransactionTemplate.name
-                            this.title = tempTransactionTemplate.title
-                            this.description = tempTransactionTemplate.description
-                            this.amount = tempTransactionTemplate.amount
-                            this.type = tempTransactionTemplate.type
-                            this.category = if (category != null) findLatest(category) else null
-                            this.counterParty =
-                                if (counterParty != null) findLatest(counterParty) else null
-                            this.method = if (method != null) findLatest(method) else null
-                            this.source = if (source != null) findLatest(source) else null
-                            this.frequency = tempTransactionTemplate.frequency
-                            this.lastUsed = tempTransactionTemplate.lastUsed
+                counterPartyMappings
+                    .entries
+                    .filter { (_, counterParty) -> counterParty.id > 0 }
+                    .distinctBy { (_, counterParty) -> counterParty.id }
+                    .forEach { (tempCounterPartyId, counterParty) ->
+                        val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                            tempTransaction.counterParty.targetId == tempCounterPartyId
                         }
+                        counterPartyBox.put(
+                            counterParty.copy(
+                                frequency = counterParty.frequency + filteredTransactions.size,
+                                lastUsed = maxOf(
+                                    counterParty.lastUsed,
+                                    filteredTransactions.maxOfOrNull { tempTransaction ->
+                                        tempTransaction.time
+                                    } ?: epoch
+                                )
+                            )
+                        )
+                    }
+
+                counterPartyMappings
+                    .filter { (_, counterParty) -> counterParty.id == 0L }
+                    .forEach { (tempCounterPartyId, _) ->
+                        val tempCounterParty = tempCounterParties.find { tempCounterParty ->
+                            tempCounterParty.id == tempCounterPartyId
+                        }
+                        if (tempCounterParty != null) {
+                            val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                                tempTransaction.counterParty.targetId == tempCounterParty.id
+                            }
+                            val counterParty = CounterParty(
+                                name = tempCounterParty.name,
+                                frequency = filteredTransactions.size,
+                                lastUsed = filteredTransactions.maxOfOrNull { tempTransaction ->
+                                    tempTransaction.time
+                                } ?: epoch
+                            )
+                            counterPartyMappings[tempCounterParty.id] = counterParty.copy(
+                                id = counterPartyBox.put(counterParty)
+                            )
+                        }
+                    }
+
+                methodMappings
+                    .entries
+                    .filter { (_, method) -> method.id > 0 }
+                    .distinctBy { (_, method) -> method.id }
+                    .forEach { (tempMethodId, method) ->
+                        val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                            tempTransaction.method.targetId == tempMethodId
+                        }
+                        methodBox.put(
+                            method.copy(
+                                frequency = method.frequency + filteredTransactions.size,
+                                lastUsed = maxOf(
+                                    method.lastUsed,
+                                    filteredTransactions.maxOfOrNull { tempTransaction ->
+                                        tempTransaction.time
+                                    } ?: epoch
+                                )
+                            )
+                        )
+                    }
+
+                methodMappings
+                    .filter { (_, method) -> method.id == 0L }
+                    .forEach { (tempMethodId, _) ->
+                        val tempMethod = tempMethods.find { tempMethod ->
+                            tempMethod.id == tempMethodId
+                        }
+                        if (tempMethod != null) {
+                            val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                                tempTransaction.method.targetId == tempMethod.id
+                            }
+                            val method = Method(
+                                name = tempMethod.name,
+                                frequency = filteredTransactions.size,
+                                lastUsed = filteredTransactions.maxOfOrNull { tempTransaction ->
+                                    tempTransaction.time
+                                } ?: epoch
+                            )
+                            methodMappings[tempMethod.id] = method.copy(
+                                id = methodBox.put(method)
+                            )
+                        }
+                    }
+
+                accountMappings
+                    .entries
+                    .filter { (_, account) -> account.id > 0 }
+                    .distinctBy { (_, account) -> account.id }
+                    .forEach { (tempAccountId, account) ->
+                        val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                            tempTransaction.account.targetId == tempAccountId
+                        }
+                        accountBox.put(
+                            account.copy(
+                                frequency = account.frequency + filteredTransactions.size,
+                                lastUsed = maxOf(
+                                    account.lastUsed,
+                                    filteredTransactions.maxOfOrNull { tempTransaction ->
+                                        tempTransaction.time
+                                    } ?: epoch
+                                )
+                            )
+                        )
+                    }
+
+                accountMappings
+                    .filter { (tempAccountId, _) -> restoreBalanceAccounts.contains(tempAccountId) }
+                    .forEach { (tempAccountId, account) ->
+                        val tempAccount = tempAccounts.find { tempAccount ->
+                            tempAccount.id == tempAccountId
+                        }
+                        if (tempAccount != null) {
+                            accountBox.put(
+                                account.copy(
+                                    balance = tempAccount.balance
+                                )
+                            )
+                        }
+                    }
+
+                accountMappings
+                    .filter { (_, account) -> account.id == 0L }
+                    .forEach { (tempAccountId, _) ->
+                        val tempAccount = tempAccounts.find { tempAccount ->
+                            tempAccount.id == tempAccountId
+                        }
+                        if (tempAccount != null) {
+                            val filteredTransactions = tempTransactions.filter { tempTransaction ->
+                                tempTransaction.account.targetId == tempAccount.id
+                            }
+                            val account = Account(
+                                name = tempAccount.name,
+                                balance = tempAccount.balance,
+                                currency = tempAccount.currency,
+                                frequency = filteredTransactions.size,
+                                lastUsed = filteredTransactions.maxOfOrNull { tempTransaction ->
+                                    tempTransaction.time
+                                } ?: epoch
+                            )
+                            accountMappings[tempAccount.id] = account.copy(
+                                id = accountBox.put(account)
+                            )
+                        }
+                    }
+
+                renameRequiredTemplates.forEach { template ->
+                    templateBox.put(
+                        template.copy(
+                            name = "${template.name} - ${Random.nextInt(0, 100)}"
+                        )
                     )
                 }
 
                 tempTransactions.forEach { tempTransaction ->
-                    val category = categoryMappings[tempTransaction.category?.uuid]
-                    val counterParty = counterPartyMappings[tempTransaction.counterParty?.uuid]
-                    val method = methodMappings[tempTransaction.method?.uuid]
-                    val source = sourceMappings[tempTransaction.source?.uuid]
+                    val account = accountMappings[tempTransaction.account.targetId]
+                    val category = categoryMappings[tempTransaction.category.targetId]
+                    val counterParty =
+                        counterPartyMappings[tempTransaction.counterParty.targetId]
+                    val method = methodMappings[tempTransaction.method.targetId]
 
-                    if (category != null && method != null && source != null) {
-                        copyToRealm(
-                            Transaction().apply {
-                                this.uuid = UUID.randomUUID().toString()
-                                this.title = tempTransaction.title
-                                this.description = tempTransaction.description
-                                this.amount = tempTransaction.amount
-                                this.time = tempTransaction.time
-                                this.currency = tempTransaction.currency
-                                this.type = tempTransaction.type
-                                this.category = findLatest(category)
-                                this.counterParty =
-                                    if (counterParty != null) findLatest(counterParty) else null
-                                this.method = findLatest(method)
-                                this.source = findLatest(source)
-                            }
+                    if (account != null && category != null && method != null) {
+                        val transaction = Transaction(
+                            title = tempTransaction.title,
+                            description = tempTransaction.description,
+                            amount = tempTransaction.amount,
+                            time = tempTransaction.time,
+                            currency = tempTransaction.currency,
+                            type = tempTransaction.type
                         )
+
+                        transaction.account.target = account
+                        transaction.category.target = category
+                        transaction.counterParty.target = counterParty
+                        transaction.method.target = method
+
+                        transactionBox.put(transaction)
                     }
                 }
 
                 clearTempData()
             }
+
             result = Event.ImportSuccess
         } catch (exception: Exception) {
             result = Event.InternalError
@@ -849,40 +971,73 @@ class ImportBackupScreenViewModel(
 
     //region Transaction
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getTempTransactionQuery(
         searchText: String,
-        sortOptions: SortOptionsScreenState,
+        sortOptions: SortOptionsState<TempTransaction>,
         filters: ImportBackupScreenFiltersState
-    ): Flow<ResultsChange<TempTransaction>> {
-        var queryString =
-            "time >= $0 && time <= $1 && currency==$2 && amount >= $3 && amount <= $4 && typeId IN $5"
-        if (searchText.isNotBlank()) {
-            queryString += " && (title CONTAINS[c] '${searchText.trim()}' || description CONTAINS[c] '${searchText.trim()}')"
-        }
-        return realm
-            .query<TempTransaction>(
-                queryString,
-                filters.startDate?.toEpochMilli() ?: 0L,
-                filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE,
-                filters.selectedCurrencies,
-                filters.filterAmountMin,
-                if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
-                filters.selectedTransactionTypes
+    ): Flow<MutableList<TempTransaction>> {
+        val transactionQueryBuilder = tempTransactionBox
+            .query(
+                TempTransaction_.time.between(
+                    filters.startDate?.toEpochMilli() ?: 0L,
+                    filters.endDate?.toEpochMilli() ?: Long.MAX_VALUE
+                )
+                    .and(
+                        TempTransaction_.currency.oneOf(filters.selectedCurrencies.toTypedArray())
+                    )
+                    .and(
+                        TempTransaction_.amount.between(
+                            filters.filterAmountMin,
+                            if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax
+                        )
+                    )
+                    .and(
+                        TempTransaction_.type.oneOf(
+                            filters.selectedTransactionTypes.toIntArray()
+                        )
+                    )
             )
-            .sort("time", sortOptions.sortDirection)
-            .asFlow()
+        val query = if (searchText.isNotBlank()) {
+            transactionQueryBuilder
+                .and()
+                .apply(
+                    TempTransaction_.title.contains(
+                        searchText.trim(),
+                        QueryBuilder.StringOrder.CASE_INSENSITIVE
+                    )
+                        .or(
+                            TempTransaction_.description.contains(
+                                searchText.trim(),
+                                QueryBuilder.StringOrder.CASE_INSENSITIVE
+                            )
+                        )
+                )
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+        } else {
+            transactionQueryBuilder
+                .order(sortOptions.sortField, sortOptions.sortFlags)
+                .build()
+        }
+        return query.flow().onCompletion {
+            query.close()
+        }
     }
 
-    private fun getTempTransactionWithIcons(
+    private fun getTempTransactionWithChips(
         tempTransaction: TempTransaction,
         searchText: String
-    ): TransactionWithIcons {
-        val category = tempTransaction.category!!
-        val counterParty = tempTransaction.counterParty
-        val method = tempTransaction.method!!
-        val source = tempTransaction.source!!
-        val currencyFormatter = currencyFormatterMap.getValue(source.currency)
+    ): TransactionWithChips {
+        val account = tempTransaction.account.target
+        val category = tempTransaction.category.target
+        val counterParty = tempTransaction.counterParty.target
+        val method = tempTransaction.method.target
+
+        val currencyFormatter = currencyFormatterMap.getValue(account.currency)
+
         val chips: MutableList<ChipInfo> = mutableListOf()
+
         if (counterParty != null) {
             chips.add(
                 ChipInfo(
@@ -908,8 +1063,8 @@ class ImportBackupScreenViewModel(
         )
         chips.add(
             ChipInfo(
-                icon = Constants.DEFAULT_SOURCE_ICON,
-                value = source.name,
+                icon = Constants.DEFAULT_ACCOUNT_ICON,
+                value = account.name,
                 resId = R.string.placeholder
             )
         )
@@ -920,8 +1075,8 @@ class ImportBackupScreenViewModel(
                 resId = R.string.placeholder
             )
         )
-        return TransactionWithIcons(
-            uuid = tempTransaction.uuid,
+        return TransactionWithChips(
+            id = tempTransaction.id,
             annotatedTitle = getHighlightedString(tempTransaction.title, searchText),
             annotatedDescription = getHighlightedString(tempTransaction.description, searchText),
             amount = currencyFormatter.format(tempTransaction.amount).toString(),
@@ -933,73 +1088,70 @@ class ImportBackupScreenViewModel(
     }
 
     private fun getEnabledTempTransactions(
-        selectedTempCategories: Set<String>,
-        selectedTempCounterParties: Set<String>,
-        selectedTempMethods: Set<String>,
-        selectedTempSources: Set<String>,
+        selectedTempAccounts: Set<Long>,
+        selectedTempCategories: Set<Long>,
+        selectedTempCounterParties: Set<Long>,
+        selectedTempMethods: Set<Long>,
         tempTransactions: List<TempTransaction>,
-    ): Set<String> {
+    ): Set<Long> {
         return tempTransactions
             .filter { tempTransaction ->
-                val categoryValid = selectedTempCategories.contains(tempTransaction.category?.uuid)
+                val accountValid = selectedTempAccounts.contains(tempTransaction.account.targetId)
+                val categoryValid =
+                    selectedTempCategories.contains(tempTransaction.category.targetId)
                 val counterPartyValid =
-                    tempTransaction.counterParty == null || selectedTempCounterParties.contains(
-                        tempTransaction.counterParty?.uuid
+                    tempTransaction.counterParty.targetId == 0L || selectedTempCounterParties.contains(
+                        tempTransaction.counterParty.targetId
                     )
-                val methodValid = selectedTempMethods.contains(tempTransaction.method?.uuid)
-                val sourceValid = selectedTempSources.contains(tempTransaction.source?.uuid)
-                categoryValid && counterPartyValid && methodValid && sourceValid
+                val methodValid = selectedTempMethods.contains(tempTransaction.method.targetId)
+                accountValid && categoryValid && counterPartyValid && methodValid
             }
-            .map { tempTransaction -> tempTransaction.uuid }
+            .map { tempTransaction -> tempTransaction.id }
             .toSet()
     }
 
     private fun getEnabledLocalDates(
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>,
-        enabledTempTransactions: Set<String>
+        filteredTransactions: Map<LocalDate, List<TransactionWithChips>>,
+        enabledTempTransactions: Set<Long>
     ): Set<LocalDate> {
         return filteredTransactions
             .filter { entry ->
                 entry.value
-                    .map { transactionWithIcons -> transactionWithIcons.uuid }
-                    .any { uuid -> enabledTempTransactions.contains(uuid) }
+                    .map { transactionWithChips -> transactionWithChips.id }
+                    .any { id -> enabledTempTransactions.contains(id) }
             }
             .keys
     }
 
     private fun getSelectedLocalDates(
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>,
-        enabledTransactions: Set<String>,
-        selectedTransactions: Set<String>
+        filteredTransactions: Map<LocalDate, List<TransactionWithChips>>,
+        enabledTransactions: Set<Long>,
+        selectedTransactions: Set<Long>
     ): Set<LocalDate> {
         return filteredTransactions
             .filter { entry ->
-                val transactionUUIDs = entry.value
-                    .filter { transactionWithIcons ->
-                        enabledTransactions.contains(
-                            transactionWithIcons.uuid
-                        )
+                val transactionIds = entry.value
+                    .filter { transactionWithChips ->
+                        enabledTransactions.contains(transactionWithChips.id)
                     }
-                    .map { transactionWithIcons -> transactionWithIcons.uuid }
-                transactionUUIDs.isNotEmpty() && transactionUUIDs.all { uuid ->
-                    selectedTransactions.contains(
-                        uuid
-                    )
+                    .map { transactionWithChips -> transactionWithChips.id }
+                transactionIds.isNotEmpty() && transactionIds.all { uuid ->
+                    selectedTransactions.contains(uuid)
                 }
             }.keys
     }
 
     private fun getAllSelected(
-        filteredTransactions: Map<LocalDate, List<TransactionWithIcons>>,
-        enabledTransactions: Set<String>,
-        selectedTransactions: Set<String>
+        filteredTransactions: Map<LocalDate, List<TransactionWithChips>>,
+        enabledTransactions: Set<Long>,
+        selectedTransactions: Set<Long>
     ): Boolean {
         return filteredTransactions
             .values
             .flatten()
-            .filter { transactionWithIcons -> enabledTransactions.contains(transactionWithIcons.uuid) }
-            .map { transaction -> transaction.uuid }
-            .all { uuid -> selectedTransactions.contains(uuid) }
+            .filter { transactionWithChips -> enabledTransactions.contains(transactionWithChips.id) }
+            .map { transactionWithChips -> transactionWithChips.id }
+            .all { id -> selectedTransactions.contains(id) }
     }
 
     //endregion
@@ -1007,80 +1159,79 @@ class ImportBackupScreenViewModel(
     //region Template
 
     private fun getEnabledTempTransactionTemplates(
-        selectedTempCategories: Set<String>,
-        selectedTempCounterParties: Set<String>,
-        selectedTempMethods: Set<String>,
-        selectedTempSources: Set<String>,
+        selectedTempAccounts: Set<Long>,
+        selectedTempCategories: Set<Long>,
+        selectedTempCounterParties: Set<Long>,
+        selectedTempMethods: Set<Long>,
         tempTransactionTemplates: List<TempTransactionTemplate>,
-    ): Set<String> {
+    ): Set<Long> {
         return tempTransactionTemplates
             .filter { tempTransactionTemplate ->
+                val accountValid =
+                    tempTransactionTemplate.account.targetId == 0L || selectedTempAccounts.contains(
+                        tempTransactionTemplate.account.targetId
+                    )
                 val categoryValid =
-                    tempTransactionTemplate.category == null || selectedTempCategories.contains(
-                        tempTransactionTemplate.category?.uuid
+                    tempTransactionTemplate.category.targetId == 0L || selectedTempCategories.contains(
+                        tempTransactionTemplate.category.targetId
                     )
                 val counterPartyValid =
-                    tempTransactionTemplate.counterParty == null || selectedTempCounterParties.contains(
-                        tempTransactionTemplate.counterParty?.uuid
+                    tempTransactionTemplate.counterParty.targetId == 0L || selectedTempCounterParties.contains(
+                        tempTransactionTemplate.counterParty.targetId
                     )
                 val methodValid =
-                    tempTransactionTemplate.method == null || selectedTempMethods.contains(
-                        tempTransactionTemplate.method?.uuid
+                    tempTransactionTemplate.method.targetId == 0L || selectedTempMethods.contains(
+                        tempTransactionTemplate.method.targetId
                     )
-                val sourceValid =
-                    tempTransactionTemplate.source == null || selectedTempSources.contains(
-                        tempTransactionTemplate.source?.uuid
-                    )
-                categoryValid && counterPartyValid && methodValid && sourceValid
+                accountValid && categoryValid && counterPartyValid && methodValid
             }
-            .map { tempTransactionTemplate -> tempTransactionTemplate.uuid }
+            .map { tempTransactionTemplate -> tempTransactionTemplate.id }
             .toSet()
     }
 
-    fun toggleTransactionTemplateSelected(tempTransactionTemplateUUID: String) {
+    fun toggleTransactionTemplateSelected(tempTransactionTemplateId: Long) {
         _primaryState.update {
             val selectedTempTransactionTemplates =
                 it.selectedTempTransactionTemplates.toMutableSet()
 
-            if (selectedTempTransactionTemplates.contains(tempTransactionTemplateUUID)) {
-                selectedTempTransactionTemplates.remove(tempTransactionTemplateUUID)
+            if (selectedTempTransactionTemplates.contains(tempTransactionTemplateId)) {
+                selectedTempTransactionTemplates.remove(tempTransactionTemplateId)
             } else {
-                selectedTempTransactionTemplates.add(tempTransactionTemplateUUID)
+                selectedTempTransactionTemplates.add(tempTransactionTemplateId)
             }
 
             it.copy(
-                selectedTempTransactionTemplates = selectedTempTransactionTemplates,
-                selectedTempTransactionTemplateCount = numberFormatter.format(
-                    selectedTempTransactionTemplates.size
-                ).toString()
+                selectedTempTransactionTemplates = selectedTempTransactionTemplates
             )
         }
     }
 
     private fun getTemplateWithIcons(
-        templates: List<TempTransactionTemplate>
-    ): List<TransactionTemplateWithIcons> {
+        tempTransactionTemplates: List<TempTransactionTemplate>
+    ): List<TemplateWithChips> {
         val hasBeenUsedComparator = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault())
-        return templates.map { template ->
-            val category = template.category
-            val counterParty = template.counterParty
-            val method = template.method
-            val source = template.source
+        return tempTransactionTemplates.map { tempTransactionTemplate ->
+            val account = tempTransactionTemplate.account.target
+            val category = tempTransactionTemplate.category.target
+            val counterParty = tempTransactionTemplate.counterParty.target
+            val method = tempTransactionTemplate.method.target
+
             val chips: MutableList<ChipInfo> = mutableListOf()
-            if (template.title.isNotEmpty()) {
+
+            if (tempTransactionTemplate.title.isNotEmpty()) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.placeholder,
-                        value = template.title,
+                        value = tempTransactionTemplate.title,
                         icon = TablerIcons.Typography
                     )
                 )
             }
-            if (template.description.isNotEmpty()) {
+            if (tempTransactionTemplate.description.isNotEmpty()) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.placeholder,
-                        value = template.description,
+                        value = tempTransactionTemplate.description,
                         icon = TablerIcons.FileText
                     )
                 )
@@ -1112,27 +1263,31 @@ class ImportBackupScreenViewModel(
                     )
                 )
             }
-            if (source != null) {
+            if (account != null) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.placeholder,
-                        value = source.name,
-                        icon = Constants.DEFAULT_SOURCE_ICON
+                        value = account.name,
+                        icon = Constants.DEFAULT_ACCOUNT_ICON
                     )
                 )
             }
             chips.add(
                 ChipInfo(
                     resId = R.string.frequency_of_use_label,
-                    value = numberFormatter.format(template.frequency).toString(),
+                    value = numberFormatter.format(tempTransactionTemplate.frequency).toString(),
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (template.lastUsed > hasBeenUsedComparator) {
+            if (tempTransactionTemplate.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
-                        value = template.lastUsed.format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")),
+                        value = tempTransactionTemplate.lastUsed.format(
+                            DateTimeFormatter.ofPattern(
+                                "dd MMM yyyy, hh:mm a"
+                            )
+                        ),
                         icon = TablerIcons.History
                     )
                 )
@@ -1145,22 +1300,23 @@ class ImportBackupScreenViewModel(
                     )
                 )
             }
-            val formattedAmount = if (template.amount > 0) {
-                if (source != null) {
-                    currencyFormatterMap.getValue(source.currency).format(template.amount)
+            val formattedAmount = if (tempTransactionTemplate.amount > 0) {
+                if (account != null) {
+                    currencyFormatterMap.getValue(account.currency)
+                        .format(tempTransactionTemplate.amount)
                         .toString()
                 } else {
-                    numberFormatter.format(template.amount).toString()
+                    numberFormatter.format(tempTransactionTemplate.amount).toString()
                 }
             } else {
                 ""
             }
-            TransactionTemplateWithIcons(
-                uuid = template.uuid,
-                annotatedName = getHighlightedString(template.name, ""),
+            TemplateWithChips(
+                id = tempTransactionTemplate.id,
+                annotatedName = getHighlightedString(tempTransactionTemplate.name, ""),
                 amount = formattedAmount,
-                typeIcon = template.type.icon,
-                typeIconColor = template.type.color,
+                typeIcon = tempTransactionTemplate.type.icon,
+                typeIconColor = tempTransactionTemplate.type.color,
                 chips = chips
             )
         }
@@ -1170,10 +1326,10 @@ class ImportBackupScreenViewModel(
 
     //region Category
 
-    fun setCategoryMapping(tempCategoryUUID: String, dbCategory: Category) {
+    fun setCategoryMapping(tempCategoryId: Long, dbCategory: Category) {
         _primaryState.update {
             val categoryMappings = it.categoryMappings.toMutableMap()
-            categoryMappings[tempCategoryUUID] = dbCategory
+            categoryMappings[tempCategoryId] = dbCategory
 
             it.copy(
                 categoryMappings = categoryMappings
@@ -1181,14 +1337,14 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    fun toggleCategorySelected(uuid: String) {
+    fun toggleCategorySelected(id: Long) {
         _primaryState.update {
             val selectedTempCategories = it.selectedTempCategories.toMutableSet()
 
-            if (selectedTempCategories.contains(uuid)) {
-                selectedTempCategories.remove(uuid)
+            if (selectedTempCategories.contains(id)) {
+                selectedTempCategories.remove(id)
             } else {
-                selectedTempCategories.add(uuid)
+                selectedTempCategories.add(id)
             }
 
             it.copy(
@@ -1203,10 +1359,10 @@ class ImportBackupScreenViewModel(
 
     //region CounterParty
 
-    fun setSelectedCounterParty(tempCounterPartyUUID: String, dbCounterParty: CounterParty) {
+    fun setSelectedCounterParty(tempCounterPartyId: Long, dbCounterParty: CounterParty) {
         _primaryState.update {
             val counterPartyMappings = it.counterPartyMappings.toMutableMap()
-            counterPartyMappings[tempCounterPartyUUID] = dbCounterParty
+            counterPartyMappings[tempCounterPartyId] = dbCounterParty
 
             it.copy(
                 counterPartyMappings = counterPartyMappings
@@ -1214,14 +1370,14 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    fun toggleCounterPartySelected(uuid: String) {
+    fun toggleCounterPartySelected(id: Long) {
         _primaryState.update {
             val selectedTempCounterParties = it.selectedTempCounterParties.toMutableSet()
 
-            if (selectedTempCounterParties.contains(uuid)) {
-                selectedTempCounterParties.remove(uuid)
+            if (selectedTempCounterParties.contains(id)) {
+                selectedTempCounterParties.remove(id)
             } else {
-                selectedTempCounterParties.add(uuid)
+                selectedTempCounterParties.add(id)
             }
 
             it.copy(
@@ -1236,10 +1392,10 @@ class ImportBackupScreenViewModel(
 
     //region Method
 
-    fun setSelectedMethod(tempMethodUUID: String, dbMethod: Method) {
+    fun setSelectedMethod(tempMethodId: Long, dbMethod: Method) {
         _primaryState.update {
             val methodMappings = it.methodMappings.toMutableMap()
-            methodMappings[tempMethodUUID] = dbMethod
+            methodMappings[tempMethodId] = dbMethod
 
             it.copy(
                 methodMappings = methodMappings
@@ -1247,14 +1403,14 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    fun toggleMethodSelected(uuid: String) {
+    fun toggleMethodSelected(id: Long) {
         _primaryState.update {
             val selectedTempMethods = it.selectedTempMethods.toMutableSet()
 
-            if (selectedTempMethods.contains(uuid)) {
-                selectedTempMethods.remove(uuid)
+            if (selectedTempMethods.contains(id)) {
+                selectedTempMethods.remove(id)
             } else {
-                selectedTempMethods.add(uuid)
+                selectedTempMethods.add(id)
             }
 
             it.copy(
@@ -1267,60 +1423,60 @@ class ImportBackupScreenViewModel(
 
     //endregion
 
-    //region Source
+    //region Account
 
-    fun setSelectedSource(tempSourceUUID: String, dbSource: Source) {
+    fun setSelectedAccount(tempAccountId: Long, dbAccount: Account) {
         _primaryState.update {
-            val sourceMappings = it.sourceMappings.toMutableMap()
-            sourceMappings[tempSourceUUID] = dbSource
+            val accountMappings = it.accountMappings.toMutableMap()
+            accountMappings[tempAccountId] = dbAccount
 
-            val restoreBalanceSources = it.restoreBalanceSources.toMutableSet()
-            restoreBalanceSources.remove(tempSourceUUID)
+            val restoreBalanceAccounts = it.restoreBalanceAccounts.toMutableSet()
+            restoreBalanceAccounts.remove(tempAccountId)
 
             it.copy(
-                sourceMappings = sourceMappings,
-                restoreBalanceSources = restoreBalanceSources
+                accountMappings = accountMappings,
+                restoreBalanceAccounts = restoreBalanceAccounts
             )
         }
     }
 
-    fun toggleSourceSelected(uuid: String) {
+    fun toggleAccountSelected(id: Long) {
         _primaryState.update {
-            val selectedTempSources = it.selectedTempSources.toMutableSet()
+            val selectedTempAccounts = it.selectedTempAccounts.toMutableSet()
 
-            if (selectedTempSources.contains(uuid)) {
-                selectedTempSources.remove(uuid)
+            if (selectedTempAccounts.contains(id)) {
+                selectedTempAccounts.remove(id)
             } else {
-                selectedTempSources.add(uuid)
+                selectedTempAccounts.add(id)
             }
 
             it.copy(
-                selectedTempSources = selectedTempSources,
-                selectedTempSourceCount = numberFormatter.format(selectedTempSources.size)
+                selectedTempAccounts = selectedTempAccounts,
+                selectedTempAccountCount = numberFormatter.format(selectedTempAccounts.size)
                     .toString()
             )
         }
     }
 
-    fun toggleRestoreBalance(tempSourceUUID: String) {
+    fun toggleRestoreBalance(tempAccountId: Long) {
         _primaryState.update {
-            val restoreBalanceSources = it.restoreBalanceSources.toMutableSet()
+            val restoreBalanceAccounts = it.restoreBalanceAccounts.toMutableSet()
 
-            if (!restoreBalanceSources.contains(tempSourceUUID)) {
-                val mappedSource = it.sourceMappings[tempSourceUUID]
-                val sameMappedSourceUUIDs = it.sourceMappings
+            if (!restoreBalanceAccounts.contains(tempAccountId)) {
+                val mappedAccount = it.accountMappings[tempAccountId]
+                val sameMappedAccountIds = it.accountMappings
                     .filter { entry ->
-                        entry.key != tempSourceUUID && entry.value.uuid == mappedSource?.uuid
+                        entry.key != tempAccountId && entry.value.id == mappedAccount?.id
                     }
                     .keys
-                restoreBalanceSources.removeAll(sameMappedSourceUUIDs)
-                restoreBalanceSources.add(tempSourceUUID)
+                restoreBalanceAccounts.removeAll(sameMappedAccountIds)
+                restoreBalanceAccounts.add(tempAccountId)
             } else {
-                restoreBalanceSources.remove(tempSourceUUID)
+                restoreBalanceAccounts.remove(tempAccountId)
             }
 
             it.copy(
-                restoreBalanceSources = restoreBalanceSources
+                restoreBalanceAccounts = restoreBalanceAccounts
             )
         }
     }
@@ -1336,13 +1492,13 @@ class ImportBackupScreenViewModel(
                 if (
                     mainState.tempCategories
                         .filter { tempCategory ->
-                            mainState.selectedTempCategories.contains(tempCategory.uuid) && mainState.conflictingTempCategories.contains(
-                                tempCategory.uuid
+                            mainState.selectedTempCategories.contains(tempCategory.id) && mainState.conflictingTempCategories.contains(
+                                tempCategory.id
                             )
                         }
                         .any { tempCategory ->
-                            val mappedCategory = mainState.categoryMappings[tempCategory.uuid]
-                            mappedCategory != null && mappedCategory.uuid.isEmpty()
+                            val mappedCategory = mainState.categoryMappings[tempCategory.id]
+                            mappedCategory != null && mappedCategory.id == 0L
                         }
                 ) {
                     eventToSend = Event.MappingInvalid
@@ -1355,13 +1511,13 @@ class ImportBackupScreenViewModel(
             currentPage == 1 &&
             mainState.tempCounterParties
                 .filter { tempCounterParty ->
-                    mainState.selectedTempCounterParties.contains(tempCounterParty.uuid) && mainState.conflictingTempCounterParties.contains(
-                        tempCounterParty.uuid
+                    mainState.selectedTempCounterParties.contains(tempCounterParty.id) && mainState.conflictingTempCounterParties.contains(
+                        tempCounterParty.id
                     )
                 }
                 .any { tempCounterParty ->
-                    val mappedCounterParty = mainState.counterPartyMappings[tempCounterParty.uuid]
-                    mappedCounterParty != null && mappedCounterParty.uuid.isEmpty()
+                    val mappedCounterParty = mainState.counterPartyMappings[tempCounterParty.id]
+                    mappedCounterParty != null && mappedCounterParty.id == 0L
                 }
         ) {
             eventToSend = Event.MappingInvalid
@@ -1372,13 +1528,13 @@ class ImportBackupScreenViewModel(
                 if (
                     mainState.tempMethods
                         .filter { tempMethod ->
-                            mainState.selectedTempMethods.contains(tempMethod.uuid) && mainState.conflictingTempMethods.contains(
-                                tempMethod.uuid
+                            mainState.selectedTempMethods.contains(tempMethod.id) && mainState.conflictingTempMethods.contains(
+                                tempMethod.id
                             )
                         }
                         .any { tempMethod ->
-                            val mappedMethod = mainState.methodMappings[tempMethod.uuid]
-                            mappedMethod != null && mappedMethod.uuid.isEmpty()
+                            val mappedMethod = mainState.methodMappings[tempMethod.id]
+                            mappedMethod != null && mappedMethod.id == 0L
                         }
                 ) {
                     eventToSend = Event.MappingInvalid
@@ -1388,24 +1544,24 @@ class ImportBackupScreenViewModel(
             }
         }
         if (currentPage == 3) {
-            val atLeastOneRestoreSourceSelected = mainState.selectedTempSources.isNotEmpty()
-            if (atLeastOneRestoreSourceSelected) {
+            val atLeastOneRestoreAccountSelected = mainState.selectedTempAccounts.isNotEmpty()
+            if (atLeastOneRestoreAccountSelected) {
                 if (
-                    mainState.tempSources
-                        .filter { tempSource ->
-                            mainState.selectedTempSources.contains(tempSource.uuid) && mainState.conflictingTempSources.contains(
-                                tempSource.uuid
+                    mainState.tempAccounts
+                        .filter { tempAccount ->
+                            mainState.selectedTempAccounts.contains(tempAccount.id) && mainState.conflictingTempAccounts.contains(
+                                tempAccount.id
                             )
                         }
-                        .any { tempSource ->
-                            val mappedSource = mainState.sourceMappings[tempSource.uuid]
-                            mappedSource != null && mappedSource.uuid.isEmpty()
+                        .any { tempAccount ->
+                            val mappedAccount = mainState.accountMappings[tempAccount.id]
+                            mappedAccount != null && mappedAccount.id == 0L
                         }
                 ) {
                     eventToSend = Event.MappingInvalid
                 }
             } else {
-                eventToSend = Event.SourceMapRequired
+                eventToSend = Event.AccountMapRequired
             }
         }
         _event.send(eventToSend)
@@ -1413,43 +1569,39 @@ class ImportBackupScreenViewModel(
 
     fun toggleLocalDateSelected(
         localDateSelected: Boolean,
-        transactions: List<TransactionWithIcons>
+        transactions: List<TransactionWithChips>
     ) {
         _primaryState.update {
-            val transactionUUIDs = transactions
-                .map { transactionWithIcons -> transactionWithIcons.uuid }
+            val transactionIds = transactions
+                .map { transactionWithChips -> transactionWithChips.id }
                 .toSet()
 
             val selectedTempTransactions = it.selectedTempTransactions.toMutableSet()
 
             if (localDateSelected) {
-                selectedTempTransactions.removeAll(transactionUUIDs)
+                selectedTempTransactions.removeAll(transactionIds)
             } else {
-                selectedTempTransactions.addAll(transactionUUIDs)
+                selectedTempTransactions.addAll(transactionIds)
             }
 
             it.copy(
-                selectedTempTransactions = selectedTempTransactions,
-                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
-                    .toString()
+                selectedTempTransactions = selectedTempTransactions
             )
         }
     }
 
-    fun toggleTransactionSelected(uuid: String) {
+    fun toggleTransactionSelected(id: Long) {
         _primaryState.update {
             val selectedTempTransactions = it.selectedTempTransactions.toMutableSet()
 
-            if (selectedTempTransactions.contains(uuid)) {
-                selectedTempTransactions.remove(uuid)
+            if (selectedTempTransactions.contains(id)) {
+                selectedTempTransactions.remove(id)
             } else {
-                selectedTempTransactions.add(uuid)
+                selectedTempTransactions.add(id)
             }
 
             it.copy(
-                selectedTempTransactions = selectedTempTransactions,
-                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
-                    .toString()
+                selectedTempTransactions = selectedTempTransactions
             )
         }
     }
@@ -1461,18 +1613,16 @@ class ImportBackupScreenViewModel(
             if (allSelected) {
                 selectedTempTransactions.clear()
             } else {
-                val transactionUUIDs = it.filteredTransactions
+                val transactionIds = it.filteredTransactions
                     .values
                     .flatten()
-                    .map { transaction -> transaction.uuid }
+                    .map { transactionWithChips -> transactionWithChips.id }
 
-                selectedTempTransactions.addAll(transactionUUIDs)
+                selectedTempTransactions.addAll(transactionIds)
             }
 
             it.copy(
-                selectedTempTransactions = selectedTempTransactions,
-                selectedTransactionsCount = numberFormatter.format(selectedTempTransactions.size)
-                    .toString()
+                selectedTempTransactions = selectedTempTransactions
             )
         }
     }
@@ -1510,10 +1660,10 @@ class ImportBackupScreenViewModel(
         }
     }
 
-    fun setSortDirection(sortDirection: Sort) {
+    fun setSortFlags(sortFlags: Int) {
         _sortOptionsState.update {
             it.copy(
-                sortDirection = sortDirection
+                sortFlags = sortFlags
             )
         }
     }

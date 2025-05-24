@@ -29,7 +29,7 @@ fun ReviewDetailsPopup(
     selectedTempCategoryCount: String,
     selectedTempCounterPartyCount: String,
     selectedTempMethodCount: String,
-    selectedTempSourceCount: String,
+    selectedTempAccountCount: String,
     selectedTempTransactionTemplateCount: String,
     selectedTransactionsCount: String,
     dismiss: () -> Unit,
@@ -111,7 +111,7 @@ fun ReviewDetailsPopup(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                text = selectedTempSourceCount,
+                text = selectedTempAccountCount,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
             )
@@ -192,7 +192,7 @@ fun ReviewDetailsPopupPreview() {
         selectedTempCategoryCount = "3",
         selectedTempCounterPartyCount = "2",
         selectedTempMethodCount = "5",
-        selectedTempSourceCount = "2",
+        selectedTempAccountCount = "2",
         selectedTempTransactionTemplateCount = "5",
         selectedTransactionsCount = "436",
         dismiss = {},

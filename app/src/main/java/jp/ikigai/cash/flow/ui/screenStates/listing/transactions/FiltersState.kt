@@ -6,15 +6,14 @@ import jp.ikigai.cash.flow.utils.getMonthStartDate
 import java.time.ZonedDateTime
 
 data class FiltersState(
-    val selectedCategories: Map<String, Boolean> = emptyMap(),
+    val selectedAccounts: Map<Long, Boolean> = emptyMap(),
+    val selectedAccountCount: String = "0",
+    val selectedCategories: Map<Long, Boolean> = emptyMap(),
     val selectedCategoryCount: String = "0",
-    val selectedCounterParties: Map<String, Boolean> = emptyMap(),
+    val selectedCounterParties: Map<Long, Boolean> = emptyMap(),
     val selectedCounterPartyCount: String = "0",
-    val includeNoCounterPartyTransactions: Boolean = true,
-    val selectedMethods: Map<String, Boolean> = emptyMap(),
+    val selectedMethods: Map<Long, Boolean> = emptyMap(),
     val selectedMethodCount: String = "0",
-    val selectedSources: Map<String, Boolean> = emptyMap(),
-    val selectedSourceCount: String = "0",
     val selectedTransactionTypes: List<Int> = listOf(1, 2),
     val filterAmountMin: Double = 0.0,
     val filterAmountMax: Double = 0.0,

@@ -36,12 +36,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
-import compose.icons.tablericons.ArrowNarrowDown
-import compose.icons.tablericons.ArrowNarrowUp
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseImport
 import compose.icons.tablericons.FileImport
-import io.realm.kotlin.query.Sort
+import compose.icons.tablericons.SortAscending
+import compose.icons.tablericons.SortDescending
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -55,7 +55,7 @@ fun ImportBackupScreenRoundedBottomBar(
     importEnabled: Boolean,
     dataLoaded: Boolean,
     allSelected: Boolean,
-    sortDirection: Sort,
+    sortFlags: Int,
     filterAmount: String,
     selectedCurrencyCount: String,
     selectedTransactionTypeCount: Int,
@@ -95,10 +95,10 @@ fun ImportBackupScreenRoundedBottomBar(
                     enabled = enabled
                 ) {
                     Icon(
-                        imageVector = if (sortDirection == Sort.DESCENDING) {
-                            TablerIcons.ArrowNarrowDown
+                        imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
+                            TablerIcons.SortDescending
                         } else {
-                            TablerIcons.ArrowNarrowUp
+                            TablerIcons.SortAscending
                         },
                         contentDescription = "sort direction icon"
                     )
@@ -328,7 +328,7 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
             allSelected = true,
             importEnabled = true,
             dataLoaded = false,
-            sortDirection = Sort.DESCENDING,
+            sortFlags = QueryBuilder.DESCENDING,
             selectedCurrencyCount = "2",
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",
@@ -349,7 +349,7 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
             allSelected = false,
             importEnabled = true,
             dataLoaded = true,
-            sortDirection = Sort.DESCENDING,
+            sortFlags = QueryBuilder.DESCENDING,
             selectedCurrencyCount = "2",
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",

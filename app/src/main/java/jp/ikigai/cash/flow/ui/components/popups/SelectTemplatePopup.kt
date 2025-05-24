@@ -48,7 +48,7 @@ import jp.ikigai.cash.flow.utils.getHighlightedString
 @Composable
 fun SelectTemplatePopup(
     templates: List<SelectTemplateInfoDTO>,
-    addNewTransaction: (String) -> Unit,
+    addNewTransaction: (Long) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -133,18 +133,18 @@ fun SelectTemplatePopup(
                 .heightIn(max = 230.dp)
                 .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             items(
                 items = filteredTemplates,
-                key = { template -> "template-${template.uuid}" }
+                key = { template -> "template-${template.id}" }
             ) { template ->
                 SelectTemplateCard(
                     data = template,
-                    onClick = { uuid ->
+                    onClick = { id ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
-                        addNewTransaction(uuid)
+                        addNewTransaction(id)
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -188,7 +188,7 @@ fun SelectTemplatePopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    addNewTransaction("")
+                    addNewTransaction(0L)
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -207,22 +207,22 @@ fun SelectTemplatePopupPreview() {
     SelectTemplatePopup(
         templates = listOf(
             SelectTemplateInfoDTO(
-                uuid = "qwe",
+                id = 0L,
                 annotatedName = AnnotatedString("Split expenses"),
                 frequency = "1"
             ),
             SelectTemplateInfoDTO(
-                uuid = "asd",
+                id = 1L,
                 annotatedName = AnnotatedString("Server"),
                 frequency = "145"
             ),
             SelectTemplateInfoDTO(
-                uuid = "zx",
+                id = 2L,
                 annotatedName = AnnotatedString("Al Taza"),
                 frequency = "3,251"
             ),
             SelectTemplateInfoDTO(
-                uuid = "dgh",
+                id = 3L,
                 annotatedName = AnnotatedString("Groceries"),
                 frequency = "10"
             )

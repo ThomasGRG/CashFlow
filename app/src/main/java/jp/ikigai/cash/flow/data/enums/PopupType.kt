@@ -8,7 +8,7 @@ enum class PopupType {
     CATEGORY,
     COUNTERPARTY,
     METHOD,
-    SOURCE,
+    ACCOUNT,
     TYPE,
     CURRENCY,
     DATE_RANGE,

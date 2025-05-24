@@ -55,12 +55,14 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import io.realm.kotlin.query.Sort
+import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.entity.Category
 import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.store.entity.Category
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.components.bottombars.MigrateCategoryScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -68,13 +70,13 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
 import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
 import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
+import jp.ikigai.cash.flow.ui.components.popups.FilterAccountPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterCurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterSourcePopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.MigrateCategoryPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsScreenState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateCategoryScreenViewModel
@@ -94,23 +96,23 @@ fun MigrateCategoryScreen(
     navigateBack: () -> Unit,
     migrate: (Category) -> Unit,
     toggleSelection: () -> Unit,
-    toggleTransactionSelected: (String) -> Unit,
+    toggleTransactionSelected: (Long) -> Unit,
     toggleLocalDateSelected: (LocalDate) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setSelectedCurrencies: (Set<String>) -> Unit,
     setStartDateAndEndDate: (ZonedDateTime?, ZonedDateTime?) -> Unit,
-    setSelectedCounterParties: (Set<String>, Boolean) -> Unit,
-    setSelectedMethods: (Set<String>) -> Unit,
-    setSelectedSources: (Set<String>) -> Unit,
+    setSelectedAccounts: (Set<Long>) -> Unit,
+    setSelectedCounterParties: (Set<Long>, Boolean) -> Unit,
+    setSelectedMethods: (Set<Long>) -> Unit,
     setSelectedTransactionTypes: (List<Int>) -> Unit,
-    setSortDirection: (Sort) -> Unit,
+    setSortFlags: (Int) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     events: Flow<Event>,
     state: MigrateCategoryScreenState,
     filtersState: TransactionFilters,
-    sortOptionsState: SortOptionsScreenState
+    sortOptionsState: SortOptionsState<Transaction>
 ) {
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
@@ -231,6 +233,18 @@ fun MigrateCategoryScreen(
         mutableIntStateOf(filtersState.dateRangeStringRes)
     }
 
+    val accounts by remember(key1 = state.accounts) {
+        mutableStateOf(state.accounts)
+    }
+
+    val selectedAccounts by remember(key1 = filtersState.selectedAccounts) {
+        mutableStateOf(filtersState.selectedAccounts)
+    }
+
+    val selectedAccountCount by remember(key1 = filtersState.selectedAccountCount) {
+        mutableStateOf(filtersState.selectedAccountCount)
+    }
+
     val categories by remember(key1 = state.categories) {
         mutableStateOf(state.categories)
     }
@@ -239,16 +253,16 @@ fun MigrateCategoryScreen(
         mutableStateOf(state.counterParties)
     }
 
-    val includeNoCounterPartyTransactions by remember(key1 = filtersState.includeNoCounterPartyTransactions) {
-        mutableStateOf(filtersState.includeNoCounterPartyTransactions)
-    }
-
     val selectedCounterParties by remember(key1 = filtersState.selectedCounterParties) {
         mutableStateOf(filtersState.selectedCounterParties)
     }
 
     val selectedCounterPartyCount by remember(key1 = filtersState.selectedCounterPartyCount) {
         mutableStateOf(filtersState.selectedCounterPartyCount)
+    }
+
+    val includeNoCounterPartyTransactions by remember(key1 = filtersState.includeNoCounterPartyTransactions) {
+        mutableStateOf(filtersState.includeNoCounterPartyTransactions)
     }
 
     val methods by remember(key1 = state.methods) {
@@ -261,18 +275,6 @@ fun MigrateCategoryScreen(
 
     val selectedMethodCount by remember(key1 = filtersState.selectedMethodCount) {
         mutableStateOf(filtersState.selectedMethodCount)
-    }
-
-    val sources by remember(key1 = state.sources) {
-        mutableStateOf(state.sources)
-    }
-
-    val selectedSources by remember(key1 = filtersState.selectedSources) {
-        mutableStateOf(filtersState.selectedSources)
-    }
-
-    val selectedSourceCount by remember(key1 = filtersState.selectedSourceCount) {
-        mutableStateOf(filtersState.selectedSourceCount)
     }
 
     val selectedTransactionTypes by remember(key1 = filtersState.selectedTransactionTypes) {
@@ -291,8 +293,8 @@ fun MigrateCategoryScreen(
         mutableStateOf(filtersState.filterAmountRange)
     }
 
-    val sortDirection by remember(key1 = sortOptionsState.sortDirection) {
-        mutableStateOf(sortOptionsState.sortDirection)
+    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
+        mutableIntStateOf(sortOptionsState.sortFlags)
     }
 
     val migrateEnabled by remember(
@@ -360,8 +362,8 @@ fun MigrateCategoryScreen(
 
                 PopupType.COUNTERPARTY -> {
                     FilterCounterPartyPopup(
-                        selectedCounterPartyUUIDs = selectedCounterParties,
-                        includeTransactionsWithNoCounterParty = includeNoCounterPartyTransactions,
+                        selectedCounterPartyIds = selectedCounterParties,
+                        includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
                         filter = setSelectedCounterParties,
                         counterParties = counterParties,
                         dismiss = hidePopup
@@ -370,18 +372,18 @@ fun MigrateCategoryScreen(
 
                 PopupType.METHOD -> {
                     FilterMethodPopup(
-                        selectedMethodUUIDs = selectedMethods,
+                        selectedMethodIds = selectedMethods,
                         methods = methods,
                         filter = setSelectedMethods,
                         dismiss = hidePopup
                     )
                 }
 
-                PopupType.SOURCE -> {
-                    FilterSourcePopup(
-                        selectedSourceUUIDs = selectedSources,
-                        sources = sources,
-                        filter = setSelectedSources,
+                PopupType.ACCOUNT -> {
+                    FilterAccountPopup(
+                        selectedAccountIds = selectedAccounts,
+                        accounts = accounts,
+                        filter = setSelectedAccounts,
                         dismiss = hidePopup
                     )
                 }
@@ -424,19 +426,19 @@ fun MigrateCategoryScreen(
                 enabled = enabled,
                 migrateEnabled = migrateEnabled,
                 allSelected = allSelected,
-                sortDirection = sortDirection,
+                sortFlags = sortFlags,
                 filterAmount = filterAmountRange,
                 selectedCurrencyCount = selectedCurrencyCount,
-                counterPartyFilterVisible = counterParties.isNotEmpty(),
+                selectedAccountCount = selectedAccountCount,
                 selectedCounterPartyCount = selectedCounterPartyCount,
+                counterPartyFilterVisible = counterParties.isNotEmpty(),
                 selectedMethodCount = selectedMethodCount,
-                selectedSourceCount = selectedSourceCount,
                 selectedTransactionTypeCount = selectedTransactionTypes.size,
                 onSortClick = {
-                    if (sortDirection == Sort.DESCENDING) {
-                        setSortDirection(Sort.ASCENDING)
+                    if (sortFlags == QueryBuilder.DESCENDING) {
+                        setSortFlags(0)
                     } else {
-                        setSortDirection(Sort.DESCENDING)
+                        setSortFlags(QueryBuilder.DESCENDING)
                     }
                 },
                 onFilterByAmountClick = {
@@ -455,7 +457,7 @@ fun MigrateCategoryScreen(
                     popupType = PopupType.METHOD
                 },
                 onFilterBySourceClick = {
-                    popupType = PopupType.SOURCE
+                    popupType = PopupType.ACCOUNT
                 },
                 onCalendarClick = {
                     popupType = PopupType.DATE_RANGE
@@ -551,16 +553,16 @@ fun MigrateCategoryScreen(
                     }
                     items(
                         items = it.value,
-                        key = { transactionWithIcons -> transactionWithIcons.uuid }
-                    ) { transactionWithIcons ->
+                        key = { transactionWithChips -> transactionWithChips.id }
+                    ) { transactionWithChips ->
                         TransactionCard(
-                            checked = selectedTransactions.contains(transactionWithIcons.uuid),
+                            checked = selectedTransactions.contains(transactionWithChips.id),
                             enabled = enabled,
-                            transactionWithIcons = transactionWithIcons,
+                            transactionWithChips = transactionWithChips,
                             onClick = {
                                 resetOneHandMode()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                toggleTransactionSelected(transactionWithIcons.uuid)
+                                toggleTransactionSelected(transactionWithChips.id)
                             },
                             onLongClick = {
                                 resetOneHandMode()
@@ -589,16 +591,16 @@ fun MigrateCategoryScreenPreview() {
         setLocale = {},
         setSelectedCurrencies = {},
         setStartDateAndEndDate = { _, _ -> },
+        setSelectedAccounts = {},
         setSelectedCounterParties = { _, _ -> },
         setSelectedMethods = {},
-        setSelectedSources = {},
         setSelectedTransactionTypes = {},
-        setSortDirection = {},
+        setSortFlags = {},
         filterByAmount = { _, _ -> },
         events = emptyList<Event>().asFlow(),
         state = MigrateCategoryScreenState(),
         filtersState = TransactionFilters(),
-        sortOptionsState = SortOptionsScreenState()
+        sortOptionsState = SortOptionsState(sortField = Transaction_.time)
     )
 }
 
@@ -607,8 +609,7 @@ fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
         route = Routes.MigrateCategory.route,
         arguments = listOf(
             navArgument("id") {
-                defaultValue = ""
-                type = NavType.StringType
+                type = NavType.LongType
             }
         )
     ) {
@@ -631,11 +632,11 @@ fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
             setLocale = viewModel::setLocale,
             setSelectedCurrencies = viewModel::setSelectedCurrencies,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
+            setSelectedAccounts = viewModel::setSelectedAccounts,
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
-            setSelectedSources = viewModel::setSelectedSources,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
-            setSortDirection = viewModel::setSortDirection,
+            setSortFlags = viewModel::setSortFlags,
             filterByAmount = viewModel::setFilterAmounts,
             events = viewModel.event,
             state = state,
