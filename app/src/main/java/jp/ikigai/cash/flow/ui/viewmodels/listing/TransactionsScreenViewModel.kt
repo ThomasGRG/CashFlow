@@ -10,8 +10,10 @@ import io.objectbox.BoxStore
 import io.objectbox.kotlin.boxFor
 import io.objectbox.kotlin.flow
 import io.objectbox.query.QueryBuilder
+import io.realm.kotlin.Realm
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
@@ -127,6 +129,7 @@ class TransactionsScreenViewModel(
         .build()
 
     init {
+        deleteRealm()
         _filtersState.update {
             it.copy(
                 startDateString = it.startDate.getDateString(datePattern),
@@ -146,6 +149,11 @@ class TransactionsScreenViewModel(
         counterPartyQuery.close()
         methodQuery.close()
         templateQuery.close()
+    }
+
+    private fun deleteRealm() = viewModelScope.launch {
+        Realm.deleteRealm(Database.config)
+        _event.send(Event.SaveSuccess)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

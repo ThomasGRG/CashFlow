@@ -48,7 +48,6 @@ fun SettingsScreen(
     navigateBack: () -> Unit,
     navigateToExportScreen: () -> Unit,
     navigateToImportScreen: () -> Unit,
-    importFromRealm: () -> Unit,
     fixBrokenMetadata: () -> Unit,
     events: Flow<Event>,
     state: SettingsScreenState
@@ -121,19 +120,6 @@ fun SettingsScreen(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    importFromRealm()
-                },
-                modifier = Modifier
-                    .padding(start = 10.dp, end = 10.dp, top = 10.dp)
-                    .height(50.dp)
-                    .fillMaxWidth(),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(text = "Import data from realm")
-            }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     navigateToImportScreen()
                 },
                 modifier = Modifier
@@ -181,7 +167,6 @@ fun SettingsScreenPreview() {
         navigateBack = {},
         navigateToExportScreen = {},
         navigateToImportScreen = {},
-        importFromRealm = {},
         fixBrokenMetadata = {},
         events = emptyList<Event>().asFlow(),
         state = SettingsScreenState()
@@ -209,7 +194,6 @@ fun NavGraphBuilder.settingsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            importFromRealm = viewModel::importFromRealm,
             fixBrokenMetadata = viewModel::fixBrokenMetadata,
             events = viewModel.event,
             state = state

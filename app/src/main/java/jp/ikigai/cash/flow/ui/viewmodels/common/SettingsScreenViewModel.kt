@@ -5,24 +5,19 @@ import androidx.lifecycle.viewModelScope
 import io.objectbox.Box
 import io.objectbox.BoxStore
 import io.objectbox.kotlin.boxFor
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.entity.Category
-import jp.ikigai.cash.flow.data.entity.CounterParty
-import jp.ikigai.cash.flow.data.entity.Method
-import jp.ikigai.cash.flow.data.entity.Source
-import jp.ikigai.cash.flow.data.entity.Transaction
-import jp.ikigai.cash.flow.data.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.store.DataStore
 import jp.ikigai.cash.flow.data.store.entity.Account
 import jp.ikigai.cash.flow.data.store.entity.Account_
+import jp.ikigai.cash.flow.data.store.entity.Category
 import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.store.entity.CounterParty
 import jp.ikigai.cash.flow.data.store.entity.CounterParty_
+import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.data.store.entity.Method_
+import jp.ikigai.cash.flow.data.store.entity.Transaction
+import jp.ikigai.cash.flow.data.store.entity.TransactionTitle
 import jp.ikigai.cash.flow.data.store.entity.TransactionTitle_
 import jp.ikigai.cash.flow.data.store.entity.Transaction_
 import jp.ikigai.cash.flow.ui.screenStates.common.SettingsScreenState
@@ -40,7 +35,6 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class SettingsScreenViewModel(
-    private val realm: Realm = Realm.open(Database.config),
     private val store: BoxStore = DataStore.store
 ) : ViewModel() {
 
@@ -52,126 +46,7 @@ class SettingsScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        realm.close()
         _event.close()
-    }
-
-    fun importFromRealm() = viewModelScope.launch {
-        _state.update {
-            it.copy(
-                showWaitDialog = true
-            )
-        }
-
-        val accountBox: Box<Account> = store.boxFor()
-        val categoryBox: Box<jp.ikigai.cash.flow.data.store.entity.Category> = store.boxFor()
-        val counterPartyBox: Box<jp.ikigai.cash.flow.data.store.entity.CounterParty> =
-            store.boxFor()
-        val methodBox: Box<jp.ikigai.cash.flow.data.store.entity.Method> = store.boxFor()
-        val transactionBox: Box<jp.ikigai.cash.flow.data.store.entity.Transaction> = store.boxFor()
-        val templateBox: Box<jp.ikigai.cash.flow.data.store.entity.TransactionTemplate> =
-            store.boxFor()
-        val titleBox: Box<jp.ikigai.cash.flow.data.store.entity.TransactionTitle> = store.boxFor()
-
-        val realmTransactions = realm.query<Transaction>().find()
-        val realmTransactionTitles = realm.query<TransactionTitle>().find()
-        val realmTemplates = realm.query<TransactionTemplate>().find()
-        val realmCategories = realm.query<Category>().find()
-        val realmCounterParties = realm.query<CounterParty>().find()
-        val realmMethods = realm.query<Method>().find()
-        val realmSources = realm.query<Source>().find()
-
-        val realmAccountToBoxMap = mutableMapOf<String, Long>()
-        val realmCategoryToBoxMap = mutableMapOf<String, Long>()
-        val realmCounterPartyToBoxMap = mutableMapOf<String, Long>()
-        val realmMethodToBoxMap = mutableMapOf<String, Long>()
-
-        realmSources.forEach { realmSource ->
-            val account = Account(
-                name = realmSource.name,
-                currency = realmSource.currency,
-                balance = realmSource.balance,
-                frequency = realmSource.frequency,
-                lastUsed = realmSource.lastUsed
-            )
-            realmAccountToBoxMap[realmSource.uuid] = accountBox.put(account)
-        }
-        realmCategories.forEach { realmCategory ->
-            val category = jp.ikigai.cash.flow.data.store.entity.Category(
-                name = realmCategory.name,
-                icon = realmCategory.icon,
-                frequency = realmCategory.frequency,
-                lastUsed = realmCategory.lastUsed
-            )
-            realmCategoryToBoxMap[realmCategory.uuid] = categoryBox.put(category)
-        }
-        realmCounterParties.map { realmCounterParty ->
-            val counterParty = jp.ikigai.cash.flow.data.store.entity.CounterParty(
-                name = realmCounterParty.name,
-                frequency = realmCounterParty.frequency,
-                lastUsed = realmCounterParty.lastUsed
-            )
-            realmCounterPartyToBoxMap[realmCounterParty.uuid] = counterPartyBox.put(counterParty)
-        }
-        realmMethods.map { realmMethod ->
-            val method = jp.ikigai.cash.flow.data.store.entity.Method(
-                name = realmMethod.name,
-                frequency = realmMethod.frequency,
-                lastUsed = realmMethod.lastUsed
-            )
-            realmMethodToBoxMap[realmMethod.uuid] = methodBox.put(method)
-        }
-        titleBox.put(
-            realmTransactionTitles.map { realmTitle ->
-                jp.ikigai.cash.flow.data.store.entity.TransactionTitle(
-                    title = realmTitle.title,
-                    frequency = realmTitle.frequency,
-                    lastUsed = realmTitle.lastUsed
-                )
-            }
-        )
-
-        realmTemplates.forEach { realmTemplate ->
-            val template = jp.ikigai.cash.flow.data.store.entity.TransactionTemplate(
-                name = realmTemplate.name,
-                title = realmTemplate.title,
-                description = realmTemplate.description,
-                amount = realmTemplate.amount,
-                type = realmTemplate.type,
-                frequency = realmTemplate.frequency,
-                lastUsed = realmTemplate.lastUsed
-            )
-            template.account.targetId = realmAccountToBoxMap[realmTemplate.source?.uuid] ?: 0L
-            template.category.targetId = realmCategoryToBoxMap[realmTemplate.category?.uuid] ?: 0L
-            template.counterParty.targetId =
-                realmCounterPartyToBoxMap[realmTemplate.counterParty?.uuid] ?: 0L
-            template.method.targetId = realmMethodToBoxMap[realmTemplate.method?.uuid] ?: 0L
-            templateBox.put(template)
-        }
-
-        realmTransactions.forEach { realmTransaction ->
-            val transaction = jp.ikigai.cash.flow.data.store.entity.Transaction(
-                title = realmTransaction.title,
-                description = realmTransaction.description,
-                amount = realmTransaction.amount,
-                type = realmTransaction.type,
-                currency = realmTransaction.currency,
-                time = realmTransaction.time
-            )
-            transaction.account.targetId = realmAccountToBoxMap[realmTransaction.source?.uuid] ?: 0L
-            transaction.category.targetId =
-                realmCategoryToBoxMap[realmTransaction.category?.uuid] ?: 0L
-            transaction.counterParty.targetId =
-                realmCounterPartyToBoxMap[realmTransaction.counterParty?.uuid] ?: 0L
-            transaction.method.targetId = realmMethodToBoxMap[realmTransaction.method?.uuid] ?: 0L
-            transactionBox.put(transaction)
-        }
-
-        _state.update {
-            it.copy(
-                showWaitDialog = false
-            )
-        }
     }
 
     fun fixBrokenMetadata() = viewModelScope.launch {
@@ -184,14 +59,11 @@ class SettingsScreenViewModel(
         var result: Event
         try {
             val accountBox: Box<Account> = store.boxFor()
-            val categoryBox: Box<jp.ikigai.cash.flow.data.store.entity.Category> = store.boxFor()
-            val counterPartyBox: Box<jp.ikigai.cash.flow.data.store.entity.CounterParty> =
-                store.boxFor()
-            val methodBox: Box<jp.ikigai.cash.flow.data.store.entity.Method> = store.boxFor()
-            val transactionBox: Box<jp.ikigai.cash.flow.data.store.entity.Transaction> =
-                store.boxFor()
-            val titleBox: Box<jp.ikigai.cash.flow.data.store.entity.TransactionTitle> =
-                store.boxFor()
+            val categoryBox: Box<Category> = store.boxFor()
+            val counterPartyBox: Box<CounterParty> = store.boxFor()
+            val methodBox: Box<Method> = store.boxFor()
+            val transactionBox: Box<Transaction> = store.boxFor()
+            val titleBox: Box<TransactionTitle> = store.boxFor()
 
             val accountQuery = accountBox.query().build()
             val categoryQuery = categoryBox.query().build()
