@@ -624,12 +624,15 @@ class UpsertTransactionScreenViewModel(
 
         getTemplateQuery.findUnique()
             ?.let {
-                templateBox.put(
-                    it.copy(
-                        frequency = it.frequency + 1,
-                        lastUsed = time
-                    )
+                val template = it.copy(
+                    frequency = it.frequency + 1,
+                    lastUsed = time
                 )
+                template.account.targetId = it.account.targetId
+                template.category.targetId = it.category.targetId
+                template.counterParty.targetId = it.counterParty.targetId
+                template.method.targetId = it.method.targetId
+                templateBox.put(template)
             }
 
         getTemplateQuery.close()
