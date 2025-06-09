@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("io.realm.kotlin")
     id("io.objectbox")
 }
 
@@ -55,8 +54,6 @@ dependencies {
 
     val composeIconsVariant = "tabler-icons"
     implementation("br.com.devsrsouza.compose.icons:$composeIconsVariant:1.1.0")
-
-    implementation("io.realm.kotlin:library-base:1.11.0")
 
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
