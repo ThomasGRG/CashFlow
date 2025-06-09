@@ -598,10 +598,10 @@ class UpsertTransactionScreenViewModel(
             currency = account.currency
         )
 
-        transactionToUpsert.account.target = account
-        transactionToUpsert.category.target = category
-        transactionToUpsert.counterParty.target = counterParty
-        transactionToUpsert.method.target = method
+        transactionToUpsert.account.targetId = account.id
+        transactionToUpsert.category.targetId = category.id
+        transactionToUpsert.counterParty.targetId = counterParty.id
+        transactionToUpsert.method.targetId = method.id
 
         try {
             transactionBox.put(transactionToUpsert)
