@@ -94,13 +94,14 @@ fun OneHandModeScaffold(
         keyboardController?.hide()
     }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .animateContentSize()
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
         Scaffold(
-            modifier = Modifier
-                .animateContentSize()
-                .navigationBarsPadding()
-                .imePadding()
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             topBar = topBar,
             bottomBar = bottomBar
         ) { contentPadding ->
@@ -159,10 +160,7 @@ fun OneHandModeScaffold(
         AnimatedVisibility(
             visible = showBottomPopup,
             enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .navigationBarsPadding()
-                .imePadding()
+            exit = fadeOut()
         ) {
             BottomPopup(
                 dismiss = onDismissPopup

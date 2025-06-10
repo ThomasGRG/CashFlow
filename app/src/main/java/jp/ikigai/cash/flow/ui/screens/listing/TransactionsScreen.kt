@@ -318,13 +318,14 @@ fun TransactionsScreen(
         mutableLongStateOf(0L)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .animateContentSize()
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
         Scaffold(
-            modifier = Modifier
-                .animateContentSize()
-                .navigationBarsPadding()
-                .imePadding()
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
                     title = {
