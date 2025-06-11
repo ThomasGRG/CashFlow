@@ -692,37 +692,6 @@ class ImportBackupScreenViewModel(
         val epoch = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault())
 
         try {
-            val renameRequiredTemplates = mutableListOf<TransactionTemplate>()
-
-            tempTransactionTemplates.forEach { tempTransactionTemplate ->
-                val account = accountMappings[tempTransactionTemplate.account.targetId]
-                val category = categoryMappings[tempTransactionTemplate.category.targetId]
-                val counterParty =
-                    counterPartyMappings[tempTransactionTemplate.counterParty.targetId]
-                val method = methodMappings[tempTransactionTemplate.method.targetId]
-
-                val template = TransactionTemplate(
-                    name = tempTransactionTemplate.name,
-                    title = tempTransactionTemplate.title,
-                    description = tempTransactionTemplate.description,
-                    amount = tempTransactionTemplate.amount,
-                    type = tempTransactionTemplate.type,
-                    frequency = tempTransactionTemplate.frequency,
-                    lastUsed = tempTransactionTemplate.lastUsed
-                )
-
-                template.account.target = account
-                template.category.target = category
-                template.counterParty.target = counterParty
-                template.method.target = method
-
-                try {
-                    templateBox.put(template)
-                } catch (exception: UniqueViolationException) {
-                    renameRequiredTemplates.add(template)
-                }
-            }
-
             store.runInTx {
                 categoryMappings
                     .entries
@@ -912,19 +881,12 @@ class ImportBackupScreenViewModel(
                                     tempTransaction.time
                                 } ?: epoch
                             )
+                            val accountId = accountBox.put(account)
                             accountMappings[tempAccount.id] = account.copy(
-                                id = accountBox.put(account)
+                                id = accountId
                             )
                         }
                     }
-
-                renameRequiredTemplates.forEach { template ->
-                    templateBox.put(
-                        template.copy(
-                            name = "${template.name} - ${Random.nextInt(0, 100)}"
-                        )
-                    )
-                }
 
                 tempTransactions.forEach { tempTransaction ->
                     val account = accountMappings[tempTransaction.account.targetId]
@@ -943,17 +905,56 @@ class ImportBackupScreenViewModel(
                             type = tempTransaction.type
                         )
 
-                        transaction.account.target = account
-                        transaction.category.target = category
-                        transaction.counterParty.target = counterParty
-                        transaction.method.target = method
+                        transaction.account.targetId = account.id
+                        transaction.category.targetId = category.id
+                        transaction.counterParty.targetId = counterParty?.id ?: 0L
+                        transaction.method.targetId = method.id
 
                         transactionBox.put(transaction)
                     }
                 }
-
-                clearTempData()
             }
+
+            val renameRequiredTemplates = mutableListOf<TransactionTemplate>()
+
+            tempTransactionTemplates.forEach { tempTransactionTemplate ->
+                val account = accountMappings[tempTransactionTemplate.account.targetId]
+                val category = categoryMappings[tempTransactionTemplate.category.targetId]
+                val counterParty =
+                    counterPartyMappings[tempTransactionTemplate.counterParty.targetId]
+                val method = methodMappings[tempTransactionTemplate.method.targetId]
+
+                val template = TransactionTemplate(
+                    name = tempTransactionTemplate.name,
+                    title = tempTransactionTemplate.title,
+                    description = tempTransactionTemplate.description,
+                    amount = tempTransactionTemplate.amount,
+                    type = tempTransactionTemplate.type,
+                    frequency = tempTransactionTemplate.frequency,
+                    lastUsed = tempTransactionTemplate.lastUsed
+                )
+
+                template.account.targetId = account?.id ?: 0L
+                template.category.targetId = category?.id ?: 0L
+                template.counterParty.targetId = counterParty?.id ?: 0L
+                template.method.targetId = method?.id ?: 0L
+
+                try {
+                    templateBox.put(template)
+                } catch (exception: UniqueViolationException) {
+                    renameRequiredTemplates.add(template)
+                }
+            }
+
+            renameRequiredTemplates.forEach { template ->
+                templateBox.put(
+                    template.copy(
+                        name = "${template.name} - ${Random.nextInt(0, 100)}"
+                    )
+                )
+            }
+
+            clearTempData()
 
             result = Event.ImportSuccess
         } catch (exception: Exception) {
