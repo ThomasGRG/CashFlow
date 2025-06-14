@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -150,10 +148,8 @@ fun CurrencyPopup(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .heightIn(min = 0.dp, max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -168,7 +164,9 @@ fun CurrencyPopup(
                         setSelectedCurrency(currencyInfo.currency.currencyCode)
                         dismiss()
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -321,10 +319,8 @@ fun FilterCurrencyPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(min = 0.dp, max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -344,7 +340,9 @@ fun FilterCurrencyPopup(
                         selectedCurrencies[currencyInfo.currency.currencyCode] =
                             !selectedCurrencies[currencyInfo.currency.currencyCode]!!
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredCurrencies.isEmpty()) {

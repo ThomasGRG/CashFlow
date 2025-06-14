@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -160,10 +158,8 @@ fun SelectCounterPartyPopup(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -179,7 +175,9 @@ fun SelectCounterPartyPopup(
                         dismiss()
                         setSelectedCounterParty(counterParty)
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -316,10 +314,8 @@ fun MigrateCounterPartyPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -334,7 +330,9 @@ fun MigrateCounterPartyPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCounterParty = counterParty
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -512,10 +510,8 @@ fun FilterCounterPartyPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 200.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -533,7 +529,9 @@ fun FilterCounterPartyPopup(
                         selectedCounterParties[counterParty.id] =
                             !selectedCounterParties[counterParty.id]!!
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
@@ -784,10 +782,8 @@ fun FilterCounterPartyPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 200.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -804,7 +800,9 @@ fun FilterCounterPartyPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCounterParties[counterParty.id] = newCheckState
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {

@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -164,10 +162,8 @@ fun SelectAccountPopup(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -183,7 +179,9 @@ fun SelectAccountPopup(
                         dismiss()
                         setSelectedAccount(account)
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -347,10 +345,8 @@ fun FilterAccountPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -367,7 +363,9 @@ fun FilterAccountPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedAccounts[account.id] = !selectedAccounts[account.id]!!
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
@@ -589,10 +587,8 @@ fun FilterAccountPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -609,7 +605,9 @@ fun FilterAccountPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedAccounts[account.id] = newCheckState
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {

@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -154,10 +152,8 @@ fun SelectCategoryPopup(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -173,7 +169,9 @@ fun SelectCategoryPopup(
                         dismiss()
                         setSelectedCategory(category)
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -310,10 +308,8 @@ fun MigrateCategoryPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -328,7 +324,9 @@ fun MigrateCategoryPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCategory = category
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
@@ -506,10 +504,8 @@ fun FilterCategoryPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -526,7 +522,9 @@ fun FilterCategoryPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCategories[category.id] = !selectedCategories[category.id]!!
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
@@ -742,10 +740,8 @@ fun FilterCategoryPopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
@@ -762,7 +758,9 @@ fun FilterCategoryPopup(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedCategories[category.id] = newCheckState
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
             if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {

@@ -1,6 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.popups
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -129,11 +127,9 @@ fun SelectTemplatePopup(
             )
         }
         LazyColumn(
-            modifier = Modifier
-                .heightIn(max = 230.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.height(200.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
                 items = filteredTemplates,
@@ -146,7 +142,9 @@ fun SelectTemplatePopup(
                         dismiss()
                         addNewTransaction(id)
                     },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
                 )
             }
         }
