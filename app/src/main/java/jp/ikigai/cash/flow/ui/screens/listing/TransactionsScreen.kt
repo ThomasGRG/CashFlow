@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -102,7 +101,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.time.ZonedDateTime
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     canAddTransaction: () -> Boolean,
@@ -500,15 +499,15 @@ fun TransactionsScreen(
                                 )
                             }
                         }
-                        transactions.forEach {
+                        transactions.forEach { entry ->
                             stickyHeader {
                                 TransactionGroupHeader(
-                                    date = it.key,
-                                    amount = it.value.totalAmount
+                                    date = entry.key,
+                                    amount = entry.value.totalAmount
                                 )
                             }
                             items(
-                                items = it.value.transactions,
+                                items = entry.value.transactions,
                                 key = { transactionWithChips -> transactionWithChips.id }
                             ) { transactionWithChips ->
                                 TransactionCard(

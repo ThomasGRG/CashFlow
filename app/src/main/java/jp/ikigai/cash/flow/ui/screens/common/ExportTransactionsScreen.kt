@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -94,7 +93,7 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportTransactionsScreen(
     navigateBack: () -> Unit,
@@ -584,21 +583,21 @@ fun ExportTransactionsScreen(
                 ) {
                     OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
                 }
-                transactions.forEach {
+                transactions.forEach { entry ->
                     stickyHeader {
                         TransactionGroupHeader(
-                            date = it.key,
-                            selected = selectedLocalDates.contains(it.key),
+                            date = entry.key,
+                            selected = selectedLocalDates.contains(entry.key),
                             enabled = enabled,
                             onClick = {
                                 resetOneHandMode()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                toggleLocalDateSelected(it.key)
+                                toggleLocalDateSelected(entry.key)
                             }
                         )
                     }
                     items(
-                        items = it.value,
+                        items = entry.value,
                         key = { transactionWithChips -> transactionWithChips.id }
                     ) { transactionWithChips ->
                         TransactionCard(
