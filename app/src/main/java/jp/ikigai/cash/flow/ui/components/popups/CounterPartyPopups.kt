@@ -155,6 +155,24 @@ fun SelectCounterPartyPopup(
                         .animateItem()
                 )
             }
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
         }
         Row(
             modifier = Modifier
@@ -288,6 +306,24 @@ fun MigrateCounterPartyPopup(
                         .padding(vertical = 4.dp)
                         .animateItem()
                 )
+            }
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
             }
         }
         Row(

@@ -144,6 +144,24 @@ fun CurrencyPopup(
                         .animateItem()
                 )
             }
+            if (searchText.isNotBlank() && filteredCurrencies.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
         }
         Row(
             modifier = Modifier
