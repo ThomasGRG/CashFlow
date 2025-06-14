@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.data.dto.TemplateWithChips
 import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TransactionTemplateCard(
     templateWithChips: TemplateWithChips,
@@ -99,7 +97,6 @@ fun TransactionTemplateCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TransactionTemplateCard(
     checked: Boolean,

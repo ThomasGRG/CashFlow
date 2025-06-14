@@ -41,7 +41,7 @@ fun CustomChip(
 
     val animatedContentColor by animateColorAsState(
         targetValue = if (enabled) {
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.onBackground
         } else {
             MaterialTheme.colorScheme.onSurface
         },

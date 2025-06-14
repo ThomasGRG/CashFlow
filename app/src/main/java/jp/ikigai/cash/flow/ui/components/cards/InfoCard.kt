@@ -2,7 +2,6 @@ package jp.ikigai.cash.flow.ui.components.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +27,6 @@ import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
 import jp.ikigai.cash.flow.ui.components.common.CustomChip
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun InfoCard(
     modifier: Modifier,
