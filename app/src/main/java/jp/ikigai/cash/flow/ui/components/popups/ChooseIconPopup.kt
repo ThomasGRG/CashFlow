@@ -19,12 +19,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -37,19 +34,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.AllIcons
 import compose.icons.TablerIcons
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import kotlinx.coroutines.delay
 
 @Composable
@@ -106,28 +102,12 @@ fun ChooseIconPopup(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = {
+        SearchBox(
+            searchText = searchText,
+            setSearchText = {
                 searchText = it
             },
-            enabled = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester = focusRequester),
-            label = {
-                Text(text = stringResource(id = R.string.search_field_label))
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                }
-            ),
-            shape = RoundedCornerShape(14.dp),
+            focusRequester = focusRequester,
             interactionSource = interactionSource
         )
         LazyVerticalStaggeredGrid(

@@ -15,15 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -38,13 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
@@ -52,6 +47,7 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.store.entity.Account
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
+import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
 
@@ -131,35 +127,14 @@ fun SelectAccountPopup(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = {
-                    searchText = it
-                },
-                enabled = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester = focusRequester),
-                label = {
-                    Text(text = stringResource(id = R.string.search_field_label))
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
-                interactionSource = interactionSource
-            )
-        }
+        SearchBox(
+            searchText = searchText,
+            setSearchText = {
+                searchText = it
+            },
+            focusRequester = focusRequester,
+            interactionSource = interactionSource
+        )
         LazyColumn(
             state = listState,
             modifier = Modifier.height(200.dp),
@@ -315,35 +290,14 @@ fun FilterAccountPopup(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = {
-                    searchText = it
-                },
-                enabled = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester = focusRequester),
-                label = {
-                    Text(text = stringResource(id = R.string.search_field_label))
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
-                interactionSource = interactionSource
-            )
-        }
+        SearchBox(
+            searchText = searchText,
+            setSearchText = {
+                searchText = it
+            },
+            focusRequester = focusRequester,
+            interactionSource = interactionSource
+        )
         LazyColumn(
             modifier = Modifier.height(200.dp),
             verticalArrangement = Arrangement.Bottom,
@@ -557,35 +511,14 @@ fun FilterAccountPopup(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = {
-                    searchText = it
-                },
-                enabled = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester = focusRequester),
-                label = {
-                    Text(text = stringResource(id = R.string.search_field_label))
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                    }
-                ),
-                shape = RoundedCornerShape(14.dp),
-                interactionSource = interactionSource
-            )
-        }
+        SearchBox(
+            searchText = searchText,
+            setSearchText = {
+                searchText = it
+            },
+            focusRequester = focusRequester,
+            interactionSource = interactionSource
+        )
         LazyColumn(
             modifier = Modifier.height(200.dp),
             verticalArrangement = Arrangement.Bottom,
