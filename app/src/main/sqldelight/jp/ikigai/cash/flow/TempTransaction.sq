@@ -1,0 +1,47 @@
+import java.time.ZonedDateTime;
+import jp.ikigai.cash.flow.data.enums.TransactionType;
+
+CREATE TABLE IF NOT EXISTS TempTransaction (
+    tempTransactionId INTEGER PRIMARY KEY NOT NULL,
+    tempTransactionTitle TEXT NOT NULL,
+    tempTransactionDescription TEXT NOT NULL,
+    tempTransactionAmount REAL NOT NULL,
+    tempTransactionCurrency TEXT NOT NULL,
+    tempTransactionType TEXT AS TransactionType NOT NULL,
+    tempTransactionDateTime INTEGER AS ZonedDateTime NOT NULL,
+    tempTransactionAccountId INTEGER NOT NULL,
+    tempTransactionCategoryId INTEGER NOT NULL,
+    tempTransactionCounterPartyId INTEGER NOT NULL,
+    tempTransactionMethodId INTEGER NOT NULL,
+    tempTransactionTemplateId INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO TempTransaction(
+    tempTransactionTitle,
+    tempTransactionDescription,
+    tempTransactionAmount,
+    tempTransactionCurrency,
+    tempTransactionType,
+    tempTransactionDateTime,
+    tempTransactionAccountId,
+    tempTransactionCategoryId,
+    tempTransactionCounterPartyId,
+    tempTransactionMethodId,
+    tempTransactionTemplateId
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+);
+
+deleteAll:
+DELETE FROM TempTransaction;

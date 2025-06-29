@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS Method (
+    methodId INTEGER PRIMARY KEY NOT NULL,
+    methodName TEXT NOT NULL UNIQUE
+);
+
+getAll:
+SELECT * FROM Method;
+
+getById:
+SELECT * FROM Method WHERE methodId = :id;
+
+getByIds:
+SELECT * FROM Method WHERE methodId IN :ids;
+
+getMethodIdsOfTransactionsWithCategoryId:
+SELECT
+    Method.methodId
+FROM Method
+LEFT JOIN `Transaction` ON Method.methodId = `Transaction`.transactionMethodId
+WHERE `Transaction`.transactionCategoryId = :categoryId;
+
+getMethodIdsOfTransactionsWithCounterPartyId:
+SELECT
+    Method.methodId
+FROM Method
+LEFT JOIN `Transaction` ON Method.methodId = `Transaction`.transactionMethodId
+WHERE `Transaction`.transactionCounterPartyId = :counterPartyId;
+
+count:
+SELECT COUNT(*) AS count FROM Method;
+
+checkNameAlreadyInUse:
+SELECT COUNT(*) FROM Method WHERE methodName = :name COLLATE NOCASE;
+
+insert:
+INSERT INTO Method(methodName) VALUES (?);
+
+update:
+UPDATE Method SET methodName = ? WHERE methodId = ?;
+
+delete:
+DELETE FROM Method WHERE methodId = ?;

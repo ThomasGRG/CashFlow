@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS TempCounterParty (
+    tempCounterPartyId INTEGER PRIMARY KEY NOT NULL,
+    tempCounterPartyName TEXT NOT NULL UNIQUE
+);
+
+getAll:
+SELECT * FROM TempCounterParty ORDER BY tempCounterPartyName ASC;
+
+insert:
+INSERT OR REPLACE INTO TempCounterParty(tempCounterPartyId, tempCounterPartyName) VALUES (?, ?);
+
+deleteAll:
+DELETE FROM TempCounterParty;

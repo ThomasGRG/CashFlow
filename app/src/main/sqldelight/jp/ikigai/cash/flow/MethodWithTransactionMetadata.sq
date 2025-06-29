@@ -1,0 +1,29 @@
+CREATE VIEW IF NOT EXISTS MethodWithTransactionMetadata AS
+SELECT
+    Method.*,
+    COUNT(`Transaction`.transactionId) AS transactionCount,
+    MAX(`Transaction`.transactionDateTime) AS lastUsed
+FROM Method
+LEFT JOIN `Transaction` ON Method.methodId = `Transaction`.transactionMethodId
+GROUP BY Method.methodId;
+
+getTransactionCount:
+SELECT transactionCount FROM MethodWithTransactionMetadata WHERE methodId = :methodId;
+
+getByIds:
+SELECT * FROM MethodWithTransactionMetadata WHERE methodId IN :ids;
+
+getAllMethodsSortedByTransactionCountDesc:
+SELECT * FROM MethodWithTransactionMetadata ORDER BY transactionCount DESC;
+
+getAllMethodsExceptIdSortedByTransactionCountDesc:
+SELECT * FROM MethodWithTransactionMetadata WHERE methodId != :id ORDER BY transactionCount DESC;
+
+getMethods:
+SELECT * FROM MethodWithTransactionMetadata WHERE methodName LIKE '%' || :searchText || '%' COLLATE NOCASE ORDER BY
+CASE WHEN :sortField = 'methodName' AND :sortDirection = 'ASC' THEN MethodWithTransactionMetadata.methodName END ASC,
+CASE WHEN :sortField = 'methodName' AND :sortDirection = 'DESC' THEN MethodWithTransactionMetadata.methodName END DESC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'ASC' THEN MethodWithTransactionMetadata.transactionCount END ASC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'DESC' THEN MethodWithTransactionMetadata.transactionCount END DESC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'ASC' THEN MethodWithTransactionMetadata.lastUsed END ASC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'DESC' THEN MethodWithTransactionMetadata.lastUsed END DESC;

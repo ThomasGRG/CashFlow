@@ -1,0 +1,20 @@
+import androidx.compose.ui.graphics.vector.ImageVector;
+
+CREATE TABLE IF NOT EXISTS TempCategory (
+    tempCategoryId INTEGER PRIMARY KEY NOT NULL,
+    tempCategoryName TEXT NOT NULL UNIQUE,
+    tempCategoryIcon TEXT AS ImageVector NOT NULL
+);
+
+getAll:
+SELECT * FROM TempCategory ORDER BY tempCategoryName ASC;
+
+insert:
+INSERT OR REPLACE INTO TempCategory(
+    tempCategoryId,
+    tempCategoryName,
+    tempCategoryIcon
+) VALUES (?, ?, ?);
+
+deleteAll:
+DELETE FROM TempCategory;

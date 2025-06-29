@@ -1,0 +1,28 @@
+CREATE VIEW IF NOT EXISTS TransactionWithMetadata AS
+SELECT
+    `Transaction`.*,
+    Account.accountName AS transactionAccountName,
+    Category.categoryName AS transactionCategoryName,
+    Category.icon AS transactionCategoryIcon,
+    CounterParty.counterPartyName AS transactionCounterPartyName,
+    Method.methodName AS transactionMethodName
+FROM `Transaction`
+LEFT JOIN Account ON `Transaction`.transactionAccountId = Account.accountId
+LEFT JOIN Category ON `Transaction`.transactionCategoryId = Category.categoryId
+LEFT JOIN CounterParty ON `Transaction`.transactionCounterPartyId = CounterParty.counterPartyId
+LEFT JOIN Method ON `Transaction`.transactionMethodId = Method.methodId
+GROUP BY `Transaction`.transactionId;
+
+getTransactions:
+SELECT * FROM TransactionWithMetadata WHERE
+(transactionTitle LIKE '%' || :searchText || '%' COLLATE NOCASE OR transactionDescription LIKE '%' || :searchText || '%' COLLATE NOCASE)
+AND (transactionDateTime BETWEEN :startDate AND :endDate)
+AND transactionCurrency IN :selectedCurrencies
+AND (transactionAmount BETWEEN :minAmount AND :maxAmount)
+AND transactionType IN :selectedTypes
+AND transactionAccountId IN :selectedAccountIds
+AND transactionCategoryId IN :selectedCategoryIds
+AND transactionCounterPartyId IN :selectedCounterPartyIds
+AND transactionMethodId IN :selectedMethodIds ORDER BY
+CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'ASC' THEN TransactionWithMetadata.transactionDateTime END ASC,
+CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'DESC' THEN TransactionWithMetadata.transactionDateTime END DESC;

@@ -1,0 +1,24 @@
+CREATE VIEW IF NOT EXISTS TempTransactionWithMetadata AS
+SELECT
+   TempTransaction.*,
+   TempAccount.tempAccountName AS tempTransactionAccountName,
+   TempCategory.tempCategoryName AS tempTransactionCategoryName,
+   TempCategory.tempCategoryIcon AS tempTransactionCategoryIcon,
+   TempCounterParty.tempCounterPartyName AS tempTransactionCounterPartyName,
+   TempMethod.tempMethodName AS tempTransactionMethodName
+FROM TempTransaction
+LEFT JOIN TempAccount ON TempTransaction.tempTransactionAccountId = TempAccount.tempAccountId
+LEFT JOIN TempCategory ON TempTransaction.tempTransactionCategoryId = TempCategory.tempCategoryId
+LEFT JOIN TempCounterParty ON TempTransaction.tempTransactionCounterPartyId = TempCounterParty.tempCounterPartyId
+LEFT JOIN TempMethod ON TempTransaction.tempTransactionMethodId = TempMethod.tempMethodId
+GROUP BY TempTransaction.tempTransactionId;
+
+getTempTransactions:
+SELECT * FROM TempTransactionWithMetadata WHERE
+(tempTransactionTitle LIKE '%' || :searchText || '%' COLLATE NOCASE OR tempTransactionDescription LIKE '%' || :searchText || '%' COLLATE NOCASE)
+AND (tempTransactionDateTime BETWEEN :startDate AND :endDate)
+AND tempTransactionCurrency IN :selectedCurrencies
+AND (tempTransactionAmount BETWEEN :minAmount AND :maxAmount)
+AND tempTransactionType IN :selectedTypes ORDER BY
+CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'ASC' THEN TempTransactionWithMetadata.tempTransactionDateTime END ASC,
+CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'DESC' THEN TempTransactionWithMetadata.tempTransactionDateTime END DESC;

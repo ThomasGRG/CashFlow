@@ -1,0 +1,32 @@
+CREATE VIEW IF NOT EXISTS AccountWithTransactionMetadata AS
+SELECT
+    Account.*,
+    Account.accountName AS formattedBalance,
+    COUNT(`Transaction`.transactionId) AS transactionCount,
+    MAX(`Transaction`.transactionDateTime) AS lastUsed
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+GROUP BY Account.accountId;
+
+getTransactionCount:
+SELECT transactionCount FROM AccountWithTransactionMetadata WHERE accountId = :accountId;
+
+getByIds:
+SELECT * FROM AccountWithTransactionMetadata WHERE accountId IN :ids;
+
+getAllAccountsSortedByTransactionCountDesc:
+SELECT * FROM AccountWithTransactionMetadata ORDER BY transactionCount DESC;
+
+getAccountsGroupedByCurrency:
+SELECT * FROM AccountWithTransactionMetadata WHERE accountName LIKE '%' || :searchText || '%' COLLATE NOCASE GROUP BY currency ORDER BY
+CASE WHEN :sortDirection = 'ASC' THEN AccountWithTransactionMetadata.balance END ASC,
+CASE WHEN :sortDirection = 'DESC' THEN AccountWithTransactionMetadata.balance END DESC;
+
+getAccounts:
+SELECT * FROM AccountWithTransactionMetadata WHERE accountName LIKE '%' || :searchText || '%' COLLATE NOCASE ORDER BY
+CASE WHEN :sortField = 'accountName' AND :sortDirection = 'ASC' THEN AccountWithTransactionMetadata.accountName END ASC,
+CASE WHEN :sortField = 'accountName' AND :sortDirection = 'DESC' THEN AccountWithTransactionMetadata.accountName END DESC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'ASC' THEN AccountWithTransactionMetadata.transactionCount END ASC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'DESC' THEN AccountWithTransactionMetadata.transactionCount END DESC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'ASC' THEN AccountWithTransactionMetadata.lastUsed END ASC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'DESC' THEN AccountWithTransactionMetadata.lastUsed END DESC;

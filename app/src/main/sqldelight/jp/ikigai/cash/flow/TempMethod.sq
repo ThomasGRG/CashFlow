@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS TempMethod (
+    tempMethodId INTEGER PRIMARY KEY NOT NULL,
+    tempMethodName TEXT NOT NULL UNIQUE
+);
+
+getAll:
+SELECT * FROM TempMethod ORDER BY tempMethodName ASC;
+
+insert:
+INSERT OR REPLACE INTO TempMethod(tempMethodId, tempMethodName) VALUES (?, ?);
+
+deleteAll:
+DELETE FROM TempMethod;

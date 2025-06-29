@@ -1,0 +1,94 @@
+import java.time.ZonedDateTime;
+import jp.ikigai.cash.flow.data.enums.TransactionType;
+
+CREATE TABLE IF NOT EXISTS `Transaction` (
+    transactionId INTEGER PRIMARY KEY NOT NULL,
+    transactionTitle TEXT NOT NULL,
+    transactionDescription TEXT NOT NULL,
+    transactionAmount REAL NOT NULL,
+    transactionCurrency TEXT NOT NULL,
+    transactionType TEXT AS TransactionType NOT NULL,
+    transactionDateTime INTEGER AS ZonedDateTime NOT NULL,
+    transactionAccountId INTEGER NOT NULL,
+    transactionCategoryId INTEGER NOT NULL,
+    transactionCounterPartyId INTEGER NOT NULL,
+    transactionMethodId INTEGER NOT NULL,
+    transactionTemplateId INTEGER NOT NULL
+);
+
+getById:
+SELECT * FROM `Transaction` WHERE transactionId = :id;
+
+getByIds:
+SELECT * FROM `Transaction` WHERE transactionId IN :ids;
+
+getTitles:
+SELECT transactionTitle FROM `Transaction` GROUP BY transactionTitle ORDER BY COUNT(*) DESC;
+
+getTransactionsForAccountId:
+SELECT * FROM `Transaction` WHERE transactionAccountId = :accountId;
+
+getTransactionsForCategoryId:
+SELECT * FROM `Transaction` WHERE transactionCategoryId = :categoryId;
+
+getTransactionsForCounterPartyId:
+SELECT * FROM `Transaction` WHERE transactionCounterPartyId = :counterPartyId;
+
+getTransactionsForMethodId:
+SELECT * FROM `Transaction` WHERE transactionMethodId = :methodId;
+
+migrateCategoryForTransactions:
+UPDATE `Transaction` SET transactionCategoryId = :categoryId WHERE transactionId IN :transactionIds;
+
+migrateCounterPartyForTransactions:
+UPDATE `Transaction` SET transactionCounterPartyId = :counterPartyId WHERE transactionId IN :transactionIds;
+
+migrateMethodForTransactions:
+UPDATE `Transaction` SET transactionMethodId = :methodId WHERE transactionId IN :transactionIds;
+
+insert:
+INSERT INTO `Transaction`(
+    transactionTitle,
+    transactionDescription,
+    transactionAmount,
+    transactionCurrency,
+    transactionType,
+    transactionDateTime,
+    transactionAccountId,
+    transactionCategoryId,
+    transactionCounterPartyId,
+    transactionMethodId,
+    transactionTemplateId
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+);
+
+update:
+UPDATE `Transaction` SET
+    transactionTitle = ?,
+    transactionDescription = ?,
+    transactionAmount = ?,
+    transactionCurrency = ?,
+    transactionType = ?,
+    transactionDateTime = ?,
+    transactionAccountId = ?,
+    transactionCategoryId = ?,
+    transactionCounterPartyId = ?,
+    transactionMethodId = ?
+WHERE transactionId = ?;
+
+delete:
+DELETE FROM `Transaction` WHERE transactionId = ?;
+
+deleteByIds:
+DELETE FROM `Transaction` WHERE transactionId IN :ids;

@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("io.objectbox")
+    id("app.cash.sqldelight") version "2.1.0"
 }
 
 android {
@@ -51,12 +52,23 @@ android {
     }
 }
 
+sqldelight {
+    databases {
+        create("CashFlowDatabase") {
+            packageName.set("jp.ikigai.cash.flow")
+        }
+    }
+}
+
 dependencies {
 
     val composeIconsVariant = "tabler-icons"
     implementation("br.com.devsrsouza.compose.icons:$composeIconsVariant:1.1.0")
 
     implementation("androidx.navigation:navigation-compose:2.9.0")
+
+    implementation("app.cash.sqldelight:android-driver:2.1.0")
+    implementation("app.cash.sqldelight:coroutines-extensions:2.1.0")
 
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")

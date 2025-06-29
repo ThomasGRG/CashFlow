@@ -1,0 +1,57 @@
+CREATE TABLE IF NOT EXISTS Account (
+    accountId INTEGER PRIMARY KEY NOT NULL,
+    accountName TEXT NOT NULL UNIQUE,
+    currency TEXT NOT NULL,
+    balance REAL NOT NULL
+);
+
+getAll:
+SELECT * FROM Account;
+
+getTotalBalanceForCurrency:
+SELECT COALESCE(SUM(balance), 0) AS totalBalance FROM Account WHERE currency = :currency;
+
+getById:
+SELECT * FROM Account WHERE accountId = :id;
+
+getByIds:
+SELECT * FROM Account WHERE accountId IN :ids;
+
+getAccountIdsOfTransactionsWithCategoryId:
+SELECT
+    Account.accountId
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+WHERE `Transaction`.transactionCategoryId = :categoryId;
+
+getAccountIdsOfTransactionsWithCounterPartyId:
+SELECT
+    Account.accountId
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+WHERE `Transaction`.transactionCounterPartyId = :counterPartyId;
+
+getAccountIdsOfTransactionsWithMethodId:
+SELECT
+    Account.accountId
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+WHERE `Transaction`.transactionMethodId = :methodId;
+
+count:
+SELECT COUNT(*) AS count FROM Account;
+
+checkNameAlreadyInUse:
+SELECT COUNT(*) FROM Account WHERE accountName = :name COLLATE NOCASE;
+
+insert:
+INSERT INTO Account(accountName, currency, balance) VALUES (?, ?, ?);
+
+update:
+UPDATE Account SET accountName = ?, currency = ?, balance = ? WHERE accountId = ?;
+
+updateBalance:
+UPDATE Account SET balance = ? WHERE accountId = ?;
+
+delete:
+DELETE FROM Account WHERE accountId = ?;

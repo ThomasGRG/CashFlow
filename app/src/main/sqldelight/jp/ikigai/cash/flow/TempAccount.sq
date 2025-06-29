@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS TempAccount (
+    tempAccountId INTEGER PRIMARY KEY NOT NULL,
+    tempAccountName TEXT NOT NULL UNIQUE,
+    tempAccountCurrency TEXT NOT NULL,
+    tempAccountBalance REAL NOT NULL
+);
+
+tempAccountWithFormattedBalance:
+SELECT *, tempAccountName AS formattedBalance FROM TempAccount ORDER BY tempAccountName ASC;
+
+insert:
+INSERT OR REPLACE INTO TempAccount(
+    tempAccountId,
+    tempAccountName,
+    tempAccountBalance,
+    tempAccountCurrency
+) VALUES (?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM TempAccount;

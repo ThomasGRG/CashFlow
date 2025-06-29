@@ -1,0 +1,68 @@
+import jp.ikigai.cash.flow.data.enums.TransactionType;
+
+CREATE TABLE IF NOT EXISTS TransactionTemplate (
+    templateId INTEGER PRIMARY KEY NOT NULL,
+    templateName TEXT NOT NULL UNIQUE,
+    templateTitle TEXT NOT NULL,
+    templateDescription TEXT NOT NULL,
+    templateAmount REAL NOT NULL,
+    templateType TEXT AS TransactionType NOT NULL,
+    templateAccountId INTEGER NOT NULL,
+    templateCategoryId INTEGER NOT NULL,
+    templateCounterPartyId INTEGER NOT NULL,
+    templateMethodId INTEGER NOT NULL
+);
+
+getTemplateNames:
+SELECT TransactionTemplate.templateName FROM TransactionTemplate;
+
+getById:
+SELECT * FROM TransactionTemplate WHERE templateId = :id;
+
+getAll:
+SELECT * FROM TransactionTemplate;
+
+count:
+SELECT COUNT(*) AS count FROM TransactionTemplate;
+
+checkNameAlreadyInUse:
+SELECT COUNT(*) FROM TransactionTemplate WHERE templateName = :name COLLATE NOCASE;
+
+insert:
+INSERT INTO TransactionTemplate(
+    templateName,
+    templateTitle,
+    templateDescription,
+    templateAmount,
+    templateType,
+    templateAccountId,
+    templateCategoryId,
+    templateCounterPartyId,
+    templateMethodId
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+);
+
+update:
+UPDATE TransactionTemplate SET
+    templateName = ?,
+    templateTitle = ?,
+    templateDescription = ?,
+    templateAmount = ?,
+    templateType = ?,
+    templateAccountId = ?,
+    templateCategoryId = ?,
+    templateCounterPartyId = ?,
+    templateMethodId = ?
+WHERE templateId = ?;
+
+delete:
+DELETE FROM TransactionTemplate WHERE templateId = ?;

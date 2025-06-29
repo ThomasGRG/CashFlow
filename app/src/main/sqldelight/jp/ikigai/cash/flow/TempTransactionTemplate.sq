@@ -1,0 +1,61 @@
+import jp.ikigai.cash.flow.data.enums.TransactionType;
+
+CREATE TABLE IF NOT EXISTS TempTransactionTemplate (
+    tempTransactionTemplateId INTEGER PRIMARY KEY NOT NULL,
+    tempTransactionTemplateName TEXT NOT NULL UNIQUE,
+    tempTransactionTemplateTitle TEXT NOT NULL,
+    tempTransactionTemplateDescription TEXT NOT NULL,
+    tempTransactionTemplateAmount REAL NOT NULL,
+    tempTransactionTemplateType TEXT AS TransactionType NOT NULL,
+    tempTransactionTemplateAccountId INTEGER NOT NULL,
+    tempTransactionTemplateCategoryId INTEGER NOT NULL,
+    tempTransactionTemplateCounterPartyId INTEGER NOT NULL,
+    tempTransactionTemplateMethodId INTEGER NOT NULL
+);
+
+tempTransactionTemplateWithMetadata:
+SELECT
+    TempTransactionTemplate.*,
+    TempAccount.tempAccountName AS tempTransactionTemplateAccountName,
+    TempAccount.tempAccountCurrency AS tempTransactionTemplateCurrency,
+    TempCategory.tempCategoryName AS tempTransactionTemplateCategoryName,
+    TempCategory.tempCategoryIcon AS tempTransactionTemplateCategoryIcon,
+    TempCounterParty.tempCounterPartyName AS tempTransactionTemplateCounterPartyName,
+    TempMethod.tempMethodName AS tempTransactionTemplateMethodName,
+    COUNT(TempTransaction.tempTransactionId) AS transactionCount,
+    MAX(TempTransaction.tempTransactionDateTime) AS lastUsed
+FROM TempTransactionTemplate
+LEFT JOIN TempAccount ON TempTransactionTemplate.tempTransactionTemplateAccountId = TempAccount.tempAccountId
+LEFT JOIN TempCategory ON TempTransactionTemplate.tempTransactionTemplateCategoryId = TempCategory.tempCategoryId
+LEFT JOIN TempCounterParty ON TempTransactionTemplate.tempTransactionTemplateCounterPartyId = TempCounterParty.tempCounterPartyId
+LEFT JOIN TempMethod ON TempTransactionTemplate.tempTransactionTemplateMethodId = TempMethod.tempMethodId
+LEFT JOIN TempTransaction ON TempTransactionTemplate.tempTransactionTemplateId = TempTransaction.tempTransactionTemplateId
+GROUP BY TempTransactionTemplate.tempTransactionTemplateId;
+
+insert:
+INSERT OR REPLACE INTO TempTransactionTemplate(
+    tempTransactionTemplateId,
+    tempTransactionTemplateName,
+    tempTransactionTemplateTitle,
+    tempTransactionTemplateDescription,
+    tempTransactionTemplateAmount,
+    tempTransactionTemplateType,
+    tempTransactionTemplateAccountId,
+    tempTransactionTemplateCategoryId,
+    tempTransactionTemplateCounterPartyId,
+    tempTransactionTemplateMethodId
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+);
+
+deleteAll:
+DELETE FROM TempTransactionTemplate;

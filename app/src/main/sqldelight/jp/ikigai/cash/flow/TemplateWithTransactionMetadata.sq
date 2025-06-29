@@ -1,0 +1,30 @@
+CREATE VIEW IF NOT EXISTS TemplateWithTransactionMetadata AS
+SELECT
+    TransactionTemplate.*,
+    Account.accountName AS templateAccountName,
+    Account.currency AS templateCurrency,
+    Category.categoryName AS templateCategoryName,
+    Category.icon AS templateCategoryIcon,
+    CounterParty.counterPartyName AS templateCounterPartyName,
+    Method.methodName AS templateMethodName,
+    COUNT(`Transaction`.transactionId) AS transactionCount,
+    MAX(`Transaction`.transactionDateTime) AS lastUsed
+FROM TransactionTemplate
+LEFT JOIN Account ON TransactionTemplate.templateAccountId = Account.accountId
+LEFT JOIN Category ON TransactionTemplate.templateCategoryId = Category.categoryId
+LEFT JOIN CounterParty ON TransactionTemplate.templateCounterPartyId = CounterParty.counterPartyId
+LEFT JOIN Method ON TransactionTemplate.templateMethodId = Method.methodId
+LEFT JOIN `Transaction` ON TransactionTemplate.templateId = `Transaction`.transactionTemplateId
+GROUP BY TransactionTemplate.templateId;
+
+getAllTemplatesSortedByTransactionCountDesc:
+SELECT * FROM TemplateWithTransactionMetadata ORDER BY transactionCount DESC;
+
+getTemplates:
+SELECT * FROM TemplateWithTransactionMetadata WHERE templateName LIKE '%' || :searchText || '%' COLLATE NOCASE ORDER BY
+CASE WHEN :sortField = 'templateName' AND :sortDirection = 'ASC' THEN TemplateWithTransactionMetadata.templateName END ASC,
+CASE WHEN :sortField = 'templateName' AND :sortDirection = 'DESC' THEN TemplateWithTransactionMetadata.templateName END DESC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'ASC' THEN TemplateWithTransactionMetadata.transactionCount END ASC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'DESC' THEN TemplateWithTransactionMetadata.transactionCount END DESC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'ASC' THEN TemplateWithTransactionMetadata.lastUsed END ASC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'DESC' THEN TemplateWithTransactionMetadata.lastUsed END DESC;

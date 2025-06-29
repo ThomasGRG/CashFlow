@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS CounterParty (
+    counterPartyId INTEGER PRIMARY KEY NOT NULL,
+    counterPartyName TEXT NOT NULL UNIQUE
+);
+
+getAll:
+SELECT * FROM CounterParty;
+
+getById:
+SELECT * FROM CounterParty WHERE counterPartyId = :id;
+
+getByIds:
+SELECT * FROM CounterParty WHERE counterPartyId IN :ids;
+
+getCounterPartyIdsOfTransactionsWithCategoryId:
+SELECT
+    CounterParty.counterPartyId
+FROM CounterParty
+LEFT JOIN `Transaction` ON CounterParty.counterPartyId = `Transaction`.transactionCounterPartyId
+WHERE `Transaction`.transactionCategoryId = :categoryId;
+
+getCounterPartyIdsOfTransactionsWithMethodId:
+SELECT
+    CounterParty.counterPartyId
+FROM CounterParty
+LEFT JOIN `Transaction` ON CounterParty.counterPartyId = `Transaction`.transactionCounterPartyId
+WHERE `Transaction`.transactionMethodId = :methodId;
+
+count:
+SELECT COUNT(*) AS count FROM CounterParty;
+
+checkNameAlreadyInUse:
+SELECT COUNT(*) FROM CounterParty WHERE counterPartyName = :name COLLATE NOCASE;
+
+insert:
+INSERT INTO CounterParty(counterPartyName) VALUES (?);
+
+update:
+UPDATE CounterParty SET counterPartyName = ? WHERE counterPartyId = ?;
+
+delete:
+DELETE FROM CounterParty WHERE counterPartyId = ?;

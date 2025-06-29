@@ -1,0 +1,29 @@
+CREATE VIEW IF NOT EXISTS CategoryWithTransactionMetadata AS
+SELECT
+    Category.*,
+    COUNT(`Transaction`.transactionId) AS transactionCount,
+    MAX(`Transaction`.transactionDateTime) AS lastUsed
+FROM Category
+LEFT JOIN `Transaction` ON Category.categoryId = `Transaction`.transactionCategoryId
+GROUP BY Category.categoryId;
+
+getTransactionCount:
+SELECT transactionCount FROM CategoryWithTransactionMetadata WHERE categoryId = :categoryId;
+
+getByIds:
+SELECT * FROM CategoryWithTransactionMetadata WHERE categoryId IN :ids;
+
+getAllCategoriesSortedByTransactionCountDesc:
+SELECT * FROM CategoryWithTransactionMetadata ORDER BY transactionCount DESC;
+
+getAllCategoriesExceptIdSortedByTransactionCountDesc:
+SELECT * FROM CategoryWithTransactionMetadata WHERE categoryId != :id ORDER BY transactionCount DESC;
+
+getCategories:
+SELECT * FROM CategoryWithTransactionMetadata WHERE categoryName LIKE '%' || :searchText || '%' COLLATE NOCASE ORDER BY
+CASE WHEN :sortField = 'categoryName' AND :sortDirection = 'ASC' THEN CategoryWithTransactionMetadata.categoryName END ASC,
+CASE WHEN :sortField = 'categoryName' AND :sortDirection = 'DESC' THEN CategoryWithTransactionMetadata.categoryName END DESC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'ASC' THEN CategoryWithTransactionMetadata.transactionCount END ASC,
+CASE WHEN :sortField = 'transactionCount' AND :sortDirection = 'DESC' THEN CategoryWithTransactionMetadata.transactionCount END DESC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'ASC' THEN CategoryWithTransactionMetadata.lastUsed END ASC,
+CASE WHEN :sortField = 'lastUsed' AND :sortDirection = 'DESC' THEN CategoryWithTransactionMetadata.lastUsed END DESC;

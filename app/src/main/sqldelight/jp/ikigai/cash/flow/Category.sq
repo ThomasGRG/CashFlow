@@ -1,0 +1,45 @@
+import androidx.compose.ui.graphics.vector.ImageVector;
+
+CREATE TABLE IF NOT EXISTS Category(
+    categoryId INTEGER PRIMARY KEY NOT NULL,
+    categoryName TEXT NOT NULL UNIQUE,
+    icon TEXT AS ImageVector NOT NULL
+);
+
+getAll:
+SELECT * FROM Category;
+
+getById:
+SELECT * FROM Category WHERE categoryId = :id;
+
+getByIds:
+SELECT * FROM Category WHERE categoryId IN :ids;
+
+getCategoryIdsOfTransactionsWithCounterPartyId:
+SELECT
+    Category.categoryId
+FROM Category
+LEFT JOIN `Transaction` ON Category.categoryId = `Transaction`.transactionCategoryId
+WHERE `Transaction`.transactionCounterPartyId = :counterPartyId;
+
+getCategoryIdsOfTransactionsWithMethodId:
+SELECT
+    Category.categoryId
+FROM Category
+LEFT JOIN `Transaction` ON Category.categoryId = `Transaction`.transactionCategoryId
+WHERE `Transaction`.transactionMethodId = :methodId;
+
+count:
+SELECT COUNT(*) AS count FROM Category;
+
+checkNameAlreadyInUse:
+SELECT COUNT(*) FROM Category WHERE categoryName = :name COLLATE NOCASE;
+
+insert:
+INSERT INTO Category(categoryName, icon) VALUES (?, ?);
+
+update:
+UPDATE Category SET categoryName = ?, icon = ? WHERE categoryId = ?;
+
+delete:
+DELETE FROM Category WHERE categoryId = ?;
