@@ -437,78 +437,79 @@ class UpsertTransactionScreenViewModel(
             val dateTime = state.value.dateTime
 
             try {
-                if (transactionId == 0L) {
-                    database
-                        .transactionQueries
-                        .insert(
-                            transactionTitle = newTitle,
-                            transactionDescription = newDescription,
-                            transactionAmount = transactionAmount,
-                            transactionCurrency = selectedAccount.currency,
-                            transactionType = selectedType,
-                            transactionDateTime = dateTime,
-                            transactionAccountId = selectedAccount.accountId,
-                            transactionCategoryId = selectedCategory.categoryId,
-                            transactionCounterPartyId = selectedCounterParty.counterPartyId,
-                            transactionMethodId = selectedMethod.methodId,
-                            transactionTemplateId = templateId
-                        )
+                database.transaction {
+                    if (transactionId == 0L) {
+                        database
+                            .transactionQueries
+                            .insert(
+                                transactionTitle = newTitle,
+                                transactionDescription = newDescription,
+                                transactionAmount = transactionAmount,
+                                transactionCurrency = selectedAccount.currency,
+                                transactionType = selectedType,
+                                transactionDateTime = dateTime,
+                                transactionAccountId = selectedAccount.accountId,
+                                transactionCategoryId = selectedCategory.categoryId,
+                                transactionCounterPartyId = selectedCounterParty.counterPartyId,
+                                transactionMethodId = selectedMethod.methodId,
+                                transactionTemplateId = templateId
+                            )
 
-                    database
-                        .accountQueries
-                        .updateBalance(
-                            balance = if (selectedType == TransactionType.DEBIT) {
-                                selectedAccount.balance - transactionAmount
-                            } else {
-                                selectedAccount.balance + transactionAmount
-                            },
-                            accountId = selectedAccount.accountId
-                        )
-                } else {
-                    database
-                        .transactionQueries
-                        .update(
-                            transactionTitle = newTitle,
-                            transactionDescription = newDescription,
-                            transactionAmount = transactionAmount,
-                            transactionCurrency = selectedAccount.currency,
-                            transactionType = selectedType,
-                            transactionDateTime = dateTime,
-                            transactionAccountId = selectedAccount.accountId,
-                            transactionCategoryId = selectedCategory.categoryId,
-                            transactionCounterPartyId = selectedCounterParty.counterPartyId,
-                            transactionMethodId = selectedMethod.methodId,
-                            transactionId = transactionId
-                        )
+                        database
+                            .accountQueries
+                            .updateBalance(
+                                balance = if (selectedType == TransactionType.DEBIT) {
+                                    selectedAccount.balance - transactionAmount
+                                } else {
+                                    selectedAccount.balance + transactionAmount
+                                },
+                                accountId = selectedAccount.accountId
+                            )
+                    } else {
+                        database
+                            .transactionQueries
+                            .update(
+                                transactionTitle = newTitle,
+                                transactionDescription = newDescription,
+                                transactionAmount = transactionAmount,
+                                transactionCurrency = selectedAccount.currency,
+                                transactionType = selectedType,
+                                transactionDateTime = dateTime,
+                                transactionAccountId = selectedAccount.accountId,
+                                transactionCategoryId = selectedCategory.categoryId,
+                                transactionCounterPartyId = selectedCounterParty.counterPartyId,
+                                transactionMethodId = selectedMethod.methodId,
+                                transactionId = transactionId
+                            )
 
-                    val accountBalance =
-                        if (selectedAccount.accountId == previousAccount?.accountId) {
-                            previousBalance
-                        } else {
-                            selectedAccount.balance
-                        }
-                    database
-                        .accountQueries
-                        .updateBalance(
-                            balance = if (selectedType == TransactionType.DEBIT) {
-                                accountBalance - transactionAmount
+                        val accountBalance =
+                            if (selectedAccount.accountId == previousAccount?.accountId) {
+                                previousBalance
                             } else {
-                                accountBalance + transactionAmount
-                            },
-                            accountId = selectedAccount.accountId
-                        )
-                    if (selectedAccount.accountId != previousAccount?.accountId) {
-                        previousAccount?.let { (accountId) ->
-                            database
-                                .accountQueries
-                                .updateBalance(
-                                    balance = previousBalance,
-                                    accountId = accountId
-                                )
+                                selectedAccount.balance
+                            }
+                        database
+                            .accountQueries
+                            .updateBalance(
+                                balance = if (selectedType == TransactionType.DEBIT) {
+                                    accountBalance - transactionAmount
+                                } else {
+                                    accountBalance + transactionAmount
+                                },
+                                accountId = selectedAccount.accountId
+                            )
+                        if (selectedAccount.accountId != previousAccount?.accountId) {
+                            previousAccount?.let { (accountId) ->
+                                database
+                                    .accountQueries
+                                    .updateBalance(
+                                        balance = previousBalance,
+                                        accountId = accountId
+                                    )
+                            }
                         }
                     }
                 }
-
                 _event.send(Event.SaveSuccess)
             } catch (e: Exception) {
                 _event.send(Event.InternalError)
@@ -533,19 +534,20 @@ class UpsertTransactionScreenViewModel(
             }
 
             try {
-                database
-                    .transactionQueries
-                    .delete(transactionId)
-
-                previousAccount?.let { (accountId) ->
+                database.transaction {
                     database
-                        .accountQueries
-                        .updateBalance(
-                            balance = previousBalance,
-                            accountId = accountId
-                        )
-                }
+                        .transactionQueries
+                        .delete(transactionId)
 
+                    previousAccount?.let { (accountId) ->
+                        database
+                            .accountQueries
+                            .updateBalance(
+                                balance = previousBalance,
+                                accountId = accountId
+                            )
+                    }
+                }
                 _event.send(Event.DeleteSuccess)
             } catch (e: Exception) {
                 _event.send(Event.InternalError)

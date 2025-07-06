@@ -186,21 +186,22 @@ class UpsertAccountScreenViewModel(
             }
 
             try {
-                val transactions = database
-                    .transactionQueries
-                    .getTransactionsForAccountId(accountId)
-                    .executeAsList()
+                database.transaction {
+                    val transactions = database
+                        .transactionQueries
+                        .getTransactionsForAccountId(accountId)
+                        .executeAsList()
 
-                database
-                    .transactionQueries
-                    .deleteByIds(
-                        transactions.map { it.transactionId }
-                    )
+                    database
+                        .transactionQueries
+                        .deleteByIds(
+                            transactions.map { it.transactionId }
+                        )
 
-                database
-                    .accountQueries
-                    .delete(accountId)
-
+                    database
+                        .accountQueries
+                        .delete(accountId)
+                }
                 _event.send(Event.DeleteSuccess)
             } catch (e: Exception) {
                 _event.send(Event.InternalError)

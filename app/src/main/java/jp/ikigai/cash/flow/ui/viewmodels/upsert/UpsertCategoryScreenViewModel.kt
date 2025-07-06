@@ -206,50 +206,51 @@ class UpsertCategoryScreenViewModel(
             }
 
             try {
-                val transactions = database
-                    .transactionQueries
-                    .getTransactionsForCategoryId(categoryId)
-                    .executeAsList()
+                database.transaction {
+                    val transactions = database
+                        .transactionQueries
+                        .getTransactionsForCategoryId(categoryId)
+                        .executeAsList()
 
-                val accountsMap = database
-                    .accountQueries
-                    .getByIds(
-                        transactions
-                            .map { it.transactionAccountId }
-                            .distinct()
-                    )
-                    .executeAsList()
-                    .associateBy { it.accountId }
+                    val accountsMap = database
+                        .accountQueries
+                        .getByIds(
+                            transactions
+                                .map { it.transactionAccountId }
+                                .distinct()
+                        )
+                        .executeAsList()
+                        .associateBy { it.accountId }
 
-                transactions
-                    .groupBy { transaction -> accountsMap.getValue(transaction.transactionAccountId) }
-                    .forEach { (account, transactions) ->
-                        var newBalance = account.balance
-                        transactions.forEach { transaction ->
-                            if (transaction.transactionType == TransactionType.CREDIT) {
-                                newBalance -= transaction.transactionAmount
-                            } else {
-                                newBalance += transaction.transactionAmount
+                    transactions
+                        .groupBy { transaction -> accountsMap.getValue(transaction.transactionAccountId) }
+                        .forEach { (account, transactions) ->
+                            var newBalance = account.balance
+                            transactions.forEach { transaction ->
+                                if (transaction.transactionType == TransactionType.CREDIT) {
+                                    newBalance -= transaction.transactionAmount
+                                } else {
+                                    newBalance += transaction.transactionAmount
+                                }
                             }
+                            database
+                                .accountQueries
+                                .updateBalance(
+                                    balance = newBalance,
+                                    accountId = account.accountId
+                                )
                         }
-                        database
-                            .accountQueries
-                            .updateBalance(
-                                balance = newBalance,
-                                accountId = account.accountId
-                            )
-                    }
 
-                database
-                    .transactionQueries
-                    .deleteByIds(
-                        transactions.map { it.transactionId }
-                    )
+                    database
+                        .transactionQueries
+                        .deleteByIds(
+                            transactions.map { it.transactionId }
+                        )
 
-                database
-                    .categoryQueries
-                    .delete(categoryId)
-
+                    database
+                        .categoryQueries
+                        .delete(categoryId)
+                }
                 _event.send(Event.DeleteSuccess)
             } catch (e: Exception) {
                 _event.send(Event.InternalError)
