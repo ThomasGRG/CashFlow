@@ -85,7 +85,6 @@
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
-    <string name="fix_metadata_button_label">Fix broken metadata</string>
     <string name="export_button_label">Export</string>
     <string name="import_button_label">Import</string>
     <string name="migrate_button_label">Migrate</string>
@@ -162,7 +161,6 @@
     <string name="internal_error_label">Internal error</string>
     <string name="io_error_label">IO error</string>
     <string name="migration_success_label">Migration complete</string>
-    <string name="metadata_fix_success_label">Metadata updated</string>
     <string name="export_success_label">Successfully exported</string>
     <string name="import_success_label">Successfully imported</string>
     <string name="save_success_label">Saved successfully</string>
