@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.screenStates.common
 import androidx.annotation.StringRes
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.time.ZonedDateTime
 
 data class TransactionFilters(
@@ -15,7 +16,7 @@ data class TransactionFilters(
     val includeNoCounterPartyTransactions: Boolean = true,
     val selectedMethods: Set<Long> = emptySet(),
     val selectedMethodCount: String = "0",
-    val selectedTransactionTypes: List<Int> = listOf(1, 2),
+    val selectedTransactionTypes: List<TransactionType> = TransactionType.entries,
     val filterAmountMin: Double = 0.0,
     val filterAmountMax: Double = 0.0,
     val filterAmountRange: String = "0+",

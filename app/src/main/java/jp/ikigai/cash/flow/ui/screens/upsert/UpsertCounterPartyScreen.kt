@@ -128,7 +128,7 @@ fun UpsertCounterPartyScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableIntStateOf(state.transactionCount)
+        mutableLongStateOf(state.transactionCount)
     }
 
     val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
@@ -136,7 +136,7 @@ fun UpsertCounterPartyScreen(
     }
 
     val counterPartyId by remember(key1 = state.counterParty) {
-        mutableLongStateOf(state.counterParty.id)
+        mutableLongStateOf(state.counterParty.counterPartyId)
     }
 
     var popupType by remember {
@@ -168,7 +168,7 @@ fun UpsertCounterPartyScreen(
     }
 
     BackHandler {
-        if (enabled && state.counterParty.name != state.name) {
+        if (enabled && state.counterParty.counterPartyName != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -274,7 +274,7 @@ fun UpsertCounterPartyScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (enabled && state.counterParty.name != state.name) {
+                        if (enabled && state.counterParty.counterPartyName != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()

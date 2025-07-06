@@ -10,7 +10,5 @@ data class TemplateExport(
     val accountId: Long,
     val categoryId: Long,
     val counterPartyId: Long,
-    val methodId: Long,
-    val frequency: Int,
-    val lastUsed: Long,
+    val methodId: Long
 )

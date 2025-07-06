@@ -12,4 +12,5 @@ data class TransactionExport(
     val categoryId: Long,
     val counterPartyId: Long,
     val methodId: Long,
+    val templateId: Long?,
 )

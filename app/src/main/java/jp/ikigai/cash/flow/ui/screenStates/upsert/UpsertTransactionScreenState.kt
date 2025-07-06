@@ -1,20 +1,34 @@
 package jp.ikigai.cash.flow.ui.screenStates.upsert
 
 import androidx.annotation.StringRes
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Archive
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.Transaction
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
-import jp.ikigai.cash.flow.data.store.entity.Transaction
-import jp.ikigai.cash.flow.data.store.entity.TransactionTitle
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.Locale
 
 data class UpsertTransactionScreenState(
-    val transaction: Transaction = Transaction(),
+    val transaction: Transaction = Transaction(
+        transactionId = 0,
+        transactionTitle = "",
+        transactionDescription = "",
+        transactionAmount = 0.0,
+        transactionCurrency = "INR",
+        transactionType = TransactionType.DEBIT,
+        transactionDateTime = ZonedDateTime.now(ZoneId.systemDefault()),
+        transactionAccountId = 0,
+        transactionCategoryId = 0,
+        transactionCounterPartyId = 0,
+        transactionMethodId = 0,
+        transactionTemplateId = 0
+    ),
     val title: String = "",
     val titleValid: Boolean = true,
     val amount: Double = 0.0,
@@ -25,19 +39,43 @@ data class UpsertTransactionScreenState(
     val timeString: String = "",
     val timeValid: Boolean = true,
     val type: TransactionType = TransactionType.DEBIT,
-    val accounts: List<Account> = emptyList(),
-    val selectedAccount: Account = Account(),
+    val accounts: List<AccountWithTransactionMetadata> = emptyList(),
+    val selectedAccount: AccountWithTransactionMetadata = AccountWithTransactionMetadata(
+        accountId = 0L,
+        accountName = "",
+        currency = "INR",
+        balance = 0.0,
+        formattedBalance = "",
+        transactionCount = 0L,
+        lastUsed = null
+    ),
     val accountValid: Boolean = true,
     @StringRes val accountErrorStringRes: Int = R.string.field_required_error_label,
-    val categories: List<Category> = emptyList(),
-    val selectedCategory: Category = Category(),
+    val categories: List<CategoryWithTransactionMetadata> = emptyList(),
+    val selectedCategory: CategoryWithTransactionMetadata = CategoryWithTransactionMetadata(
+        categoryId = 0L,
+        categoryName = "",
+        icon = TablerIcons.Archive,
+        transactionCount = 0L,
+        lastUsed = null
+    ),
     val categoryValid: Boolean = true,
-    val counterParties: List<CounterParty> = emptyList(),
-    val selectedCounterParty: CounterParty = CounterParty(),
-    val methods: List<Method> = emptyList(),
-    val selectedMethod: Method = Method(),
+    val counterParties: List<CounterPartyWithTransactionMetadata> = emptyList(),
+    val selectedCounterParty: CounterPartyWithTransactionMetadata = CounterPartyWithTransactionMetadata(
+        counterPartyId = 0L,
+        counterPartyName = "",
+        transactionCount = 0L,
+        lastUsed = null
+    ),
+    val methods: List<MethodWithTransactionMetadata> = emptyList(),
+    val selectedMethod: MethodWithTransactionMetadata = MethodWithTransactionMetadata(
+        methodId = 0L,
+        methodName = "",
+        transactionCount = 0L,
+        lastUsed = null
+    ),
     val methodValid: Boolean = true,
-    val transactionTitles: List<TransactionTitle> = emptyList(),
+    val transactionTitles: List<String> = emptyList(),
     val loading: Boolean = true,
     val enabled: Boolean = false,
     val locale: Locale? = null

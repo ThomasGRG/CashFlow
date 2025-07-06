@@ -113,14 +113,14 @@ fun SelectTransactionTypePopup(
 
 @Composable
 fun FilterTransactionTypePopup(
-    selectedTransactionTypes: List<Int>,
-    filter: (List<Int>) -> Unit,
+    selectedTransactionTypes: List<TransactionType>,
+    filter: (List<TransactionType>) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
     val selectedTypes = remember {
-        mutableStateListOf<Int>()
+        mutableStateListOf<TransactionType>()
     }
 
     LaunchedEffect(Unit) {
@@ -147,17 +147,17 @@ fun FilterTransactionTypePopup(
             ) {
                 MultiSelectCard(
                     checked = {
-                        selectedTypes.contains(TransactionType.CREDIT.id)
+                        selectedTypes.contains(TransactionType.CREDIT)
                     },
                     label = AnnotatedString(stringResource(id = TransactionType.CREDIT.label)),
                     icon = TransactionType.CREDIT.icon,
                     iconTint = TransactionType.CREDIT.color,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (selectedTypes.contains(TransactionType.CREDIT.id)) {
-                            selectedTypes.remove(TransactionType.CREDIT.id)
+                        if (selectedTypes.contains(TransactionType.CREDIT)) {
+                            selectedTypes.remove(TransactionType.CREDIT)
                         } else {
-                            selectedTypes.add(TransactionType.CREDIT.id)
+                            selectedTypes.add(TransactionType.CREDIT)
                         }
                     },
                     modifier = Modifier.animateItem()
@@ -169,17 +169,17 @@ fun FilterTransactionTypePopup(
             ) {
                 MultiSelectCard(
                     checked = {
-                        selectedTypes.contains(TransactionType.DEBIT.id)
+                        selectedTypes.contains(TransactionType.DEBIT)
                     },
                     label = AnnotatedString(stringResource(id = TransactionType.DEBIT.label)),
                     icon = TransactionType.DEBIT.icon,
                     iconTint = TransactionType.DEBIT.color,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (selectedTypes.contains(TransactionType.DEBIT.id)) {
-                            selectedTypes.remove(TransactionType.DEBIT.id)
+                        if (selectedTypes.contains(TransactionType.DEBIT)) {
+                            selectedTypes.remove(TransactionType.DEBIT)
                         } else {
-                            selectedTypes.add(TransactionType.DEBIT.id)
+                            selectedTypes.add(TransactionType.DEBIT)
                         }
                     },
                     modifier = Modifier.animateItem()

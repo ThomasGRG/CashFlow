@@ -2,27 +2,26 @@ package jp.ikigai.cash.flow.ui.viewmodels.listing
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ChartLine
 import compose.icons.tablericons.History
-import io.objectbox.Box
-import io.objectbox.BoxStore
-import io.objectbox.Property
-import io.objectbox.kotlin.boxFor
-import io.objectbox.kotlin.flow
-import io.objectbox.query.QueryBuilder
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CashFlowDatabase
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.AccountListingDTO
 import jp.ikigai.cash.flow.data.dto.ChipInfo
-import jp.ikigai.cash.flow.data.store.DataStore
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Account_
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.AccountScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,7 +40,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class AccountScreenViewModel(
-    store: BoxStore = DataStore.store
+    private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
@@ -54,34 +52,22 @@ class AccountScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(
-        SortOptionsState<Account>(
-            sortField = Account_.lastUsed
-        )
+    private val _sortConfigState = MutableStateFlow(
+        SortConfigState(sortField = "transactionCount")
     )
-    val sortOptionsState: StateFlow<SortOptionsState<Account>> = _sortOptionsState.asStateFlow()
-
-    private val accountBox: Box<Account> = store.boxFor()
-
-    private val accountCountQuery = accountBox.query().build()
+    val sortConfigState: StateFlow<SortConfigState> = _sortConfigState.asStateFlow()
 
     init {
         getSources()
         getCount()
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        accountCountQuery.close()
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getCount() = viewModelScope.launch {
-        accountCountQuery.flow().collectLatest { accounts ->
+        database.accountQueries.count().asFlow().mapToOne(Dispatchers.IO).collectLatest { count ->
             _state.update {
                 it.copy(
-                    count = accounts.size,
-                    countString = numberFormatter.format(accounts.size).toString()
+                    count = count,
+                    countString = numberFormatter.format(count).toString()
                 )
             }
         }
@@ -99,7 +85,7 @@ class AccountScreenViewModel(
                     }
                 }
                 .debounce(300),
-            _sortOptionsState
+            _sortConfigState
                 .onEach {
                     _state.update {
                         it.copy(
@@ -107,30 +93,28 @@ class AccountScreenViewModel(
                         )
                     }
                 }
-        ) { searchText, sortOptions ->
-            Pair(searchText, sortOptions)
-        }.flatMapLatest { (searchText, sortOptions) ->
-            val accountQueryBuilder = if (searchText.isBlank()) {
-                accountBox.query()
-            } else {
-                accountBox
-                    .query(
-                        Account_.name.contains(
-                            searchText,
-                            QueryBuilder.StringOrder.CASE_INSENSITIVE
-                        )
+        ) { searchText, sortConfig ->
+            Pair(searchText, sortConfig)
+        }.flatMapLatest { (searchText, sortConfig) ->
+            if (sortConfig.sortField == "balance") {
+                database
+                    .accountWithTransactionMetadataQueries
+                    .getAccountsGroupedByCurrency(
+                        searchText = searchText,
+                        sortDirection = sortConfig.sortDirection.name
                     )
-            }
-            if (sortOptions.sortField == Account_.balance) {
-                accountQueryBuilder
-                    .order(Account_.currency)
-                    .order(sortOptions.sortField, sortOptions.sortFlags)
+                    .asFlow()
+                    .mapToList(Dispatchers.IO)
             } else {
-                accountQueryBuilder.order(sortOptions.sortField, sortOptions.sortFlags)
-            }
-            val query = accountQueryBuilder.build()
-            query.flow().onCompletion {
-                query.close()
+                database
+                    .accountWithTransactionMetadataQueries
+                    .getAccounts(
+                        searchText = searchText,
+                        sortField = sortConfig.sortField,
+                        sortDirection = sortConfig.sortDirection.name
+                    )
+                    .asFlow()
+                    .mapToList(Dispatchers.IO)
             }
         }.collectLatest { accounts ->
             _state.update { screenState ->
@@ -143,7 +127,7 @@ class AccountScreenViewModel(
     }
 
     private fun mapToDTO(
-        accounts: List<Account>,
+        accounts: List<AccountWithTransactionMetadata>,
         searchText: String
     ): List<AccountListingDTO> {
         val hasBeenUsedComparator = Instant.EPOCH.atZone(ZoneId.systemDefault())
@@ -153,11 +137,11 @@ class AccountScreenViewModel(
             chips.add(
                 ChipInfo(
                     resId = R.string.frequency_of_use_label,
-                    value = numberFormatter.format(account.frequency).toString(),
+                    value = numberFormatter.format(account.transactionCount).toString(),
                     icon = TablerIcons.ChartLine
                 )
             )
-            if (account.lastUsed > hasBeenUsedComparator) {
+            if (account.lastUsed != null && account.lastUsed > hasBeenUsedComparator) {
                 chips.add(
                     ChipInfo(
                         resId = R.string.last_used_datetime_label,
@@ -176,8 +160,8 @@ class AccountScreenViewModel(
                 )
             }
             AccountListingDTO(
-                id = account.id,
-                annotatedName = getHighlightedString(account.name, searchText),
+                id = account.accountId,
+                annotatedName = getHighlightedString(account.accountName, searchText),
                 icon = Constants.DEFAULT_ACCOUNT_ICON,
                 currency = account.currency,
                 balance = currencyFormatter.format(account.balance).toString(),
@@ -192,11 +176,11 @@ class AccountScreenViewModel(
         }
     }
 
-    fun setSortOptions(field: Property<Account>, flags: Int) {
-        _sortOptionsState.update {
+    fun setSortConfig(field: String, direction: SortDirection) {
+        _sortConfigState.update {
             it.copy(
-                sortFlags = flags,
-                sortField = field
+                sortField = field,
+                sortDirection = direction
             )
         }
     }

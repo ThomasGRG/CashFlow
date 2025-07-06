@@ -1,13 +1,13 @@
 package jp.ikigai.cash.flow.ui.screenStates.migration
 
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
 import java.time.LocalDate
 import java.util.Locale
 
@@ -18,11 +18,11 @@ data class MigrateCounterPartyScreenState(
     val selectedTransactionCount: Int = 0,
     val selectedLocalDates: Set<LocalDate> = emptySet(),
     val allSelected: Boolean = false,
-    val accounts: List<Account> = emptyList(),
-    val categories: List<Category> = emptyList(),
-    val counterParties: List<CounterParty> = emptyList(),
-    val methods: List<Method> = emptyList(),
-    val transactionTypes: List<TransactionType> = TransactionType.values().toList(),
+    val accounts: List<AccountWithTransactionMetadata> = emptyList(),
+    val categories: List<CategoryWithTransactionMetadata> = emptyList(),
+    val counterParties: List<CounterPartyWithTransactionMetadata> = emptyList(),
+    val methods: List<MethodWithTransactionMetadata> = emptyList(),
+    val transactionTypes: List<TransactionType> = TransactionType.entries,
     val currencies: List<CurrencyInfo> = Constants.currencyList,
     val loading: Boolean = true,
     val enabled: Boolean = false,

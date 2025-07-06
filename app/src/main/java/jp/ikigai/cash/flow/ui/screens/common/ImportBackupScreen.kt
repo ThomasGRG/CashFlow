@@ -47,18 +47,18 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import io.objectbox.query.QueryBuilder
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.PopupType
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
-import jp.ikigai.cash.flow.data.store.entity.temp.TempTransaction
-import jp.ikigai.cash.flow.data.store.entity.temp.TempTransaction_
+import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ImportBackupScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.MapAccountCard
 import jp.ikigai.cash.flow.ui.components.cards.MapCategoryCard
@@ -80,7 +80,7 @@ import jp.ikigai.cash.flow.ui.components.popups.SelectAccountPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
 import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
@@ -110,17 +110,17 @@ fun ImportBackupScreen(
     setSearchText: (String) -> Unit,
     setSelectedCurrencies: (Set<String>) -> Unit,
     setStartDateAndEndDate: (ZonedDateTime?, ZonedDateTime?) -> Unit,
-    setSelectedTransactionTypes: (List<Int>) -> Unit,
-    setSortFlags: (Int) -> Unit,
+    setSelectedTransactionTypes: (List<TransactionType>) -> Unit,
+    setSortDirection: (SortDirection) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     toggleTransactionTemplateSelected: (Long) -> Unit,
-    setCategoryMapping: (Long, Category) -> Unit,
+    setCategoryMapping: (Long, CategoryWithTransactionMetadata) -> Unit,
     toggleCategorySelected: (Long) -> Unit,
-    setCounterPartyMapping: (Long, CounterParty) -> Unit,
+    setCounterPartyMapping: (Long, CounterPartyWithTransactionMetadata) -> Unit,
     toggleCounterPartySelected: (Long) -> Unit,
-    setMethodMapping: (Long, Method) -> Unit,
+    setMethodMapping: (Long, MethodWithTransactionMetadata) -> Unit,
     toggleMethodSelected: (Long) -> Unit,
-    setAccountMapping: (Long, Account) -> Unit,
+    setAccountMapping: (Long, AccountWithTransactionMetadata) -> Unit,
     toggleAccountSelected: (Long) -> Unit,
     toggleRestoreBalance: (Long) -> Unit,
     checkPageValidity: (Int) -> Unit,
@@ -128,7 +128,7 @@ fun ImportBackupScreen(
     primaryState: ImportBackupScreenPrimaryState,
     secondaryState: ImportBackupScreenSecondaryState,
     filtersState: ImportBackupScreenFiltersState,
-    sortOptionsState: SortOptionsState<TempTransaction>
+    sortConfigState: SortConfigState
 ) {
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -209,8 +209,8 @@ fun ImportBackupScreen(
         mutableIntStateOf(filtersState.dateRangeStringRes)
     }
 
-    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
-        mutableIntStateOf(sortOptionsState.sortFlags)
+    val sortDirection by remember(key1 = sortConfigState.sortDirection) {
+        mutableStateOf(sortConfigState.sortDirection)
     }
 
     val transactions by remember(
@@ -554,9 +554,10 @@ fun ImportBackupScreen(
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
                         index = dbCategories
-                            .indexOfFirst { it.id == categoryMappings[selectedTempCategoryId]?.id }
+                            .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
                             .coerceAtLeast(0),
-                        selectedCategoryId = categoryMappings[selectedTempCategoryId]?.id ?: 0L,
+                        selectedCategoryId = categoryMappings[selectedTempCategoryId]?.categoryId
+                            ?: 0L,
                         categories = dbCategories,
                         setSelectedCategory = {
                             setCategoryMapping(selectedTempCategoryId, it)
@@ -568,9 +569,9 @@ fun ImportBackupScreen(
                 PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
                         index = dbCounterParties
-                            .indexOfFirst { it.id == counterPartyMappings[selectedTempCounterPartyId]?.id }
+                            .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
                             .coerceAtLeast(0),
-                        selectedCounterPartyId = counterPartyMappings[selectedTempCounterPartyId]?.id
+                        selectedCounterPartyId = counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId
                             ?: 0L,
                         counterParties = dbCounterParties,
                         setSelectedCounterParty = {
@@ -583,9 +584,9 @@ fun ImportBackupScreen(
                 PopupType.METHOD -> {
                     SelectMethodPopup(
                         index = dbMethods
-                            .indexOfFirst { it.id == methodMappings[selectedTempMethodId]?.id }
+                            .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
                             .coerceAtLeast(0),
-                        selectedMethodId = methodMappings[selectedTempMethodId]?.id ?: 0L,
+                        selectedMethodId = methodMappings[selectedTempMethodId]?.methodId ?: 0L,
                         methods = dbMethods,
                         setSelectedMethod = {
                             setMethodMapping(selectedTempMethodId, it)
@@ -597,9 +598,9 @@ fun ImportBackupScreen(
                 PopupType.ACCOUNT -> {
                     SelectAccountPopup(
                         index = currencyAccountMap[selectedTempAccountCurrency]
-                            ?.indexOfFirst { it.id == accountMappings[selectedTempAccountId]?.id }
+                            ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
                             ?.coerceAtLeast(0) ?: 0,
-                        selectedAccountId = accountMappings[selectedTempAccountId]?.id ?: 0L,
+                        selectedAccountId = accountMappings[selectedTempAccountId]?.accountId ?: 0L,
                         accounts = currencyAccountMap[selectedTempAccountCurrency]
                             ?: emptyList(),
                         setSelectedAccount = {
@@ -700,15 +701,15 @@ fun ImportBackupScreen(
                 allSelected = allSelected,
                 importEnabled = selectedTransactionsCount.isNotEmpty(),
                 dataLoaded = dataLoadComplete,
-                sortFlags = sortFlags,
+                sortDirection = sortDirection,
                 filterAmount = filterAmountRange,
                 selectedCurrencyCount = selectedCurrencyCount,
                 selectedTransactionTypeCount = selectedTransactionTypes.size,
                 onSortClick = {
-                    if (sortFlags == QueryBuilder.DESCENDING) {
-                        setSortFlags(0)
+                    if (sortDirection == SortDirection.DESC) {
+                        setSortDirection(SortDirection.ASC)
                     } else {
-                        setSortFlags(QueryBuilder.DESCENDING)
+                        setSortDirection(SortDirection.DESC)
                     }
                 },
                 onFilterByAmountClick = {
@@ -770,25 +771,41 @@ fun ImportBackupScreen(
                             }
                             items(
                                 items = tempCategories,
-                                key = { tempCategory -> tempCategory.id }
+                                key = { tempCategory -> tempCategory.tempCategoryId }
                             ) { tempCategory ->
                                 MapCategoryCard(
                                     tempCategory = tempCategory,
-                                    mappedCategory = categoryMappings[tempCategory.id]
-                                        ?: Category(),
+                                    mappedCategory = categoryMappings[
+                                        tempCategory.tempCategoryId
+                                    ] ?: CategoryWithTransactionMetadata(
+                                        categoryId = 0L,
+                                        categoryName = "",
+                                        icon = Constants.DEFAULT_CATEGORY_ICON,
+                                        transactionCount = 0L,
+                                        lastUsed = null
+                                    ),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempCategories.contains(tempCategory.id),
-                                    conflicting = conflictingTempCategories.contains(tempCategory.id),
+                                    selected = selectedTempCategories.contains(tempCategory.tempCategoryId),
+                                    conflicting = conflictingTempCategories.contains(tempCategory.tempCategoryId),
                                     selectCategory = {
-                                        selectedTempCategoryId = tempCategory.id
+                                        selectedTempCategoryId = tempCategory.tempCategoryId
                                         popupType = PopupType.CATEGORY
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleCategorySelected(tempCategory.id)
+                                        toggleCategorySelected(tempCategory.tempCategoryId)
                                     },
                                     clearSelectedCategory = {
-                                        setCategoryMapping(tempCategory.id, Category())
+                                        setCategoryMapping(
+                                            tempCategory.tempCategoryId,
+                                            CategoryWithTransactionMetadata(
+                                                categoryId = 0L,
+                                                categoryName = "",
+                                                icon = Constants.DEFAULT_CATEGORY_ICON,
+                                                transactionCount = 0L,
+                                                lastUsed = null
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -810,29 +827,43 @@ fun ImportBackupScreen(
                             }
                             items(
                                 items = tempCounterParties,
-                                key = { tempCounterParty -> tempCounterParty.id }
+                                key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
                             ) { tempCounterParty ->
                                 MapCounterPartyCard(
                                     tempCounterParty = tempCounterParty,
-                                    mappedCounterParty = counterPartyMappings[tempCounterParty.id]
-                                        ?: CounterParty(),
+                                    mappedCounterParty = counterPartyMappings[
+                                        tempCounterParty.tempCounterPartyId
+                                    ] ?: CounterPartyWithTransactionMetadata(
+                                        counterPartyId = 0L,
+                                        counterPartyName = "",
+                                        transactionCount = 0L,
+                                        lastUsed = null
+                                    ),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempCounterParties.contains(tempCounterParty.id),
+                                    selected = selectedTempCounterParties.contains(
+                                        tempCounterParty.tempCounterPartyId
+                                    ),
                                     conflicting = conflictingTempCounterParties.contains(
-                                        tempCounterParty.id
+                                        tempCounterParty.tempCounterPartyId
                                     ),
                                     selectCounterParty = {
-                                        selectedTempCounterPartyId = tempCounterParty.id
+                                        selectedTempCounterPartyId =
+                                            tempCounterParty.tempCounterPartyId
                                         popupType = PopupType.COUNTERPARTY
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleCounterPartySelected(tempCounterParty.id)
+                                        toggleCounterPartySelected(tempCounterParty.tempCounterPartyId)
                                     },
                                     clearSelectedCounterParty = {
                                         setCounterPartyMapping(
-                                            tempCounterParty.id,
-                                            CounterParty()
+                                            tempCounterParty.tempCounterPartyId,
+                                            CounterPartyWithTransactionMetadata(
+                                                counterPartyId = 0L,
+                                                counterPartyName = "",
+                                                transactionCount = 0L,
+                                                lastUsed = null
+                                            )
                                         )
                                     }
                                 )
@@ -855,24 +886,43 @@ fun ImportBackupScreen(
                             }
                             items(
                                 items = tempMethods,
-                                key = { tempMethod -> tempMethod.id }
+                                key = { tempMethod -> tempMethod.tempMethodId }
                             ) { tempMethod ->
                                 MapMethodCard(
                                     tempMethod = tempMethod,
-                                    mappedMethod = methodMappings[tempMethod.id] ?: Method(),
+                                    mappedMethod = methodMappings[
+                                        tempMethod.tempMethodId
+                                    ] ?: MethodWithTransactionMetadata(
+                                        methodId = 0L,
+                                        methodName = "",
+                                        transactionCount = 0L,
+                                        lastUsed = null
+                                    ),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempMethods.contains(tempMethod.id),
-                                    conflicting = conflictingTempMethods.contains(tempMethod.id),
+                                    selected = selectedTempMethods.contains(
+                                        tempMethod.tempMethodId
+                                    ),
+                                    conflicting = conflictingTempMethods.contains(
+                                        tempMethod.tempMethodId
+                                    ),
                                     selectMethod = {
-                                        selectedTempMethodId = tempMethod.id
+                                        selectedTempMethodId = tempMethod.tempMethodId
                                         popupType = PopupType.METHOD
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleMethodSelected(tempMethod.id)
+                                        toggleMethodSelected(tempMethod.tempMethodId)
                                     },
                                     clearSelectedMethod = {
-                                        setMethodMapping(tempMethod.id, Method())
+                                        setMethodMapping(
+                                            tempMethod.tempMethodId,
+                                            MethodWithTransactionMetadata(
+                                                methodId = 0L,
+                                                methodName = "",
+                                                transactionCount = 0L,
+                                                lastUsed = null
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -894,30 +944,58 @@ fun ImportBackupScreen(
                             }
                             items(
                                 items = tempAccounts,
-                                key = { tempAccount -> tempAccount.id }
+                                key = { tempAccount -> tempAccount.tempAccountId }
                             ) { tempAccount ->
                                 MapAccountCard(
                                     tempAccount = tempAccount,
-                                    mappedAccount = accountMappings[tempAccount.id] ?: Account(),
+                                    mappedAccount = accountMappings[
+                                        tempAccount.tempAccountId
+                                    ] ?: AccountWithTransactionMetadata(
+                                        accountId = 0L,
+                                        accountName = "",
+                                        currency = "INR",
+                                        balance = 0.0,
+                                        formattedBalance = "",
+                                        transactionCount = 0L,
+                                        lastUsed = null
+                                    ),
                                     modifier = Modifier.animateItem(),
-                                    selected = selectedTempAccounts.contains(tempAccount.id),
-                                    restoreBalance = restoreBalanceAccounts.contains(tempAccount.id),
-                                    conflicting = conflictingTempAccounts.contains(tempAccount.id),
+                                    selected = selectedTempAccounts.contains(
+                                        tempAccount.tempAccountId
+                                    ),
+                                    restoreBalance = restoreBalanceAccounts.contains(
+                                        tempAccount.tempAccountId
+                                    ),
+                                    conflicting = conflictingTempAccounts.contains(
+                                        tempAccount.tempAccountId
+                                    ),
                                     selectSource = {
-                                        selectedTempAccountId = tempAccount.id
-                                        selectedTempAccountCurrency = tempAccount.currency
+                                        selectedTempAccountId = tempAccount.tempAccountId
+                                        selectedTempAccountCurrency =
+                                            tempAccount.tempAccountCurrency
                                         popupType = PopupType.ACCOUNT
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleAccountSelected(tempAccount.id)
+                                        toggleAccountSelected(tempAccount.tempAccountId)
                                     },
                                     toggleRestoreBalance = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleRestoreBalance(tempAccount.id)
+                                        toggleRestoreBalance(tempAccount.tempAccountId)
                                     },
                                     clearSelectedSource = {
-                                        setAccountMapping(tempAccount.id, Account())
+                                        setAccountMapping(
+                                            tempAccount.tempAccountId,
+                                            AccountWithTransactionMetadata(
+                                                accountId = 0L,
+                                                accountName = "",
+                                                currency = "INR",
+                                                balance = 0.0,
+                                                formattedBalance = "",
+                                                transactionCount = 0L,
+                                                lastUsed = null
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -1069,7 +1147,7 @@ fun ImportBackupScreenPreview() {
         setSelectedCurrencies = {},
         setStartDateAndEndDate = { _, _ -> },
         setSelectedTransactionTypes = {},
-        setSortFlags = {},
+        setSortDirection = {},
         filterByAmount = { _, _ -> },
         toggleTransactionTemplateSelected = {},
         setCategoryMapping = { _, _ -> },
@@ -1086,7 +1164,7 @@ fun ImportBackupScreenPreview() {
         primaryState = ImportBackupScreenPrimaryState(),
         secondaryState = ImportBackupScreenSecondaryState(),
         filtersState = ImportBackupScreenFiltersState(),
-        sortOptionsState = SortOptionsState(sortField = TempTransaction_.time)
+        sortConfigState = SortConfigState(sortField = "tempTransactionDateTime")
     )
 }
 
@@ -1099,7 +1177,7 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
         val secondaryState by viewModel.secondaryState.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
         val filtersState by viewModel.filtersState.collectAsState()
-        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
+        val sortConfigState by viewModel.sortConfigState.collectAsState()
 
         ImportBackupScreen(
             navigateBack = {
@@ -1116,7 +1194,7 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
             setSelectedCurrencies = viewModel::setSelectedCurrencies,
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
-            setSortFlags = viewModel::setSortFlags,
+            setSortDirection = viewModel::setSortDirection,
             filterByAmount = viewModel::setFilterAmounts,
             toggleTransactionTemplateSelected = viewModel::toggleTransactionTemplateSelected,
             setCategoryMapping = viewModel::setCategoryMapping,
@@ -1133,7 +1211,7 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
             primaryState = mainState,
             secondaryState = secondaryState,
             filtersState = filtersState,
-            sortOptionsState = sortOptionsState
+            sortConfigState = sortConfigState
         )
     }
 }

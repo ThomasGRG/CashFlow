@@ -39,21 +39,22 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
+import compose.icons.tablericons.Archive
 import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.LetterCase
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -85,10 +86,10 @@ fun UpsertTransactionTemplateScreen(
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
     setAmount: (String) -> Unit,
-    setSelectedAccount: (Account) -> Unit,
-    setSelectedCategory: (Category) -> Unit,
-    setSelectedCounterParty: (CounterParty) -> Unit,
-    setSelectedMethod: (Method) -> Unit,
+    setSelectedAccount: (AccountWithTransactionMetadata) -> Unit,
+    setSelectedCategory: (CategoryWithTransactionMetadata) -> Unit,
+    setSelectedCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    setSelectedMethod: (MethodWithTransactionMetadata) -> Unit,
     setTransactionType: (TransactionType) -> Unit,
     upsertTransactionTemplate: (String, String, String) -> Unit,
     deleteTransactionTemplate: () -> Unit,
@@ -158,7 +159,7 @@ fun UpsertTransactionTemplateScreen(
     }
 
     val transactionTemplateId by remember(key1 = state.transactionTemplate) {
-        mutableLongStateOf(state.transactionTemplate.id)
+        mutableLongStateOf(state.transactionTemplate.templateId)
     }
 
     val name by remember(key1 = state.name) {
@@ -183,7 +184,7 @@ fun UpsertTransactionTemplateScreen(
         saver = TextFieldValueSaver
     ) {
         mutableStateOf(
-            TextFieldValue(state.transactionTemplate.title)
+            TextFieldValue(state.transactionTemplate.templateTitle)
         )
     }
 
@@ -192,7 +193,7 @@ fun UpsertTransactionTemplateScreen(
         saver = TextFieldValueSaver
     ) {
         mutableStateOf(
-            TextFieldValue(state.transactionTemplate.description)
+            TextFieldValue(state.transactionTemplate.templateDescription)
         )
     }
 
@@ -257,9 +258,9 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
-                        index = categories.indexOfFirst { it.id == selectedCategory.id }
+                        index = categories.indexOfFirst { it.categoryId == selectedCategory.categoryId }
                             .coerceAtLeast(0),
-                        selectedCategoryId = selectedCategory.id,
+                        selectedCategoryId = selectedCategory.categoryId,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
                         dismiss = hidePopup
@@ -268,9 +269,9 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
-                        index = counterParties.indexOfFirst { it.id == selectedCounterParty.id }
+                        index = counterParties.indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
                             .coerceAtLeast(0),
-                        selectedCounterPartyId = selectedCounterParty.id,
+                        selectedCounterPartyId = selectedCounterParty.counterPartyId,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
                         dismiss = hidePopup
@@ -279,9 +280,9 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.METHOD -> {
                     SelectMethodPopup(
-                        index = methods.indexOfFirst { it.id == selectedMethod.id }
+                        index = methods.indexOfFirst { it.methodId == selectedMethod.methodId }
                             .coerceAtLeast(0),
-                        selectedMethodId = selectedMethod.id,
+                        selectedMethodId = selectedMethod.methodId,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
                         dismiss = hidePopup
@@ -290,9 +291,9 @@ fun UpsertTransactionTemplateScreen(
 
                 PopupType.ACCOUNT -> {
                     SelectAccountPopup(
-                        index = accounts.indexOfFirst { it.id == selectedAccount.id }
+                        index = accounts.indexOfFirst { it.accountId == selectedAccount.accountId }
                             .coerceAtLeast(0),
-                        selectedAccountId = selectedAccount.id,
+                        selectedAccountId = selectedAccount.accountId,
                         setSelectedAccount = setSelectedAccount,
                         accounts = accounts,
                         dismiss = hidePopup
@@ -496,13 +497,21 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedCategory.name,
+                    value = selectedCategory.categoryName,
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                     leadingIcon = selectedCategory.icon,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedCategory(Category())
+                        setSelectedCategory(
+                            CategoryWithTransactionMetadata(
+                                categoryId = 0,
+                                categoryName = "",
+                                icon = TablerIcons.Archive,
+                                transactionCount = 0,
+                                lastUsed = null
+                            )
+                        )
                     },
                     onClick = {
                         resetOneHandMode()
@@ -517,13 +526,20 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedCounterParty.name,
+                    value = selectedCounterParty.counterPartyName,
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                     leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedCounterParty(CounterParty())
+                        setSelectedCounterParty(
+                            CounterPartyWithTransactionMetadata(
+                                counterPartyId = 0,
+                                counterPartyName = "",
+                                transactionCount = 0,
+                                lastUsed = null
+                            )
+                        )
                     },
                     onClick = {
                         resetOneHandMode()
@@ -538,13 +554,20 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedMethod.name,
+                    value = selectedMethod.methodName,
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                     leadingIcon = Constants.DEFAULT_METHOD_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedMethod(Method())
+                        setSelectedMethod(
+                            MethodWithTransactionMetadata(
+                                methodId = 0,
+                                methodName = "",
+                                transactionCount = 0,
+                                lastUsed = null
+                            )
+                        )
                     },
                     onClick = {
                         resetOneHandMode()
@@ -559,13 +582,23 @@ fun UpsertTransactionTemplateScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = if (selectedAccount.id > 0) "${selectedAccount.name} - ${selectedAccount.formattedBalance}" else "",
+                    value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
                     label = stringResource(id = R.string.account_field_label),
                     placeHolder = stringResource(id = R.string.select_account_placeholder_label),
                     leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedAccount(Account(currency = "INR"))
+                        setSelectedAccount(
+                            AccountWithTransactionMetadata(
+                                accountId = 0,
+                                accountName = "",
+                                balance = 0.0,
+                                currency = "INR",
+                                formattedBalance = "",
+                                transactionCount = 0,
+                                lastUsed = null
+                            )
+                        )
                     },
                     onClick = {
                         resetOneHandMode()

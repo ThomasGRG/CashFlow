@@ -3,36 +3,30 @@ package jp.ikigai.cash.flow.ui.viewmodels.listing
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
-import io.objectbox.Box
-import io.objectbox.BoxStore
-import io.objectbox.kotlin.boxFor
-import io.objectbox.kotlin.flow
-import io.objectbox.query.QueryBuilder
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CashFlowDatabase
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.TemplateWithTransactionMetadata
+import jp.ikigai.cash.flow.TransactionWithMetadata
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.dto.TransactionsWithTotalAmount
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.DataStore
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Account_
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.Category_
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.CounterParty_
-import jp.ikigai.cash.flow.data.store.entity.Method
-import jp.ikigai.cash.flow.data.store.entity.Method_
-import jp.ikigai.cash.flow.data.store.entity.Transaction
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
-import jp.ikigai.cash.flow.data.store.entity.Transaction_
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
@@ -40,7 +34,7 @@ import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import jp.ikigai.cash.flow.utils.getDateString
 import jp.ikigai.cash.flow.utils.getHighlightedString
 import jp.ikigai.cash.flow.utils.getNumberFormatter
-import jp.ikigai.cash.flow.utils.toEpochMilli
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -52,7 +46,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -64,7 +57,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class TransactionsScreenViewModel(
-    store: BoxStore = DataStore.store
+    private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private val datePattern = "dd-LLL-yyyy"
@@ -83,48 +76,13 @@ class TransactionsScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortOptionsState = MutableStateFlow(
-        SortOptionsState<Transaction>(
-            sortField = Transaction_.time
-        )
+    private val _sortConfigState = MutableStateFlow(
+        SortConfigState(sortField = "transactionDateTime")
     )
-    val sortOptionsState: StateFlow<SortOptionsState<Transaction>> =
-        _sortOptionsState.asStateFlow()
+    val sortConfigState: StateFlow<SortConfigState> = _sortConfigState.asStateFlow()
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
-
-    private val accountBox: Box<Account> = store.boxFor()
-    private val categoryBox: Box<Category> = store.boxFor()
-    private val counterPartyBox: Box<CounterParty> = store.boxFor()
-    private val methodBox: Box<Method> = store.boxFor()
-    private val templateBox: Box<TransactionTemplate> = store.boxFor()
-    private val transactionBox: Box<Transaction> = store.boxFor()
-
-    private val templateQuery = templateBox
-        .query()
-        .orderDesc(TransactionTemplate_.frequency)
-        .build()
-
-    private val accountQuery = accountBox
-        .query()
-        .orderDesc(Account_.frequency)
-        .build()
-
-    private val methodQuery = methodBox
-        .query()
-        .orderDesc(Method_.frequency)
-        .build()
-
-    private val counterPartyQuery = counterPartyBox
-        .query()
-        .orderDesc(CounterParty_.frequency)
-        .build()
-
-    private val categoryQuery = categoryBox
-        .query()
-        .orderDesc(Category_.frequency)
-        .build()
 
     init {
         _filtersState.update {
@@ -141,21 +99,55 @@ class TransactionsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         _event.close()
-        accountQuery.close()
-        categoryQuery.close()
-        counterPartyQuery.close()
-        methodQuery.close()
-        templateQuery.close()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun getAccountQuery(): Flow<List<AccountWithTransactionMetadata>> {
+        return database
+            .accountWithTransactionMetadataQueries
+            .getAllAccountsSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getCategoryQuery(): Flow<List<CategoryWithTransactionMetadata>> {
+        return database
+            .categoryWithTransactionMetadataQueries
+            .getAllCategoriesSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getCounterPartyQuery(): Flow<List<CounterPartyWithTransactionMetadata>> {
+        return database
+            .counterPartyWithTransactionMetadataQueries
+            .getAllCounterPartiesSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getMethodQuery(): Flow<List<MethodWithTransactionMetadata>> {
+        return database
+            .methodWithTransactionMetadataQueries
+            .getAllMethodsSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getTemplateQuery(): Flow<List<TemplateWithTransactionMetadata>> {
+        return database
+            .templateWithTransactionMetadataQueries
+            .getAllTemplatesSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
     private fun loadData() = viewModelScope.launch {
         combineFiveFlows(
-            accountQuery.flow(),
-            categoryQuery.flow(),
-            counterPartyQuery.flow(),
-            methodQuery.flow(),
-            templateQuery.flow()
+            getAccountQuery(),
+            getCategoryQuery(),
+            getCounterPartyQuery(),
+            getMethodQuery(),
+            getTemplateQuery()
         ) { accounts, categories, counterParties, methods, templates ->
             TransactionScreenFlows(
                 accounts = accounts,
@@ -223,16 +215,14 @@ class TransactionsScreenViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBalance() = viewModelScope.launch {
         filtersState.flatMapLatest {
-            val query = accountBox
-                .query(
-                    Account_.currency.equal(it.selectedCurrency)
+            database
+                .accountQueries
+                .getTotalBalanceForCurrency(
+                    currency = it.selectedCurrency,
                 )
-                .build()
-            query.flow().onCompletion {
-                query.close()
-            }
-        }.collectLatest { accounts ->
-            val totalBalance = accounts.sumOf { account -> account.balance }
+                .asFlow()
+                .mapToOne(Dispatchers.IO)
+        }.collectLatest { totalBalance ->
             _state.update {
                 it.copy(
                     balance = currencyFormatter.format(totalBalance).toString()
@@ -253,7 +243,7 @@ class TransactionsScreenViewModel(
                     }
                 }
                 .debounce(300),
-            _sortOptionsState
+            _sortConfigState
                 .onEach {
                     _state.update {
                         it.copy(
@@ -269,22 +259,41 @@ class TransactionsScreenViewModel(
                         )
                     }
                 }
-        ) { searchText, sortOptions, filters ->
-            Triple(searchText, sortOptions, filters)
-        }.flatMapLatest { (searchText, sortOptions, filters) ->
-            getTransactionQuery(
-                searchText,
-                sortOptions,
-                filters
-            )
+        ) { searchText, sortConfig, filters ->
+            Triple(searchText, sortConfig, filters)
+        }.flatMapLatest { (searchText, sortConfig, filters) ->
+            val selectedCounterPartyIds = filters.selectedCounterParties.filter { it.value }.keys
+            database
+                .transactionWithMetadataQueries
+                .getTransactions(
+                    searchText = searchText.trim(),
+                    startDate = filters.startDate,
+                    endDate = filters.endDate,
+                    selectedCurrencies = listOf(filters.selectedCurrency),
+                    minAmount = filters.filterAmountMin,
+                    maxAmount = if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax,
+                    selectedTypes = filters.selectedTransactionTypes,
+                    selectedAccountIds = filters.selectedAccounts.filter { it.value }.keys,
+                    selectedCategoryIds = filters.selectedCategories.filter { it.value }.keys,
+                    selectedCounterPartyIds = if (filters.includeNoCounterPartyTransactions) {
+                        selectedCounterPartyIds + 0L
+                    } else {
+                        selectedCounterPartyIds
+                    },
+                    selectedMethodIds = filters.selectedMethods.filter { it.value }.keys,
+                    sortField = sortConfig.sortField,
+                    sortDirection = sortConfig.sortDirection.name
+                )
+                .asFlow()
+                .mapToList(Dispatchers.IO)
         }.collectLatest { transactions ->
             val incomeTransactions = transactions
-                .filter { it.type == TransactionType.CREDIT }
-            val income = incomeTransactions.sumOf { it.amount }
+                .filter { it.transactionType == TransactionType.CREDIT }
+            val income = incomeTransactions.sumOf { it.transactionAmount }
 
             val expenseTransactions = transactions
-                .filter { it.type == TransactionType.DEBIT }
-            val expense = expenseTransactions.sumOf { it.amount }
+                .filter { it.transactionType == TransactionType.DEBIT }
+            val expense = expenseTransactions.sumOf { it.transactionAmount }
 
             _state.update {
                 it.copy(
@@ -306,79 +315,78 @@ class TransactionsScreenViewModel(
     }
 
     private fun getSelectedAccounts(
-        accounts: List<Account>,
+        accounts: List<AccountWithTransactionMetadata>,
         selectedAccounts: Map<Long, Boolean>
     ): Map<Long, Boolean> {
         return accounts.associateBy(
             {
-                it.id
+                it.accountId
             },
             {
-                selectedAccounts.getOrDefault(it.id, true)
+                selectedAccounts.getOrDefault(it.accountId, true)
             }
         )
     }
 
     private fun getSelectedCategories(
-        categories: List<Category>,
+        categories: List<CategoryWithTransactionMetadata>,
         selectedCategories: Map<Long, Boolean>
     ): Map<Long, Boolean> {
         return categories.associateBy(
             {
-                it.id
+                it.categoryId
             },
             {
-                selectedCategories.getOrDefault(it.id, true)
+                selectedCategories.getOrDefault(it.categoryId, true)
             }
         )
     }
 
     private fun getSelectedCounterParties(
-        counterParties: List<CounterParty>,
+        counterParties: List<CounterPartyWithTransactionMetadata>,
         selectedCounterParties: Map<Long, Boolean>
     ): Map<Long, Boolean> {
         val counterPartyMap = counterParties
             .associateBy(
                 {
-                    it.id
+                    it.counterPartyId
                 },
                 {
-                    selectedCounterParties.getOrDefault(it.id, true)
+                    selectedCounterParties.getOrDefault(it.counterPartyId, true)
                 }
             )
             .toMutableMap()
-        counterPartyMap[0L] = selectedCounterParties.getOrDefault(0L, true)
         return counterPartyMap
     }
 
     private fun getSelectedMethods(
-        methods: List<Method>,
+        methods: List<MethodWithTransactionMetadata>,
         selectedMethods: Map<Long, Boolean>
     ): Map<Long, Boolean> {
         return methods.associateBy(
             {
-                it.id
+                it.methodId
             },
             {
-                selectedMethods.getOrDefault(it.id, true)
+                selectedMethods.getOrDefault(it.methodId, true)
             }
         )
     }
 
-    private fun mapToTemplateDTO(templates: List<TransactionTemplate>): List<SelectTemplateInfoDTO> {
+    private fun mapToTemplateDTO(templates: List<TemplateWithTransactionMetadata>): List<SelectTemplateInfoDTO> {
         return templates.map { template ->
             SelectTemplateInfoDTO(
-                id = template.id,
-                annotatedName = AnnotatedString(template.name),
-                frequency = template.frequency.toString()
+                id = template.templateId,
+                annotatedName = AnnotatedString(template.templateName),
+                frequency = numberFormatter.format(template.transactionCount).toString()
             )
         }
     }
 
     fun canAddTransaction(): Boolean {
-        val accountEmpty = accountBox.isEmpty
-        val categoryEmpty = categoryBox.isEmpty
-        val methodEmpty = methodBox.isEmpty
+        val accountEmpty = database.accountQueries.count().executeAsOne() == 0L
+        val categoryEmpty = database.categoryQueries.count().executeAsOne() == 0L
+        val methodEmpty = database.methodQueries.count().executeAsOne() == 0L
         val canAddTransaction = !accountEmpty && !categoryEmpty && !methodEmpty
         if (!canAddTransaction) {
             showToastBarForRequiredFields(accountEmpty, methodEmpty, categoryEmpty)
@@ -408,93 +416,20 @@ class TransactionsScreenViewModel(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getTransactionQuery(
-        searchText: String,
-        sortOptions: SortOptionsState<Transaction>,
-        filters: FiltersState
-    ): Flow<MutableList<Transaction>> {
-        val transactionQueryBuilder = transactionBox
-            .query(
-                Transaction_.time.between(
-                    filters.startDate.toEpochMilli(),
-                    filters.endDate.toEpochMilli()
-                )
-                    .and(
-                        Transaction_.currency.equal(filters.selectedCurrency)
-                    )
-                    .and(
-                        Transaction_.amount.between(
-                            filters.filterAmountMin,
-                            if (filters.filterAmountMax <= filters.filterAmountMin) Double.MAX_VALUE else filters.filterAmountMax
-                        )
-                    )
-                    .and(
-                        Transaction_.type.oneOf(
-                            filters.selectedTransactionTypes.toIntArray()
-                        )
-                    )
-                    .and(
-                        Transaction_.accountId.oneOf(
-                            filters.selectedAccounts.filter { it.value }.keys.toLongArray()
-                        )
-                    )
-                    .and(
-                        Transaction_.categoryId.oneOf(
-                            filters.selectedCategories.filter { it.value }.keys.toLongArray()
-                        )
-                    )
-                    .and(
-                        Transaction_.counterPartyId.oneOf(
-                            filters.selectedCounterParties.filter { it.value }.keys.toLongArray()
-                        )
-                    )
-                    .and(
-                        Transaction_.methodId.oneOf(
-                            filters.selectedMethods.filter { it.value }.keys.toLongArray()
-                        )
-                    )
-            )
-        val query = if (searchText.isNotBlank()) {
-            transactionQueryBuilder
-                .and()
-                .apply(
-                    Transaction_.title.contains(
-                        searchText.trim(),
-                        QueryBuilder.StringOrder.CASE_INSENSITIVE
-                    )
-                        .or(
-                            Transaction_.description.contains(
-                                searchText.trim(),
-                                QueryBuilder.StringOrder.CASE_INSENSITIVE
-                            )
-                        )
-                )
-                .order(sortOptions.sortField, sortOptions.sortFlags)
-                .build()
-        } else {
-            transactionQueryBuilder
-                .order(sortOptions.sortField, sortOptions.sortFlags)
-                .build()
-        }
-        return query.flow().onCompletion {
-            query.close()
-        }
-    }
-
     private fun getTransactionsMap(
-        transactions: List<Transaction>,
+        transactions: List<TransactionWithMetadata>,
         searchText: String
     ): Map<LocalDate, TransactionsWithTotalAmount> {
-        val transactionsMap = transactions.groupBy { it.time.toLocalDate() }
+        val transactionsMap = transactions.groupBy { it.transactionDateTime.toLocalDate() }
         val transactionDetailsMap = mutableMapOf<LocalDate, TransactionsWithTotalAmount>()
         transactionsMap.forEach { (localDate, transactionsList) ->
             val creditTransactions =
-                transactionsList.filter { it.type == TransactionType.CREDIT }
-            val credit = creditTransactions.sumOf { it.amount }
+                transactionsList.filter { it.transactionType == TransactionType.CREDIT }
+            val credit = creditTransactions.sumOf { it.transactionAmount }
 
-            val debitTransactions = transactionsList.filter { it.type == TransactionType.DEBIT }
-            val debit = debitTransactions.sumOf { it.amount }
+            val debitTransactions =
+                transactionsList.filter { it.transactionType == TransactionType.DEBIT }
+            val debit = debitTransactions.sumOf { it.transactionAmount }
 
             transactionDetailsMap[localDate] = TransactionsWithTotalAmount(
                 transactions = transactionsList.map { getTransactionWithChips(it, searchText) },
@@ -505,61 +440,59 @@ class TransactionsScreenViewModel(
     }
 
     private fun getTransactionWithChips(
-        transaction: Transaction,
+        transaction: TransactionWithMetadata,
         searchText: String
     ): TransactionWithChips {
-        val account = transaction.account.target
-        val category = transaction.category.target
-        val counterParty = transaction.counterParty.target
-        val method = transaction.method.target
-
         val chips: MutableList<ChipInfo> = mutableListOf()
 
-        if (counterParty != null) {
+        if (transaction.transactionCounterPartyName != null) {
             chips.add(
                 ChipInfo(
                     icon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                    value = counterParty.name,
+                    value = transaction.transactionCounterPartyName,
                     resId = R.string.placeholder
                 )
             )
         }
         chips.add(
             ChipInfo(
-                icon = category.icon,
-                value = category.name,
+                icon = transaction.transactionCategoryIcon!!,
+                value = transaction.transactionCategoryName!!,
                 resId = R.string.placeholder
             )
         )
         chips.add(
             ChipInfo(
                 icon = Constants.DEFAULT_METHOD_ICON,
-                value = method.name,
+                value = transaction.transactionMethodName!!,
                 resId = R.string.placeholder
             )
         )
         chips.add(
             ChipInfo(
                 icon = Constants.DEFAULT_ACCOUNT_ICON,
-                value = account.name,
+                value = transaction.transactionAccountName!!,
                 resId = R.string.placeholder
             )
         )
         chips.add(
             ChipInfo(
                 icon = TablerIcons.Alarm,
-                value = transaction.time.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                value = transaction.transactionDateTime.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 resId = R.string.placeholder
             )
         )
         return TransactionWithChips(
-            id = transaction.id,
-            annotatedTitle = getHighlightedString(transaction.title, searchText),
-            annotatedDescription = getHighlightedString(transaction.description, searchText),
-            amount = currencyFormatter.format(transaction.amount).toString(),
-            typeIcon = transaction.type.icon,
-            typeIconColor = transaction.type.color,
-            currency = transaction.currency,
+            id = transaction.transactionId,
+            annotatedTitle = getHighlightedString(transaction.transactionTitle, searchText),
+            annotatedDescription = getHighlightedString(
+                transaction.transactionDescription,
+                searchText
+            ),
+            amount = currencyFormatter.format(transaction.transactionAmount).toString(),
+            typeIcon = transaction.transactionType.icon,
+            typeIconColor = transaction.transactionType.color,
+            currency = transaction.transactionCurrency,
             chips = chips
         )
     }
@@ -606,13 +539,17 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setSelectedCounterParties(selectedCounterParties: Map<Long, Boolean>) {
+    fun setSelectedCounterParties(
+        selectedCounterParties: Map<Long, Boolean>,
+        includeNoCounterPartyTransactions: Boolean
+    ) {
         _filtersState.update {
             it.copy(
                 selectedCounterParties = selectedCounterParties,
                 selectedCounterPartyCount = numberFormatter.format(
                     selectedCounterParties.count { entry -> entry.value }
-                ).toString()
+                ).toString(),
+                includeNoCounterPartyTransactions = includeNoCounterPartyTransactions
             )
         }
     }
@@ -628,7 +565,7 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setSelectedTransactionTypes(selectedTransactionTypes: List<Int>) {
+    fun setSelectedTransactionTypes(selectedTransactionTypes: List<TransactionType>) {
         _filtersState.update {
             it.copy(
                 selectedTransactionTypes = selectedTransactionTypes
@@ -636,10 +573,10 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setSortFlags(sortFlags: Int) {
-        _sortOptionsState.update {
+    fun setSortDirection(sortDirection: SortDirection) {
+        _sortConfigState.update {
             it.copy(
-                sortFlags = sortFlags
+                sortDirection = sortDirection
             )
         }
     }
@@ -684,58 +621,44 @@ class TransactionsScreenViewModel(
         transactionId: Long,
         setCurrentDateTime: Boolean
     ) = viewModelScope.launch {
-        val transactionQuery = transactionBox
-            .query(Transaction_.id.equal(transactionId))
-            .build()
+        val transaction = database.transactionQueries.getById(transactionId).executeAsOne()
 
-        transactionQuery.findUnique()?.let { transaction ->
-            val clone = Transaction(
-                title = transaction.title,
-                description = transaction.description,
-                amount = transaction.amount,
-                type = transaction.type,
-                currency = transaction.currency,
-                time = if (!setCurrentDateTime) transaction.time else ZonedDateTime.now(ZoneId.systemDefault())
+        val account = database
+            .accountQueries
+            .getById(
+                transaction.transactionAccountId
             )
-            clone.account.targetId = transaction.account.targetId
-            clone.category.targetId = transaction.category.targetId
-            clone.counterParty.targetId = transaction.counterParty.targetId
-            clone.method.targetId = transaction.method.targetId
-            transactionBox.put(clone)
-            transaction.account.target.let { account ->
-                accountBox.put(
-                    account.copy(
-                        frequency = account.frequency + 1,
-                        lastUsed = clone.time
-                    )
-                )
-            }
-            transaction.category.target.let { category ->
-                categoryBox.put(
-                    category.copy(
-                        frequency = category.frequency + 1,
-                        lastUsed = clone.time
-                    )
-                )
-            }
-            transaction.counterParty.target?.let { counterParty ->
-                counterPartyBox.put(
-                    counterParty.copy(
-                        frequency = counterParty.frequency + 1,
-                        lastUsed = clone.time
-                    )
-                )
-            }
-            transaction.method.target.let { method ->
-                methodBox.put(
-                    method.copy(
-                        frequency = method.frequency + 1,
-                        lastUsed = clone.time
-                    )
-                )
-            }
+            .executeAsOne()
+
+        val dateTime = if (setCurrentDateTime) {
+            ZonedDateTime.now(ZoneId.systemDefault())
+        } else {
+            transaction.transactionDateTime
         }
 
-        transactionQuery.close()
+        database
+            .transactionQueries
+            .insert(
+                transactionTitle = transaction.transactionTitle,
+                transactionDescription = transaction.transactionDescription,
+                transactionAmount = transaction.transactionAmount,
+                transactionCurrency = transaction.transactionCurrency,
+                transactionType = transaction.transactionType,
+                transactionDateTime = dateTime,
+                transactionAccountId = transaction.transactionAccountId,
+                transactionCategoryId = transaction.transactionCategoryId,
+                transactionCounterPartyId = transaction.transactionCounterPartyId,
+                transactionMethodId = transaction.transactionMethodId,
+                transactionTemplateId = transaction.transactionTemplateId
+            )
+
+        database.accountQueries.updateBalance(
+            balance = if (transaction.transactionType == TransactionType.DEBIT) {
+                account.balance - transaction.transactionAmount
+            } else {
+                account.balance + transaction.transactionAmount
+            },
+            accountId = account.accountId
+        )
     }
 }

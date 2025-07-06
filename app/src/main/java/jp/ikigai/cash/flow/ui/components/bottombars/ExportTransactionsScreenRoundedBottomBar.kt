@@ -29,8 +29,8 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseExport
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
@@ -40,7 +40,7 @@ fun ExportTransactionsScreenRoundedBottomBar(
     enabled: Boolean,
     exportEnabled: Boolean,
     allSelected: Boolean,
-    sortFlags: Int,
+    sortDirection: SortDirection,
     filterAmount: String,
     selectedCurrencyCount: String,
     selectedAccountCount: String,
@@ -84,7 +84,7 @@ fun ExportTransactionsScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
+                    imageVector = if (sortDirection == SortDirection.DESC) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending

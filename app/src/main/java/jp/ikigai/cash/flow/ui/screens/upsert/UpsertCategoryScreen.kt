@@ -137,7 +137,7 @@ fun UpsertCategoryScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableIntStateOf(state.transactionCount)
+        mutableLongStateOf(state.transactionCount)
     }
 
     val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
@@ -145,7 +145,7 @@ fun UpsertCategoryScreen(
     }
 
     val categoryId by remember(key1 = state.category) {
-        mutableLongStateOf(state.category.id)
+        mutableLongStateOf(state.category.categoryId)
     }
 
     var popupType by remember {
@@ -177,7 +177,7 @@ fun UpsertCategoryScreen(
     }
 
     BackHandler {
-        if (enabled && (state.category.name != state.name || state.category.icon != selectedIcon)) {
+        if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -290,7 +290,7 @@ fun UpsertCategoryScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (enabled && (state.category.name != state.name || state.category.icon != selectedIcon)) {
+                        if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()

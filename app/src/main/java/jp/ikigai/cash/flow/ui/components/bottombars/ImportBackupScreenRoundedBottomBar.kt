@@ -41,8 +41,8 @@ import compose.icons.tablericons.DatabaseImport
 import compose.icons.tablericons.FileImport
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
@@ -55,7 +55,7 @@ fun ImportBackupScreenRoundedBottomBar(
     importEnabled: Boolean,
     dataLoaded: Boolean,
     allSelected: Boolean,
-    sortFlags: Int,
+    sortDirection: SortDirection,
     filterAmount: String,
     selectedCurrencyCount: String,
     selectedTransactionTypeCount: Int,
@@ -95,7 +95,7 @@ fun ImportBackupScreenRoundedBottomBar(
                     enabled = enabled
                 ) {
                     Icon(
-                        imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
+                        imageVector = if (sortDirection == SortDirection.DESC) {
                             TablerIcons.SortDescending
                         } else {
                             TablerIcons.SortAscending
@@ -328,7 +328,7 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
             allSelected = true,
             importEnabled = true,
             dataLoaded = false,
-            sortFlags = QueryBuilder.DESCENDING,
+            sortDirection = SortDirection.DESC,
             selectedCurrencyCount = "2",
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",
@@ -349,7 +349,7 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
             allSelected = false,
             importEnabled = true,
             dataLoaded = true,
-            sortFlags = QueryBuilder.DESCENDING,
+            sortDirection = SortDirection.DESC,
             selectedCurrencyCount = "2",
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",

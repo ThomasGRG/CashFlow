@@ -27,23 +27,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.TempAccountWithFormattedBalance
+import jp.ikigai.cash.flow.TempCategory
+import jp.ikigai.cash.flow.TempCounterParty
+import jp.ikigai.cash.flow.TempMethod
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
-import jp.ikigai.cash.flow.data.store.entity.temp.TempAccount
-import jp.ikigai.cash.flow.data.store.entity.temp.TempCategory
-import jp.ikigai.cash.flow.data.store.entity.temp.TempCounterParty
-import jp.ikigai.cash.flow.data.store.entity.temp.TempMethod
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 
 @Composable
 fun MapCategoryCard(
     modifier: Modifier = Modifier,
     tempCategory: TempCategory,
-    mappedCategory: Category,
+    mappedCategory: CategoryWithTransactionMetadata,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -75,7 +75,7 @@ fun MapCategoryCard(
                     .padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = tempCategory.name,
+                    text = tempCategory.tempCategoryName,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
                         .alpha(alpha)
@@ -95,7 +95,7 @@ fun MapCategoryCard(
                     .alpha(alpha)
             )
             CustomOutlinedButton(
-                value = mappedCategory.name,
+                value = mappedCategory.categoryName,
                 leadingIcon = mappedCategory.icon,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedCategory,
@@ -104,11 +104,11 @@ fun MapCategoryCard(
                 onClick = selectCategory,
                 placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedCategory.id == 0L,
+                isError = selected && conflicting && mappedCategory.categoryId == 0L,
                 errorHint = stringResource(id = R.string.category_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCategory.id == 0L
+                visible = selected && !conflicting && mappedCategory.categoryId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_category_label),
@@ -127,7 +127,7 @@ fun MapCategoryCard(
 fun MapCounterPartyCard(
     modifier: Modifier = Modifier,
     tempCounterParty: TempCounterParty,
-    mappedCounterParty: CounterParty,
+    mappedCounterParty: CounterPartyWithTransactionMetadata,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -159,7 +159,7 @@ fun MapCounterPartyCard(
                     .padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = tempCounterParty.name,
+                    text = tempCounterParty.tempCounterPartyName,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
                         .alpha(alpha)
@@ -179,7 +179,7 @@ fun MapCounterPartyCard(
                     .alpha(alpha)
             )
             CustomOutlinedButton(
-                value = mappedCounterParty.name,
+                value = mappedCounterParty.counterPartyName,
                 leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedCounterParty,
@@ -188,11 +188,11 @@ fun MapCounterPartyCard(
                 onClick = selectCounterParty,
                 placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedCounterParty.id == 0L,
+                isError = selected && conflicting && mappedCounterParty.counterPartyId == 0L,
                 errorHint = stringResource(id = R.string.counter_party_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCounterParty.id == 0L
+                visible = selected && !conflicting && mappedCounterParty.counterPartyId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_counterParty_label),
@@ -211,7 +211,7 @@ fun MapCounterPartyCard(
 fun MapMethodCard(
     modifier: Modifier = Modifier,
     tempMethod: TempMethod,
-    mappedMethod: Method,
+    mappedMethod: MethodWithTransactionMetadata,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -243,7 +243,7 @@ fun MapMethodCard(
                     .padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = tempMethod.name,
+                    text = tempMethod.tempMethodName,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
                         .alpha(alpha)
@@ -263,7 +263,7 @@ fun MapMethodCard(
                     .alpha(alpha)
             )
             CustomOutlinedButton(
-                value = mappedMethod.name,
+                value = mappedMethod.methodName,
                 leadingIcon = Constants.DEFAULT_METHOD_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedMethod,
@@ -272,11 +272,11 @@ fun MapMethodCard(
                 onClick = selectMethod,
                 placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedMethod.id == 0L,
+                isError = selected && conflicting && mappedMethod.methodId == 0L,
                 errorHint = stringResource(id = R.string.method_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedMethod.id == 0L
+                visible = selected && !conflicting && mappedMethod.methodId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_method_label),
@@ -294,8 +294,8 @@ fun MapMethodCard(
 @Composable
 fun MapAccountCard(
     modifier: Modifier = Modifier,
-    tempAccount: TempAccount,
-    mappedAccount: Account,
+    tempAccount: TempAccountWithFormattedBalance,
+    mappedAccount: AccountWithTransactionMetadata,
     selected: Boolean,
     conflicting: Boolean,
     restoreBalance: Boolean,
@@ -310,7 +310,7 @@ fun MapAccountCard(
     )
 
     val switchAlpha by animateFloatAsState(
-        targetValue = if (selected && mappedAccount.id > 0) 1f else 0.38f,
+        targetValue = if (selected && mappedAccount.accountId > 0) 1f else 0.38f,
         label = "animated alpha"
     )
 
@@ -334,7 +334,7 @@ fun MapAccountCard(
                     .padding(bottom = 6.dp)
             ) {
                 Text(
-                    text = tempAccount.name,
+                    text = tempAccount.tempAccountName,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier
                         .alpha(alpha)
@@ -354,14 +354,14 @@ fun MapAccountCard(
                     .alpha(alpha)
             )
             AnimatedVisibility(
-                visible = mappedAccount.id > 0 && tempAccount.balance != mappedAccount.balance
+                visible = mappedAccount.accountId > 0 && tempAccount.tempAccountBalance != mappedAccount.balance
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(
                             onClick = toggleRestoreBalance,
-                            enabled = selected && mappedAccount.id > 0
+                            enabled = selected && mappedAccount.accountId > 0
                         )
                         .padding(start = 6.dp, top = 2.dp, end = 6.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -380,7 +380,7 @@ fun MapAccountCard(
                     Switch(
                         checked = restoreBalance,
                         onCheckedChange = null,
-                        enabled = selected && mappedAccount.id > 0,
+                        enabled = selected && mappedAccount.accountId > 0,
                         thumbContent = {
                             Icon(
                                 imageVector = if (restoreBalance) Icons.Filled.Check else Icons.Filled.Clear,
@@ -392,7 +392,7 @@ fun MapAccountCard(
                 }
             }
             CustomOutlinedButton(
-                value = if (mappedAccount.id > 0) "${mappedAccount.name} - ${mappedAccount.formattedBalance}" else "",
+                value = if (mappedAccount.accountId > 0) "${mappedAccount.accountName} - ${mappedAccount.formattedBalance}" else "",
                 leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedSource,
@@ -401,11 +401,11 @@ fun MapAccountCard(
                 onClick = selectSource,
                 placeHolder = stringResource(id = R.string.select_account_placeholder_label),
                 modifier = Modifier.padding(bottom = 5.dp),
-                isError = selected && conflicting && mappedAccount.id == 0L,
+                isError = selected && conflicting && mappedAccount.accountId == 0L,
                 errorHint = stringResource(id = R.string.account_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedAccount.id == 0L
+                visible = selected && !conflicting && mappedAccount.accountId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_account_label),

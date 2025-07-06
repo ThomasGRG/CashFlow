@@ -46,9 +46,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
@@ -59,8 +59,8 @@ import jp.ikigai.cash.flow.utils.getHighlightedString
 fun SelectCounterPartyPopup(
     index: Int,
     selectedCounterPartyId: Long,
-    setSelectedCounterParty: (CounterParty) -> Unit,
-    counterParties: List<CounterParty>,
+    setSelectedCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -83,7 +83,7 @@ fun SelectCounterPartyPopup(
     val counterPartyList by remember {
         mutableStateOf(
             counterParties.map { counterParty ->
-                Pair(counterParty, getHighlightedString(counterParty.name, ""))
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
@@ -104,13 +104,13 @@ fun SelectCounterPartyPopup(
         } else {
             counterPartyList
                 .filter {
-                    it.first.name.contains(
+                    it.first.counterPartyName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map {
-                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                    Pair(it.first, getHighlightedString(it.first.counterPartyName, searchText))
                 }
         }
     }
@@ -139,10 +139,10 @@ fun SelectCounterPartyPopup(
         ) {
             items(
                 items = filteredCounterPartyList,
-                key = { (counterParty, _) -> "counterParty-${counterParty.id}" }
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
             ) { (counterParty, annotatedName) ->
                 SelectableCard(
-                    checked = { counterParty.id == selectedCounterPartyId },
+                    checked = { counterParty.counterPartyId == selectedCounterPartyId },
                     label = annotatedName,
                     icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
@@ -215,8 +215,8 @@ fun SelectCounterPartyPopup(
 @Composable
 fun MigrateCounterPartyPopup(
     migrateCount: Int,
-    selectCounterParty: (CounterParty) -> Unit,
-    counterParties: List<CounterParty>,
+    selectCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -239,7 +239,7 @@ fun MigrateCounterPartyPopup(
     val counterPartyList by remember {
         mutableStateOf(
             counterParties.map { counterParty ->
-                Pair(counterParty, getHighlightedString(counterParty.name, ""))
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
@@ -254,19 +254,29 @@ fun MigrateCounterPartyPopup(
         } else {
             counterPartyList
                 .filter { (counterParty, _) ->
-                    counterParty.name.contains(
+                    counterParty.counterPartyName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map { (counterParty, _) ->
-                    Pair(counterParty, getHighlightedString(counterParty.name, searchText))
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
                 }
         }
     }
 
     var selectedCounterParty by remember {
-        mutableStateOf(CounterParty())
+        mutableStateOf(
+            CounterPartyWithTransactionMetadata(
+                counterPartyId = 0,
+                counterPartyName = "",
+                transactionCount = 0,
+                lastUsed = null
+            )
+        )
     }
 
     Column(
@@ -292,10 +302,10 @@ fun MigrateCounterPartyPopup(
         ) {
             items(
                 items = filteredCounterPartyList,
-                key = { (counterParty, _) -> "counterParty-${counterParty.id}" }
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
             ) { (counterParty, annotatedName) ->
                 SelectableCard(
-                    checked = { counterParty.id == selectedCounterParty.id },
+                    checked = { counterParty.counterPartyId == selectedCounterParty.counterPartyId },
                     label = annotatedName,
                     icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
@@ -372,7 +382,7 @@ fun MigrateCounterPartyPopup(
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCounterParty.id > 0,
+                enabled = selectedCounterParty.counterPartyId > 0,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -389,8 +399,9 @@ fun MigrateCounterPartyPopup(
 @Composable
 fun FilterCounterPartyPopup(
     selectedCounterPartyMap: Map<Long, Boolean>,
-    counterParties: List<CounterParty>,
-    filter: (Map<Long, Boolean>) -> Unit,
+    includeNoCounterPartyTransactions: Boolean,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
+    filter: (Map<Long, Boolean>, Boolean) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -410,10 +421,14 @@ fun FilterCounterPartyPopup(
         mutableStateOf("")
     }
 
+    var includeTransactionsWithNoCounterParty by remember(includeNoCounterPartyTransactions) {
+        mutableStateOf(includeNoCounterPartyTransactions)
+    }
+
     val counterPartyList by remember {
         mutableStateOf(
             counterParties.map { counterParty ->
-                Pair(counterParty, getHighlightedString(counterParty.name, ""))
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
@@ -428,13 +443,16 @@ fun FilterCounterPartyPopup(
         } else {
             counterPartyList
                 .filter { (counterParty, _) ->
-                    counterParty.name.contains(
+                    counterParty.counterPartyName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
                 .map { (counterParty, _) ->
-                    Pair(counterParty, getHighlightedString(counterParty.name, searchText))
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
                 }
         }
     }
@@ -452,7 +470,7 @@ fun FilterCounterPartyPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredCounterPartyList
-                .map { (counterParty, _) -> selectedCounterParties[counterParty.id] }
+                .map { (counterParty, _) -> selectedCounterParties[counterParty.counterPartyId] }
                 .filter { it == true }
                 .size
         }
@@ -485,268 +503,18 @@ fun FilterCounterPartyPopup(
         ) {
             items(
                 items = filteredCounterPartyList,
-                key = { (counterParty, _) -> "counterParty-${counterParty.id}" }
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
             ) { (counterParty, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedCounterParties.getOrDefault(counterParty.id, true)
+                        selectedCounterParties.getOrDefault(counterParty.counterPartyId, true)
                     },
                     label = annotatedName,
                     icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCounterParties[counterParty.id] =
-                            !selectedCounterParties[counterParty.id]!!
-                    },
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .animateItem()
-                )
-            }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
-                item(
-                    key = "no_results"
-                ) {
-                    Text(
-                        text = stringResource(
-                            id = R.string.choose_icon_screen_empty_placeholder_label,
-                            searchText
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp)
-                            .animateItem()
-                    )
-                }
-            }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    selectedCounterParties[0L] = !selectedCounterParties[0L]!!
-                }
-                .padding(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(id = R.string.no_counter_party_label),
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .padding(end = 10.dp)
-                    .weight(1f, fill = false)
-            )
-            Switch(
-                checked = selectedCounterParties[0L] == true,
-                onCheckedChange = null,
-                thumbContent = {
-                    Icon(
-                        imageVector = if (selectedCounterParties[0L] == true) Icons.Filled.Check else Icons.Filled.Clear,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                    )
-                }
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    dismiss()
-                },
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(35),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(text = stringResource(id = R.string.cancel_button_label))
-            }
-            FilledTonalIconButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
-                    filteredCounterPartyList
-                        .map { (counterParty, _) -> counterParty.id }
-                        .forEach { id -> selectedCounterParties[id] = !allSelected }
-                },
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .size(50.dp),
-                shape = RoundedCornerShape(35)
-            ) {
-                AnimatedToggleSelectIcon(
-                    deselectVisible = filteredListSelectedCount == filteredCounterPartyList.size
-                )
-            }
-            FilledTonalIconButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (isFocused) {
-                        keyboardController?.show()
-                    } else {
-                        focusRequester.requestFocus()
-                    }
-                },
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .size(50.dp),
-                shape = RoundedCornerShape(35)
-            ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
-            }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    dismiss()
-                    filter(selectedCounterParties)
-                },
-                modifier = Modifier
-                    .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(35),
-                enabled = selectedCount > 0,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.filter_button_with_count_label,
-                        selectedCount
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun FilterCounterPartyPopup(
-    selectedCounterPartyIds: Set<Long>,
-    includeNoCounterPartyTransactions: Boolean,
-    counterParties: List<CounterParty>,
-    filter: (Set<Long>, Boolean) -> Unit,
-    dismiss: () -> Unit,
-) {
-    val haptics = LocalHapticFeedback.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    val focusRequester = remember {
-        FocusRequester()
-    }
-
-    val interactionSource = remember {
-        MutableInteractionSource()
-    }
-
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
-    var searchText by remember {
-        mutableStateOf("")
-    }
-
-    val counterPartyList by remember {
-        mutableStateOf(
-            counterParties.map { counterParty ->
-                Pair(counterParty, getHighlightedString(counterParty.name, ""))
-            }
-        )
-    }
-
-    var filteredCounterPartyList by remember {
-        mutableStateOf(counterPartyList)
-    }
-
-    LaunchedEffect(key1 = searchText) {
-        filteredCounterPartyList = if (searchText.isBlank()) {
-            counterPartyList
-        } else {
-            counterPartyList
-                .filter { (counterParty, _) ->
-                    counterParty.name.contains(
-                        searchText.trim(),
-                        ignoreCase = true
-                    )
-                }
-                .map { (counterParty, _) ->
-                    Pair(counterParty, getHighlightedString(counterParty.name, searchText))
-                }
-        }
-    }
-
-    var includeTransactionsWithNoCounterParty by remember(includeNoCounterPartyTransactions) {
-        mutableStateOf(includeNoCounterPartyTransactions)
-    }
-
-    val selectedCounterParties = remember {
-        mutableStateMapOf<Long, Boolean>()
-    }
-
-    val selectedCount by remember {
-        derivedStateOf {
-            selectedCounterParties.filter { it.value }.size
-        }
-    }
-
-    val filteredListSelectedCount by remember {
-        derivedStateOf {
-            filteredCounterPartyList
-                .map { (counterParty, _) -> selectedCounterParties[counterParty.id] }
-                .filter { it == true }
-                .size
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        selectedCounterParties.putAll(
-            counterParties.associate { counterParty ->
-                counterParty.id to selectedCounterPartyIds.contains(counterParty.id)
-            }
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        SearchBox(
-            searchText = searchText,
-            setSearchText = {
-                searchText = it
-            },
-            focusRequester = focusRequester,
-            interactionSource = interactionSource
-        )
-        LazyColumn(
-            modifier = Modifier.height(230.dp),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            items(
-                items = filteredCounterPartyList,
-                key = { (counterParty, _) -> "counterParty-${counterParty.id}" }
-            ) { (counterParty, annotatedName) ->
-                MultiSelectCard(
-                    checked = {
-                        selectedCounterParties.getOrDefault(counterParty.id, true)
-                    },
-                    label = annotatedName,
-                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                    onClick = { newCheckState ->
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCounterParties[counterParty.id] = newCheckState
+                        selectedCounterParties[counterParty.counterPartyId] =
+                            !selectedCounterParties[counterParty.counterPartyId]!!
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -826,7 +594,260 @@ fun FilterCounterPartyPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
                     filteredCounterPartyList
-                        .map { (counterParty, _) -> counterParty.id }
+                        .map { (counterParty, _) -> counterParty.counterPartyId }
+                        .forEach { id -> selectedCounterParties[id] = !allSelected }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                AnimatedToggleSelectIcon(
+                    deselectVisible = filteredListSelectedCount == filteredCounterPartyList.size
+                )
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isFocused) {
+                        keyboardController?.show()
+                    } else {
+                        focusRequester.requestFocus()
+                    }
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .size(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(selectedCounterParties, includeTransactionsWithNoCounterParty)
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0 || includeTransactionsWithNoCounterParty,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedCount
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterCounterPartyPopup(
+    selectedCounterPartyIds: Set<Long>,
+    includeNoCounterPartyTransactions: Boolean,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
+    filter: (Set<Long>, Boolean) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val counterPartyList by remember {
+        mutableStateOf(
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
+            }
+        )
+    }
+
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
+        } else {
+            counterPartyList
+                .filter { (counterParty, _) ->
+                    counterParty.counterPartyName.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+                .map { (counterParty, _) ->
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
+                }
+        }
+    }
+
+    var includeTransactionsWithNoCounterParty by remember(includeNoCounterPartyTransactions) {
+        mutableStateOf(includeNoCounterPartyTransactions)
+    }
+
+    val selectedCounterParties = remember {
+        mutableStateMapOf<Long, Boolean>()
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedCounterParties.filter { it.value }.size
+        }
+    }
+
+    val filteredListSelectedCount by remember {
+        derivedStateOf {
+            filteredCounterPartyList
+                .map { (counterParty, _) -> selectedCounterParties[counterParty.counterPartyId] }
+                .filter { it == true }
+                .size
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        selectedCounterParties.putAll(
+            counterParties.associate { counterParty ->
+                counterParty.counterPartyId to selectedCounterPartyIds.contains(counterParty.counterPartyId)
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SearchBox(
+            searchText = searchText,
+            setSearchText = {
+                searchText = it
+            },
+            focusRequester = focusRequester,
+            interactionSource = interactionSource
+        )
+        LazyColumn(
+            modifier = Modifier.height(230.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            items(
+                items = filteredCounterPartyList,
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
+            ) { (counterParty, annotatedName) ->
+                MultiSelectCard(
+                    checked = {
+                        selectedCounterParties.getOrDefault(counterParty.counterPartyId, true)
+                    },
+                    label = annotatedName,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
+                    onClick = { newCheckState ->
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedCounterParties[counterParty.counterPartyId] = newCheckState
+                    },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    includeTransactionsWithNoCounterParty = !includeTransactionsWithNoCounterParty
+                }
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.no_counter_party_label),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .weight(1f, fill = false)
+            )
+            Switch(
+                checked = includeTransactionsWithNoCounterParty,
+                onCheckedChange = null,
+                thumbContent = {
+                    Icon(
+                        imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                    )
+                }
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .padding(start = 4.dp, end = 4.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+            FilledTonalIconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
+                    filteredCounterPartyList
+                        .map { (counterParty, _) -> counterParty.counterPartyId }
                         .forEach { id -> selectedCounterParties[id] = !allSelected }
                 },
                 modifier = Modifier

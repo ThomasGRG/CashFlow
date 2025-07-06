@@ -3,30 +3,23 @@ package jp.ikigai.cash.flow.ui.viewmodels.upsert
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.objectbox.Box
-import io.objectbox.BoxStore
-import io.objectbox.kotlin.boxFor
-import io.objectbox.kotlin.flow
-import io.objectbox.query.QueryBuilder
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CashFlowDatabase
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.UpsertTransactionTemplateFlows
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.DataStore
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Account_
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.Category_
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.CounterParty_
-import jp.ikigai.cash.flow.data.store.entity.Method
-import jp.ikigai.cash.flow.data.store.entity.Method_
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.combineFiveFlows
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -43,7 +36,7 @@ import java.util.Locale
 
 class UpsertTransactionTemplateScreenViewModel(
     savedStateHandle: SavedStateHandle,
-    store: BoxStore = DataStore.store
+    private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private val templateId: Long = checkNotNull(savedStateHandle["id"])
@@ -58,40 +51,6 @@ class UpsertTransactionTemplateScreenViewModel(
     private val _state = MutableStateFlow(UpsertTransactionTemplateScreenState())
     val state: StateFlow<UpsertTransactionTemplateScreenState> = _state.asStateFlow()
 
-    private val accountBox: Box<Account> = store.boxFor()
-    private val categoryBox: Box<Category> = store.boxFor()
-    private val counterPartyBox: Box<CounterParty> = store.boxFor()
-    private val methodBox: Box<Method> = store.boxFor()
-    private val templateBox: Box<TransactionTemplate> = store.boxFor()
-
-    private val accountQuery = accountBox
-        .query()
-        .orderDesc(Account_.frequency)
-        .build()
-
-    private val categoryQuery = categoryBox
-        .query()
-        .orderDesc(Category_.frequency)
-        .build()
-
-    private val counterPartyQuery = counterPartyBox
-        .query()
-        .orderDesc(CounterParty_.frequency)
-        .build()
-
-    private val methodQuery = methodBox
-        .query()
-        .orderDesc(Method_.frequency)
-        .build()
-
-    private val templateQuery = templateBox
-        .query(TransactionTemplate_.id.equal(0L))
-        .build()
-
-    private val nameAlreadyInUseQuery = templateBox
-        .query(TransactionTemplate_.name.equal("", QueryBuilder.StringOrder.CASE_INSENSITIVE))
-        .build()
-
     init {
         loadDataJob = loadData()
     }
@@ -99,38 +58,67 @@ class UpsertTransactionTemplateScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         _event.close()
-        accountQuery.close()
-        categoryQuery.close()
-        counterPartyQuery.close()
-        methodQuery.close()
-        templateQuery.close()
-        nameAlreadyInUseQuery.close()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun getAccountQuery(): Flow<List<AccountWithTransactionMetadata>> {
+        return database
+            .accountWithTransactionMetadataQueries
+            .getAllAccountsSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getCategoryQuery(): Flow<List<CategoryWithTransactionMetadata>> {
+        return database
+            .categoryWithTransactionMetadataQueries
+            .getAllCategoriesSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getCounterPartyQuery(): Flow<List<CounterPartyWithTransactionMetadata>> {
+        return database
+            .counterPartyWithTransactionMetadataQueries
+            .getAllCounterPartiesSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
+    private fun getMethodQuery(): Flow<List<MethodWithTransactionMetadata>> {
+        return database
+            .methodWithTransactionMetadataQueries
+            .getAllMethodsSortedByTransactionCountDesc()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+    }
+
     private fun loadData() = viewModelScope.launch {
         val flows = if (templateId > 0) {
             combineFiveFlows(
-                accountQuery.flow(),
-                categoryQuery.flow(),
-                counterPartyQuery.flow(),
-                methodQuery.flow(),
-                templateQuery.setParameter(TransactionTemplate_.id, templateId).flow()
+                getAccountQuery(),
+                getCategoryQuery(),
+                getCounterPartyQuery(),
+                getMethodQuery(),
+                database
+                    .transactionTemplateQueries
+                    .getById(templateId)
+                    .asFlow()
+                    .mapToOne(Dispatchers.IO)
             ) { accounts, categories, counterParties, methods, template ->
                 UpsertTransactionTemplateFlows(
                     accounts = accounts,
                     categories = categories,
                     counterParties = counterParties,
                     methods = methods,
-                    transactionTemplate = template.first()
+                    transactionTemplate = template
                 )
             }
         } else {
             combine(
-                accountQuery.flow(),
-                categoryQuery.flow(),
-                counterPartyQuery.flow(),
-                methodQuery.flow()
+                getAccountQuery(),
+                getCategoryQuery(),
+                getCounterPartyQuery(),
+                getMethodQuery()
             ) { accounts, categories, counterParties, methods ->
                 UpsertTransactionTemplateFlows(
                     accounts = accounts,
@@ -161,32 +149,42 @@ class UpsertTransactionTemplateScreenViewModel(
                 } else {
                     val transactionTemplate = upsertTransactionTemplateFlows.transactionTemplate
 
-                    val selectedAccount = transactionTemplate.account.target ?: it.selectedAccount
-                    val currencyFormatter = currencyFormatterMap.getValue(selectedAccount.currency)
+                    val selectedAccount = accounts.find { account ->
+                        account.accountId == transactionTemplate.templateAccountId
+                    } ?: it.selectedAccount
 
-                    val selectedCategory =
-                        transactionTemplate.category.target ?: it.selectedCategory
-                    val selectedCounterParty =
-                        transactionTemplate.counterParty.target ?: it.selectedCounterParty
-                    val selectedMethod = transactionTemplate.method.target ?: it.selectedMethod
+                    val selectedCategory = upsertTransactionTemplateFlows
+                        .categories
+                        .find { category ->
+                            category.categoryId == transactionTemplate.templateCategoryId
+                        } ?: it.selectedCategory
+
+                    val selectedCounterParty = upsertTransactionTemplateFlows
+                        .counterParties
+                        .find { counterParty ->
+                            counterParty.counterPartyId == transactionTemplate.templateCounterPartyId
+                        } ?: it.selectedCounterParty
+
+                    val selectedMethod = upsertTransactionTemplateFlows
+                        .methods
+                        .find { method ->
+                            method.methodId == transactionTemplate.templateMethodId
+                        } ?: it.selectedMethod
 
                     it.copy(
                         transactionTemplate = transactionTemplate,
-                        name = transactionTemplate.name,
-                        amount = transactionTemplate.amount,
-                        displayAmount = transactionTemplate.amount.toString(),
+                        name = transactionTemplate.templateName,
+                        amount = transactionTemplate.templateAmount,
+                        displayAmount = transactionTemplate.templateAmount.toString(),
                         accounts = accounts,
-                        selectedAccount = selectedAccount.copy(
-                            formattedBalance = currencyFormatter.format(selectedAccount.balance)
-                                .toString()
-                        ),
+                        selectedAccount = selectedAccount,
                         categories = upsertTransactionTemplateFlows.categories,
                         selectedCategory = selectedCategory,
                         counterParties = upsertTransactionTemplateFlows.counterParties,
                         selectedCounterParty = selectedCounterParty,
                         methods = upsertTransactionTemplateFlows.methods,
                         selectedMethod = selectedMethod,
-                        type = transactionTemplate.type,
+                        type = transactionTemplate.templateType,
                         loading = false,
                         enabled = true
                     )
@@ -196,10 +194,13 @@ class UpsertTransactionTemplateScreenViewModel(
     }
 
     fun checkNameAlreadyInUse(name: String) = viewModelScope.launch {
-        if (name.isNotBlank() && name.trim() != state.value.transactionTemplate.name) {
-            nameAlreadyInUseQuery
-                .setParameter(TransactionTemplate_.name, name.trim())
-                .count()
+        if (name.isNotBlank() && name.trim() != state.value.transactionTemplate.templateName) {
+            database
+                .transactionTemplateQueries
+                .checkNameAlreadyInUse(
+                    name.trim()
+                )
+                .executeAsOne()
                 .let { count ->
                     _state.update {
                         it.copy(
@@ -223,10 +224,10 @@ class UpsertTransactionTemplateScreenViewModel(
         if (title.isNotBlank()) validCount += 1
         if (description.isNotBlank()) validCount += 1
         if (state.value.amount > 0) validCount += 1
-        if (state.value.selectedAccount.id > 0) validCount += 1
-        if (state.value.selectedCategory.id > 0) validCount += 1
-        if (state.value.selectedCounterParty.id > 0) validCount += 1
-        if (state.value.selectedMethod.id > 0) validCount += 1
+        if (state.value.selectedAccount.accountId > 0) validCount += 1
+        if (state.value.selectedCategory.categoryId > 0) validCount += 1
+        if (state.value.selectedCounterParty.counterPartyId > 0) validCount += 1
+        if (state.value.selectedMethod.methodId > 0) validCount += 1
         return validCount >= 2
     }
 
@@ -257,27 +258,42 @@ class UpsertTransactionTemplateScreenViewModel(
                 )
             }
 
-            val transactionTemplate = state.value.transactionTemplate
-                .copy(
-                    name = newName,
-                    title = newTitle,
-                    description = newDescription,
-                    amount = state.value.amount,
-                    type = state.value.type
-                )
-
             val selectedAccount = state.value.selectedAccount
             val selectedCategory = state.value.selectedCategory
             val selectedCounterParty = state.value.selectedCounterParty
             val selectedMethod = state.value.selectedMethod
 
-            transactionTemplate.account.targetId = selectedAccount.id
-            transactionTemplate.category.targetId = selectedCategory.id
-            transactionTemplate.counterParty.targetId = selectedCounterParty.id
-            transactionTemplate.method.targetId = selectedMethod.id
-
             try {
-                templateBox.put(transactionTemplate)
+                if (templateId == 0L) {
+                    database
+                        .transactionTemplateQueries
+                        .insert(
+                            templateName = newName,
+                            templateTitle = newTitle,
+                            templateDescription = newDescription,
+                            templateAmount = state.value.amount,
+                            templateType = state.value.type,
+                            templateAccountId = selectedAccount.accountId,
+                            templateCategoryId = selectedCategory.categoryId,
+                            templateCounterPartyId = selectedCounterParty.counterPartyId,
+                            templateMethodId = selectedMethod.methodId
+                        )
+                } else {
+                    database
+                        .transactionTemplateQueries
+                        .update(
+                            templateName = newName,
+                            templateTitle = newTitle,
+                            templateDescription = newDescription,
+                            templateAmount = state.value.amount,
+                            templateType = state.value.type,
+                            templateAccountId = selectedAccount.accountId,
+                            templateCategoryId = selectedCategory.categoryId,
+                            templateCounterPartyId = selectedCounterParty.counterPartyId,
+                            templateMethodId = selectedMethod.methodId,
+                            templateId = templateId
+                        )
+                }
                 _event.send(Event.SaveSuccess)
             } catch (e: Exception) {
                 _event.send(Event.InternalError)
@@ -300,11 +316,12 @@ class UpsertTransactionTemplateScreenViewModel(
                 )
             }
 
-            val deleted = templateBox.remove(templateId)
-
-            if (deleted) {
+            try {
+                database
+                    .transactionTemplateQueries
+                    .delete(templateId)
                 _event.send(Event.DeleteSuccess)
-            } else {
+            } catch (e: Exception) {
                 _event.send(Event.InternalError)
             }
 
@@ -336,7 +353,7 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
-    fun setSelectedAccount(account: Account) {
+    fun setSelectedAccount(account: AccountWithTransactionMetadata) {
         _state.update {
             it.copy(
                 selectedAccount = account
@@ -344,7 +361,7 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
-    fun setSelectedCategory(category: Category) {
+    fun setSelectedCategory(category: CategoryWithTransactionMetadata) {
         _state.update {
             it.copy(
                 selectedCategory = category
@@ -352,7 +369,7 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
-    fun setSelectedCounterParty(counterParty: CounterParty) {
+    fun setSelectedCounterParty(counterParty: CounterPartyWithTransactionMetadata) {
         _state.update {
             it.copy(
                 selectedCounterParty = counterParty
@@ -360,7 +377,7 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
-    fun setSelectedMethod(method: Method) {
+    fun setSelectedMethod(method: MethodWithTransactionMetadata) {
         _state.update {
             it.copy(
                 selectedMethod = method
@@ -393,16 +410,16 @@ class UpsertTransactionTemplateScreenViewModel(
         val selectedMethod = state.value.selectedMethod
         val selectedType = state.value.type
 
-        val nameChanged = transactionTemplate.name != state.value.name
-        val titleChanged = transactionTemplate.title != title
-        val descriptionChanged = transactionTemplate.description != description
-        val amountChanged = transactionTemplate.amount != state.value.amount
-        val accountChanged = transactionTemplate.account.targetId != selectedAccount.id
-        val categoryChanged = transactionTemplate.category.targetId != selectedCategory.id
+        val nameChanged = transactionTemplate.templateName != state.value.name
+        val titleChanged = transactionTemplate.templateTitle != title
+        val descriptionChanged = transactionTemplate.templateDescription != description
+        val amountChanged = transactionTemplate.templateAmount != state.value.amount
+        val accountChanged = transactionTemplate.templateAccountId != selectedAccount.accountId
+        val categoryChanged = transactionTemplate.templateCategoryId != selectedCategory.categoryId
         val counterPartyChanged =
-            transactionTemplate.counterParty.targetId != selectedCounterParty.id
-        val methodChanged = transactionTemplate.method.targetId != selectedMethod.id
-        val typeChanged = transactionTemplate.type.id != selectedType.id
+            transactionTemplate.templateCounterPartyId != selectedCounterParty.counterPartyId
+        val methodChanged = transactionTemplate.templateMethodId != selectedMethod.methodId
+        val typeChanged = transactionTemplate.templateType.id != selectedType.id
 
         return nameChanged || titleChanged || descriptionChanged || amountChanged || categoryChanged || counterPartyChanged || methodChanged || accountChanged || typeChanged
     }

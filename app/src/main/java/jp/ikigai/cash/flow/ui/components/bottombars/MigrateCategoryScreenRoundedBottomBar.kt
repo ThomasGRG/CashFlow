@@ -31,8 +31,8 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.Replace
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
@@ -42,7 +42,7 @@ fun MigrateCategoryScreenRoundedBottomBar(
     enabled: Boolean,
     migrateEnabled: Boolean,
     allSelected: Boolean,
-    sortFlags: Int,
+    sortDirection: SortDirection,
     filterAmount: String,
     selectedCurrencyCount: String,
     counterPartyFilterVisible: Boolean,
@@ -84,7 +84,7 @@ fun MigrateCategoryScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
+                    imageVector = if (sortDirection == SortDirection.DESC) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending
@@ -293,7 +293,7 @@ fun MigrateCategoryScreenRoundedBottomBarPreview() {
             enabled = true,
             migrateEnabled = true,
             allSelected = true,
-            sortFlags = QueryBuilder.DESCENDING,
+            sortDirection = SortDirection.DESC,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
             counterPartyFilterVisible = true,
@@ -318,7 +318,7 @@ fun MigrateCategoryScreenRoundedBottomBarPreview() {
             enabled = false,
             migrateEnabled = false,
             allSelected = false,
-            sortFlags = QueryBuilder.DESCENDING,
+            sortDirection = SortDirection.DESC,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
             counterPartyFilterVisible = true,

@@ -128,7 +128,7 @@ fun UpsertMethodScreen(
     }
 
     val transactionCount by remember(key1 = state.transactionCount) {
-        mutableIntStateOf(state.transactionCount)
+        mutableLongStateOf(state.transactionCount)
     }
 
     val formattedTransactionCount by remember(key1 = state.formattedTransactionCount) {
@@ -136,7 +136,7 @@ fun UpsertMethodScreen(
     }
 
     val methodId by remember(key1 = state.method) {
-        mutableLongStateOf(state.method.id)
+        mutableLongStateOf(state.method.methodId)
     }
 
     var popupType by remember {
@@ -168,7 +168,7 @@ fun UpsertMethodScreen(
     }
 
     BackHandler {
-        if (enabled && state.method.name != state.name) {
+        if (enabled && state.method.methodName != state.name) {
             popupType = PopupType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -265,7 +265,7 @@ fun UpsertMethodScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (enabled && state.method.name != state.name) {
+                        if (enabled && state.method.methodName != state.name) {
                             popupType = PopupType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()

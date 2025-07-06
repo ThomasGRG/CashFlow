@@ -37,14 +37,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import io.objectbox.query.QueryBuilder
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.Transaction
-import jp.ikigai.cash.flow.data.store.entity.Transaction_
+import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.MigrateCategoryScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -59,7 +58,7 @@ import jp.ikigai.cash.flow.ui.components.popups.FilterCurrencyPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterMethodPopup
 import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
 import jp.ikigai.cash.flow.ui.components.popups.MigrateCategoryPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateCategoryScreenViewModel
@@ -77,7 +76,7 @@ import java.util.Locale
 @Composable
 fun MigrateCategoryScreen(
     navigateBack: () -> Unit,
-    migrate: (Category) -> Unit,
+    migrate: (CategoryWithTransactionMetadata) -> Unit,
     toggleSelection: () -> Unit,
     toggleTransactionSelected: (Long) -> Unit,
     toggleLocalDateSelected: (LocalDate) -> Unit,
@@ -89,13 +88,13 @@ fun MigrateCategoryScreen(
     setSelectedAccounts: (Set<Long>) -> Unit,
     setSelectedCounterParties: (Set<Long>, Boolean) -> Unit,
     setSelectedMethods: (Set<Long>) -> Unit,
-    setSelectedTransactionTypes: (List<Int>) -> Unit,
-    setSortFlags: (Int) -> Unit,
+    setSelectedTransactionTypes: (List<TransactionType>) -> Unit,
+    setSortDirection: (SortDirection) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     events: Flow<Event>,
     state: MigrateCategoryScreenState,
     filtersState: TransactionFilters,
-    sortOptionsState: SortOptionsState<Transaction>
+    sortConfigState: SortConfigState
 ) {
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
@@ -276,8 +275,8 @@ fun MigrateCategoryScreen(
         mutableStateOf(filtersState.filterAmountRange)
     }
 
-    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
-        mutableIntStateOf(sortOptionsState.sortFlags)
+    val sortDirection by remember(key1 = sortConfigState.sortDirection) {
+        mutableStateOf(sortConfigState.sortDirection)
     }
 
     val migrateEnabled by remember(
@@ -409,7 +408,7 @@ fun MigrateCategoryScreen(
                 enabled = enabled,
                 migrateEnabled = migrateEnabled,
                 allSelected = allSelected,
-                sortFlags = sortFlags,
+                sortDirection = sortDirection,
                 filterAmount = filterAmountRange,
                 selectedCurrencyCount = selectedCurrencyCount,
                 selectedAccountCount = selectedAccountCount,
@@ -418,10 +417,10 @@ fun MigrateCategoryScreen(
                 selectedMethodCount = selectedMethodCount,
                 selectedTransactionTypeCount = selectedTransactionTypes.size,
                 onSortClick = {
-                    if (sortFlags == QueryBuilder.DESCENDING) {
-                        setSortFlags(0)
+                    if (sortDirection == SortDirection.DESC) {
+                        setSortDirection(SortDirection.ASC)
                     } else {
-                        setSortFlags(QueryBuilder.DESCENDING)
+                        setSortDirection(SortDirection.DESC)
                     }
                 },
                 onFilterByAmountClick = {
@@ -539,12 +538,12 @@ fun MigrateCategoryScreenPreview() {
         setSelectedCounterParties = { _, _ -> },
         setSelectedMethods = {},
         setSelectedTransactionTypes = {},
-        setSortFlags = {},
+        setSortDirection = {},
         filterByAmount = { _, _ -> },
         events = emptyList<Event>().asFlow(),
         state = MigrateCategoryScreenState(),
         filtersState = TransactionFilters(),
-        sortOptionsState = SortOptionsState(sortField = Transaction_.time)
+        sortConfigState = SortConfigState(sortField = "transactionDateTime")
     )
 }
 
@@ -561,7 +560,7 @@ fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
         val filtersState by viewModel.filtersState.collectAsState()
-        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
+        val sortConfigState by viewModel.sortConfigState.collectAsState()
 
         MigrateCategoryScreen(
             navigateBack = {
@@ -580,12 +579,12 @@ fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
-            setSortFlags = viewModel::setSortFlags,
+            setSortDirection = viewModel::setSortDirection,
             filterByAmount = viewModel::setFilterAmounts,
             events = viewModel.event,
             state = state,
             filtersState = filtersState,
-            sortOptionsState = sortOptionsState
+            sortConfigState = sortConfigState
         )
     }
 }

@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,20 +36,17 @@ import androidx.navigation.NavGraphBuilder
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.Property
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.Category_
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.InfoCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
-import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.CategoryScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -64,8 +61,8 @@ fun CategoryScreen(
     editCategory: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
-    sortOptionsState: SortOptionsState<Category>,
-    setSortOptions: (Property<Category>, Int) -> Unit,
+    sortConfigState: SortConfigState,
+    setSortConfig: (String, SortDirection) -> Unit,
     setLocale: (Locale?) -> Unit,
     state: CategoryScreenState
 ) {
@@ -93,7 +90,7 @@ fun CategoryScreen(
     }
 
     val count by remember(key1 = state.count) {
-        mutableIntStateOf(state.count)
+        mutableLongStateOf(state.count)
     }
 
     val countString by remember(key1 = state.countString) {
@@ -116,29 +113,27 @@ fun CategoryScreen(
         mutableStateOf(PopupType.NONE)
     }
 
-    val sortOptions = mapOf(
-        stringResource(id = R.string.name_field_label) to Category_.name,
-        stringResource(id = R.string.frequency_label) to Category_.frequency,
-        stringResource(id = R.string.last_used_label) to Category_.lastUsed
+    val sortFields = mapOf(
+        stringResource(id = R.string.name_field_label) to "categoryName",
+        stringResource(id = R.string.frequency_label) to "transactionCount",
+        stringResource(id = R.string.last_used_label) to "lastUsed"
     )
 
-    val sortField by remember(key1 = sortOptionsState.sortField) {
-        mutableStateOf(sortOptionsState.sortField)
+    val sortField by remember(key1 = sortConfigState.sortField) {
+        mutableStateOf(sortConfigState.sortField)
     }
 
-    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
-        mutableIntStateOf(sortOptionsState.sortFlags)
+    val sortDirection by remember(key1 = sortConfigState.sortDirection) {
+        mutableStateOf(sortConfigState.sortDirection)
     }
 
-    val sortIcon by remember(key1 = sortOptionsState.sortFlags, key2 = state.count) {
+    val sortIcon by remember(key1 = sortConfigState.sortDirection) {
         mutableStateOf(
-            if (state.count > 0) {
-                if (sortOptionsState.sortFlags == QueryBuilder.DESCENDING) {
-                    TablerIcons.SortDescending
-                } else {
-                    TablerIcons.SortAscending
-                }
-            } else null
+            if (sortConfigState.sortDirection == SortDirection.DESC) {
+                TablerIcons.SortDescending
+            } else {
+                TablerIcons.SortAscending
+            }
         )
     }
 
@@ -155,11 +150,11 @@ fun CategoryScreen(
         bottomPopupContent = { hidePopup ->
             when (popupType) {
                 PopupType.SORT -> {
-                    SortOptionsPopup(
+                    SortConfigPopup(
                         selectedField = sortField,
-                        selectedDirection = sortFlags,
-                        options = sortOptions,
-                        sort = setSortOptions,
+                        selectedDirection = sortDirection,
+                        fields = sortFields,
+                        sort = setSortConfig,
                         dismiss = hidePopup
                     )
                 }
@@ -171,7 +166,7 @@ fun CategoryScreen(
             popupType = PopupType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0) {
+        emptyPlaceholderText = if (count == 0L) {
             stringResource(id = R.string.categories_screen_empty_placeholder_label)
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
@@ -269,8 +264,8 @@ fun CategoryScreenPreview() {
         editCategory = {},
         searchState = "",
         setSearchText = {},
-        sortOptionsState = SortOptionsState(sortField = Category_.lastUsed),
-        setSortOptions = { _, _ -> },
+        sortConfigState = SortConfigState(sortField = "frequency"),
+        setSortConfig = { _, _ -> },
         setLocale = {},
         state = CategoryScreenState()
     )
@@ -283,7 +278,7 @@ fun NavGraphBuilder.categoryScreen(navController: NavController) {
         val viewModel: CategoryScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
-        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
+        val sortConfigState by viewModel.sortConfigState.collectAsState()
 
         CategoryScreen(
             navigateBack = {
@@ -301,8 +296,8 @@ fun NavGraphBuilder.categoryScreen(navController: NavController) {
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,
-            sortOptionsState = sortOptionsState,
-            setSortOptions = viewModel::setSortOptions,
+            sortConfigState = sortConfigState,
+            setSortConfig = viewModel::setSortConfig,
             setLocale = viewModel::setLocale,
             state = state
         )

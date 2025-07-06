@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,21 +36,18 @@ import androidx.navigation.NavGraphBuilder
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.Property
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate
-import jp.ikigai.cash.flow.data.store.entity.TransactionTemplate_
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
-import jp.ikigai.cash.flow.ui.components.popups.SortOptionsPopup
-import jp.ikigai.cash.flow.ui.screenStates.common.SortOptionsState
+import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
+import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.utils.animatedComposable
@@ -69,8 +66,8 @@ fun TransactionTemplateScreen(
     editTransactionTemplate: (Long) -> Unit,
     searchState: String,
     setSearchText: (String) -> Unit,
-    sortOptionsState: SortOptionsState<TransactionTemplate>,
-    setSortOptions: (Property<TransactionTemplate>, Int) -> Unit,
+    sortConfigState: SortConfigState,
+    setSortConfig: (String, SortDirection) -> Unit,
     setLocale: (Locale?) -> Unit,
     events: Flow<Event>,
     state: TransactionTemplateScreenState
@@ -120,7 +117,7 @@ fun TransactionTemplateScreen(
     }
 
     val count by remember(key1 = state.count) {
-        mutableIntStateOf(state.count)
+        mutableLongStateOf(state.count)
     }
 
     val countString by remember(key1 = state.countString) {
@@ -139,29 +136,27 @@ fun TransactionTemplateScreen(
         mutableStateOf(PopupType.NONE)
     }
 
-    val sortOptions = mapOf(
-        stringResource(id = R.string.name_field_label) to TransactionTemplate_.name,
-        stringResource(id = R.string.frequency_label) to TransactionTemplate_.frequency,
-        stringResource(id = R.string.last_used_label) to TransactionTemplate_.lastUsed
+    val sortFields = mapOf(
+        stringResource(id = R.string.name_field_label) to "templateName",
+        stringResource(id = R.string.frequency_label) to "transactionCount",
+        stringResource(id = R.string.last_used_label) to "lastUsed"
     )
 
-    val sortField by remember(key1 = sortOptionsState.sortField) {
-        mutableStateOf(sortOptionsState.sortField)
+    val sortField by remember(key1 = sortConfigState.sortField) {
+        mutableStateOf(sortConfigState.sortField)
     }
 
-    val sortFlags by remember(key1 = sortOptionsState.sortFlags) {
-        mutableIntStateOf(sortOptionsState.sortFlags)
+    val sortDirection by remember(key1 = sortConfigState.sortDirection) {
+        mutableStateOf(sortConfigState.sortDirection)
     }
 
-    val sortIcon by remember(key1 = sortOptionsState.sortFlags, key2 = state.count) {
+    val sortIcon by remember(key1 = sortConfigState.sortDirection) {
         mutableStateOf(
-            if (state.count > 0) {
-                if (sortOptionsState.sortFlags == QueryBuilder.DESCENDING) {
-                    TablerIcons.SortDescending
-                } else {
-                    TablerIcons.SortAscending
-                }
-            } else null
+            if (sortConfigState.sortDirection == SortDirection.DESC) {
+                TablerIcons.SortDescending
+            } else {
+                TablerIcons.SortAscending
+            }
         )
     }
 
@@ -186,11 +181,11 @@ fun TransactionTemplateScreen(
         bottomPopupContent = { hidePopup ->
             when (popupType) {
                 PopupType.SORT -> {
-                    SortOptionsPopup(
+                    SortConfigPopup(
                         selectedField = sortField,
-                        selectedDirection = sortFlags,
-                        options = sortOptions,
-                        sort = setSortOptions,
+                        selectedDirection = sortDirection,
+                        fields = sortFields,
+                        sort = setSortConfig,
                         dismiss = hidePopup
                     )
                 }
@@ -202,7 +197,7 @@ fun TransactionTemplateScreen(
             popupType = PopupType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0) {
+        emptyPlaceholderText = if (count == 0L) {
             stringResource(id = R.string.templates_screen_empty_placeholder_label)
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
@@ -300,8 +295,8 @@ fun TransactionTemplateScreenPreview() {
         editTransactionTemplate = {},
         searchState = "",
         setSearchText = {},
-        sortOptionsState = SortOptionsState(sortField = TransactionTemplate_.lastUsed),
-        setSortOptions = { _, _ -> },
+        sortConfigState = SortConfigState(sortField = "transactionCount"),
+        setSortConfig = { _, _ -> },
         setLocale = {},
         events = emptyList<Event>().asFlow(),
         state = TransactionTemplateScreenState()
@@ -315,7 +310,7 @@ fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
         val viewModel: TransactionTemplateScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
-        val sortOptionsState by viewModel.sortOptionsState.collectAsState()
+        val sortConfigState by viewModel.sortConfigState.collectAsState()
 
         TransactionTemplateScreen(
             navigateBack = {
@@ -335,8 +330,8 @@ fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,
-            sortOptionsState = sortOptionsState,
-            setSortOptions = viewModel::setSortOptions,
+            sortConfigState = sortConfigState,
+            setSortConfig = viewModel::setSortConfig,
             setLocale = viewModel::setLocale,
             events = viewModel.event,
             state = state

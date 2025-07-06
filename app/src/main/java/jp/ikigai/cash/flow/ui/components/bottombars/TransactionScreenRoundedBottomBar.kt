@@ -34,13 +34,13 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
-import io.objectbox.query.QueryBuilder
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SortDirection
 
 @Composable
 fun TransactionScreenRoundedBottomBar(
     selectedCurrencySymbol: String,
-    sortFlags: Int,
+    sortDirection: SortDirection,
     filterAmount: String,
     selectedAccountCount: String,
     selectedCategoryCount: String,
@@ -82,7 +82,7 @@ fun TransactionScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortFlags == QueryBuilder.DESCENDING) {
+                    imageVector = if (sortDirection == SortDirection.DESC) {
                         TablerIcons.SortDescending
                     } else {
                         TablerIcons.SortAscending
@@ -271,7 +271,7 @@ fun TransactionScreenRoundedBottomBar(
 fun TransactionScreenRoundedBottomBarPreview() {
     TransactionScreenRoundedBottomBar(
         selectedCurrencySymbol = Currency.getInstance("INR").symbol,
-        sortFlags = QueryBuilder.DESCENDING,
+        sortDirection = SortDirection.DESC,
         filterAmount = "3000+",
         counterPartyFilterVisible = true,
         selectedAccountCount = "1",

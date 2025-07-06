@@ -56,16 +56,16 @@ import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.Typography
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
+import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.data.store.entity.Account
-import jp.ikigai.cash.flow.data.store.entity.Category
-import jp.ikigai.cash.flow.data.store.entity.CounterParty
-import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -104,10 +104,10 @@ fun UpsertTransactionScreen(
     setAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
     setTime: (ZonedDateTime) -> Unit,
-    setSelectedAccount: (Account) -> Unit,
-    setSelectedCategory: (Category) -> Unit,
-    setSelectedCounterParty: (CounterParty) -> Unit,
-    setSelectedMethod: (Method) -> Unit,
+    setSelectedAccount: (AccountWithTransactionMetadata) -> Unit,
+    setSelectedCategory: (CategoryWithTransactionMetadata) -> Unit,
+    setSelectedCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    setSelectedMethod: (MethodWithTransactionMetadata) -> Unit,
     setTransactionType: (TransactionType) -> Unit,
     upsertTransaction: (String, String) -> Unit,
     deleteTransaction: () -> Unit,
@@ -231,7 +231,7 @@ fun UpsertTransactionScreen(
     }
 
     val transactionId by remember(key1 = state.transaction) {
-        mutableLongStateOf(state.transaction.id)
+        mutableLongStateOf(state.transaction.transactionId)
     }
 
     val transaction by remember(key1 = state.transaction) {
@@ -261,7 +261,7 @@ fun UpsertTransactionScreen(
 
     var descriptionFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
         mutableStateOf(
-            TextFieldValue(state.transaction.description)
+            TextFieldValue(state.transaction.transactionDescription)
         )
     }
 
@@ -343,9 +343,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.CATEGORY -> {
                     SelectCategoryPopup(
-                        index = categories.indexOfFirst { it.id == selectedCategory.id }
+                        index = categories.indexOfFirst { it.categoryId == selectedCategory.categoryId }
                             .coerceAtLeast(0),
-                        selectedCategoryId = selectedCategory.id,
+                        selectedCategoryId = selectedCategory.categoryId,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
                         dismiss = hidePopup
@@ -354,9 +354,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.COUNTERPARTY -> {
                     SelectCounterPartyPopup(
-                        index = counterParties.indexOfFirst { it.id == selectedCounterParty.id }
+                        index = counterParties.indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
                             .coerceAtLeast(0),
-                        selectedCounterPartyId = selectedCounterParty.id,
+                        selectedCounterPartyId = selectedCounterParty.counterPartyId,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
                         dismiss = hidePopup
@@ -365,9 +365,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.METHOD -> {
                     SelectMethodPopup(
-                        index = methods.indexOfFirst { it.id == selectedMethod.id }
+                        index = methods.indexOfFirst { it.methodId == selectedMethod.methodId }
                             .coerceAtLeast(0),
-                        selectedMethodId = selectedMethod.id,
+                        selectedMethodId = selectedMethod.methodId,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
                         dismiss = hidePopup
@@ -376,9 +376,9 @@ fun UpsertTransactionScreen(
 
                 PopupType.ACCOUNT -> {
                     SelectAccountPopup(
-                        index = accounts.indexOfFirst { it.id == selectedAccount.id }
+                        index = accounts.indexOfFirst { it.accountId == selectedAccount.accountId }
                             .coerceAtLeast(0),
-                        selectedAccountId = selectedAccount.id,
+                        selectedAccountId = selectedAccount.accountId,
                         setSelectedAccount = setSelectedAccount,
                         accounts = accounts,
                         dismiss = hidePopup
@@ -478,7 +478,7 @@ fun UpsertTransactionScreen(
                     onValueChange = {
                         setTitle(it)
                     },
-                    initialValue = transaction.title,
+                    initialValue = transaction.transactionTitle,
                     enabled = enabled,
                     isFocused = isTitleFieldFocused,
                     label = stringResource(id = R.string.title_field_label),
@@ -545,7 +545,7 @@ fun UpsertTransactionScreen(
                     value = descriptionFieldValue,
                     onValueChange = { descriptionFieldValue = it },
                     hasValueChanged = {
-                        transaction.id > 0 && transaction.description != descriptionFieldValue.text
+                        transaction.transactionId > 0 && transaction.transactionDescription != descriptionFieldValue.text
                     },
                     enabled = enabled,
                     label = stringResource(id = R.string.description_field_label),
@@ -571,7 +571,7 @@ fun UpsertTransactionScreen(
                     onValueChange = setAmount,
                     hasValueChanged = {
                         val newAmount = amount.toDoubleOrNull()
-                        newAmount != null && newAmount > 0 && transaction.id > 0 && newAmount != transaction.amount
+                        newAmount != null && newAmount > 0 && transaction.transactionId > 0 && newAmount != transaction.transactionAmount
                     },
                     enabled = enabled,
                     label = stringResource(id = R.string.amount_label),
@@ -595,7 +595,7 @@ fun UpsertTransactionScreen(
                     value = stringResource(id = transactionType.label),
                     label = stringResource(id = R.string.transaction_type_field_label),
                     hasValueChanged = {
-                        transaction.id > 0 && transactionType != transaction.type
+                        transaction.transactionId > 0 && transactionType != transaction.transactionType
                     },
                     placeHolder = "",
                     leadingIcon = transactionType.icon,
@@ -614,8 +614,8 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = date,
                     hasValueChanged = {
-                        val initialDate = transaction.time.toLocalDate()
-                        transaction.id > 0 && (!dateTime.toLocalDate()
+                        val initialDate = transaction.transactionDateTime.toLocalDate()
+                        transaction.transactionId > 0 && (!dateTime.toLocalDate()
                             .equals(initialDate))
                     },
                     label = stringResource(id = R.string.date_field_label),
@@ -636,8 +636,8 @@ fun UpsertTransactionScreen(
                     enabled = enabled,
                     value = time,
                     hasValueChanged = {
-                        val initialDateTime = transaction.time
-                        transaction.id > 0 && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
+                        val initialDateTime = transaction.transactionDateTime
+                        transaction.transactionId > 0 && (dateTime.hour != initialDateTime.hour || dateTime.minute != initialDateTime.minute)
                     },
                     label = stringResource(id = R.string.time_field_label),
                     placeHolder = "",
@@ -657,9 +657,9 @@ fun UpsertTransactionScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedCategory.name,
+                    value = selectedCategory.categoryName,
                     hasValueChanged = {
-                        transaction.id > 0 && transaction.category.targetId != selectedCategory.id
+                        transaction.transactionId > 0 && transaction.transactionCategoryId != selectedCategory.categoryId
                     },
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
@@ -679,17 +679,17 @@ fun UpsertTransactionScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedCounterParty.name,
+                    value = selectedCounterParty.counterPartyName,
                     hasValueChanged = {
-                        if (transaction.id > 0) {
-                            if (transaction.counterParty.targetId > 0 && selectedCounterParty.id == 0L) {
+                        if (transaction.transactionId > 0) {
+                            if (transaction.transactionCounterPartyId > 0 && selectedCounterParty.counterPartyId == 0L) {
                                 true
-                            } else if (transaction.counterParty.targetId == 0L && selectedCounterParty.id > 0) {
+                            } else if (transaction.transactionCounterPartyId == 0L && selectedCounterParty.counterPartyId > 0) {
                                 true
-                            } else if (transaction.counterParty.targetId == 0L && selectedCounterParty.id == 0L) {
+                            } else if (transaction.transactionCounterPartyId == 0L && selectedCounterParty.counterPartyId == 0L) {
                                 false
                             } else {
-                                transaction.counterParty.targetId != selectedCounterParty.id
+                                transaction.transactionCounterPartyId != selectedCounterParty.counterPartyId
                             }
                         } else {
                             false
@@ -700,7 +700,14 @@ fun UpsertTransactionScreen(
                     leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     trailingIcon = Icons.Filled.Clear,
                     onTrailingIconClick = {
-                        setSelectedCounterParty(CounterParty())
+                        setSelectedCounterParty(
+                            CounterPartyWithTransactionMetadata(
+                                counterPartyId = 0,
+                                counterPartyName = "",
+                                transactionCount = 0,
+                                lastUsed = null
+                            )
+                        )
                     },
                     onClick = {
                         resetOneHandMode()
@@ -715,9 +722,9 @@ fun UpsertTransactionScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = selectedMethod.name,
+                    value = selectedMethod.methodName,
                     hasValueChanged = {
-                        transaction.id > 0 && transaction.method.targetId != selectedMethod.id
+                        transaction.transactionId > 0 && transaction.transactionMethodId != selectedMethod.methodId
                     },
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
@@ -737,9 +744,9 @@ fun UpsertTransactionScreen(
             ) {
                 CustomOutlinedButton(
                     enabled = enabled,
-                    value = if (selectedAccount.id > 0) "${selectedAccount.name} - ${selectedAccount.formattedBalance}" else "",
+                    value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
                     hasValueChanged = {
-                        transaction.id > 0 && transaction.account.targetId != selectedAccount.id
+                        transaction.transactionId > 0 && transaction.transactionAccountId != selectedAccount.accountId
                     },
                     label = stringResource(id = R.string.account_field_label),
                     placeHolder = stringResource(id = R.string.select_account_placeholder_label),

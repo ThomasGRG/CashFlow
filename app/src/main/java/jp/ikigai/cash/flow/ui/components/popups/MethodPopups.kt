@@ -41,9 +41,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.store.entity.Method
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
@@ -54,8 +54,8 @@ import jp.ikigai.cash.flow.utils.getHighlightedString
 fun SelectMethodPopup(
     index: Int,
     selectedMethodId: Long,
-    setSelectedMethod: (Method) -> Unit,
-    methods: List<Method>,
+    setSelectedMethod: (MethodWithTransactionMetadata) -> Unit,
+    methods: List<MethodWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -78,7 +78,7 @@ fun SelectMethodPopup(
     val methodList by remember {
         mutableStateOf(
             methods.map { method ->
-                Pair(method, getHighlightedString(method.name, ""))
+                Pair(method, getHighlightedString(method.methodName, ""))
             }
         )
     }
@@ -99,13 +99,13 @@ fun SelectMethodPopup(
         } else {
             methodList
                 .filter {
-                    it.first.name.contains(
+                    it.first.methodName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map {
-                    Pair(it.first, getHighlightedString(it.first.name, searchText))
+                    Pair(it.first, getHighlightedString(it.first.methodName, searchText))
                 }
         }
     }
@@ -134,10 +134,10 @@ fun SelectMethodPopup(
         ) {
             items(
                 items = filteredMethodList,
-                key = { (method, _) -> "method-${method.id}" }
+                key = { (method, _) -> "method-${method.methodId}" }
             ) { (method, annotatedName) ->
                 SelectableCard(
-                    checked = { method.id == selectedMethodId },
+                    checked = { method.methodId == selectedMethodId },
                     label = annotatedName,
                     icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
@@ -210,8 +210,8 @@ fun SelectMethodPopup(
 @Composable
 fun MigrateMethodPopup(
     migrateCount: Int,
-    selectMethod: (Method) -> Unit,
-    methods: List<Method>,
+    selectMethod: (MethodWithTransactionMetadata) -> Unit,
+    methods: List<MethodWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -234,7 +234,7 @@ fun MigrateMethodPopup(
     val methodList by remember {
         mutableStateOf(
             methods.map { method ->
-                Pair(method, getHighlightedString(method.name, ""))
+                Pair(method, getHighlightedString(method.methodName, ""))
             }
         )
     }
@@ -249,19 +249,26 @@ fun MigrateMethodPopup(
         } else {
             methodList
                 .filter { (method, _) ->
-                    method.name.contains(
+                    method.methodName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map { (method, _) ->
-                    Pair(method, getHighlightedString(method.name, searchText))
+                    Pair(method, getHighlightedString(method.methodName, searchText))
                 }
         }
     }
 
     var selectedMethod by remember {
-        mutableStateOf(Method())
+        mutableStateOf(
+            MethodWithTransactionMetadata(
+                methodId = 0,
+                methodName = "",
+                transactionCount = 0,
+                lastUsed = null
+            )
+        )
     }
 
     Column(
@@ -287,10 +294,10 @@ fun MigrateMethodPopup(
         ) {
             items(
                 items = filteredMethodList,
-                key = { (method, _) -> "method-${method.id}" }
+                key = { (method, _) -> "method-${method.methodId}" }
             ) { (method, annotatedName) ->
                 SelectableCard(
-                    checked = { method.id == selectedMethod.id },
+                    checked = { method.methodId == selectedMethod.methodId },
                     label = annotatedName,
                     icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
@@ -367,7 +374,7 @@ fun MigrateMethodPopup(
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedMethod.id > 0,
+                enabled = selectedMethod.methodId > 0,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -384,7 +391,7 @@ fun MigrateMethodPopup(
 @Composable
 fun FilterMethodPopup(
     selectedMethodsMap: Map<Long, Boolean>,
-    methods: List<Method>,
+    methods: List<MethodWithTransactionMetadata>,
     filter: (Map<Long, Boolean>) -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -408,7 +415,7 @@ fun FilterMethodPopup(
     val methodList by remember {
         mutableStateOf(
             methods.map { method ->
-                Pair(method, getHighlightedString(method.name, ""))
+                Pair(method, getHighlightedString(method.methodName, ""))
             }
         )
     }
@@ -423,13 +430,13 @@ fun FilterMethodPopup(
         } else {
             methodList
                 .filter { (method, _) ->
-                    method.name.contains(
+                    method.methodName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
                 .map { (method, _) ->
-                    Pair(method, getHighlightedString(method.name, searchText))
+                    Pair(method, getHighlightedString(method.methodName, searchText))
                 }
         }
     }
@@ -447,7 +454,7 @@ fun FilterMethodPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredMethodList
-                .map { (method, _) -> selectedMethods[method.id] }
+                .map { (method, _) -> selectedMethods[method.methodId] }
                 .filter { it == true }
                 .size
         }
@@ -480,17 +487,17 @@ fun FilterMethodPopup(
         ) {
             items(
                 items = filteredMethodList,
-                key = { (method, _) -> "method-${method.id}" }
+                key = { (method, _) -> "method-${method.methodId}" }
             ) { (method, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedMethods.getOrDefault(method.id, true)
+                        selectedMethods.getOrDefault(method.methodId, true)
                     },
                     label = annotatedName,
                     icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedMethods[method.id] = !selectedMethods[method.id]!!
+                        selectedMethods[method.methodId] = !selectedMethods[method.methodId]!!
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -540,7 +547,7 @@ fun FilterMethodPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredMethodList.size
                     filteredMethodList
-                        .map { (method, _) -> method.id }
+                        .map { (method, _) -> method.methodId }
                         .forEach { id -> selectedMethods[id] = !allSelected }
                 },
                 modifier = Modifier
@@ -595,7 +602,7 @@ fun FilterMethodPopup(
 @Composable
 fun FilterMethodPopup(
     selectedMethodIds: Set<Long>,
-    methods: List<Method>,
+    methods: List<MethodWithTransactionMetadata>,
     filter: (Set<Long>) -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -619,7 +626,7 @@ fun FilterMethodPopup(
     val methodList by remember {
         mutableStateOf(
             methods.map { method ->
-                Pair(method, getHighlightedString(method.name, ""))
+                Pair(method, getHighlightedString(method.methodName, ""))
             }
         )
     }
@@ -634,13 +641,13 @@ fun FilterMethodPopup(
         } else {
             methodList
                 .filter { (method, _) ->
-                    method.name.contains(
+                    method.methodName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
                 .map { (method, _) ->
-                    Pair(method, getHighlightedString(method.name, searchText))
+                    Pair(method, getHighlightedString(method.methodName, searchText))
                 }
         }
     }
@@ -658,7 +665,7 @@ fun FilterMethodPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredMethodList
-                .map { (method, _) -> selectedMethods[method.id] }
+                .map { (method, _) -> selectedMethods[method.methodId] }
                 .filter { it == true }
                 .size
         }
@@ -666,7 +673,7 @@ fun FilterMethodPopup(
 
     LaunchedEffect(Unit) {
         methods.forEach { method ->
-            selectedMethods[method.id] = selectedMethodIds.contains(method.id)
+            selectedMethods[method.methodId] = selectedMethodIds.contains(method.methodId)
         }
     }
 
@@ -693,17 +700,17 @@ fun FilterMethodPopup(
         ) {
             items(
                 items = filteredMethodList,
-                key = { (method, _) -> "method-${method.id}" }
+                key = { (method, _) -> "method-${method.methodId}" }
             ) { (method, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedMethods.getOrDefault(method.id, true)
+                        selectedMethods.getOrDefault(method.methodId, true)
                     },
                     label = annotatedName,
                     icon = Constants.DEFAULT_METHOD_ICON,
                     onClick = { newCheckState ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedMethods[method.id] = newCheckState
+                        selectedMethods[method.methodId] = newCheckState
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -753,7 +760,7 @@ fun FilterMethodPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredMethodList.size
                     filteredMethodList
-                        .map { (method, _) -> method.id }
+                        .map { (method, _) -> method.methodId }
                         .forEach { id -> selectedMethods[id] = !allSelected }
                 },
                 modifier = Modifier

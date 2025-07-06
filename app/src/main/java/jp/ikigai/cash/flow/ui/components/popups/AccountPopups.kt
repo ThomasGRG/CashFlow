@@ -42,9 +42,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.store.entity.Account
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
@@ -55,8 +55,8 @@ import jp.ikigai.cash.flow.utils.getHighlightedString
 fun SelectAccountPopup(
     index: Int,
     selectedAccountId: Long,
-    setSelectedAccount: (Account) -> Unit,
-    accounts: List<Account>,
+    setSelectedAccount: (AccountWithTransactionMetadata) -> Unit,
+    accounts: List<AccountWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -79,7 +79,7 @@ fun SelectAccountPopup(
     val accountList by remember {
         mutableStateOf(
             accounts.map { account ->
-                val highlightedString = getHighlightedString(account.name, "")
+                val highlightedString = getHighlightedString(account.accountName, "")
                 Pair(
                     account,
                     highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
@@ -104,13 +104,13 @@ fun SelectAccountPopup(
         } else {
             accountList
                 .filter {
-                    it.first.name.contains(
+                    it.first.accountName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map {
-                    val highlightedString = getHighlightedString(it.first.name, searchText)
+                    val highlightedString = getHighlightedString(it.first.accountName, searchText)
                     Pair(
                         it.first,
                         highlightedString.plus(AnnotatedString(" - ${it.first.formattedBalance}"))
@@ -143,10 +143,10 @@ fun SelectAccountPopup(
         ) {
             items(
                 items = filteredAccountList,
-                key = { (account, _) -> "account-${account.id}" }
+                key = { (account, _) -> "account-${account.accountId}" }
             ) { (account, annotatedName) ->
                 SelectableCard(
-                    checked = { account.id == selectedAccountId },
+                    checked = { account.accountId == selectedAccountId },
                     label = annotatedName,
                     icon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
@@ -219,7 +219,7 @@ fun SelectAccountPopup(
 @Composable
 fun FilterAccountPopup(
     selectedAccountsMap: Map<Long, Boolean>,
-    accounts: List<Account>,
+    accounts: List<AccountWithTransactionMetadata>,
     filter: (Map<Long, Boolean>) -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -243,7 +243,7 @@ fun FilterAccountPopup(
     val accountList by remember {
         mutableStateOf(
             accounts.map { account ->
-                val highlightedString = getHighlightedString(account.name, "")
+                val highlightedString = getHighlightedString(account.accountName, "")
                 Pair(
                     account,
                     highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
@@ -262,13 +262,13 @@ fun FilterAccountPopup(
         } else {
             accountList
                 .filter { (account, _) ->
-                    account.name.contains(
+                    account.accountName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
                 .map { (account, _) ->
-                    val highlightedString = getHighlightedString(account.name, searchText)
+                    val highlightedString = getHighlightedString(account.accountName, searchText)
                     Pair(
                         account,
                         highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}")),
@@ -290,7 +290,7 @@ fun FilterAccountPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredAccountList
-                .map { (account, _) -> selectedAccounts[account.id] }
+                .map { (account, _) -> selectedAccounts[account.accountId] }
                 .filter { it == true }
                 .size
         }
@@ -323,17 +323,17 @@ fun FilterAccountPopup(
         ) {
             items(
                 items = filteredAccountList,
-                key = { (account, _) -> "account-${account.id}" }
+                key = { (account, _) -> "account-${account.accountId}" }
             ) { (account, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedAccounts.getOrDefault(account.id, true)
+                        selectedAccounts.getOrDefault(account.accountId, true)
                     },
                     label = annotatedName,
                     icon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedAccounts[account.id] = !selectedAccounts[account.id]!!
+                        selectedAccounts[account.accountId] = !selectedAccounts[account.accountId]!!
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -383,7 +383,7 @@ fun FilterAccountPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredAccountList.size
                     filteredAccountList
-                        .map { (account, _) -> account.id }
+                        .map { (account, _) -> account.accountId }
                         .forEach { id -> selectedAccounts[id] = !allSelected }
                 },
                 modifier = Modifier
@@ -438,7 +438,7 @@ fun FilterAccountPopup(
 @Composable
 fun FilterAccountPopup(
     selectedAccountIds: Set<Long>,
-    accounts: List<Account>,
+    accounts: List<AccountWithTransactionMetadata>,
     filter: (Set<Long>) -> Unit,
     dismiss: () -> Unit,
 ) {
@@ -462,7 +462,7 @@ fun FilterAccountPopup(
     val accountList by remember {
         mutableStateOf(
             accounts.map { account ->
-                val highlightedString = getHighlightedString(account.name, "")
+                val highlightedString = getHighlightedString(account.accountName, "")
                 Pair(
                     account,
                     highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}"))
@@ -481,13 +481,13 @@ fun FilterAccountPopup(
         } else {
             accountList
                 .filter { (account, _) ->
-                    account.name.contains(
+                    account.accountName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
                 .map { (account, _) ->
-                    val highlightedString = getHighlightedString(account.name, searchText)
+                    val highlightedString = getHighlightedString(account.accountName, searchText)
                     Pair(
                         account,
                         highlightedString.plus(AnnotatedString(" - ${account.formattedBalance}")),
@@ -509,7 +509,7 @@ fun FilterAccountPopup(
     val filteredListSelectedCount by remember {
         derivedStateOf {
             filteredAccountList
-                .map { (account, _) -> selectedAccounts[account.id] }
+                .map { (account, _) -> selectedAccounts[account.accountId] }
                 .filter { it == true }
                 .size
         }
@@ -517,7 +517,7 @@ fun FilterAccountPopup(
 
     LaunchedEffect(Unit) {
         accounts.forEach { account ->
-            selectedAccounts[account.id] = selectedAccountIds.contains(account.id)
+            selectedAccounts[account.accountId] = selectedAccountIds.contains(account.accountId)
         }
     }
 
@@ -544,17 +544,17 @@ fun FilterAccountPopup(
         ) {
             items(
                 items = filteredAccountList,
-                key = { (account, _) -> "account-${account.id}" }
+                key = { (account, _) -> "account-${account.accountId}" }
             ) { (account, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedAccounts.getOrDefault(account.id, true)
+                        selectedAccounts.getOrDefault(account.accountId, true)
                     },
                     label = annotatedName,
                     icon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = { newCheckState ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedAccounts[account.id] = newCheckState
+                        selectedAccounts[account.accountId] = newCheckState
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -604,7 +604,7 @@ fun FilterAccountPopup(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     val allSelected = filteredListSelectedCount == filteredAccountList.size
                     filteredAccountList
-                        .map { (account, _) -> account.id }
+                        .map { (account, _) -> account.accountId }
                         .forEach { id -> selectedAccounts[id] = !allSelected }
                 },
                 modifier = Modifier

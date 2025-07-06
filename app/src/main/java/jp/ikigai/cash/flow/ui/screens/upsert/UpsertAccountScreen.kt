@@ -128,7 +128,7 @@ fun UpsertAccountScreen(
     }
 
     val accountId by remember(key1 = state.account) {
-        mutableLongStateOf(state.account.id)
+        mutableLongStateOf(state.account.accountId)
     }
 
     val account by remember(key1 = state.account) {
@@ -321,7 +321,7 @@ fun UpsertAccountScreen(
                 enabled = enabled,
                 value = name,
                 onValueChange = setName,
-                hasValueChanged = { account.id > 0 && account.name != name },
+                hasValueChanged = { account.accountId > 0 && account.accountName != name },
                 modifier = Modifier.focusRequester(focusRequester = focusRequester),
                 label = stringResource(id = R.string.name_field_label),
                 placeHolder = stringResource(id = R.string.account_name_placeholder_label),
@@ -346,7 +346,7 @@ fun UpsertAccountScreen(
                 },
                 hasValueChanged = {
                     val newBalance = balanceFieldValue.text.toDoubleOrNull()
-                    account.id > 0 && newBalance != null && newBalance != account.balance
+                    account.accountId > 0 && newBalance != null && newBalance != account.balance
                 },
                 enabled = enabled,
                 label = stringResource(id = R.string.balance_field_label),
@@ -369,7 +369,7 @@ fun UpsertAccountScreen(
                 enabled = enabled,
                 value = selectedCurrency,
                 hasValueChanged = {
-                    account.id > 0 && account.currency != selectedCurrency
+                    account.accountId > 0 && account.currency != selectedCurrency
                 },
                 label = stringResource(id = R.string.currency_label),
                 placeHolder = "",

@@ -5,7 +5,7 @@ import java.util.Locale
 
 data class AccountScreenState(
     val accounts: List<AccountListingDTO> = emptyList(),
-    val count: Int = 0,
+    val count: Long = 0,
     val countString: String = "",
     val loading: Boolean = true,
     val locale: Locale? = null

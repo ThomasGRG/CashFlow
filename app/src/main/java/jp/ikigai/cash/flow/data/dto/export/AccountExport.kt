@@ -4,7 +4,5 @@ data class AccountExport(
     val id: Long,
     val name: String,
     val currency: String,
-    val balance: Double,
-    val frequency: Int,
-    val lastUsed: Long,
+    val balance: Double
 )
