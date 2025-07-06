@@ -2,7 +2,6 @@ package jp.ikigai.cash.flow
 
 import android.app.Application
 import jp.ikigai.cash.flow.data.Database
-import jp.ikigai.cash.flow.data.store.DataStore
 import jp.ikigai.cash.flow.koin.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -13,7 +12,6 @@ class App: Application() {
     override fun onCreate() {
         super.onCreate()
         Database.init(this)
-        DataStore.init(this)
         startKoin {
             androidLogger()
             androidContext(this@App)
