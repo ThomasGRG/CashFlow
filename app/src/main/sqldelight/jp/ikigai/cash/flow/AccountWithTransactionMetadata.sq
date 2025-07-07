@@ -18,7 +18,8 @@ getAllAccountsSortedByTransactionCountDesc:
 SELECT * FROM AccountWithTransactionMetadata ORDER BY transactionCount DESC;
 
 getAccountsGroupedByCurrency:
-SELECT * FROM AccountWithTransactionMetadata WHERE accountName LIKE '%' || :searchText || '%' COLLATE NOCASE GROUP BY currency ORDER BY
+SELECT * FROM AccountWithTransactionMetadata WHERE accountName LIKE '%' || :searchText || '%' COLLATE NOCASE
+ORDER BY AccountWithTransactionMetadata.currency ASC,
 CASE WHEN :sortDirection = 'ASC' THEN AccountWithTransactionMetadata.balance END ASC,
 CASE WHEN :sortDirection = 'DESC' THEN AccountWithTransactionMetadata.balance END DESC;
 
