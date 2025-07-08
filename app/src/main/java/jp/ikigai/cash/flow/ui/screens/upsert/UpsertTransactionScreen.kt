@@ -48,6 +48,7 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Alarm
@@ -83,7 +84,6 @@ import jp.ikigai.cash.flow.ui.components.popups.TimePickerPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -789,8 +789,8 @@ fun UpsertTransactionScreenPreview() {
 }
 
 fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
-    animatedComposable(
-        Routes.UpsertTransaction.route,
+    composable(
+        route = Routes.UpsertTransaction.route,
         arguments = listOf(
             navArgument("id") {
                 defaultValue = 0L

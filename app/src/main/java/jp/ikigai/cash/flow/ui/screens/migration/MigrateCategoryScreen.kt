@@ -36,6 +36,7 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.R
@@ -62,7 +63,6 @@ import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.migration.MigrateCategoryScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -548,7 +548,7 @@ fun MigrateCategoryScreenPreview() {
 }
 
 fun NavGraphBuilder.migrateCategoryScreen(navController: NavController) {
-    animatedComposable(
+    composable(
         route = Routes.MigrateCategory.route,
         arguments = listOf(
             navArgument("id") {

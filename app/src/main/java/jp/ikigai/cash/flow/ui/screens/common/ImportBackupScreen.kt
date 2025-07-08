@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
@@ -85,7 +86,6 @@ import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFilt
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -1169,7 +1169,7 @@ fun ImportBackupScreenPreview() {
 }
 
 fun NavGraphBuilder.importBackupScreen(navController: NavController) {
-    animatedComposable(
+    composable(
         route = Routes.ImportBackup.route
     ) {
         val viewModel: ImportBackupScreenViewModel = koinViewModel()

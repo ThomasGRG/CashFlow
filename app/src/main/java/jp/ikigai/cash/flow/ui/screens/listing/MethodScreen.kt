@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
@@ -49,7 +50,6 @@ import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.MethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.MethodScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -269,8 +269,8 @@ fun MethodScreenPreview() {
 }
 
 fun NavGraphBuilder.methodScreen(navController: NavController) {
-    animatedComposable(
-        Routes.Methods.route
+    composable(
+        route = Routes.Methods.route
     ) {
         val viewModel: MethodScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()

@@ -21,11 +21,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.utils.animatedComposable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +107,7 @@ fun SettingsScreenPreview() {
 }
 
 fun NavGraphBuilder.settingsScreen(navController: NavController) {
-    animatedComposable(
+    composable(
         route = Routes.Settings.route
     ) {
         SettingsScreen(

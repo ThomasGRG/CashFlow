@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
@@ -50,7 +51,6 @@ import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -304,8 +304,8 @@ fun TransactionTemplateScreenPreview() {
 }
 
 fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
-    animatedComposable(
-        Routes.Templates.route
+    composable(
+        route = Routes.Templates.route
     ) {
         val viewModel: TransactionTemplateScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()

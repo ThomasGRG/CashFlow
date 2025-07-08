@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -64,7 +65,6 @@ import jp.ikigai.cash.flow.ui.screenStates.common.ExportTransactionsScreenState
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.viewmodels.common.ExportTransactionsScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import jp.ikigai.cash.flow.utils.getExportFileName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -595,7 +595,7 @@ fun ExportTransactionsScreenPreview() {
 }
 
 fun NavGraphBuilder.exportTransactionsScreen(navController: NavController) {
-    animatedComposable(
+    composable(
         route = Routes.ExportTransactions.route
     ) {
         val viewModel: ExportTransactionsScreenViewModel = koinViewModel()

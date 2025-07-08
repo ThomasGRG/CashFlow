@@ -1,10 +1,8 @@
 package jp.ikigai.cash.flow.ui.screens.listing
 
 import android.icu.util.Currency
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -54,7 +52,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.PopupType
@@ -669,31 +666,7 @@ fun TransactionsScreenPreview() {
 
 fun NavGraphBuilder.transactionsScreen(navController: NavController) {
     composable(
-        Routes.Transactions.route,
-        enterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.TWEEN_DURATION)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                animationSpec = tween(Constants.TWEEN_DURATION)
-            )
-        },
-        popEnterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.TWEEN_DURATION)
-            )
-        },
-        popExitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                animationSpec = tween(Constants.TWEEN_DURATION)
-            )
-        }
+        Routes.Transactions.route
     ) {
         val uriHandler = LocalUriHandler.current
         val viewModel: TransactionsScreenViewModel = koinViewModel()

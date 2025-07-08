@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
@@ -49,7 +50,6 @@ import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.CategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.CategoryScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -272,8 +272,8 @@ fun CategoryScreenPreview() {
 }
 
 fun NavGraphBuilder.categoryScreen(navController: NavController) {
-    animatedComposable(
-        Routes.Categories.route,
+    composable(
+        route = Routes.Categories.route
     ) {
         val viewModel: CategoryScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()

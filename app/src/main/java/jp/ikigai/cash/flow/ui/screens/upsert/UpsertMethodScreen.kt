@@ -46,6 +46,7 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.DeviceFloppy
@@ -63,7 +64,6 @@ import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
 import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -366,8 +366,8 @@ fun UpsertMethodScreenPreview() {
 }
 
 fun NavGraphBuilder.upsertMethodScreen(navController: NavController) {
-    animatedComposable(
-        Routes.UpsertMethod.route,
+    composable(
+        route = Routes.UpsertMethod.route,
         arguments = listOf(
             navArgument("id") {
                 defaultValue = 0L

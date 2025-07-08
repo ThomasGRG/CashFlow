@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CashBanknote
@@ -63,7 +64,6 @@ import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertAccountScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
-import jp.ikigai.cash.flow.utils.animatedComposable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -399,8 +399,8 @@ fun UpsertSourceScreenPreview() {
 }
 
 fun NavGraphBuilder.upsertAccountScreen(navController: NavController) {
-    animatedComposable(
-        Routes.UpsertAccount.route,
+    composable(
+        route = Routes.UpsertAccount.route,
         arguments = listOf(
             navArgument("id") {
                 defaultValue = 0L
