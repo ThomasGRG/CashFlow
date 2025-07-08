@@ -6,7 +6,7 @@ data class TemplateExport(
     val title: String,
     val description: String,
     val amount: Double,
-    val typeId: Int,
+    val type: String,
     val accountId: Long,
     val categoryId: Long,
     val counterPartyId: Long,

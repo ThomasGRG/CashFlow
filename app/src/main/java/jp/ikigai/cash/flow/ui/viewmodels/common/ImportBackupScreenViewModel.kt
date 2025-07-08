@@ -176,8 +176,7 @@ class ImportBackupScreenViewModel(
                                 tempTransactionTemplateTitle = template.title,
                                 tempTransactionTemplateDescription = template.description,
                                 tempTransactionTemplateAmount = template.amount,
-                                tempTransactionTemplateType = TransactionType.entries
-                                    .find { it.id == template.typeId } ?: TransactionType.DEBIT,
+                                tempTransactionTemplateType = TransactionType.valueOf(template.type),
                                 tempTransactionTemplateAccountId = template.accountId,
                                 tempTransactionTemplateCategoryId = template.categoryId,
                                 tempTransactionTemplateCounterPartyId = template.counterPartyId,
@@ -191,14 +190,13 @@ class ImportBackupScreenViewModel(
                                 tempTransactionDescription = transaction.description,
                                 tempTransactionAmount = transaction.amount,
                                 tempTransactionCurrency = transaction.currency,
-                                tempTransactionType = TransactionType.entries
-                                    .find { it.id == transaction.typeId } ?: TransactionType.DEBIT,
+                                tempTransactionType = TransactionType.valueOf(transaction.type),
                                 tempTransactionDateTime = transaction.time.toZonedDateTime(),
                                 tempTransactionAccountId = transaction.accountId,
                                 tempTransactionCategoryId = transaction.categoryId,
                                 tempTransactionCounterPartyId = transaction.counterPartyId,
                                 tempTransactionMethodId = transaction.methodId,
-                                tempTransactionTemplateId = transaction.templateId ?: 0L
+                                tempTransactionTemplateId = transaction.templateId
                             )
                         }
                     }
