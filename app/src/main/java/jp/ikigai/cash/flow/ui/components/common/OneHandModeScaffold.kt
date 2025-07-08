@@ -34,6 +34,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -148,7 +149,9 @@ fun OneHandModeScaffold(
                     visible = showToastBar,
                     enter = fadeIn() + scaleIn(initialScale = 0.6f),
                     exit = fadeOut() + scaleOut(targetScale = 0.6f),
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .align(Alignment.BottomCenter)
                 ) {
                     ToastBar(
                         message = toastBarText,

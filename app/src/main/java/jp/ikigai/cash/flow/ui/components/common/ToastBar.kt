@@ -1,21 +1,16 @@
 package jp.ikigai.cash.flow.ui.components.common
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun ToastBar(
@@ -24,20 +19,13 @@ fun ToastBar(
 ) {
     val haptics = LocalHapticFeedback.current
 
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth(0.95f)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    Snackbar(
+        content = {
             Text(
-                text = message,
-                modifier = Modifier.fillMaxWidth(0.9f)
+                text = message
             )
+        },
+        dismissAction = {
             IconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -50,8 +38,11 @@ fun ToastBar(
                     )
                 },
             )
-        }
-    }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        dismissActionContentColor = MaterialTheme.colorScheme.onSurface
+    )
 }
 
 @Preview
