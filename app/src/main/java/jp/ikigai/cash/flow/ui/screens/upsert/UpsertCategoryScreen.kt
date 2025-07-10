@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +30,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,21 +59,22 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ChooseIconSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ResetIconSheet
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.ChooseIconPopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.ResetIconPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertCategoryScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCategoryScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -92,6 +95,9 @@ fun UpsertCategoryScreen(
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val locale by remember(key1 = configuration) {
         mutableStateOf(
@@ -148,8 +154,8 @@ fun UpsertCategoryScreen(
         mutableLongStateOf(state.category.categoryId)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -178,7 +184,7 @@ fun UpsertCategoryScreen(
 
     BackHandler {
         if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
-            popupType = PopupType.CONFIRM_NAVIGATION
+            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
         }
@@ -196,57 +202,78 @@ fun UpsertCategoryScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationSheet(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = hidePopup,
-                        navigate = navigateBack
-                    )
-                }
-
-                PopupType.RESET_ICON -> {
-                    ResetIconPopup(
-                        dismiss = hidePopup,
-                        reset = {
-                            setIcon(Constants.DEFAULT_CATEGORY_ICON)
+                        navigate = navigateBack,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
                         }
                     )
                 }
 
-                PopupType.WARN_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.RESET_ICON -> {
+                    ResetIconSheet(
+                        reset = {
+                            setIcon(Constants.DEFAULT_CATEGORY_ICON)
+                        },
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
+                    )
+                }
+
+                SheetType.WARN_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.category_transactions_deletion_warning_label),
                         delete = deleteCategory,
                         migrate = {
                             migrateTransactions(categoryId)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.CONFIRM_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.delete_category_confirmation_label),
-                        dismiss = hidePopup,
-                        delete = deleteCategory
+                        delete = deleteCategory,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.SELECT_ICON -> {
-                    ChooseIconPopup(
-                        dismiss = hidePopup,
-                        setIcon = setIcon
+                SheetType.SELECT_ICON -> {
+                    ChooseIconSheet(
+                        setIcon = setIcon,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -291,7 +318,7 @@ fun UpsertCategoryScreen(
                     navigateBack = {
                         keyboardController?.hide()
                         if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
-                            popupType = PopupType.CONFIRM_NAVIGATION
+                            sheetType = SheetType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
                         }
@@ -318,10 +345,10 @@ fun UpsertCategoryScreen(
                     } else null,
                     extraButtonAction = if (categoryId > 0 && enabled) {
                         {
-                            popupType = if (transactionCount > 0) {
-                                PopupType.WARN_DELETE
+                            sheetType = if (transactionCount > 0) {
+                                SheetType.WARN_DELETE
                             } else {
-                                PopupType.CONFIRM_DELETE
+                                SheetType.CONFIRM_DELETE
                             }
                         }
                     } else null
@@ -350,12 +377,12 @@ fun UpsertCategoryScreen(
                         onClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = PopupType.SELECT_ICON
+                            sheetType = SheetType.SELECT_ICON
                         },
                         onLongClick = {
                             resetOneHandMode()
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            popupType = PopupType.RESET_ICON
+                            sheetType = SheetType.RESET_ICON
                         }
                     ),
                 tint = if (enabled) {

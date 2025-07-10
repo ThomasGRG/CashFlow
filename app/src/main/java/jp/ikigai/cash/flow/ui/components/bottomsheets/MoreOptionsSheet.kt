@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,11 +11,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -33,7 +30,7 @@ import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.R
 
 @Composable
-fun MoreOptionsPopup(
+fun MoreOptionsSheet(
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
@@ -47,9 +44,7 @@ fun MoreOptionsPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(top = 20.dp, start = 5.dp, end = 5.dp, bottom = 20.dp),
+            .padding(start = 5.dp, end = 5.dp, bottom = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -230,8 +225,8 @@ fun MoreOptionsPopup(
 
 @Preview
 @Composable
-fun MoreOptionsPopupPreview() {
-    MoreOptionsPopup(
+fun MoreOptionsSheetPreview() {
+    MoreOptionsSheet(
         navigateToCategoriesScreen = {},
         navigateToCounterPartyScreen = {},
         navigateToMethodsScreen = {},

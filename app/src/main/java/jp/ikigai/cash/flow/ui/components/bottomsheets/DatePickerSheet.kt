@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,50 +9,53 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.utils.toEpochMilli
+import jp.ikigai.cash.flow.utils.toZonedDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimePickerPopup(
-    time: ZonedDateTime,
-    updateTime: (ZonedDateTime) -> Unit,
+fun DatePickerSheet(
+    date: ZonedDateTime,
+    selectableDates: SelectableDates = DatePickerDefaults.AllDates,
+    setDate: (ZonedDateTime) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
-    val timePickerState = rememberTimePickerState(
-        is24Hour = false,
-        initialHour = time.hour,
-        initialMinute = time.minute
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = date.toEpochMilli(),
+        selectableDates = selectableDates
     )
 
     Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(top = 24.dp, bottom = 15.dp),
+        modifier = Modifier.padding(bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        TimePicker(
-            state = timePickerState
+        DatePicker(
+            state = datePickerState,
+            colors = DatePickerDefaults.colors(
+                containerColor = BottomSheetDefaults.ContainerColor
+            )
         )
         Row(
             modifier = Modifier
@@ -79,7 +81,7 @@ fun TimePickerPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    updateTime(time.withHour(timePickerState.hour).withMinute(timePickerState.minute))
+                    setDate(datePickerState.selectedDateMillis!!.toZonedDateTime())
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -92,8 +94,9 @@ fun TimePickerPopup(
     }
 }
 
-@Preview
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showSystemUi = true, showBackground = true)
 @Composable
-fun TimePickerPopupPreview() {
-    TimePickerPopup(time = ZonedDateTime.now(), updateTime = {}, dismiss = {})
+fun DatePickerSheetPreview() {
+    DatePickerSheet(date = ZonedDateTime.now(ZoneId.of("UTC")), setDate = {}, dismiss = {})
 }

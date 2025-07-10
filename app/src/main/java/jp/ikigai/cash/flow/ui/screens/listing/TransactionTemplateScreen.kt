@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,14 +42,14 @@ import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
-import jp.ikigai.cash.flow.ui.components.popups.SortConfigPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionTemplateScreenViewModel
@@ -55,6 +57,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -74,6 +77,9 @@ fun TransactionTemplateScreen(
 ) {
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val focusRequester = remember {
         FocusRequester()
@@ -132,8 +138,8 @@ fun TransactionTemplateScreen(
         mutableStateOf(state.loading)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     val sortFields = mapOf(
@@ -177,24 +183,25 @@ fun TransactionTemplateScreen(
         onDismissToastBar = {
             showToastBar = false
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.SORT -> {
-                    SortConfigPopup(
-                        selectedField = sortField,
-                        selectedDirection = sortDirection,
-                        fields = sortFields,
-                        sort = setSortConfig,
-                        dismiss = hidePopup
-                    )
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            SortConfigSheet(
+                selectedField = sortField,
+                selectedDirection = sortDirection,
+                fields = sortFields,
+                sort = setSortConfig,
+                dismiss = {
+                    scope
+                        .launch { sheetState.hide() }
+                        .invokeOnCompletion {
+                            sheetType = SheetType.NONE
+                        }
                 }
-
-                else -> {}
-            }
+            )
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
         emptyPlaceholderText = if (count == 0L) {
@@ -224,7 +231,7 @@ fun TransactionTemplateScreen(
                 navigateBack = navigateBack,
                 sortClick = if (count > 0) {
                     {
-                        popupType = PopupType.SORT
+                        sheetType = SheetType.SORT
                     }
                 } else null,
                 sortIcon = sortIcon,

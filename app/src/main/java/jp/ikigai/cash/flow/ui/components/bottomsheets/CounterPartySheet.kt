@@ -1,6 +1,6 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -16,13 +16,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -33,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -41,7 +43,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
+import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
@@ -51,11 +53,11 @@ import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
 
 @Composable
-fun SelectCategoryPopup(
+fun SelectCounterPartySheet(
     index: Int,
-    selectedCategoryId: Long,
-    setSelectedCategory: (CategoryWithTransactionMetadata) -> Unit,
-    categories: List<CategoryWithTransactionMetadata>,
+    selectedCounterPartyId: Long,
+    setSelectedCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -75,16 +77,16 @@ fun SelectCategoryPopup(
         mutableStateOf("")
     }
 
-    val categoryList by remember {
+    val counterPartyList by remember {
         mutableStateOf(
-            categories.map { category ->
-                Pair(category, getHighlightedString(category.categoryName, ""))
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
 
-    var filteredCategoryList by remember {
-        mutableStateOf(categoryList)
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
     }
 
     val listState = rememberLazyListState()
@@ -94,27 +96,25 @@ fun SelectCategoryPopup(
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredCategoryList = if (searchText.isBlank()) {
-            categoryList
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
         } else {
-            categoryList
+            counterPartyList
                 .filter {
-                    it.first.categoryName.contains(
+                    it.first.counterPartyName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
                 .map {
-                    Pair(it.first, getHighlightedString(it.first.categoryName, searchText))
+                    Pair(it.first, getHighlightedString(it.first.counterPartyName, searchText))
                 }
         }
     }
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -133,24 +133,24 @@ fun SelectCategoryPopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredCategoryList,
-                key = { (category, _) -> "category-${category.categoryId}" }
-            ) { (category, annotatedName) ->
+                items = filteredCounterPartyList,
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
+            ) { (counterParty, annotatedName) ->
                 SelectableCard(
-                    checked = { category.categoryId == selectedCategoryId },
+                    checked = { counterParty.counterPartyId == selectedCounterPartyId },
                     label = annotatedName,
-                    icon = category.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         dismiss()
-                        setSelectedCategory(category)
+                        setSelectedCounterParty(counterParty)
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -208,10 +208,10 @@ fun SelectCategoryPopup(
 }
 
 @Composable
-fun MigrateCategoryPopup(
+fun MigrateCounterPartySheet(
     migrateCount: Int,
-    selectCategory: (CategoryWithTransactionMetadata) -> Unit,
-    categories: List<CategoryWithTransactionMetadata>,
+    selectCounterParty: (CounterPartyWithTransactionMetadata) -> Unit,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -231,41 +231,43 @@ fun MigrateCategoryPopup(
         mutableStateOf("")
     }
 
-    val categoryList by remember {
+    val counterPartyList by remember {
         mutableStateOf(
-            categories.map { category ->
-                Pair(category, getHighlightedString(category.categoryName, ""))
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
 
-    var filteredCategoryList by remember {
-        mutableStateOf(categoryList)
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredCategoryList = if (searchText.isBlank()) {
-            categoryList
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
         } else {
-            categoryList
-                .filter { (category, _) ->
-                    category.categoryName.contains(
+            counterPartyList
+                .filter { (counterParty, _) ->
+                    counterParty.counterPartyName.contains(
                         searchText,
                         ignoreCase = true
                     )
                 }
-                .map { (category, _) ->
-                    Pair(category, getHighlightedString(category.categoryName, searchText))
+                .map { (counterParty, _) ->
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
                 }
         }
     }
 
-    var selectedCategory by remember {
+    var selectedCounterParty by remember {
         mutableStateOf(
-            CategoryWithTransactionMetadata(
-                categoryId = 0,
-                categoryName = "",
-                icon = Constants.DEFAULT_CATEGORY_ICON,
+            CounterPartyWithTransactionMetadata(
+                counterPartyId = 0,
+                counterPartyName = "",
                 transactionCount = 0,
                 lastUsed = null
             )
@@ -274,9 +276,7 @@ fun MigrateCategoryPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -294,23 +294,23 @@ fun MigrateCategoryPopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredCategoryList,
-                key = { (category, _) -> "category-${category.categoryId}" }
-            ) { (category, annotatedName) ->
+                items = filteredCounterPartyList,
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
+            ) { (counterParty, annotatedName) ->
                 SelectableCard(
-                    checked = { category.categoryId == selectedCategory.categoryId },
+                    checked = { counterParty.counterPartyId == selectedCounterParty.counterPartyId },
                     label = annotatedName,
-                    icon = category.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategory = category
+                        selectedCounterParty = counterParty
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -369,13 +369,13 @@ fun MigrateCategoryPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    selectCategory(selectedCategory)
+                    selectCounterParty(selectedCounterParty)
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCategory.categoryId > 0,
+                enabled = selectedCounterParty.counterPartyId > 0,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -390,10 +390,11 @@ fun MigrateCategoryPopup(
 }
 
 @Composable
-fun FilterCategoryPopup(
-    selectedCategoryMap: Map<Long, Boolean>,
-    categories: List<CategoryWithTransactionMetadata>,
-    filter: (Map<Long, Boolean>) -> Unit,
+fun FilterCounterPartySheet(
+    selectedCounterPartyMap: Map<Long, Boolean>,
+    includeNoCounterPartyTransactions: Boolean,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
+    filter: (Map<Long, Boolean>, Boolean) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -413,63 +414,68 @@ fun FilterCategoryPopup(
         mutableStateOf("")
     }
 
-    val categoryList by remember {
+    var includeTransactionsWithNoCounterParty by remember(includeNoCounterPartyTransactions) {
+        mutableStateOf(includeNoCounterPartyTransactions)
+    }
+
+    val counterPartyList by remember {
         mutableStateOf(
-            categories.map { category ->
-                Pair(category, getHighlightedString(category.categoryName, ""))
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
 
-    var filteredCategoryList by remember {
-        mutableStateOf(categoryList)
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredCategoryList = if (searchText.isBlank()) {
-            categoryList
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
         } else {
-            categoryList
-                .filter { (category, _) ->
-                    category.categoryName.contains(
+            counterPartyList
+                .filter { (counterParty, _) ->
+                    counterParty.counterPartyName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map { (category, _) ->
-                    Pair(category, getHighlightedString(category.categoryName, searchText))
+                .map { (counterParty, _) ->
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
                 }
         }
     }
 
-    val selectedCategories = remember {
+    val selectedCounterParties = remember {
         mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
         derivedStateOf {
-            selectedCategories.filter { it.value }.size
+            selectedCounterParties.filter { it.value }.size
         }
     }
 
     val filteredListSelectedCount by remember {
         derivedStateOf {
-            filteredCategoryList
-                .map { (category, _) -> selectedCategories[category.categoryId] }
+            filteredCounterPartyList
+                .map { (counterParty, _) -> selectedCounterParties[counterParty.counterPartyId] }
                 .filter { it == true }
                 .size
         }
     }
 
     LaunchedEffect(Unit) {
-        selectedCategories.putAll(selectedCategoryMap)
+        selectedCounterParties.putAll(selectedCounterPartyMap)
     }
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(20.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -487,26 +493,26 @@ fun FilterCategoryPopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredCategoryList,
-                key = { (category, _) -> "category-${category.categoryId}" }
-            ) { (category, annotatedName) ->
+                items = filteredCounterPartyList,
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
+            ) { (counterParty, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedCategories.getOrDefault(category.categoryId, true)
+                        selectedCounterParties.getOrDefault(counterParty.counterPartyId, true)
                     },
                     label = annotatedName,
-                    icon = category.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategories[category.categoryId] =
-                            !selectedCategories[category.categoryId]!!
+                        selectedCounterParties[counterParty.counterPartyId] =
+                            !selectedCounterParties[counterParty.counterPartyId]!!
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -527,6 +533,36 @@ fun FilterCategoryPopup(
         }
         Row(
             modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    includeTransactionsWithNoCounterParty = !includeTransactionsWithNoCounterParty
+                }
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.no_counter_party_label),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .weight(1f, fill = false)
+            )
+            Switch(
+                checked = includeTransactionsWithNoCounterParty,
+                onCheckedChange = null,
+                thumbContent = {
+                    Icon(
+                        imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                    )
+                }
+            )
+        }
+        Row(
+            modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -542,17 +578,15 @@ fun FilterCategoryPopup(
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = stringResource(id = R.string.cancel_button_label)
-                )
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             FilledTonalIconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val allSelected = filteredListSelectedCount == filteredCategoryList.size
-                    filteredCategoryList
-                        .map { (category, _) -> category.categoryId }
-                        .forEach { id -> selectedCategories[id] = !allSelected }
+                    val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
+                    filteredCounterPartyList
+                        .map { (counterParty, _) -> counterParty.counterPartyId }
+                        .forEach { id -> selectedCounterParties[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -560,7 +594,7 @@ fun FilterCategoryPopup(
                 shape = RoundedCornerShape(35)
             ) {
                 AnimatedToggleSelectIcon(
-                    deselectVisible = filteredListSelectedCount == filteredCategoryList.size
+                    deselectVisible = filteredListSelectedCount == filteredCounterPartyList.size
                 )
             }
             FilledTonalIconButton(
@@ -583,13 +617,13 @@ fun FilterCategoryPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    filter(selectedCategories)
+                    filter(selectedCounterParties, includeTransactionsWithNoCounterParty)
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCount > 0,
+                enabled = selectedCount > 0 || includeTransactionsWithNoCounterParty,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
@@ -604,10 +638,11 @@ fun FilterCategoryPopup(
 }
 
 @Composable
-fun FilterCategoryPopup(
-    selectedCategoryIds: Set<Long>,
-    categories: List<CategoryWithTransactionMetadata>,
-    filter: (Set<Long>) -> Unit,
+fun FilterCounterPartySheet(
+    selectedCounterPartyIds: Set<Long>,
+    includeNoCounterPartyTransactions: Boolean,
+    counterParties: List<CounterPartyWithTransactionMetadata>,
+    filter: (Set<Long>, Boolean) -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
@@ -627,66 +662,72 @@ fun FilterCategoryPopup(
         mutableStateOf("")
     }
 
-    val categoryList by remember {
+    val counterPartyList by remember {
         mutableStateOf(
-            categories.map { category ->
-                Pair(category, getHighlightedString(category.categoryName, ""))
+            counterParties.map { counterParty ->
+                Pair(counterParty, getHighlightedString(counterParty.counterPartyName, ""))
             }
         )
     }
 
-    var filteredCategoryList by remember {
-        mutableStateOf(categoryList)
+    var filteredCounterPartyList by remember {
+        mutableStateOf(counterPartyList)
     }
 
     LaunchedEffect(key1 = searchText) {
-        filteredCategoryList = if (searchText.isBlank()) {
-            categoryList
+        filteredCounterPartyList = if (searchText.isBlank()) {
+            counterPartyList
         } else {
-            categoryList
-                .filter { (category, _) ->
-                    category.categoryName.contains(
+            counterPartyList
+                .filter { (counterParty, _) ->
+                    counterParty.counterPartyName.contains(
                         searchText.trim(),
                         ignoreCase = true
                     )
                 }
-                .map { (category, _) ->
-                    Pair(category, getHighlightedString(category.categoryName, searchText))
+                .map { (counterParty, _) ->
+                    Pair(
+                        counterParty,
+                        getHighlightedString(counterParty.counterPartyName, searchText)
+                    )
                 }
         }
     }
 
-    val selectedCategories = remember {
+    var includeTransactionsWithNoCounterParty by remember(includeNoCounterPartyTransactions) {
+        mutableStateOf(includeNoCounterPartyTransactions)
+    }
+
+    val selectedCounterParties = remember {
         mutableStateMapOf<Long, Boolean>()
     }
 
     val selectedCount by remember {
         derivedStateOf {
-            selectedCategories.filter { it.value }.size
+            selectedCounterParties.filter { it.value }.size
         }
     }
 
     val filteredListSelectedCount by remember {
         derivedStateOf {
-            filteredCategoryList
-                .map { (category, _) -> selectedCategories[category.categoryId] }
+            filteredCounterPartyList
+                .map { (counterParty, _) -> selectedCounterParties[counterParty.counterPartyId] }
                 .filter { it == true }
                 .size
         }
     }
 
     LaunchedEffect(Unit) {
-        categories.forEach { category ->
-            selectedCategories[category.categoryId] =
-                selectedCategoryIds.contains(category.categoryId)
-        }
+        selectedCounterParties.putAll(
+            counterParties.associate { counterParty ->
+                counterParty.counterPartyId to selectedCounterPartyIds.contains(counterParty.counterPartyId)
+            }
+        )
     }
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(20.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -704,25 +745,25 @@ fun FilterCategoryPopup(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
-                items = filteredCategoryList,
-                key = { (category, _) -> "category-${category.categoryId}" }
-            ) { (category, annotatedName) ->
+                items = filteredCounterPartyList,
+                key = { (counterParty, _) -> "counterParty-${counterParty.counterPartyId}" }
+            ) { (counterParty, annotatedName) ->
                 MultiSelectCard(
                     checked = {
-                        selectedCategories.getOrDefault(category.categoryId, true)
+                        selectedCounterParties.getOrDefault(counterParty.counterPartyId, true)
                     },
                     label = annotatedName,
-                    icon = category.icon,
+                    icon = Constants.DEFAULT_COUNTERPARTY_ICON,
                     onClick = { newCheckState ->
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedCategories[category.categoryId] = newCheckState
+                        selectedCounterParties[counterParty.counterPartyId] = newCheckState
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCategoryList.isEmpty()) {
+            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
@@ -743,6 +784,36 @@ fun FilterCategoryPopup(
         }
         Row(
             modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    includeTransactionsWithNoCounterParty = !includeTransactionsWithNoCounterParty
+                }
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.no_counter_party_label),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .weight(1f, fill = false)
+            )
+            Switch(
+                checked = includeTransactionsWithNoCounterParty,
+                onCheckedChange = null,
+                thumbContent = {
+                    Icon(
+                        imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                    )
+                }
+            )
+        }
+        Row(
+            modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -758,17 +829,15 @@ fun FilterCategoryPopup(
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = stringResource(id = R.string.cancel_button_label)
-                )
+                Text(text = stringResource(id = R.string.cancel_button_label))
             }
             FilledTonalIconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val allSelected = filteredListSelectedCount == filteredCategoryList.size
-                    filteredCategoryList
-                        .map { (category, _) -> category.categoryId }
-                        .forEach { id -> selectedCategories[id] = !allSelected }
+                    val allSelected = filteredListSelectedCount == filteredCounterPartyList.size
+                    filteredCounterPartyList
+                        .map { (counterParty, _) -> counterParty.counterPartyId }
+                        .forEach { id -> selectedCounterParties[id] = !allSelected }
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
@@ -776,7 +845,7 @@ fun FilterCategoryPopup(
                 shape = RoundedCornerShape(35)
             ) {
                 AnimatedToggleSelectIcon(
-                    deselectVisible = filteredListSelectedCount == filteredCategoryList.size
+                    deselectVisible = filteredListSelectedCount == filteredCounterPartyList.size
                 )
             }
             FilledTonalIconButton(
@@ -799,7 +868,8 @@ fun FilterCategoryPopup(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     filter(
-                        selectedCategories.filter { entry -> entry.value }.keys
+                        selectedCounterParties.filter { entry -> entry.value }.keys,
+                        includeTransactionsWithNoCounterParty
                     )
                     dismiss()
                 },
@@ -807,7 +877,7 @@ fun FilterCategoryPopup(
                     .padding(start = 4.dp, end = 4.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(35),
-                enabled = selectedCount > 0,
+                enabled = selectedCount > 0 || includeTransactionsWithNoCounterParty,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(

@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -36,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 
 @Composable
-fun ExportPopup(
+fun ExportSheet(
     selectedTransactionCount: Int,
     dismiss: () -> Unit,
     export: (Boolean) -> Unit,
@@ -49,9 +46,7 @@ fun ExportPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -129,8 +124,8 @@ fun ExportPopup(
 
 @Preview
 @Composable
-fun ExportPopupPreview() {
-    ExportPopup(
+fun ExportSheetPreview() {
+    ExportSheet(
         selectedTransactionCount = 11,
         dismiss = {},
         export = {}

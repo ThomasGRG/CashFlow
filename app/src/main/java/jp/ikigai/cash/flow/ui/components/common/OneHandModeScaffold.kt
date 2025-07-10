@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +14,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,9 +47,10 @@ fun OneHandModeScaffold(
     showToastBar: Boolean,
     toastBarText: String,
     onDismissToastBar: () -> Unit,
-    showBottomPopup: Boolean = false,
-    bottomPopupContent: @Composable (() -> Unit) -> Unit = {},
-    onDismissPopup: () -> Unit = {},
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    showBottomSheet: Boolean = false,
+    bottomSheetContent: @Composable () -> Unit = {},
+    onDismissSheet: () -> Unit = {},
     showEmptyPlaceholder: Boolean,
     emptyPlaceholderText: String,
     topBar: @Composable () -> Unit = {},
@@ -91,84 +94,79 @@ fun OneHandModeScaffold(
         }
     }
 
-    LaunchedEffect(key1 = showBottomPopup) {
+    LaunchedEffect(key1 = showBottomSheet) {
         keyboardController?.hide()
     }
 
-    Box(
+    Scaffold(
         modifier = Modifier
             .animateContentSize()
             .navigationBarsPadding()
             .imePadding()
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = topBar,
-            bottomBar = bottomBar
-        ) { contentPadding ->
-            PullToRefreshBox(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
-                isRefreshing = isPulledDown,
-                onRefresh = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    isPulledDown = true
-                },
-                state = oneHandModeState,
-                indicator = {
-                    OneHandModeIndicator(
-                        state = oneHandModeState,
-                        isRefreshing = isPulledDown,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-                }
+            .fillMaxSize(),
+        topBar = topBar,
+        bottomBar = bottomBar
+    ) { contentPadding ->
+        PullToRefreshBox(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+            isRefreshing = isPulledDown,
+            onRefresh = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                isPulledDown = true
+            },
+            state = oneHandModeState,
+            indicator = {
+                OneHandModeIndicator(
+                    state = oneHandModeState,
+                    isRefreshing = isPulledDown,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+        ) {
+            content(
+                oneHandModeBoxHeight
             ) {
-                content(
-                    oneHandModeBoxHeight
-                ) {
-                    oneHandModeBoxHeight = 0.0
-                    isPulledDown = false
-                }
-                if (loading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.TopCenter)
-                    )
-                } else {
-                    if (showEmptyPlaceholder) {
-                        Text(
-                            text = emptyPlaceholderText, modifier = Modifier.align(
-                                Alignment.Center
-                            )
-                        )
-                    }
-                }
-                AnimatedVisibility(
-                    visible = showToastBar,
-                    enter = fadeIn() + scaleIn(initialScale = 0.6f),
-                    exit = fadeOut() + scaleOut(targetScale = 0.6f),
+                oneHandModeBoxHeight = 0.0
+                isPulledDown = false
+            }
+            if (loading) {
+                LinearProgressIndicator(
                     modifier = Modifier
-                        .padding(horizontal = 10.dp)
-                        .align(Alignment.BottomCenter)
-                ) {
-                    ToastBar(
-                        message = toastBarText,
-                        onDismiss = onDismissToastBar
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                )
+            } else {
+                if (showEmptyPlaceholder) {
+                    Text(
+                        text = emptyPlaceholderText, modifier = Modifier.align(
+                            Alignment.Center
+                        )
                     )
                 }
             }
-        }
-        AnimatedVisibility(
-            visible = showBottomPopup,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            BottomPopup(
-                dismiss = onDismissPopup
+            AnimatedVisibility(
+                visible = showToastBar,
+                enter = fadeIn() + scaleIn(initialScale = 0.6f),
+                exit = fadeOut() + scaleOut(targetScale = 0.6f),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .align(Alignment.BottomCenter)
             ) {
-                bottomPopupContent(it)
+                ToastBar(
+                    message = toastBarText,
+                    onDismiss = onDismissToastBar
+                )
+            }
+        }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = onDismissSheet,
+                sheetState = sheetState,
+//                sheetGesturesEnabled: Boolean = false, TODO()
+            ) {
+                bottomSheetContent()
             }
         }
     }

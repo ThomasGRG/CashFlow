@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,19 +57,20 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -87,6 +90,9 @@ fun UpsertMethodScreen(
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val locale by remember(key1 = configuration) {
         mutableStateOf(
@@ -139,8 +145,8 @@ fun UpsertMethodScreen(
         mutableLongStateOf(state.method.methodId)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -169,7 +175,7 @@ fun UpsertMethodScreen(
 
     BackHandler {
         if (enabled && state.method.methodName != state.name) {
-            popupType = PopupType.CONFIRM_NAVIGATION
+            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
         }
@@ -187,41 +193,54 @@ fun UpsertMethodScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationSheet(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = hidePopup,
-                        navigate = navigateBack
+                        navigate = navigateBack,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.WARN_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.WARN_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.method_transactions_deletion_warning_label),
                         delete = deleteMethod,
                         migrate = {
                             migrateTransactions(methodId)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.CONFIRM_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.delete_method_confirmation_label),
-                        dismiss = hidePopup,
-                        delete = deleteMethod
+                        delete = deleteMethod,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -266,7 +285,7 @@ fun UpsertMethodScreen(
                     navigateBack = {
                         keyboardController?.hide()
                         if (enabled && state.method.methodName != state.name) {
-                            popupType = PopupType.CONFIRM_NAVIGATION
+                            sheetType = SheetType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()
                         }
@@ -293,10 +312,10 @@ fun UpsertMethodScreen(
                     } else null,
                     extraButtonAction = if (methodId > 0 && enabled) {
                         {
-                            popupType = if (transactionCount > 0) {
-                                PopupType.WARN_DELETE
+                            sheetType = if (transactionCount > 0) {
+                                SheetType.WARN_DELETE
                             } else {
-                                PopupType.CONFIRM_DELETE
+                                SheetType.CONFIRM_DELETE
                             }
                         }
                     } else null

@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,11 +12,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -29,7 +26,7 @@ import compose.icons.tablericons.AlertTriangle
 import jp.ikigai.cash.flow.R
 
 @Composable
-fun ConfirmDeletePopup(
+fun ConfirmDeleteSheet(
     message: String,
     dismiss: () -> Unit,
     delete: () -> Unit,
@@ -38,9 +35,7 @@ fun ConfirmDeletePopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -94,7 +89,7 @@ fun ConfirmDeletePopup(
 }
 
 @Composable
-fun ConfirmDeletePopup(
+fun ConfirmDeleteSheet(
     message: String,
     delete: () -> Unit,
     migrate: () -> Unit,
@@ -104,9 +99,7 @@ fun ConfirmDeletePopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -174,16 +167,16 @@ fun ConfirmDeletePopup(
 
 @Preview
 @Composable
-fun ConfirmDeletePopupPreview() {
+fun ConfirmDeleteSheetPreview() {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        ConfirmDeletePopup(
+        ConfirmDeleteSheet(
             message = stringResource(id = R.string.delete_transaction_confirmation_label),
             dismiss = {},
             delete = {}
         )
-        ConfirmDeletePopup(
+        ConfirmDeleteSheet(
             message = stringResource(id = R.string.category_transactions_deletion_warning_label),
             dismiss = {},
             delete = {},

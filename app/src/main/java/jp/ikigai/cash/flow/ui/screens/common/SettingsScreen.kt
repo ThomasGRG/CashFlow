@@ -43,9 +43,9 @@ fun SettingsScreen(
         showToastBar = false,
         toastBarText = "",
         onDismissToastBar = {},
-        showBottomPopup = false,
-        bottomPopupContent = {},
-        onDismissPopup = {},
+        showBottomSheet = false,
+        bottomSheetContent = {},
+        onDismissSheet = {},
         topBar = {
             TopAppBar(
                 title = {

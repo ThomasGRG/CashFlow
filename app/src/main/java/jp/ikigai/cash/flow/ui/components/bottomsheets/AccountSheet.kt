@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -33,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -52,7 +49,7 @@ import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 import jp.ikigai.cash.flow.utils.getHighlightedString
 
 @Composable
-fun SelectAccountPopup(
+fun SelectAccountSheet(
     index: Int,
     selectedAccountId: Long,
     setSelectedAccount: (AccountWithTransactionMetadata) -> Unit,
@@ -121,9 +118,7 @@ fun SelectAccountPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -217,7 +212,7 @@ fun SelectAccountPopup(
 }
 
 @Composable
-fun FilterAccountPopup(
+fun FilterAccountSheet(
     selectedAccountsMap: Map<Long, Boolean>,
     accounts: List<AccountWithTransactionMetadata>,
     filter: (Map<Long, Boolean>) -> Unit,
@@ -302,9 +297,7 @@ fun FilterAccountPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(20.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -436,7 +429,7 @@ fun FilterAccountPopup(
 }
 
 @Composable
-fun FilterAccountPopup(
+fun FilterAccountSheet(
     selectedAccountIds: Set<Long>,
     accounts: List<AccountWithTransactionMetadata>,
     filter: (Set<Long>) -> Unit,
@@ -523,9 +516,7 @@ fun FilterAccountPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(20.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

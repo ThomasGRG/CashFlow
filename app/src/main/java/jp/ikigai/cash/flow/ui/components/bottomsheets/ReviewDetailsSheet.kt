@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,11 +11,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -25,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 
 @Composable
-fun ReviewDetailsPopup(
+fun ReviewDetailsSheet(
     selectedTempCategoryCount: String,
     selectedTempCounterPartyCount: String,
     selectedTempMethodCount: String,
@@ -39,9 +36,7 @@ fun ReviewDetailsPopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -187,8 +182,8 @@ fun ReviewDetailsPopup(
 
 @Preview
 @Composable
-fun ReviewDetailsPopupPreview() {
-    ReviewDetailsPopup(
+fun ReviewDetailsSheetPreview() {
+    ReviewDetailsSheet(
         selectedTempCategoryCount = "3",
         selectedTempCounterPartyCount = "2",
         selectedTempMethodCount = "5",

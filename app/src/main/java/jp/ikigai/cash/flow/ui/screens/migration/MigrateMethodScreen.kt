@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,23 +44,23 @@ import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.MigrateMethodScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.MigrateMethodSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
-import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterAccountPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterCategoryPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterCounterPartyPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterCurrencyPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
-import jp.ikigai.cash.flow.ui.components.popups.MigrateMethodPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.TransactionFilters
 import jp.ikigai.cash.flow.ui.screenStates.migration.MigrateMethodScreenState
@@ -67,6 +69,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -99,6 +102,9 @@ fun MigrateMethodScreen(
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val focusRequester = remember {
         FocusRequester()
@@ -144,8 +150,8 @@ fun MigrateMethodScreen(
         }
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     val searchText by remember(key1 = searchState) {
@@ -300,89 +306,122 @@ fun MigrateMethodScreen(
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.DATE_RANGE -> {
-                    DateRangePickerPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.DATE_RANGE -> {
+                    DateRangePickerSheet(
                         startDate = startDate,
                         endDate = endDate,
                         filter = setStartDateAndEndDate,
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CURRENCY -> {
-                    FilterCurrencyPopup(
+                SheetType.CURRENCY -> {
+                    FilterCurrencySheet(
                         selectedCurrencyCodes = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.AMOUNT -> {
-                    AmountFilterPopup(
+                SheetType.AMOUNT -> {
+                    AmountFilterSheet(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CATEGORY -> {
-                    FilterCategoryPopup(
+                SheetType.CATEGORY -> {
+                    FilterCategorySheet(
                         selectedCategoryIds = selectedCategories,
                         categories = categories,
                         filter = setSelectedCategories,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.COUNTERPARTY -> {
-                    FilterCounterPartyPopup(
+                SheetType.COUNTERPARTY -> {
+                    FilterCounterPartySheet(
                         selectedCounterPartyIds = selectedCounterParties,
                         includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
                         counterParties = counterParties,
                         filter = setSelectedCounterParties,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.METHOD -> {
-                    MigrateMethodPopup(
+                SheetType.METHOD -> {
+                    MigrateMethodSheet(
                         migrateCount = selectedTransactionCount,
                         selectMethod = migrate,
                         methods = methods,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.ACCOUNT -> {
-                    FilterAccountPopup(
+                SheetType.ACCOUNT -> {
+                    FilterAccountSheet(
                         selectedAccountIds = selectedAccounts,
                         accounts = accounts,
                         filter = setSelectedAccounts,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.TYPE -> {
-                    FilterTransactionTypePopup(
+                SheetType.TYPE -> {
+                    FilterTransactionTypeSheet(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         topBar = {
             TopAppBar(
@@ -424,28 +463,28 @@ fun MigrateMethodScreen(
                     }
                 },
                 onFilterByAmountClick = {
-                    popupType = PopupType.AMOUNT
+                    sheetType = SheetType.AMOUNT
                 },
                 onFilterByTypeClick = {
-                    popupType = PopupType.TYPE
+                    sheetType = SheetType.TYPE
                 },
                 onFilterByCurrencyClick = {
-                    popupType = PopupType.CURRENCY
+                    sheetType = SheetType.CURRENCY
                 },
                 onFilterByCategoryClick = {
-                    popupType = PopupType.CATEGORY
+                    sheetType = SheetType.CATEGORY
                 },
                 onFilterByCounterPartyClick = {
-                    popupType = PopupType.COUNTERPARTY
+                    sheetType = SheetType.COUNTERPARTY
                 },
                 onFilterBySourceClick = {
-                    popupType = PopupType.ACCOUNT
+                    sheetType = SheetType.ACCOUNT
                 },
                 onCalendarClick = {
-                    popupType = PopupType.DATE_RANGE
+                    sheetType = SheetType.DATE_RANGE
                 },
                 migrateTransactions = {
-                    popupType = PopupType.METHOD
+                    sheetType = SheetType.METHOD
                 },
                 onSearchClick = {
                     if (isFocused) {

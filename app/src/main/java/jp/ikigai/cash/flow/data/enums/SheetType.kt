@@ -1,6 +1,6 @@
 package jp.ikigai.cash.flow.data.enums
 
-enum class PopupType {
+enum class SheetType {
     NONE,
     SORT,
     DATE,

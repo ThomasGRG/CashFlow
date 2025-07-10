@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +22,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,20 +56,20 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectAccountPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectTransactionTypePopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -75,6 +77,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -99,6 +102,9 @@ fun UpsertTransactionTemplateScreen(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val configuration = LocalConfiguration.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val locale by remember(key1 = configuration) {
         mutableStateOf(
@@ -221,13 +227,13 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(state.type)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     BackHandler {
         if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
-            popupType = PopupType.CONFIRM_NAVIGATION
+            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
         }
@@ -245,84 +251,113 @@ fun UpsertTransactionTemplateScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationSheet(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = hidePopup,
-                        navigate = navigateBack
+                        navigate = navigateBack,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CATEGORY -> {
-                    SelectCategoryPopup(
+                SheetType.CATEGORY -> {
+                    SelectCategorySheet(
                         index = categories.indexOfFirst { it.categoryId == selectedCategory.categoryId }
                             .coerceAtLeast(0),
                         selectedCategoryId = selectedCategory.categoryId,
                         setSelectedCategory = setSelectedCategory,
                         categories = categories,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.COUNTERPARTY -> {
-                    SelectCounterPartyPopup(
+                SheetType.COUNTERPARTY -> {
+                    SelectCounterPartySheet(
                         index = counterParties.indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
                             .coerceAtLeast(0),
                         selectedCounterPartyId = selectedCounterParty.counterPartyId,
                         setSelectedCounterParty = setSelectedCounterParty,
                         counterParties = counterParties,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.METHOD -> {
-                    SelectMethodPopup(
+                SheetType.METHOD -> {
+                    SelectMethodSheet(
                         index = methods.indexOfFirst { it.methodId == selectedMethod.methodId }
                             .coerceAtLeast(0),
                         selectedMethodId = selectedMethod.methodId,
                         setSelectedMethod = setSelectedMethod,
                         methods = methods,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.ACCOUNT -> {
-                    SelectAccountPopup(
+                SheetType.ACCOUNT -> {
+                    SelectAccountSheet(
                         index = accounts.indexOfFirst { it.accountId == selectedAccount.accountId }
                             .coerceAtLeast(0),
                         selectedAccountId = selectedAccount.accountId,
                         setSelectedAccount = setSelectedAccount,
                         accounts = accounts,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.TYPE -> {
-                    SelectTransactionTypePopup(
+                SheetType.TYPE -> {
+                    SelectTransactionTypeSheet(
                         selectedTransactionType = transactionType,
                         setSelectedTransactionType = { selectedTransactionType ->
                             setTransactionType(selectedTransactionType)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.CONFIRM_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.delete_template_confirmation_label),
                         delete = deleteTransactionTemplate,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -342,7 +377,7 @@ fun UpsertTransactionTemplateScreen(
                 navigateBack = {
                     keyboardController?.hide()
                     if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
-                        popupType = PopupType.CONFIRM_NAVIGATION
+                        sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
                     }
@@ -373,7 +408,7 @@ fun UpsertTransactionTemplateScreen(
                 } else null,
                 extraButtonAction = if (transactionTemplateId > 0 && enabled) {
                     {
-                        popupType = PopupType.CONFIRM_DELETE
+                        sheetType = SheetType.CONFIRM_DELETE
                     }
                 } else null
             )
@@ -486,7 +521,7 @@ fun UpsertTransactionTemplateScreen(
                     leadingIcon = transactionType.icon,
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.TYPE
+                        sheetType = SheetType.TYPE
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -515,7 +550,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.CATEGORY
+                        sheetType = SheetType.CATEGORY
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -543,7 +578,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.COUNTERPARTY
+                        sheetType = SheetType.COUNTERPARTY
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -571,7 +606,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.METHOD
+                        sheetType = SheetType.METHOD
                     },
                     modifier = Modifier.animateItem()
                 )
@@ -602,7 +637,7 @@ fun UpsertTransactionTemplateScreen(
                     },
                     onClick = {
                         resetOneHandMode()
-                        popupType = PopupType.ACCOUNT
+                        sheetType = SheetType.ACCOUNT
                     },
                     modifier = Modifier.animateItem()
                 )

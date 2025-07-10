@@ -1,6 +1,5 @@
-package jp.ikigai.cash.flow.ui.components.popups
+package jp.ikigai.cash.flow.ui.components.bottomsheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,16 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -33,7 +29,7 @@ import jp.ikigai.cash.flow.ui.components.common.MultiSelectCard
 import jp.ikigai.cash.flow.ui.components.common.SelectableCard
 
 @Composable
-fun SelectTransactionTypePopup(
+fun SelectTransactionTypeSheet(
     selectedTransactionType: TransactionType,
     setSelectedTransactionType: (TransactionType) -> Unit,
     dismiss: () -> Unit,
@@ -42,9 +38,7 @@ fun SelectTransactionTypePopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -112,7 +106,7 @@ fun SelectTransactionTypePopup(
 }
 
 @Composable
-fun FilterTransactionTypePopup(
+fun FilterTransactionTypeSheet(
     selectedTransactionTypes: List<TransactionType>,
     filter: (List<TransactionType>) -> Unit,
     dismiss: () -> Unit,
@@ -129,9 +123,7 @@ fun FilterTransactionTypePopup(
 
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
-            .padding(24.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -228,8 +220,8 @@ fun FilterTransactionTypePopup(
 
 @Preview
 @Composable
-fun SelectTransactionTypePopupPreview() {
-    SelectTransactionTypePopup(
+fun SelectTransactionTypeSheetPreview() {
+    SelectTransactionTypeSheet(
         selectedTransactionType = TransactionType.CREDIT,
         setSelectedTransactionType = {},
         dismiss = {}

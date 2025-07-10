@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,10 +58,20 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ImportBackupScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ReviewDetailsSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
 import jp.ikigai.cash.flow.ui.components.cards.MapAccountCard
 import jp.ikigai.cash.flow.ui.components.cards.MapCategoryCard
 import jp.ikigai.cash.flow.ui.components.cards.MapCounterPartyCard
@@ -71,16 +82,6 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.components.popups.AmountFilterPopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.DateRangePickerPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterCurrencyPopup
-import jp.ikigai.cash.flow.ui.components.popups.FilterTransactionTypePopup
-import jp.ikigai.cash.flow.ui.components.popups.ReviewDetailsPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectAccountPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectCategoryPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectCounterPartyPopup
-import jp.ikigai.cash.flow.ui.components.popups.SelectMethodPopup
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
@@ -135,6 +136,9 @@ fun ImportBackupScreen(
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
     val focusRequester = remember {
         FocusRequester()
     }
@@ -155,8 +159,6 @@ fun ImportBackupScreen(
         setLocale(locale)
     }
 
-    val scrollScope = rememberCoroutineScope()
-
     val enabled by remember(key1 = primaryState.enabled) {
         mutableStateOf(primaryState.enabled)
     }
@@ -165,8 +167,8 @@ fun ImportBackupScreen(
         mutableStateOf(primaryState.loading)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     val dataLoadComplete by remember(key1 = primaryState.dataLoadComplete) {
@@ -443,7 +445,7 @@ fun ImportBackupScreen(
                 currentEvent = event
                 showToastBar = true
             } else {
-                scrollScope.launch {
+                scope.launch {
                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                 }
             }
@@ -462,11 +464,11 @@ fun ImportBackupScreen(
 
     BackHandler(enabled = enabled) {
         if (pagerState.currentPage > 0) {
-            scrollScope.launch {
+            scope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
             }
         } else if (dataLoadComplete) {
-            popupType = PopupType.CONFIRM_NAVIGATION
+            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
         }
@@ -497,62 +499,83 @@ fun ImportBackupScreen(
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.REVIEW -> {
-                    ReviewDetailsPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.REVIEW -> {
+                    ReviewDetailsSheet(
                         selectedTempCategoryCount = selectedTempCategoryCount,
                         selectedTempCounterPartyCount = selectedTempCounterPartyCount,
                         selectedTempMethodCount = selectedTempMethodCount,
                         selectedTempAccountCount = selectedTempAccountCount,
                         selectedTempTransactionTemplateCount = selectedTempTransactionTemplateCount,
                         selectedTransactionsCount = selectedTransactionsCount,
-                        dismiss = hidePopup,
-                        complete = import
+                        complete = import,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationPopup(
+                SheetType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationSheet(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = hidePopup,
-                        navigate = navigateBack
+                        navigate = navigateBack,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.DATE_RANGE -> {
-                    DateRangePickerPopup(
+                SheetType.DATE_RANGE -> {
+                    DateRangePickerSheet(
                         startDate = startDate,
                         endDate = endDate,
                         filter = setStartDateAndEndDate,
                         reset = {
                             setStartDateAndEndDate(null, null)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CURRENCY -> {
-                    FilterCurrencyPopup(
+                SheetType.CURRENCY -> {
+                    FilterCurrencySheet(
                         selectedCurrencyCodes = selectedCurrencies,
                         currencies = currencies,
                         filter = setSelectedCurrencies,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.AMOUNT -> {
-                    AmountFilterPopup(
+                SheetType.AMOUNT -> {
+                    AmountFilterSheet(
                         minAmount = filterAmountMin,
                         maxAmount = filterAmountMax,
                         filter = filterByAmount,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CATEGORY -> {
-                    SelectCategoryPopup(
+                SheetType.CATEGORY -> {
+                    SelectCategorySheet(
                         index = dbCategories
                             .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
                             .coerceAtLeast(0),
@@ -562,12 +585,16 @@ fun ImportBackupScreen(
                         setSelectedCategory = {
                             setCategoryMapping(selectedTempCategoryId, it)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.COUNTERPARTY -> {
-                    SelectCounterPartyPopup(
+                SheetType.COUNTERPARTY -> {
+                    SelectCounterPartySheet(
                         index = dbCounterParties
                             .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
                             .coerceAtLeast(0),
@@ -577,12 +604,16 @@ fun ImportBackupScreen(
                         setSelectedCounterParty = {
                             setCounterPartyMapping(selectedTempCounterPartyId, it)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.METHOD -> {
-                    SelectMethodPopup(
+                SheetType.METHOD -> {
+                    SelectMethodSheet(
                         index = dbMethods
                             .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
                             .coerceAtLeast(0),
@@ -591,12 +622,16 @@ fun ImportBackupScreen(
                         setSelectedMethod = {
                             setMethodMapping(selectedTempMethodId, it)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.ACCOUNT -> {
-                    SelectAccountPopup(
+                SheetType.ACCOUNT -> {
+                    SelectAccountSheet(
                         index = currencyAccountMap[selectedTempAccountCurrency]
                             ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
                             ?.coerceAtLeast(0) ?: 0,
@@ -606,23 +641,31 @@ fun ImportBackupScreen(
                         setSelectedAccount = {
                             setAccountMapping(selectedTempAccountId, it)
                         },
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.TYPE -> {
-                    FilterTransactionTypePopup(
+                SheetType.TYPE -> {
+                    FilterTransactionTypeSheet(
                         selectedTransactionTypes = selectedTransactionTypes,
                         filter = setSelectedTransactionTypes,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         topBar = {
             TopAppBar(
@@ -682,11 +725,11 @@ fun ImportBackupScreen(
                 navigateBack = {
                     if (enabled) {
                         if (pagerState.currentPage > 0) {
-                            scrollScope.launch {
+                            scope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
                             }
                         } else if (dataLoadComplete) {
-                            popupType = PopupType.CONFIRM_NAVIGATION
+                            sheetType = SheetType.CONFIRM_NAVIGATION
                         }
                     } else {
                         navigateBack()
@@ -713,13 +756,13 @@ fun ImportBackupScreen(
                     }
                 },
                 onFilterByAmountClick = {
-                    popupType = PopupType.AMOUNT
+                    sheetType = SheetType.AMOUNT
                 },
                 onFilterByTypeClick = {
-                    popupType = PopupType.TYPE
+                    sheetType = SheetType.TYPE
                 },
                 onFilterByCurrencyClick = {
-                    popupType = PopupType.CURRENCY
+                    sheetType = SheetType.CURRENCY
                 },
                 onSearchClick = {
                     if (isFocused) {
@@ -732,11 +775,11 @@ fun ImportBackupScreen(
                     toggleSelection(allSelected)
                 },
                 onCalendarClick = {
-                    popupType = PopupType.DATE_RANGE
+                    sheetType = SheetType.DATE_RANGE
                 },
                 actionButtonClick = {
                     if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
-                        popupType = PopupType.REVIEW
+                        sheetType = SheetType.REVIEW
                     } else {
                         importFilePicker.launch("application/json")
                     }
@@ -789,7 +832,7 @@ fun ImportBackupScreen(
                                     conflicting = conflictingTempCategories.contains(tempCategory.tempCategoryId),
                                     selectCategory = {
                                         selectedTempCategoryId = tempCategory.tempCategoryId
-                                        popupType = PopupType.CATEGORY
+                                        sheetType = SheetType.CATEGORY
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -849,7 +892,7 @@ fun ImportBackupScreen(
                                     selectCounterParty = {
                                         selectedTempCounterPartyId =
                                             tempCounterParty.tempCounterPartyId
-                                        popupType = PopupType.COUNTERPARTY
+                                        sheetType = SheetType.COUNTERPARTY
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -907,7 +950,7 @@ fun ImportBackupScreen(
                                     ),
                                     selectMethod = {
                                         selectedTempMethodId = tempMethod.tempMethodId
-                                        popupType = PopupType.METHOD
+                                        sheetType = SheetType.METHOD
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -973,7 +1016,7 @@ fun ImportBackupScreen(
                                         selectedTempAccountId = tempAccount.tempAccountId
                                         selectedTempAccountCurrency =
                                             tempAccount.tempAccountCurrency
-                                        popupType = PopupType.ACCOUNT
+                                        sheetType = SheetType.ACCOUNT
                                     },
                                     toggleSelected = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)

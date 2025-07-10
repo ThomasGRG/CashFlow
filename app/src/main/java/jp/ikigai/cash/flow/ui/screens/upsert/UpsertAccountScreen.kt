@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,6 +25,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,15 +54,15 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.data.enums.PopupType
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmDeletePopup
-import jp.ikigai.cash.flow.ui.components.popups.ConfirmNavigationPopup
-import jp.ikigai.cash.flow.ui.components.popups.CurrencyPopup
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertAccountScreenViewModel
 import jp.ikigai.cash.flow.utils.TextFieldValueSaver
@@ -68,6 +70,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +86,9 @@ fun UpsertAccountScreen(
     state: UpsertAccountScreenState,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     val focusRequester = remember {
         FocusRequester()
@@ -143,8 +149,8 @@ fun UpsertAccountScreen(
         mutableStateOf(state.account.currency)
     }
 
-    var popupType by remember {
-        mutableStateOf(PopupType.NONE)
+    var sheetType by remember {
+        mutableStateOf(SheetType.NONE)
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -173,7 +179,7 @@ fun UpsertAccountScreen(
 
     BackHandler {
         if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
-            popupType = PopupType.CONFIRM_NAVIGATION
+            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
         }
@@ -191,50 +197,67 @@ fun UpsertAccountScreen(
                 navigateBack()
             }
         },
-        showBottomPopup = popupType != PopupType.NONE,
-        bottomPopupContent = { hidePopup ->
-            when (popupType) {
-                PopupType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationPopup(
+        sheetState = sheetState,
+        showBottomSheet = sheetType != SheetType.NONE,
+        bottomSheetContent = {
+            when (sheetType) {
+                SheetType.CONFIRM_NAVIGATION -> {
+                    ConfirmNavigationSheet(
                         message = stringResource(id = R.string.navigation_confirmation_label),
-                        dismiss = hidePopup,
-                        navigate = navigateBack
+                        navigate = navigateBack,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CURRENCY -> {
-                    CurrencyPopup(
+                SheetType.CURRENCY -> {
+                    CurrencySheet(
                         index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
                         selectedCurrency = selectedCurrency,
                         setSelectedCurrency = { currency ->
                             selectedCurrency = currency
                         },
                         currencies = currencies,
-                        dismiss = hidePopup
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.CONFIRM_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.CONFIRM_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.delete_account_confirmation_label),
-                        dismiss = hidePopup,
-                        delete = deleteSource
+                        delete = deleteSource,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
-                PopupType.WARN_DELETE -> {
-                    ConfirmDeletePopup(
+                SheetType.WARN_DELETE -> {
+                    ConfirmDeleteSheet(
                         message = stringResource(id = R.string.account_transactions_deletion_warning_label),
-                        dismiss = hidePopup,
-                        delete = deleteSource
+                        delete = deleteSource,
+                        dismiss = {
+                            scope
+                                .launch { sheetState.hide() }
+                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        }
                     )
                 }
 
                 else -> {}
             }
         },
-        onDismissPopup = {
-            popupType = PopupType.NONE
+        onDismissSheet = {
+            sheetType = SheetType.NONE
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
@@ -254,7 +277,7 @@ fun UpsertAccountScreen(
                 navigateBack = {
                     keyboardController?.hide()
                     if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
-                        popupType = PopupType.CONFIRM_NAVIGATION
+                        sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
                     }
@@ -285,10 +308,10 @@ fun UpsertAccountScreen(
                 } else null,
                 extraButtonAction = if (accountId > 0 && enabled) {
                     {
-                        popupType = if (hasTransactions) {
-                            PopupType.WARN_DELETE
+                        sheetType = if (hasTransactions) {
+                            SheetType.WARN_DELETE
                         } else {
-                            PopupType.CONFIRM_DELETE
+                            SheetType.CONFIRM_DELETE
                         }
                     }
                 } else null
@@ -376,7 +399,7 @@ fun UpsertAccountScreen(
                 leadingIcon = TablerIcons.CurrencyDollar,
                 onClick = {
                     resetOneHandMode()
-                    popupType = PopupType.CURRENCY
+                    sheetType = SheetType.CURRENCY
                 }
             )
         }
