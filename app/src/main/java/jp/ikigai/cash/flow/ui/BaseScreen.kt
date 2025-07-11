@@ -2,7 +2,9 @@ package jp.ikigai.cash.flow.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -33,7 +35,9 @@ fun BaseScreen() {
     val navController = rememberNavController()
 
     NavHost(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         navController = navController,
         startDestination = Routes.Transactions.route,
         enterTransition = {
