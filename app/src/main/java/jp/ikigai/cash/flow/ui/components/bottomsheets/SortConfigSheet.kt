@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,7 +74,7 @@ fun SortConfigSheet(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     direction = SortDirection.ASC
                 },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
             ) {
                 Text(text = stringResource(id = R.string.ascending_label))
             }
@@ -85,7 +84,7 @@ fun SortConfigSheet(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     direction = SortDirection.DESC
                 },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
             ) {
                 Text(text = stringResource(id = R.string.descending_label))
             }
