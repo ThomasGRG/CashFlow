@@ -28,6 +28,8 @@ data class UpsertTransactionTemplateScreenState(
     val name: String = "",
     val nameValid: Boolean = true,
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
+    val title: String = "",
+    val description: String = "",
     val amount: Double = 0.0,
     val displayAmount: String = "",
     val type: TransactionType = TransactionType.DEBIT,
@@ -63,6 +65,7 @@ data class UpsertTransactionTemplateScreenState(
         transactionCount = 0L,
         lastUsed = null
     ),
+    val hasUnsavedChanges: Boolean = false,
     val loading: Boolean = true,
     val enabled: Boolean = false,
     val locale: Locale? = null

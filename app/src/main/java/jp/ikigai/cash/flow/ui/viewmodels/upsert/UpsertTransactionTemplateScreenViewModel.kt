@@ -174,6 +174,8 @@ class UpsertTransactionTemplateScreenViewModel(
                     it.copy(
                         transactionTemplate = transactionTemplate,
                         name = transactionTemplate.templateName,
+                        title = transactionTemplate.templateTitle,
+                        description = transactionTemplate.templateDescription,
                         amount = transactionTemplate.templateAmount,
                         displayAmount = transactionTemplate.templateAmount.toString(),
                         accounts = accounts,
@@ -231,80 +233,83 @@ class UpsertTransactionTemplateScreenViewModel(
         return validCount >= 2
     }
 
-    fun upsertTransactionTemplate(newName: String, newTitle: String, newDescription: String) =
-        viewModelScope.launch {
-            if (newName.isBlank()) {
-                _state.update {
-                    it.copy(
-                        nameValid = false,
-                        nameErrorStringRes = R.string.name_empty_error_label
-                    )
-                }
-                return@launch
-            }
-            if (!state.value.nameValid || state.value.loading) {
-                return@launch
-            }
-            val isValid = validate(newTitle, newDescription)
-            if (!isValid) {
-                _event.send(Event.MinimumTwoFieldsRequired)
-                return@launch
-            }
-            loadDataJob?.cancelAndJoin()
-            _state.update {
-                it.copy(
-                    loading = true,
-                    enabled = false
-                )
-            }
-
-            val selectedAccount = state.value.selectedAccount
-            val selectedCategory = state.value.selectedCategory
-            val selectedCounterParty = state.value.selectedCounterParty
-            val selectedMethod = state.value.selectedMethod
-
-            try {
-                if (templateId == 0L) {
-                    database
-                        .transactionTemplateQueries
-                        .insert(
-                            templateName = newName,
-                            templateTitle = newTitle,
-                            templateDescription = newDescription,
-                            templateAmount = state.value.amount,
-                            templateType = state.value.type,
-                            templateAccountId = selectedAccount.accountId,
-                            templateCategoryId = selectedCategory.categoryId,
-                            templateCounterPartyId = selectedCounterParty.counterPartyId,
-                            templateMethodId = selectedMethod.methodId
-                        )
-                } else {
-                    database
-                        .transactionTemplateQueries
-                        .update(
-                            templateName = newName,
-                            templateTitle = newTitle,
-                            templateDescription = newDescription,
-                            templateAmount = state.value.amount,
-                            templateType = state.value.type,
-                            templateAccountId = selectedAccount.accountId,
-                            templateCategoryId = selectedCategory.categoryId,
-                            templateCounterPartyId = selectedCounterParty.counterPartyId,
-                            templateMethodId = selectedMethod.methodId,
-                            templateId = templateId
-                        )
-                }
-                _event.send(Event.SaveSuccess)
-            } catch (e: Exception) {
-                _event.send(Event.InternalError)
-            }
-
-            _state.update {
-                it.copy(
-                    loading = false
-                )
-            }
+    fun upsertTransactionTemplate(
+        newName: String,
+        newTitle: String,
+        newDescription: String
+    ) = viewModelScope.launch {
+        if (state.value.loading) {
+            return@launch
         }
+        if (newName.isBlank()) {
+            _state.update {
+                it.copy(
+                    nameValid = false,
+                    nameErrorStringRes = R.string.name_empty_error_label
+                )
+            }
+            return@launch
+        }
+        val isValid = validate(newTitle, newDescription)
+        if (!isValid) {
+            _event.send(Event.MinimumTwoFieldsRequired)
+            return@launch
+        }
+        loadDataJob?.cancelAndJoin()
+        _state.update {
+            it.copy(
+                loading = true,
+                enabled = false
+            )
+        }
+
+        val selectedAccount = state.value.selectedAccount
+        val selectedCategory = state.value.selectedCategory
+        val selectedCounterParty = state.value.selectedCounterParty
+        val selectedMethod = state.value.selectedMethod
+
+        try {
+            if (templateId == 0L) {
+                database
+                    .transactionTemplateQueries
+                    .insert(
+                        templateName = newName,
+                        templateTitle = newTitle,
+                        templateDescription = newDescription,
+                        templateAmount = state.value.amount,
+                        templateType = state.value.type,
+                        templateAccountId = selectedAccount.accountId,
+                        templateCategoryId = selectedCategory.categoryId,
+                        templateCounterPartyId = selectedCounterParty.counterPartyId,
+                        templateMethodId = selectedMethod.methodId
+                    )
+            } else {
+                database
+                    .transactionTemplateQueries
+                    .update(
+                        templateName = newName,
+                        templateTitle = newTitle,
+                        templateDescription = newDescription,
+                        templateAmount = state.value.amount,
+                        templateType = state.value.type,
+                        templateAccountId = selectedAccount.accountId,
+                        templateCategoryId = selectedCategory.categoryId,
+                        templateCounterPartyId = selectedCounterParty.counterPartyId,
+                        templateMethodId = selectedMethod.methodId,
+                        templateId = templateId
+                    )
+            }
+            _event.send(Event.SaveSuccess)
+        } catch (e: Exception) {
+            _event.send(Event.InternalError)
+        }
+
+        _state.update {
+            it.copy(
+                loading = false
+            )
+        }
+    }
 
     fun deleteTransactionTemplate() = viewModelScope.launch {
         if (templateId > 0) {
@@ -339,16 +344,37 @@ class UpsertTransactionTemplateScreenViewModel(
                 name = name,
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
+                hasUnsavedChanges = getHasUnsavedChanges(name = name),
                 loading = name.isNotBlank()
             )
         }
     }
 
-    fun setAmount(amountString: String) {
+    fun setTitle(title: String) {
         _state.update {
             it.copy(
-                amount = amountString.toDoubleOrNull() ?: 0.0,
-                displayAmount = amountString
+                title = title,
+                hasUnsavedChanges = getHasUnsavedChanges(title = title)
+            )
+        }
+    }
+
+    fun setDescription(description: String) {
+        _state.update {
+            it.copy(
+                description = description,
+                hasUnsavedChanges = getHasUnsavedChanges(description = description)
+            )
+        }
+    }
+
+    fun setAmount(amountString: String) {
+        val amount = amountString.toDoubleOrNull() ?: 0.0
+        _state.update {
+            it.copy(
+                amount = amount,
+                displayAmount = amountString,
+                hasUnsavedChanges = getHasUnsavedChanges(amount = amount)
             )
         }
     }
@@ -356,7 +382,8 @@ class UpsertTransactionTemplateScreenViewModel(
     fun setSelectedAccount(account: AccountWithTransactionMetadata) {
         _state.update {
             it.copy(
-                selectedAccount = account
+                selectedAccount = account,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedAccount = account)
             )
         }
     }
@@ -364,7 +391,8 @@ class UpsertTransactionTemplateScreenViewModel(
     fun setSelectedCategory(category: CategoryWithTransactionMetadata) {
         _state.update {
             it.copy(
-                selectedCategory = category
+                selectedCategory = category,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedCategory = category)
             )
         }
     }
@@ -372,7 +400,8 @@ class UpsertTransactionTemplateScreenViewModel(
     fun setSelectedCounterParty(counterParty: CounterPartyWithTransactionMetadata) {
         _state.update {
             it.copy(
-                selectedCounterParty = counterParty
+                selectedCounterParty = counterParty,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedCounterParty = counterParty)
             )
         }
     }
@@ -380,7 +409,8 @@ class UpsertTransactionTemplateScreenViewModel(
     fun setSelectedMethod(method: MethodWithTransactionMetadata) {
         _state.update {
             it.copy(
-                selectedMethod = method
+                selectedMethod = method,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedMethod = method)
             )
         }
     }
@@ -388,7 +418,8 @@ class UpsertTransactionTemplateScreenViewModel(
     fun setTransactionType(transactionType: TransactionType) {
         _state.update {
             it.copy(
-                type = transactionType
+                type = transactionType,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedType = transactionType)
             )
         }
     }
@@ -402,18 +433,23 @@ class UpsertTransactionTemplateScreenViewModel(
         }
     }
 
-    fun hasChanges(title: String, description: String): Boolean {
+    private fun getHasUnsavedChanges(
+        name: String = state.value.name,
+        title: String = state.value.title,
+        description: String = state.value.description,
+        amount: Double = state.value.amount,
+        selectedAccount: AccountWithTransactionMetadata = state.value.selectedAccount,
+        selectedCategory: CategoryWithTransactionMetadata = state.value.selectedCategory,
+        selectedCounterParty: CounterPartyWithTransactionMetadata = state.value.selectedCounterParty,
+        selectedMethod: MethodWithTransactionMetadata = state.value.selectedMethod,
+        selectedType: TransactionType = state.value.type
+    ): Boolean {
         val transactionTemplate = state.value.transactionTemplate
-        val selectedAccount = state.value.selectedAccount
-        val selectedCategory = state.value.selectedCategory
-        val selectedCounterParty = state.value.selectedCounterParty
-        val selectedMethod = state.value.selectedMethod
-        val selectedType = state.value.type
 
-        val nameChanged = transactionTemplate.templateName != state.value.name
+        val nameChanged = transactionTemplate.templateName != name
         val titleChanged = transactionTemplate.templateTitle != title
         val descriptionChanged = transactionTemplate.templateDescription != description
-        val amountChanged = transactionTemplate.templateAmount != state.value.amount
+        val amountChanged = transactionTemplate.templateAmount != amount
         val accountChanged = transactionTemplate.templateAccountId != selectedAccount.accountId
         val categoryChanged = transactionTemplate.templateCategoryId != selectedCategory.categoryId
         val counterPartyChanged =

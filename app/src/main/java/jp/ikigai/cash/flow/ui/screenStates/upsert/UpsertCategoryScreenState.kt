@@ -19,6 +19,7 @@ data class UpsertCategoryScreenState(
     val nameValid: Boolean = true,
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
     val selectedIcon: ImageVector = Constants.DEFAULT_CATEGORY_ICON,
+    val hasUnsavedChanges: Boolean = false,
     val transactionCount: Long = 0,
     val formattedTransactionCount: String = "",
     val loading: Boolean = true,

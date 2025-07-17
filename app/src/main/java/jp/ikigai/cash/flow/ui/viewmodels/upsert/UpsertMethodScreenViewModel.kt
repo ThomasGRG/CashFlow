@@ -124,6 +124,7 @@ class UpsertMethodScreenViewModel(
                 name = name,
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
+                hasUnsavedChanges = it.method.methodName != name,
                 loading = name.isNotBlank()
             )
         }

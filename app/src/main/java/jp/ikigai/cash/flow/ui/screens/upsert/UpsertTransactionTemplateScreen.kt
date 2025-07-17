@@ -23,7 +23,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +31,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
@@ -72,7 +71,6 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionTemplateScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
-import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -88,6 +86,8 @@ fun UpsertTransactionTemplateScreen(
     checkNameAlreadyInUse: (String) -> Unit,
     setLocale: (Locale?) -> Unit,
     setName: (String) -> Unit,
+    setTitle: (String) -> Unit,
+    setDescription: (String) -> Unit,
     setAmount: (String) -> Unit,
     setSelectedAccount: (AccountWithTransactionMetadata) -> Unit,
     setSelectedCategory: (CategoryWithTransactionMetadata) -> Unit,
@@ -96,7 +96,6 @@ fun UpsertTransactionTemplateScreen(
     setTransactionType: (TransactionType) -> Unit,
     upsertTransactionTemplate: (String, String, String) -> Unit,
     deleteTransactionTemplate: () -> Unit,
-    hasChanges: (String, String) -> Boolean,
     events: Flow<Event>,
     state: UpsertTransactionTemplateScreenState
 ) {
@@ -185,22 +184,12 @@ fun UpsertTransactionTemplateScreen(
         mutableIntStateOf(state.nameErrorStringRes)
     }
 
-    var titleFieldValue by rememberSaveable(
-        state.transactionTemplate,
-        saver = TextFieldValueSaver
-    ) {
-        mutableStateOf(
-            TextFieldValue(state.transactionTemplate.templateTitle)
-        )
+    val title by remember(key1 = state.title) {
+        mutableStateOf(state.title)
     }
 
-    var descriptionFieldValue by rememberSaveable(
-        state.transactionTemplate,
-        saver = TextFieldValueSaver
-    ) {
-        mutableStateOf(
-            TextFieldValue(state.transactionTemplate.templateDescription)
-        )
+    val description by remember(key1 = state.description) {
+        mutableStateOf(state.description)
     }
 
     val amount by remember(key1 = state.displayAmount) {
@@ -231,12 +220,14 @@ fun UpsertTransactionTemplateScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    BackHandler {
-        if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
-        } else {
-            navigateBack()
-        }
+    val hasUnsavedChanges by remember(key1 = state.hasUnsavedChanges) {
+        mutableStateOf(state.hasUnsavedChanges)
+    }
+
+    BackHandler(
+        enabled = enabled && hasUnsavedChanges
+    ) {
+        sheetType = SheetType.CONFIRM_NAVIGATION
     }
 
     OneHandModeScaffold(
@@ -376,7 +367,7 @@ fun UpsertTransactionTemplateScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (enabled && hasChanges(titleFieldValue.text, descriptionFieldValue.text)) {
+                    if (enabled && hasUnsavedChanges) {
                         sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -393,8 +384,8 @@ fun UpsertTransactionTemplateScreen(
                     if (enabled) {
                         upsertTransactionTemplate(
                             name.trim(),
-                            titleFieldValue.text,
-                            descriptionFieldValue.text
+                            title,
+                            description
                         )
                     }
                 },
@@ -456,13 +447,17 @@ fun UpsertTransactionTemplateScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = titleFieldValue,
-                    onValueChange = { titleFieldValue = it },
+                    value = title,
+                    onValueChange = setTitle,
                     enabled = enabled,
                     label = stringResource(id = R.string.title_field_label),
                     placeHolder = stringResource(id = R.string.title_placeholder_label),
                     icon = TablerIcons.LetterCase,
                     iconDescription = "title icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
                     onDone = {
                         keyboardController?.hide()
                     },
@@ -474,8 +469,8 @@ fun UpsertTransactionTemplateScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = descriptionFieldValue,
-                    onValueChange = { descriptionFieldValue = it },
+                    value = description,
+                    onValueChange = setDescription,
                     enabled = enabled,
                     label = stringResource(id = R.string.description_field_label),
                     placeHolder = stringResource(id = R.string.description_placeholder_label),
@@ -503,6 +498,12 @@ fun UpsertTransactionTemplateScreen(
                     placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
                     icon = TablerIcons.CashBanknote,
                     iconDescription = "amount icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false,
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
                     onDone = {
                         keyboardController?.hide()
                     },
@@ -654,6 +655,8 @@ fun UpsertTransactionTemplateScreenPreview() {
         checkNameAlreadyInUse = {},
         setLocale = {},
         setName = {},
+        setTitle = {},
+        setDescription = {},
         setAmount = {},
         setSelectedAccount = {},
         setSelectedCategory = {},
@@ -662,7 +665,6 @@ fun UpsertTransactionTemplateScreenPreview() {
         setTransactionType = {},
         upsertTransactionTemplate = { _, _, _ -> },
         deleteTransactionTemplate = {},
-        hasChanges = { _, _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertTransactionTemplateScreenState()
     )
@@ -688,6 +690,8 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setLocale = viewModel::setLocale,
             setName = viewModel::setName,
+            setTitle = viewModel::setTitle,
+            setDescription = viewModel::setDescription,
             setAmount = viewModel::setAmount,
             setSelectedAccount = viewModel::setSelectedAccount,
             setSelectedCategory = viewModel::setSelectedCategory,
@@ -696,7 +700,6 @@ fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController
             setTransactionType = viewModel::setTransactionType,
             upsertTransactionTemplate = viewModel::upsertTransactionTemplate,
             deleteTransactionTemplate = viewModel::deleteTransactionTemplate,
-            hasChanges = viewModel::hasChanges,
             events = viewModel.event,
             state = state
         )

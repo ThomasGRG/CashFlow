@@ -16,7 +16,11 @@ data class UpsertAccountScreenState(
     val name: String = "",
     val nameValid: Boolean = true,
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
+    val balance: String = "0",
+    val balanceValid: Boolean = true,
+    val selectedCurrency: String = "INR",
     val currencies: List<CurrencyInfo> = Constants.currencyList,
+    val hasUnsavedChanges: Boolean = false,
     val hasTransactions: Boolean = false,
     val loading: Boolean = true,
     val enabled: Boolean = false

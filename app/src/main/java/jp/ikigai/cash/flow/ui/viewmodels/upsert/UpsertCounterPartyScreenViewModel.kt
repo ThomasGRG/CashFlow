@@ -124,6 +124,7 @@ class UpsertCounterPartyScreenViewModel(
                 name = name,
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
+                hasUnsavedChanges = it.counterParty.counterPartyName != name,
                 loading = name.isNotBlank()
             )
         }

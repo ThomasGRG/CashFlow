@@ -126,6 +126,7 @@ class UpsertCategoryScreenViewModel(
                 name = name,
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
+                hasUnsavedChanges = getHasUnsavedChanges(name = name),
                 loading = name.isNotBlank()
             )
         }
@@ -134,7 +135,8 @@ class UpsertCategoryScreenViewModel(
     fun setIcon(icon: ImageVector) {
         _state.update {
             it.copy(
-                selectedIcon = icon
+                selectedIcon = icon,
+                hasUnsavedChanges = getHasUnsavedChanges(icon = icon)
             )
         }
     }
@@ -149,6 +151,9 @@ class UpsertCategoryScreenViewModel(
     }
 
     fun upsertCategory(newIcon: ImageVector, newName: String) = viewModelScope.launch {
+        if (state.value.loading) {
+            return@launch
+        }
         if (newName.isBlank()) {
             _state.update {
                 it.copy(
@@ -158,41 +163,39 @@ class UpsertCategoryScreenViewModel(
             }
             return@launch
         }
-        if (state.value.nameValid && !state.value.loading) {
-            _state.update {
-                it.copy(
-                    loading = true,
-                    enabled = false
-                )
-            }
+        _state.update {
+            it.copy(
+                loading = true,
+                enabled = false
+            )
+        }
 
-            try {
-                if (categoryId == 0L) {
-                    database
-                        .categoryQueries
-                        .insert(
-                            categoryName = newName,
-                            icon = newIcon
-                        )
-                } else {
-                    database
-                        .categoryQueries
-                        .update(
-                            categoryName = newName,
-                            icon = newIcon,
-                            categoryId = categoryId
-                        )
-                }
-                _event.send(Event.SaveSuccess)
-            } catch (e: Exception) {
-                _event.send(Event.InternalError)
+        try {
+            if (categoryId == 0L) {
+                database
+                    .categoryQueries
+                    .insert(
+                        categoryName = newName,
+                        icon = newIcon
+                    )
+            } else {
+                database
+                    .categoryQueries
+                    .update(
+                        categoryName = newName,
+                        icon = newIcon,
+                        categoryId = categoryId
+                    )
             }
+            _event.send(Event.SaveSuccess)
+        } catch (e: Exception) {
+            _event.send(Event.InternalError)
+        }
 
-            _state.update {
-                it.copy(
-                    loading = false
-                )
-            }
+        _state.update {
+            it.copy(
+                loading = false
+            )
         }
     }
 
@@ -262,5 +265,14 @@ class UpsertCategoryScreenViewModel(
                 )
             }
         }
+    }
+
+    private fun getHasUnsavedChanges(
+        name: String = state.value.name,
+        icon: ImageVector = state.value.selectedIcon
+    ): Boolean {
+        val nameChanged = state.value.category.categoryName != name
+        val iconChanged = state.value.category.icon != icon
+        return nameChanged || iconChanged
     }
 }

@@ -26,7 +26,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -65,7 +63,6 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertAccountScreenViewModel
-import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -79,9 +76,10 @@ fun UpsertAccountScreen(
     navigateBack: () -> Unit,
     checkNameAlreadyInUse: (String) -> Unit,
     setName: (String) -> Unit,
-    upsertTransactionSource: (String, String, Double) -> Unit,
+    setBalance: (String) -> Unit,
+    setCurrency: (String) -> Unit,
+    upsertTransactionSource: (String, String, Double?) -> Unit,
     deleteSource: () -> Unit,
-    hasChanges: (String, String) -> Boolean,
     events: Flow<Event>,
     state: UpsertAccountScreenState,
 ) {
@@ -123,14 +121,12 @@ fun UpsertAccountScreen(
         mutableStateOf(state.hasTransactions)
     }
 
-    var balanceFieldValue by rememberSaveable(state.account, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.account.balance.toString())
-        )
+    val balance by remember(key1 = state.balance) {
+        mutableStateOf(state.balance)
     }
 
-    var balanceValid by rememberSaveable {
-        mutableStateOf(true)
+    val balanceValid by remember(key1 = state.balanceValid) {
+        mutableStateOf(state.balanceValid)
     }
 
     val accountId by remember(key1 = state.account) {
@@ -145,8 +141,8 @@ fun UpsertAccountScreen(
         mutableStateOf(state.currencies)
     }
 
-    var selectedCurrency by rememberSaveable(state.account) {
-        mutableStateOf(state.account.currency)
+    val selectedCurrency by remember(key1 = state.selectedCurrency) {
+        mutableStateOf(state.selectedCurrency)
     }
 
     var sheetType by remember {
@@ -177,12 +173,14 @@ fun UpsertAccountScreen(
         }
     }
 
-    BackHandler {
-        if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
-        } else {
-            navigateBack()
-        }
+    val hasUnsavedChanges by remember(key1 = state.hasUnsavedChanges) {
+        mutableStateOf(state.hasUnsavedChanges)
+    }
+
+    BackHandler(
+        enabled = enabled && hasUnsavedChanges
+    ) {
+        sheetType = SheetType.CONFIRM_NAVIGATION
     }
 
     OneHandModeScaffold(
@@ -217,9 +215,7 @@ fun UpsertAccountScreen(
                     CurrencySheet(
                         index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
                         selectedCurrency = selectedCurrency,
-                        setSelectedCurrency = { currency ->
-                            selectedCurrency = currency
-                        },
+                        setSelectedCurrency = setCurrency,
                         currencies = currencies,
                         dismiss = {
                             scope
@@ -276,7 +272,7 @@ fun UpsertAccountScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (enabled && hasChanges(balanceFieldValue.text, selectedCurrency)) {
+                    if (enabled && hasUnsavedChanges) {
                         sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -294,7 +290,7 @@ fun UpsertAccountScreen(
                         upsertTransactionSource(
                             name.trim(),
                             selectedCurrency,
-                            balanceFieldValue.text.toDoubleOrNull() ?: 0.0
+                            balance.toDoubleOrNull()
                         )
                     }
                 },
@@ -361,14 +357,10 @@ fun UpsertAccountScreen(
                 }
             )
             RoundedCornerOutlinedTextField(
-                value = balanceFieldValue,
-                onValueChange = { value ->
-                    balanceFieldValue = value
-                    val newBalance = value.text.toDoubleOrNull()
-                    balanceValid = newBalance != null
-                },
+                value = balance,
+                onValueChange = setBalance,
                 hasValueChanged = {
-                    val newBalance = balanceFieldValue.text.toDoubleOrNull()
+                    val newBalance = balance.toDoubleOrNull()
                     account.accountId > 0 && newBalance != null && newBalance != account.balance
                 },
                 enabled = enabled,
@@ -413,9 +405,10 @@ fun UpsertSourceScreenPreview() {
         navigateBack = {},
         checkNameAlreadyInUse = {},
         setName = {},
+        setBalance = {},
+        setCurrency = {},
         upsertTransactionSource = { _, _, _ -> },
         deleteSource = {},
-        hasChanges = { _, _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertAccountScreenState()
     )
@@ -440,9 +433,10 @@ fun NavGraphBuilder.upsertAccountScreen(navController: NavController) {
             },
             checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setName = viewModel::setName,
+            setBalance = viewModel::setBalance,
+            setCurrency = viewModel::setCurrency,
             upsertTransactionSource = viewModel::upsertSource,
             deleteSource = viewModel::deleteSource,
-            hasChanges = viewModel::hasChanges,
             events = viewModel.event,
             state = state
         )

@@ -13,6 +13,7 @@ data class UpsertCounterPartyScreenState(
     val name: String = "",
     val nameValid: Boolean = true,
     @StringRes val nameErrorStringRes: Int = R.string.name_empty_error_label,
+    val hasUnsavedChanges: Boolean = false,
     val transactionCount: Long = 0,
     val formattedTransactionCount: String = "",
     val loading: Boolean = true,

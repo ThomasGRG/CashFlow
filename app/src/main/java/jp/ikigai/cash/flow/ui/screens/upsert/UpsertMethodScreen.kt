@@ -173,12 +173,14 @@ fun UpsertMethodScreen(
         }
     }
 
-    BackHandler {
-        if (enabled && state.method.methodName != state.name) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
-        } else {
-            navigateBack()
-        }
+    val hasUnsavedChanges by remember(key1 = state.hasUnsavedChanges) {
+        mutableStateOf(state.hasUnsavedChanges)
+    }
+
+    BackHandler(
+        enabled = enabled && hasUnsavedChanges
+    ) {
+        sheetType = SheetType.CONFIRM_NAVIGATION
     }
 
     OneHandModeScaffold(
@@ -284,7 +286,7 @@ fun UpsertMethodScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (enabled && state.method.methodName != state.name) {
+                        if (enabled && hasUnsavedChanges) {
                             sheetType = SheetType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()

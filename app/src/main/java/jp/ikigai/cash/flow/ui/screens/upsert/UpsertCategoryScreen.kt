@@ -182,12 +182,14 @@ fun UpsertCategoryScreen(
         }
     }
 
-    BackHandler {
-        if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
-        } else {
-            navigateBack()
-        }
+    val hasUnsavedChanges by remember(key1 = state.hasUnsavedChanges) {
+        mutableStateOf(state.hasUnsavedChanges)
+    }
+
+    BackHandler(
+        enabled = enabled && hasUnsavedChanges
+    ) {
+        sheetType = SheetType.CONFIRM_NAVIGATION
     }
 
     OneHandModeScaffold(
@@ -317,7 +319,7 @@ fun UpsertCategoryScreen(
                 ThreeSlotRoundedBottomBar(
                     navigateBack = {
                         keyboardController?.hide()
-                        if (enabled && (state.category.categoryName != state.name || state.category.icon != selectedIcon)) {
+                        if (enabled && hasUnsavedChanges) {
                             sheetType = SheetType.CONFIRM_NAVIGATION
                         } else {
                             navigateBack()

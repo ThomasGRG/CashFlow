@@ -78,6 +78,8 @@ class UpsertAccountScreenViewModel(
                     it.copy(
                         account = account,
                         name = account.accountName,
+                        balance = account.balance.toString(),
+                        selectedCurrency = account.currency,
                         loading = false,
                         enabled = true
                     )
@@ -117,7 +119,27 @@ class UpsertAccountScreenViewModel(
                 name = name,
                 nameValid = name.isNotBlank(),
                 nameErrorStringRes = R.string.name_empty_error_label,
+                hasUnsavedChanges = getHasUnsavedChanges(name = name),
                 loading = name.isNotBlank()
+            )
+        }
+    }
+
+    fun setBalance(balance: String) {
+        _state.update {
+            it.copy(
+                balance = balance,
+                balanceValid = balance.toDoubleOrNull() != null,
+                hasUnsavedChanges = getHasUnsavedChanges(balanceString = balance)
+            )
+        }
+    }
+
+    fun setCurrency(currency: String) {
+        _state.update {
+            it.copy(
+                selectedCurrency = currency,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedCurrency = currency)
             )
         }
     }
@@ -125,8 +147,11 @@ class UpsertAccountScreenViewModel(
     fun upsertSource(
         newName: String,
         newCurrency: String,
-        newBalance: Double
+        newBalance: Double?
     ) = viewModelScope.launch {
+        if (state.value.loading) {
+            return@launch
+        }
         if (newName.isBlank()) {
             _state.update {
                 it.copy(
@@ -136,43 +161,50 @@ class UpsertAccountScreenViewModel(
             }
             return@launch
         }
-        if (state.value.nameValid && !state.value.loading) {
+        if (newBalance == null) {
             _state.update {
                 it.copy(
-                    loading = true,
-                    enabled = false
+                    balanceValid = false
                 )
             }
+            return@launch
+        }
 
-            try {
-                if (accountId == 0L) {
-                    database
-                        .accountQueries
-                        .insert(
-                            accountName = newName,
-                            balance = newBalance,
-                            currency = newCurrency
-                        )
-                } else {
-                    database
-                        .accountQueries
-                        .update(
-                            accountName = newName,
-                            balance = newBalance,
-                            currency = newCurrency,
-                            accountId = accountId
-                        )
-                }
-                _event.send(Event.SaveSuccess)
-            } catch (e: Exception) {
-                _event.send(Event.InternalError)
-            }
+        _state.update {
+            it.copy(
+                loading = true,
+                enabled = false
+            )
+        }
 
-            _state.update {
-                it.copy(
-                    loading = false
-                )
+        try {
+            if (accountId == 0L) {
+                database
+                    .accountQueries
+                    .insert(
+                        accountName = newName,
+                        balance = newBalance,
+                        currency = newCurrency
+                    )
+            } else {
+                database
+                    .accountQueries
+                    .update(
+                        accountName = newName,
+                        balance = newBalance,
+                        currency = newCurrency,
+                        accountId = accountId
+                    )
             }
+            _event.send(Event.SaveSuccess)
+        } catch (e: Exception) {
+            _event.send(Event.InternalError)
+        }
+
+        _state.update {
+            it.copy(
+                loading = false
+            )
         }
     }
 
@@ -215,14 +247,15 @@ class UpsertAccountScreenViewModel(
         }
     }
 
-    fun hasChanges(
-        balanceString: String,
-        selectedCurrency: String
+    private fun getHasUnsavedChanges(
+        name: String = state.value.name,
+        balanceString: String = state.value.balance,
+        selectedCurrency: String = state.value.selectedCurrency
     ): Boolean {
         val balance = balanceString.toDoubleOrNull()
         val account = state.value.account
 
-        val nameChanged = account.accountName != state.value.name
+        val nameChanged = account.accountName != name
         val balanceChanged = balance == null || account.balance != balance
         val currencyChanged = account.currency != selectedCurrency
 
