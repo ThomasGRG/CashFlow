@@ -22,5 +22,6 @@ enum class SheetType {
     CLONE_TRANSACTION,
     EXPORT,
     CONFIRM_NAVIGATION,
-    REVIEW
+    REVIEW,
+    AUDIT_LOG
 }

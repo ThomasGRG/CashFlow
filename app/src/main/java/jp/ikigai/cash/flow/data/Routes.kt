@@ -4,6 +4,8 @@ sealed class Routes(val route: String) {
 
     data object Settings : Routes("settings")
 
+    data object AuditLogs : Routes("auditLogs")
+
     data object ExportTransactions : Routes("exportTransactions")
     data object ImportBackup : Routes("importBackup")
 

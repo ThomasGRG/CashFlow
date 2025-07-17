@@ -109,11 +109,14 @@ fun TransactionsScreen(
     setSortDirection: (SortDirection) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     cloneTransaction: (Long, Boolean) -> Unit,
+    navigateToAccountsScreen: () -> Unit,
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
-    navigateToSourcesScreen: () -> Unit,
+    navigateToImportScreen: () -> Unit,
+    navigateToExportScreen: () -> Unit,
+    navigateToAuditLogsScreen: () -> Unit,
     navigateToSettingsScreen: () -> Unit,
     openGithubPage: () -> Unit,
     events: Flow<Event>,
@@ -556,8 +559,11 @@ fun TransactionsScreen(
                             navigateToCategoriesScreen = navigateToCategoriesScreen,
                             navigateToCounterPartyScreen = navigateToCounterPartyScreen,
                             navigateToMethodsScreen = navigateToMethodsScreen,
-                            navigateToSourcesScreen = navigateToSourcesScreen,
+                            navigateToSourcesScreen = navigateToAccountsScreen,
                             navigateToTemplatesScreen = navigateToTemplatesScreen,
+                            navigateToImportScreen = navigateToImportScreen,
+                            navigateToExportScreen = navigateToExportScreen,
+                            navigateToAuditLogsScreen = navigateToAuditLogsScreen,
                             navigateToSettingsScreen = navigateToSettingsScreen,
                             openGithubReleasesPage = openGithubPage,
                             dismiss = {
@@ -716,11 +722,14 @@ fun TransactionsScreenPreview() {
         setSortDirection = {},
         filterByAmount = { _, _ -> },
         cloneTransaction = { _, _ -> },
+        navigateToAccountsScreen = {},
         navigateToCategoriesScreen = {},
         navigateToCounterPartyScreen = {},
         navigateToMethodsScreen = {},
         navigateToTemplatesScreen = {},
-        navigateToSourcesScreen = {},
+        navigateToImportScreen = {},
+        navigateToExportScreen = {},
+        navigateToAuditLogsScreen = {},
         navigateToSettingsScreen = {},
         openGithubPage = {},
         events = emptyList<Event>().asFlow(),
@@ -771,7 +780,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
                     launchSingleTop = true
                 }
             },
-            navigateToSourcesScreen = {
+            navigateToAccountsScreen = {
                 navController.navigate(Routes.Accounts.route) {
                     launchSingleTop = true
                 }
@@ -788,6 +797,21 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             },
             navigateToTemplatesScreen = {
                 navController.navigate(Routes.Templates.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToImportScreen = {
+                navController.navigate(Routes.ImportBackup.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToExportScreen = {
+                navController.navigate(Routes.ExportTransactions.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToAuditLogsScreen = {
+                navController.navigate(Routes.AuditLogs.route) {
                     launchSingleTop = true
                 }
             },

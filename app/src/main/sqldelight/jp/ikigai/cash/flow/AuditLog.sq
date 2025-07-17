@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS AuditLog (
+    logId INTEGER PRIMARY KEY NOT NULL,
+    entityId INTEGER NOT NULL,
+    entityType TEXT NOT NULL,
+    logAction TEXT NOT NULL,
+    dateTime INTEGER NOT NULL,
+    beforeJSON TEXT NOT NULL,
+    afterJSON TEXT NOT NULL
+);
+
+getAll:
+SELECT * FROM AuditLog WHERE dateTime BETWEEN :startDate AND :endDate ORDER BY
+CASE WHEN :sortField = 'dateTime' AND :sortDirection = 'ASC' THEN AuditLog.dateTime END ASC,
+CASE WHEN :sortField = 'dateTime' AND :sortDirection = 'DESC' THEN AuditLog.dateTime END DESC;

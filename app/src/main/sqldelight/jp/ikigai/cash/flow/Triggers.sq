@@ -1,0 +1,75 @@
+CREATE TRIGGER IF NOT EXISTS OnAccountBalanceUpdate AFTER UPDATE ON Account WHEN old.balance != new.balance
+BEGIN
+    INSERT INTO AuditLog(
+        entityId,
+        entityType,
+        logAction,
+        dateTime,
+        beforeJSON,
+        afterJSON
+    ) VALUES (
+        new.accountId,
+        'ACCOUNT',
+        'BALANCE_UPDATE',
+        CAST(strftime('%s', 'now') AS INTEGER),
+        '{"accountId":' || old.accountId || ',"accountName":"' || old.accountName || '","currency":"' || old.currency || '","balance":' || old.balance || '}',
+        '{"accountId":' || new.accountId || ',"accountName":"' || new.accountName || '","currency":"' || new.currency || '","balance":' || new.balance || '}'
+    );
+END;
+
+CREATE TRIGGER IF NOT EXISTS OnTransactionCreate AFTER INSERT ON `Transaction`
+BEGIN
+    INSERT INTO AuditLog(
+        entityId,
+        entityType,
+        logAction,
+        dateTime,
+        beforeJSON,
+        afterJSON
+    ) VALUES (
+        new.transactionId,
+        'TRANSACTION',
+        'CREATE',
+        CAST(strftime('%s', 'now') AS INTEGER),
+        '',
+        '{"transactionId":' || new.transactionId || ',"transactionTitle":"' || new.transactionTitle || '","transactionDescription":"' || new.transactionDescription || '","transactionAmount":' || new.transactionAmount || ',"transactionCurrency":"' || new.transactionCurrency || '","transactionType":"' || new.transactionType || '","transactionDateTime":' || new.transactionDateTime || ',"transactionAccountName":"' || (SELECT accountName FROM Account WHERE accountId = new.transactionAccountId) || '","transactionCategoryName":"' || (SELECT categoryName FROM Category WHERE categoryId = new.transactionCategoryId) || '","transactionCounterPartyName":"' || COALESCE((SELECT counterPartyName FROM CounterParty WHERE counterPartyId = new.transactionCounterPartyId), '') || '","transactionMethodName":"' || (SELECT methodName FROM Method WHERE methodId = new.transactionMethodId) || '"}'
+    );
+END;
+
+CREATE TRIGGER IF NOT EXISTS OnTransactionUpdate AFTER UPDATE ON `Transaction`
+BEGIN
+    INSERT INTO AuditLog(
+        entityId,
+        entityType,
+        logAction,
+        dateTime,
+        beforeJSON,
+        afterJSON
+    ) VALUES (
+        new.transactionId,
+        'TRANSACTION',
+        'UPDATE',
+        CAST(strftime('%s', 'now') AS INTEGER),
+        '{"transactionId":' || old.transactionId || ',"transactionTitle":"' || old.transactionTitle || '","transactionDescription":"' || old.transactionDescription || '","transactionAmount":' || old.transactionAmount || ',"transactionCurrency":"' || old.transactionCurrency || '","transactionType":"' || old.transactionType || '","transactionDateTime":' || old.transactionDateTime || ',"transactionAccountName":"' || (SELECT accountName FROM Account WHERE accountId = old.transactionAccountId) || '","transactionCategoryName":"' || (SELECT categoryName FROM Category WHERE categoryId = old.transactionCategoryId) || '","transactionCounterPartyName":"' || COALESCE((SELECT counterPartyName FROM CounterParty WHERE counterPartyId = old.transactionCounterPartyId), '') || '","transactionMethodName":"' || (SELECT methodName FROM Method WHERE methodId = old.transactionMethodId) || '"}',
+        '{"transactionId":' || new.transactionId || ',"transactionTitle":"' || new.transactionTitle || '","transactionDescription":"' || new.transactionDescription || '","transactionAmount":' || new.transactionAmount || ',"transactionCurrency":"' || new.transactionCurrency || '","transactionType":"' || new.transactionType || '","transactionDateTime":' || new.transactionDateTime || ',"transactionAccountName":"' || (SELECT accountName FROM Account WHERE accountId = new.transactionAccountId) || '","transactionCategoryName":"' || (SELECT categoryName FROM Category WHERE categoryId = new.transactionCategoryId) || '","transactionCounterPartyName":"' || COALESCE((SELECT counterPartyName FROM CounterParty WHERE counterPartyId = new.transactionCounterPartyId), '') || '","transactionMethodName":"' || (SELECT methodName FROM Method WHERE methodId = new.transactionMethodId) || '"}'
+    );
+END;
+
+CREATE TRIGGER IF NOT EXISTS OnTransactionDelete AFTER DELETE ON `Transaction`
+BEGIN
+    INSERT INTO AuditLog(
+        entityId,
+        entityType,
+        logAction,
+        dateTime,
+        beforeJSON,
+        afterJSON
+    ) VALUES (
+        old.transactionId,
+        'TRANSACTION',
+        'DELETE',
+        CAST(strftime('%s', 'now') AS INTEGER),
+        '{"transactionId":' || old.transactionId || ',"transactionTitle":"' || old.transactionTitle || '","transactionDescription":"' || old.transactionDescription || '","transactionAmount":' || old.transactionAmount || ',"transactionCurrency":"' || old.transactionCurrency || '","transactionType":"' || old.transactionType || '","transactionDateTime":' || old.transactionDateTime || ',"transactionAccountName":"' || (SELECT accountName FROM Account WHERE accountId = old.transactionAccountId) || '","transactionCategoryName":"' || (SELECT categoryName FROM Category WHERE categoryId = old.transactionCategoryId) || '","transactionCounterPartyName":"' || COALESCE((SELECT counterPartyName FROM CounterParty WHERE counterPartyId = old.transactionCounterPartyId), '') || '","transactionMethodName":"' || (SELECT methodName FROM Method WHERE methodId = old.transactionMethodId) || '"}',
+        ''
+    );
+END;

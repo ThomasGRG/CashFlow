@@ -15,6 +15,7 @@ import jp.ikigai.cash.flow.ui.screens.common.exportTransactionsScreen
 import jp.ikigai.cash.flow.ui.screens.common.importBackupScreen
 import jp.ikigai.cash.flow.ui.screens.common.settingsScreen
 import jp.ikigai.cash.flow.ui.screens.listing.accountScreen
+import jp.ikigai.cash.flow.ui.screens.listing.auditLogsScreen
 import jp.ikigai.cash.flow.ui.screens.listing.categoryScreen
 import jp.ikigai.cash.flow.ui.screens.listing.counterPartyScreen
 import jp.ikigai.cash.flow.ui.screens.listing.methodScreen
@@ -65,6 +66,8 @@ fun BaseScreen() {
             )
         }
     ) {
+        auditLogsScreen(navController = navController)
+
         settingsScreen(navController = navController)
 
         exportTransactionsScreen(navController = navController)
