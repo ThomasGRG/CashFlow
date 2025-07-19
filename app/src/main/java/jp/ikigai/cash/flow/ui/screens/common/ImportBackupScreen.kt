@@ -462,15 +462,15 @@ fun ImportBackupScreen(
         }
     }
 
-    BackHandler(enabled = enabled) {
+    BackHandler(
+        enabled = enabled && dataLoadComplete
+    ) {
         if (pagerState.currentPage > 0) {
             scope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
             }
-        } else if (dataLoadComplete) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
-            navigateBack()
+            sheetType = SheetType.CONFIRM_NAVIGATION
         }
     }
 
