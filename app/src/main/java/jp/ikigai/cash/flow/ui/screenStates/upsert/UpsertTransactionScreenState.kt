@@ -31,6 +31,7 @@ data class UpsertTransactionScreenState(
     ),
     val title: String = "",
     val titleValid: Boolean = true,
+    val description: String = "",
     val amount: Double = 0.0,
     val displayAmount: String = "",
     val amountValid: Boolean = true,

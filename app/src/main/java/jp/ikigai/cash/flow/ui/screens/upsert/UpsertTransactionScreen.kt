@@ -32,7 +32,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
@@ -85,7 +85,6 @@ import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
-import jp.ikigai.cash.flow.utils.TextFieldValueSaver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -104,6 +103,7 @@ fun UpsertTransactionScreen(
     navigateBack: () -> Unit,
     setLocale: (Locale?) -> Unit,
     setTitle: (String) -> Unit,
+    setDescription: (String) -> Unit,
     setAmount: (String) -> Unit,
     setDate: (ZonedDateTime) -> Unit,
     setTime: (ZonedDateTime) -> Unit,
@@ -250,8 +250,13 @@ fun UpsertTransactionScreen(
 
     val isTitleFieldFocused by titleFieldInteractionSource.collectIsFocusedAsState()
 
-    val title by remember(key1 = state.title) {
-        mutableStateOf(state.title)
+    val titleFieldValue by remember(key1 = state.title) {
+        mutableStateOf(
+            TextFieldValue(
+                text = state.title,
+                selection = TextRange(state.title.length)
+            )
+        )
     }
 
     val titleValid by remember(key1 = state.titleValid) {
@@ -259,16 +264,16 @@ fun UpsertTransactionScreen(
     }
 
     val filteredTransactionTitles by remember(
-        key1 = title,
+        key1 = titleFieldValue,
         key2 = state.transactionTitles
     ) {
-        mutableStateOf(filterTransactionTitles(title))
+        mutableStateOf(
+            filterTransactionTitles(titleFieldValue.text)
+        )
     }
 
-    var descriptionFieldValue by rememberSaveable(state.transaction, saver = TextFieldValueSaver) {
-        mutableStateOf(
-            TextFieldValue(state.transaction.transactionDescription)
-        )
+    val description by remember(key1 = state.description) {
+        mutableStateOf(state.description)
     }
 
     val amount by remember(key1 = state.displayAmount) {
@@ -300,7 +305,7 @@ fun UpsertTransactionScreen(
     }
 
     BackHandler {
-        if (enabled && hasChanges(descriptionFieldValue.text)) {
+        if (enabled && hasChanges(description)) {
             sheetType = SheetType.CONFIRM_NAVIGATION
         } else {
             navigateBack()
@@ -467,7 +472,7 @@ fun UpsertTransactionScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (enabled && hasChanges(descriptionFieldValue.text)) {
+                    if (enabled && hasChanges(description)) {
                         sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -482,7 +487,7 @@ fun UpsertTransactionScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        upsertTransaction(title, descriptionFieldValue.text)
+                        upsertTransaction(titleFieldValue.text, description)
                     }
                 },
                 extraButtonIcon = if (transactionId > 0) {
@@ -517,11 +522,13 @@ fun UpsertTransactionScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = title,
+                    value = titleFieldValue,
                     onValueChange = {
-                        setTitle(it)
+                        setTitle(it.text)
                     },
-                    initialValue = transaction.transactionTitle,
+                    hasValueChanged = {
+                        transaction.transactionId > 0 && transaction.transactionTitle != titleFieldValue.text
+                    },
                     enabled = enabled,
                     isFocused = isTitleFieldFocused,
                     label = stringResource(id = R.string.title_field_label),
@@ -541,7 +548,7 @@ fun UpsertTransactionScreen(
                     boxModifier = Modifier.animateItem()
                 )
             }
-            if (filteredTransactionTitles.isNotEmpty() && (title.isBlank() || isTitleFieldFocused)) {
+            if (filteredTransactionTitles.isNotEmpty() && (titleFieldValue.text.isBlank() || isTitleFieldFocused)) {
                 item(
                     key = "auto-complete",
                     contentType = "lazyRow"
@@ -585,10 +592,10 @@ fun UpsertTransactionScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = descriptionFieldValue,
-                    onValueChange = { descriptionFieldValue = it },
+                    value = description,
+                    onValueChange = setDescription,
                     hasValueChanged = {
-                        transaction.transactionId > 0 && transaction.transactionDescription != descriptionFieldValue.text
+                        transaction.transactionId > 0 && transaction.transactionDescription != description
                     },
                     enabled = enabled,
                     label = stringResource(id = R.string.description_field_label),
@@ -814,6 +821,7 @@ fun UpsertTransactionScreenPreview() {
         navigateBack = {},
         setLocale = {},
         setTitle = {},
+        setDescription = {},
         setAmount = {},
         setDate = {},
         setTime = {},
@@ -854,6 +862,7 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             },
             setLocale = viewModel::setLocale,
             setTitle = viewModel::setTitle,
+            setDescription = viewModel::setDescription,
             setAmount = viewModel::setAmount,
             setDate = viewModel::setDate,
             setTime = viewModel::setTime,

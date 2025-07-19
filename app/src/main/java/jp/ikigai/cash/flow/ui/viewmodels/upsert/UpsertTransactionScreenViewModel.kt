@@ -281,6 +281,7 @@ class UpsertTransactionScreenViewModel(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 transaction = transaction,
                 title = transaction.transactionTitle,
+                description = transaction.transactionDescription,
                 dateTime = dateTime,
                 dateString = dateTime.getDateString(datePattern),
                 timeString = dateTime.getTimeString(),
@@ -332,13 +333,10 @@ class UpsertTransactionScreenViewModel(
                 methods = upsertTransactionFlows.methods,
                 selectedMethod = selectedMethod,
                 transactionTitles = upsertTransactionFlows.transactionTitles,
-                transaction = it.transaction.copy(
-                    transactionTitle = transactionTemplate.templateTitle,
-                    transactionDescription = transactionTemplate.templateDescription
-                ),
                 dateString = it.dateTime.getDateString(datePattern),
                 timeString = it.dateTime.getTimeString(),
                 title = transactionTemplate.templateTitle,
+                description = transactionTemplate.templateDescription,
                 amount = transactionTemplate.templateAmount,
                 displayAmount = if (transactionTemplate.templateAmount > 0) transactionTemplate.templateAmount.toString() else "",
                 type = transactionTemplate.templateType,
@@ -592,6 +590,14 @@ class UpsertTransactionScreenViewModel(
             it.copy(
                 title = title,
                 titleValid = title.isNotBlank()
+            )
+        }
+    }
+
+    fun setDescription(description: String) {
+        _state.update {
+            it.copy(
+                description = description
             )
         }
     }
