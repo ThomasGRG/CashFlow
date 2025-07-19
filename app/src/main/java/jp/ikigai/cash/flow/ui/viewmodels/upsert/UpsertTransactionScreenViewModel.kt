@@ -580,7 +580,8 @@ class UpsertTransactionScreenViewModel(
             screenState.copy(
                 amount = newAmount,
                 amountValid = amountValid,
-                displayAmount = displayAmount
+                displayAmount = displayAmount,
+                hasUnsavedChanges = getHasUnsavedChanges(amount = newAmount)
             )
         }
     }
@@ -589,7 +590,8 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 title = title,
-                titleValid = title.isNotBlank()
+                titleValid = title.isNotBlank(),
+                hasUnsavedChanges = getHasUnsavedChanges(title = title)
             )
         }
     }
@@ -597,7 +599,8 @@ class UpsertTransactionScreenViewModel(
     fun setDescription(description: String) {
         _state.update {
             it.copy(
-                description = description
+                description = description,
+                hasUnsavedChanges = getHasUnsavedChanges(description = description)
             )
         }
     }
@@ -611,7 +614,8 @@ class UpsertTransactionScreenViewModel(
                 dateTime = newDateTime,
                 dateString = newDateTime.getDateString(datePattern),
                 timeString = newDateTime.getTimeString(),
-                timeValid = isTimeValid(selectedDateTime = newDateTime)
+                timeValid = isTimeValid(selectedDateTime = newDateTime),
+                hasUnsavedChanges = getHasUnsavedChanges(selectedDateTime = newDateTime)
             )
         }
     }
@@ -622,7 +626,8 @@ class UpsertTransactionScreenViewModel(
                 dateTime = time,
                 dateString = time.getDateString(datePattern),
                 timeString = time.getTimeString(),
-                timeValid = isTimeValid(selectedDateTime = time)
+                timeValid = isTimeValid(selectedDateTime = time),
+                hasUnsavedChanges = getHasUnsavedChanges(selectedDateTime = time)
             )
         }
     }
@@ -655,9 +660,7 @@ class UpsertTransactionScreenViewModel(
             )
             screenState.copy(
                 selectedAccount = account,
-                transaction = screenState.transaction.copy(
-                    transactionCurrency = account.currency
-                )
+                hasUnsavedChanges = getHasUnsavedChanges(selectedAccount = account)
             )
         }
     }
@@ -666,7 +669,8 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedCategory = category,
-                categoryValid = true
+                categoryValid = true,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedCategory = category)
             )
         }
     }
@@ -675,6 +679,7 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedCounterParty = counterParty,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedCounterParty = counterParty)
             )
         }
     }
@@ -683,7 +688,8 @@ class UpsertTransactionScreenViewModel(
         _state.update {
             it.copy(
                 selectedMethod = method,
-                methodValid = true
+                methodValid = true,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedMethod = method)
             )
         }
     }
@@ -696,7 +702,8 @@ class UpsertTransactionScreenViewModel(
                 screenState.selectedAccount
             )
             screenState.copy(
-                type = transactionType
+                type = transactionType,
+                hasUnsavedChanges = getHasUnsavedChanges(selectedType = transactionType)
             )
         }
     }
@@ -723,16 +730,19 @@ class UpsertTransactionScreenViewModel(
         }
     }
 
-    fun hasChanges(description: String): Boolean {
+    private fun getHasUnsavedChanges(
+        title: String = state.value.title,
+        description: String = state.value.description,
+        amount: Double = state.value.amount,
+        selectedDateTime: ZonedDateTime = state.value.dateTime,
+        selectedType: TransactionType = state.value.type,
+        selectedAccount: AccountWithTransactionMetadata = state.value.selectedAccount,
+        selectedCategory: CategoryWithTransactionMetadata = state.value.selectedCategory,
+        selectedCounterParty: CounterPartyWithTransactionMetadata = state.value.selectedCounterParty,
+        selectedMethod: MethodWithTransactionMetadata = state.value.selectedMethod,
+    ): Boolean {
         val transaction = state.value.transaction
-        val selectedAccount = state.value.selectedAccount
-        val selectedCategory = state.value.selectedCategory
-        val selectedCounterParty = state.value.selectedCounterParty
-        val selectedMethod = state.value.selectedMethod
-        val selectedType = state.value.type
-
         val transactionDateTime = transaction.transactionDateTime
-        val selectedDateTime = state.value.dateTime
 
         val yearChanged = transactionDateTime.year != selectedDateTime.year
         val monthChanged = transactionDateTime.month.value != selectedDateTime.month.value
@@ -743,9 +753,9 @@ class UpsertTransactionScreenViewModel(
         val minuteChanged = transactionDateTime.minute != selectedDateTime.minute
         val timeChanged = hourChanged || minuteChanged
 
-        val titleChanged = transaction.transactionTitle != state.value.title
+        val titleChanged = transaction.transactionTitle != title
         val descriptionChanged = transaction.transactionDescription != description
-        val amountChanged = transaction.transactionAmount != state.value.amount
+        val amountChanged = transaction.transactionAmount != amount
         val accountChanged = transaction.transactionAccountId != selectedAccount.accountId
         val categoryChanged = transaction.transactionCategoryId != selectedCategory.categoryId
         val counterPartyChanged =

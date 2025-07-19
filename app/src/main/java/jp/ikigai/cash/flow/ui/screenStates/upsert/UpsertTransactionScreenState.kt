@@ -77,6 +77,7 @@ data class UpsertTransactionScreenState(
     ),
     val methodValid: Boolean = true,
     val transactionTitles: List<String> = emptyList(),
+    val hasUnsavedChanges: Boolean = false,
     val loading: Boolean = true,
     val enabled: Boolean = false,
     val locale: Locale? = null

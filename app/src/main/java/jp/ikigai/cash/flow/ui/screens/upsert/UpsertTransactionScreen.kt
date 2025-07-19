@@ -115,7 +115,6 @@ fun UpsertTransactionScreen(
     upsertTransaction: (String, String) -> Unit,
     deleteTransaction: () -> Unit,
     filterTransactionTitles: (String) -> List<String>,
-    hasChanges: (String) -> Boolean,
     events: Flow<Event>,
     state: UpsertTransactionScreenState
 ) {
@@ -304,12 +303,16 @@ fun UpsertTransactionScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    BackHandler {
-        if (enabled && hasChanges(description)) {
-            sheetType = SheetType.CONFIRM_NAVIGATION
-        } else {
-            navigateBack()
-        }
+    val hasUnsavedChanges by remember(key1 = state.hasUnsavedChanges) {
+        mutableStateOf(
+            state.hasUnsavedChanges
+        )
+    }
+
+    BackHandler(
+        enabled = enabled && hasUnsavedChanges
+    ) {
+        sheetType = SheetType.CONFIRM_NAVIGATION
     }
 
     OneHandModeScaffold(
@@ -472,7 +475,7 @@ fun UpsertTransactionScreen(
             ThreeSlotRoundedBottomBar(
                 navigateBack = {
                     keyboardController?.hide()
-                    if (enabled && hasChanges(description)) {
+                    if (enabled && hasUnsavedChanges) {
                         sheetType = SheetType.CONFIRM_NAVIGATION
                     } else {
                         navigateBack()
@@ -833,7 +836,6 @@ fun UpsertTransactionScreenPreview() {
         upsertTransaction = { _, _ -> },
         deleteTransaction = {},
         filterTransactionTitles = { emptyList() },
-        hasChanges = { _ -> false },
         events = emptyList<Event>().asFlow(),
         state = UpsertTransactionScreenState()
     )
@@ -874,7 +876,6 @@ fun NavGraphBuilder.upsertTransactionScreen(navController: NavController) {
             upsertTransaction = viewModel::upsertTransaction,
             deleteTransaction = viewModel::deleteTransaction,
             filterTransactionTitles = viewModel::filterTransactionTitles,
-            hasChanges = viewModel::hasChanges,
             events = viewModel.event,
             state = state
         )
