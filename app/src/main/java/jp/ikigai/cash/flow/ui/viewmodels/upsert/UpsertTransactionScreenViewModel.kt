@@ -335,6 +335,16 @@ class UpsertTransactionScreenViewModel(
                 transactionTitles = upsertTransactionFlows.transactionTitles,
                 dateString = it.dateTime.getDateString(datePattern),
                 timeString = it.dateTime.getTimeString(),
+                transaction = it.transaction.copy(
+                    transactionTitle = transactionTemplate.templateTitle,
+                    transactionDescription = transactionTemplate.templateDescription,
+                    transactionAmount = transactionTemplate.templateAmount,
+                    transactionType = transactionTemplate.templateType,
+                    transactionAccountId = transactionTemplate.templateAccountId,
+                    transactionCategoryId = transactionTemplate.templateCategoryId,
+                    transactionCounterPartyId = transactionTemplate.templateCounterPartyId,
+                    transactionMethodId = transactionTemplate.templateMethodId
+                ),
                 title = transactionTemplate.templateTitle,
                 description = transactionTemplate.templateDescription,
                 amount = transactionTemplate.templateAmount,
