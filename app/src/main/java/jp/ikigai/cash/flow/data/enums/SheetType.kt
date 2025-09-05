@@ -23,5 +23,7 @@ enum class SheetType {
     EXPORT,
     CONFIRM_NAVIGATION,
     REVIEW,
-    AUDIT_LOG
+    AUDIT_LOG,
+    MONTH_RANGE,
+    CHART,
 }
