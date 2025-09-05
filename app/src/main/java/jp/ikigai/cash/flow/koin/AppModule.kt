@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.koin
 
+import jp.ikigai.cash.flow.ui.viewmodels.charts.ChartsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ExportTransactionsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.listing.AccountScreenViewModel
@@ -23,6 +24,8 @@ import org.koin.dsl.module
 
 val appModule = module {
     viewModel() { AuditLogsScreenViewModel() }
+
+    viewModel() { ChartsScreenViewModel(get()) }
 
     viewModel() { TransactionsScreenViewModel() }
     viewModel() { UpsertTransactionScreenViewModel(get()) }

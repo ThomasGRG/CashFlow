@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.ui.screens.charts.chartsScreen
 import jp.ikigai.cash.flow.ui.screens.common.exportTransactionsScreen
 import jp.ikigai.cash.flow.ui.screens.common.importBackupScreen
 import jp.ikigai.cash.flow.ui.screens.common.settingsScreen
@@ -73,6 +74,8 @@ fun BaseScreen() {
         exportTransactionsScreen(navController = navController)
 
         importBackupScreen(navController = navController)
+
+        chartsScreen(navController = navController)
 
         transactionsScreen(navController = navController)
         upsertTransactionScreen(navController = navController)

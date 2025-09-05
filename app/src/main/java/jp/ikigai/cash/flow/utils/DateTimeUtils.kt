@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.utils
 
 import java.time.Instant
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -51,6 +52,32 @@ fun ZonedDateTime.getEndOfDay(): ZonedDateTime {
         this.year,
         this.monthValue,
         this.dayOfMonth,
+        23,
+        59,
+        59,
+        999999999,
+        ZoneId.of("UTC")
+    )
+}
+
+fun YearMonth.toStartOfMonth(): ZonedDateTime {
+    return ZonedDateTime.of(
+        this.year,
+        this.monthValue,
+        1,
+        0,
+        0,
+        0,
+        0,
+        ZoneId.of("UTC")
+    )
+}
+
+fun YearMonth.toEndOfMonth(): ZonedDateTime {
+    return ZonedDateTime.of(
+        this.year,
+        this.monthValue,
+        this.lengthOfMonth(),
         23,
         59,
         59,

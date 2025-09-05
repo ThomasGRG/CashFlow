@@ -1,0 +1,143 @@
+TemplateWithTransactionCount:
+SELECT
+    TransactionTemplate.templateName,
+    COUNT(`Transaction`.transactionId) AS transactionCount
+FROM TransactionTemplate
+LEFT JOIN `Transaction` ON TransactionTemplate.templateId = `Transaction`.transactionTemplateId
+WHERE `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY TransactionTemplate.templateId
+ORDER BY transactionCount DESC;
+
+CategoryWithTransactionCount:
+SELECT
+    Category.categoryName,
+    COUNT(`Transaction`.transactionId) AS transactionCount
+FROM Category
+LEFT JOIN `Transaction` ON Category.categoryId = `Transaction`.transactionCategoryId
+WHERE `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Category.categoryId
+ORDER BY transactionCount DESC;
+
+CategoryWithTotalAmount:
+SELECT
+    Category.categoryName,
+    SUM(CASE WHEN `Transaction`.transactionType = 'DEBIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalDebitAmount,
+    SUM(CASE WHEN `Transaction`.transactionType = 'CREDIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalCreditAmount
+FROM Category
+LEFT JOIN `Transaction` ON Category.categoryId = `Transaction`.transactionCategoryId
+WHERE `Transaction`.transactionCurrency = :currency AND `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Category.categoryId;
+
+CategoryTrend:
+SELECT
+    `Transaction`.transactionDateTime,
+    `Transaction`.transactionAmount,
+    `Transaction`.transactionType
+FROM `Transaction`
+WHERE transactionCurrency = :currency
+AND transactionDateTime BETWEEN :startDate AND :endDate
+AND transactionCategoryId = :categoryId
+ORDER BY transactionDateTime ASC;
+
+CounterPartyWithTransactionCount:
+SELECT
+    CounterParty.counterPartyName,
+    COUNT(`Transaction`.transactionId) AS transactionCount
+FROM CounterParty
+LEFT JOIN `Transaction` ON CounterParty.counterPartyId = `Transaction`.transactionCounterPartyId
+WHERE `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY CounterParty.counterPartyId
+ORDER BY transactionCount DESC;
+
+CounterPartyWithTotalAmount:
+SELECT
+    CounterParty.counterPartyName,
+    SUM(CASE WHEN `Transaction`.transactionType = 'DEBIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalDebitAmount,
+    SUM(CASE WHEN `Transaction`.transactionType = 'CREDIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalCreditAmount
+FROM CounterParty
+LEFT JOIN `Transaction` ON CounterParty.counterPartyId = `Transaction`.transactionCounterPartyId
+WHERE `Transaction`.transactionCurrency = :currency AND `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY CounterParty.counterPartyId;
+
+CounterPartyTrend:
+SELECT
+    `Transaction`.transactionDateTime,
+    `Transaction`.transactionAmount,
+    `Transaction`.transactionType
+FROM `Transaction`
+WHERE transactionCurrency = :currency
+AND transactionDateTime BETWEEN :startDate AND :endDate
+AND transactionCounterPartyId = :counterPartyId
+ORDER BY transactionDateTime ASC;
+
+MethodWithTransactionCount:
+SELECT
+    Method.methodName,
+    COUNT(`Transaction`.transactionId) AS transactionCount
+FROM Method
+LEFT JOIN `Transaction` ON Method.methodId = `Transaction`.transactionMethodId
+WHERE `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Method.methodId
+ORDER BY transactionCount DESC;
+
+MethodWithTotalAmount:
+SELECT
+    Method.methodName,
+    SUM(CASE WHEN `Transaction`.transactionType = 'DEBIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalDebitAmount,
+    SUM(CASE WHEN `Transaction`.transactionType = 'CREDIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalCreditAmount
+FROM Method
+LEFT JOIN `Transaction` ON Method.methodId = `Transaction`.transactionMethodId
+WHERE `Transaction`.transactionCurrency = :currency AND `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Method.methodId;
+
+MethodTrend:
+SELECT
+    `Transaction`.transactionDateTime,
+    `Transaction`.transactionAmount,
+    `Transaction`.transactionType
+FROM `Transaction`
+WHERE transactionCurrency = :currency
+AND transactionDateTime BETWEEN :startDate AND :endDate
+AND transactionMethodId = :methodId
+ORDER BY transactionDateTime ASC;
+
+AccountWithTransactionCount:
+SELECT
+    Account.accountName,
+    COUNT(`Transaction`.transactionId) AS transactionCount
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+WHERE `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Account.accountId
+ORDER BY transactionCount DESC;
+
+AccountWithTotalAmount:
+SELECT
+    Account.accountName,
+    SUM(CASE WHEN `Transaction`.transactionType = 'DEBIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalDebitAmount,
+    SUM(CASE WHEN `Transaction`.transactionType = 'CREDIT' THEN `Transaction`.transactionAmount ELSE 0 END) AS totalCreditAmount
+FROM Account
+LEFT JOIN `Transaction` ON Account.accountId = `Transaction`.transactionAccountId
+WHERE `Transaction`.transactionCurrency = :currency AND `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY Account.accountId;
+
+AccountTrend:
+SELECT
+    `Transaction`.transactionDateTime,
+    `Transaction`.transactionAmount,
+    `Transaction`.transactionType
+FROM `Transaction`
+WHERE transactionCurrency = :currency
+AND transactionDateTime BETWEEN :startDate AND :endDate
+AND transactionAccountId = :accountId
+ORDER BY transactionDateTime ASC;
+
+TotalDebitCreditInfo:
+SELECT
+    `Transaction`.transactionType,
+    SUM(`Transaction`.transactionAmount) AS totalAmount
+FROM `Transaction`
+WHERE `Transaction`.transactionCurrency = :currency
+AND `Transaction`.transactionDateTime BETWEEN :startDate AND :endDate
+GROUP BY `Transaction`.transactionType
+ORDER BY `Transaction`.transactionType ASC;

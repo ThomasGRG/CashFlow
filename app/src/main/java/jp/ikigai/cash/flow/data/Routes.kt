@@ -1,10 +1,18 @@
 package jp.ikigai.cash.flow.data
 
+import jp.ikigai.cash.flow.data.enums.ChartType
+
 sealed class Routes(val route: String) {
 
     data object Settings : Routes("settings")
 
     data object AuditLogs : Routes("auditLogs")
+
+    data object Insights : Routes("insights?type={type}") {
+        fun getRoute(type: ChartType = ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART): String {
+            return "insights?type=${type.name}"
+        }
+    }
 
     data object ExportTransactions : Routes("exportTransactions")
     data object ImportBackup : Routes("importBackup")

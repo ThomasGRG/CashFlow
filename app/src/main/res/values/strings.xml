@@ -15,6 +15,23 @@
 
     <string name="select_backup_continue_label">Select a backup to continue…</string>
 
+    <!--  Chart Strings  -->
+    <string name="categories_transaction_count_bar_chart">Categories | Transaction count | Bar chart</string>
+    <string name="categories_debit_credit_bar_chart">Categories | Amount | Bar chart</string>
+    <string name="counter_parties_transaction_count_bar_chart">Counterparties | Transaction count | Bar chart</string>
+    <string name="counter_parties_debit_credit_bar_chart">Counterparties | Amount | Bar chart</string>
+    <string name="methods_transaction_count_bar_chart">Methods | Transaction count | Bar chart</string>
+    <string name="methods_debit_credit_bar_chart">Methods | Amount | Bar chart</string>
+    <string name="accounts_transaction_count_bar_chart">Accounts | Transaction count | Bar chart</string>
+    <string name="accounts_debit_credit_bar_chart">Accounts | Amount | Bar chart</string>
+    <string name="transaction_type_amount_bar_chart">Transaction Type | Amount | Bar chart</string>
+    <string name="template_transaction_count_bar_chart">Template | Transaction count | Bar chart</string>
+    <string name="category_trends_line_chart">Category | Trends | Line chart</string>
+    <string name="counterparty_trends_line_chart">CounterParty | Trends | Line chart</string>
+    <string name="method_trends_line_chart">Method | Trends | Line chart</string>
+    <string name="account_trends_line_chart">Account | Trends | Line chart</string>
+    <!--  Chart Strings  -->
+
     <!--  Hint Strings  -->
     <string name="new_category_label">A new category will be created</string>
     <string name="new_counterParty_label">A new counter party will be created</string>
@@ -48,6 +65,7 @@
     <!--  Common Strings  -->
 
     <!--  TopAppBar Strings  -->
+    <string name="charts_label">Charts</string>
     <string name="audit_log_label">Audit logs</string>
     <string name="settings_label">Settings</string>
     <string name="export_transactions_label">Export transactions</string>
@@ -110,16 +128,22 @@
     <string name="migrate_transactions_chip_label">Migrate transactions (%1$s)</string>
     <string name="sort_by_time_chip_label">Sort by: Time</string>
     <string name="amount_filter_chip_label">Amount: %1$s</string>
+    <string name="selected_currency_chip_label">Currency: %1$s</string>
     <string name="currency_filter_chip_label">Currencies (%1$s)</string>
+    <string name="selected_category_filter_chip_label">Category: %1$s</string>
     <string name="category_filter_chip_label">Categories (%1$s)</string>
+    <string name="selected_counter_party_filter_chip_label">Counterparty: %1$s</string>
     <string name="counter_party_filter_chip_label">Counterparties (%1$s)</string>
+    <string name="selected_method_filter_chip_label">Method: %1$s</string>
     <string name="method_filter_chip_label">Methods (%1$s)</string>
+    <string name="selected_account_filter_chip_label">Account: %1$s</string>
     <string name="account_filter_chip_label">Accounts (%1$s)</string>
     <string name="transaction_type_filter_chip_label">Transaction Types (%1$d)</string>
     <!--  Filter Chip Strings  -->
 
     <!--  Empty Placeholder Strings  -->
     <string name="choose_icon_screen_empty_placeholder_label">No results found for \"%1$s\"</string>
+    <string name="charts_screen_empty_placeholder_label">No data found.</string>
     <string name="audit_logs_screen_empty_placeholder_label">No logs found.</string>
     <string name="transactions_screen_empty_placeholder_label">You have not added any transactions.</string>
     <string name="categories_screen_empty_placeholder_label">You have not added any categories.</string>
@@ -131,6 +155,8 @@
     <!--  Empty Placeholder Strings  -->
 
     <!--  Placeholder Strings  -->
+    <string name="start_month_placeholder_label">Start month</string>
+    <string name="end_month_placeholder_label">End month</string>
     <string name="counter_party_placeholder_label">Select a counter party</string>
     <string name="select_category_placeholder_label">Select a category</string>
     <string name="select_method_placeholder_label">Select a method</string>
@@ -184,6 +210,7 @@
     <!--  Error Strings  -->
 
     <!--  TextField Strings  -->
+    <string name="chart_type_field_label">Chart type</string>
     <string name="map_to_field_label">Map to</string>
     <string name="search_field_label">Search</string>
     <string name="template_name_field_label">Template name</string>
