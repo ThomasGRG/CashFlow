@@ -46,147 +46,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-
-@Composable
-fun RoundedCornerOutlinedTextField(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
-    modifier: Modifier = Modifier,
-    boxModifier: Modifier = Modifier,
-    hasValueChanged: (() -> Boolean)? = null,
-    isFocused: Boolean,
-    enabled: Boolean,
-    label: String,
-    placeHolder: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
-    icon: ImageVector,
-    iconDescription: String,
-    isError: Boolean = false,
-    errorHint: String = "",
-    keyboardOptions: KeyboardOptions = KeyboardOptions(
-        capitalization = KeyboardCapitalization.Words,
-        imeAction = ImeAction.Done
-    ),
-    onDone: KeyboardActionScope.() -> Unit,
-    interactionSource: MutableInteractionSource,
-) {
-    val haptics = LocalHapticFeedback.current
-
-    val focusRequester = remember {
-        FocusRequester()
-    }
-
-    val alpha by remember(key1 = enabled) {
-        mutableFloatStateOf(if (enabled) 1f else 0.38f)
-    }
-
-    val animatedIconColor by animateColorAsState(
-        targetValue = if (enabled && isError) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onBackground
-        },
-        label = "animated icon color"
-    )
-
-    val animatedLabelColor by animateColorAsState(
-        targetValue = if (enabled) {
-            if (isError) {
-                MaterialTheme.colorScheme.error
-            } else {
-                if (isFocused) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    if (hasValueChanged != null && hasValueChanged()) {
-                        Color(221, 161, 82)
-                    } else {
-                        MaterialTheme.colorScheme.outline
-                    }
-                }
-            }
-        } else {
-            MaterialTheme.colorScheme.outline
-        },
-        label = "animated label color"
-    )
-
-    Box(modifier = boxModifier) {
-        Column {
-            Spacer(modifier = Modifier.height(9.dp))
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                enabled = enabled,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                placeholder = {
-                    Text(text = placeHolder)
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = iconDescription,
-                        modifier = Modifier.alpha(alpha),
-                        tint = animatedIconColor
-                    )
-                },
-                trailingIcon = {
-                    AnimatedVisibility(
-                        visible = enabled && value.text.isNotEmpty(),
-                        enter = scaleIn() + fadeIn(),
-                        exit = scaleOut() + fadeOut()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = "clear field",
-                            modifier = Modifier
-                                .clickable(
-                                    enabled = enabled,
-                                    onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onValueChange(TextFieldValue(""))
-                                        if (!isFocused) focusRequester.requestFocus()
-                                    }
-                                )
-                        )
-                    }
-                },
-                isError = isError,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = KeyboardActions(
-                    onDone = onDone
-                ),
-                shape = RoundedCornerShape(14.dp),
-                interactionSource = interactionSource,
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = animatedLabelColor
-                )
-            )
-            AnimatedTextFieldErrorLabel(
-                visible = enabled && isError,
-                errorLabel = errorHint
-            )
-        }
-        Row(
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .align(Alignment.TopStart)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = animatedLabelColor,
-                modifier = Modifier
-                    .background(backgroundColor)
-                    .alpha(alpha = alpha)
-                    .padding(start = 3.dp, end = 3.dp)
-            )
-        }
-    }
-}
 
 @Composable
 fun RoundedCornerOutlinedTextField(
@@ -348,6 +208,7 @@ fun RoundedCornerOutlinedTextField(
         imeAction = ImeAction.Done
     ),
     onDone: KeyboardActionScope.() -> Unit,
+    interactionSource: MutableInteractionSource? = null,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -446,7 +307,8 @@ fun RoundedCornerOutlinedTextField(
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = animatedLabelColor
-                )
+                ),
+                interactionSource = interactionSource,
             )
             AnimatedTextFieldErrorLabel(
                 visible = enabled && isError,
