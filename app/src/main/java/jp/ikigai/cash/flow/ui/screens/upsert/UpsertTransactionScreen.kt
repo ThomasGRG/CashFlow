@@ -40,10 +40,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
@@ -249,13 +247,8 @@ fun UpsertTransactionScreen(
 
     val isTitleFieldFocused by titleFieldInteractionSource.collectIsFocusedAsState()
 
-    val titleFieldValue by remember(key1 = state.title) {
-        mutableStateOf(
-            TextFieldValue(
-                text = state.title,
-                selection = TextRange(state.title.length)
-            )
-        )
+    val title by remember(key1 = state.title) {
+        mutableStateOf(state.title)
     }
 
     val titleValid by remember(key1 = state.titleValid) {
@@ -263,11 +256,11 @@ fun UpsertTransactionScreen(
     }
 
     val filteredTransactionTitles by remember(
-        key1 = titleFieldValue,
+        key1 = title,
         key2 = state.transactionTitles
     ) {
         mutableStateOf(
-            filterTransactionTitles(titleFieldValue.text)
+            filterTransactionTitles(title)
         )
     }
 
@@ -490,7 +483,7 @@ fun UpsertTransactionScreen(
                 },
                 floatingButtonAction = {
                     if (enabled) {
-                        upsertTransaction(titleFieldValue.text, description)
+                        upsertTransaction(title, description)
                     }
                 },
                 extraButtonIcon = if (transactionId > 0) {
@@ -525,15 +518,12 @@ fun UpsertTransactionScreen(
                 contentType = "type-enabled"
             ) {
                 RoundedCornerOutlinedTextField(
-                    value = titleFieldValue,
-                    onValueChange = {
-                        setTitle(it.text)
-                    },
+                    value = title,
+                    onValueChange = setTitle,
                     hasValueChanged = {
-                        transaction.transactionId > 0 && transaction.transactionTitle != titleFieldValue.text
+                        transaction.transactionId > 0 && transaction.transactionTitle != title
                     },
                     enabled = enabled,
-                    isFocused = isTitleFieldFocused,
                     label = stringResource(id = R.string.title_field_label),
                     placeHolder = stringResource(id = R.string.title_placeholder_label),
                     icon = TablerIcons.Typography,
@@ -551,7 +541,7 @@ fun UpsertTransactionScreen(
                     boxModifier = Modifier.animateItem()
                 )
             }
-            if (filteredTransactionTitles.isNotEmpty() && (titleFieldValue.text.isBlank() || isTitleFieldFocused)) {
+            if (filteredTransactionTitles.isNotEmpty() && (title.isBlank() || isTitleFieldFocused)) {
                 item(
                     key = "auto-complete",
                     contentType = "lazyRow"
