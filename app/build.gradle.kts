@@ -66,6 +66,9 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.9.0")
 
+    implementation("com.patrykandpatrick.vico:compose:2.1.3")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.1.3")
+
     implementation("app.cash.sqldelight:android-driver:2.1.0")
     implementation("app.cash.sqldelight:coroutines-extensions:2.1.0")
 
