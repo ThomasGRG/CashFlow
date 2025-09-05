@@ -15,7 +15,10 @@ fun getNumberFormatter(locale: Locale? = null): LocalizedNumberFormatter {
         .precision(Precision.maxFraction(2))
 }
 
-fun getCurrencyFormatterMap(locale: Locale? = null): Map<String, LocalizedNumberFormatter> {
+fun getCurrencyFormatterMap(
+    locale: Locale? = null,
+    notation: Notation = Notation.simple()
+): Map<String, LocalizedNumberFormatter> {
     return Constants.currencyList.associateBy(
         keySelector = {
             it.currency.currencyCode
@@ -24,6 +27,7 @@ fun getCurrencyFormatterMap(locale: Locale? = null): Map<String, LocalizedNumber
             NumberFormatter
                 .withLocale(locale ?: Locale.getDefault())
                 .unit(Currency.getInstance(it.currency.currencyCode))
+                .notation(notation)
         }
     )
 }
