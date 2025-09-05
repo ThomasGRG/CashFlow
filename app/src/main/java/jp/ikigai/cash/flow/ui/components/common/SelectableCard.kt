@@ -57,6 +57,37 @@ fun SelectableCard(
 @Composable
 fun SelectableCard(
     checked: () -> Boolean,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    OutlinedCard(
+        onClick = onClick,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = Color.Transparent
+        ),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            RadioButton(selected = checked(), onClick = null)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
+}
+
+@Composable
+fun SelectableCard(
+    checked: () -> Boolean,
     label: AnnotatedString,
     icon: ImageVector,
     iconTint: Color = MaterialTheme.colorScheme.onBackground,
