@@ -41,6 +41,7 @@ import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
@@ -60,6 +61,7 @@ import java.util.Locale
 @Composable
 fun MethodScreen(
     navigateBack: () -> Unit,
+    viewCharts: () -> Unit,
     addNewTransactionMethod: () -> Unit,
     editTransactionMethod: (Long) -> Unit,
     searchState: String,
@@ -212,7 +214,7 @@ fun MethodScreen(
                     }
                 } else null,
                 graphClick = if (count > 0) {
-                    {}
+                    viewCharts
                 } else null
             )
         }
@@ -264,6 +266,7 @@ fun MethodScreen(
 fun MethodScreenPreview() {
     MethodScreen(
         navigateBack = {},
+        viewCharts = {},
         addNewTransactionMethod = {},
         editTransactionMethod = {},
         searchState = "",
@@ -287,6 +290,13 @@ fun NavGraphBuilder.methodScreen(navController: NavController) {
         MethodScreen(
             navigateBack = {
                 navController.popBackStack()
+            },
+            viewCharts = {
+                navController.navigate(
+                    Routes.Insights.getRoute(ChartType.METHOD_DEBIT_CREDIT_BAR_CHART)
+                ) {
+                    launchSingleTop = true
+                }
             },
             addNewTransactionMethod = {
                 navController.navigate(Routes.UpsertMethod.getRoute()) {

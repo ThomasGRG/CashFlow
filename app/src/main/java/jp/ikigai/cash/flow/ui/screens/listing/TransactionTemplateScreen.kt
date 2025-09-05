@@ -42,6 +42,7 @@ import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
@@ -65,6 +66,7 @@ import java.util.Locale
 @Composable
 fun TransactionTemplateScreen(
     navigateBack: () -> Unit,
+    viewCharts: () -> Unit,
     addNewTransactionTemplate: () -> Unit,
     editTransactionTemplate: (Long) -> Unit,
     searchState: String,
@@ -246,7 +248,7 @@ fun TransactionTemplateScreen(
                     }
                 } else null,
                 graphClick = if (count > 0) {
-                    {}
+                    viewCharts
                 } else null
             )
         }
@@ -298,6 +300,7 @@ fun TransactionTemplateScreen(
 fun TransactionTemplateScreenPreview() {
     TransactionTemplateScreen(
         navigateBack = {},
+        viewCharts = {},
         addNewTransactionTemplate = {},
         editTransactionTemplate = {},
         searchState = "",
@@ -322,6 +325,13 @@ fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
         TransactionTemplateScreen(
             navigateBack = {
                 navController.popBackStack()
+            },
+            viewCharts = {
+                navController.navigate(
+                    Routes.Insights.getRoute(ChartType.TEMPLATE_TRANSACTION_COUNT_BAR_CHART)
+                ) {
+                    launchSingleTop = true
+                }
             },
             addNewTransactionTemplate = {
                 if (viewModel.canAddTransaction()) {

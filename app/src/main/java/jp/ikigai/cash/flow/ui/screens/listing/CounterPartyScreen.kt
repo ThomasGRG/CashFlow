@@ -41,6 +41,7 @@ import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
@@ -60,6 +61,7 @@ import java.util.Locale
 @Composable
 fun CounterPartyScreen(
     navigateBack: () -> Unit,
+    viewCharts: () -> Unit,
     addNewCounterParty: () -> Unit,
     editCounterParty: (Long) -> Unit,
     searchState: String,
@@ -215,7 +217,7 @@ fun CounterPartyScreen(
                     }
                 } else null,
                 graphClick = if (count > 0) {
-                    {}
+                    viewCharts
                 } else null
             )
         }
@@ -267,6 +269,7 @@ fun CounterPartyScreen(
 fun CounterPartyScreenPreview() {
     CounterPartyScreen(
         navigateBack = {},
+        viewCharts = {},
         addNewCounterParty = {},
         editCounterParty = {},
         searchState = "",
@@ -290,6 +293,13 @@ fun NavGraphBuilder.counterPartyScreen(navController: NavController) {
         CounterPartyScreen(
             navigateBack = {
                 navController.popBackStack()
+            },
+            viewCharts = {
+                navController.navigate(
+                    Routes.Insights.getRoute(ChartType.COUNTERPARTY_DEBIT_CREDIT_BAR_CHART)
+                ) {
+                    launchSingleTop = true
+                }
             },
             addNewCounterParty = {
                 navController.navigate(Routes.UpsertCounterParty.getRoute()) {

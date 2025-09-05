@@ -41,6 +41,7 @@ import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
@@ -60,6 +61,7 @@ import java.util.Locale
 @Composable
 fun CategoryScreen(
     navigateBack: () -> Unit,
+    viewCharts: () -> Unit,
     addNewCategory: () -> Unit,
     editCategory: (Long) -> Unit,
     searchState: String,
@@ -215,7 +217,7 @@ fun CategoryScreen(
                     }
                 } else null,
                 graphClick = if (count > 0) {
-                    {}
+                    viewCharts
                 } else null
             )
         }
@@ -267,6 +269,7 @@ fun CategoryScreen(
 fun CategoryScreenPreview() {
     CategoryScreen(
         navigateBack = {},
+        viewCharts = {},
         addNewCategory = {},
         editCategory = {},
         searchState = "",
@@ -290,6 +293,13 @@ fun NavGraphBuilder.categoryScreen(navController: NavController) {
         CategoryScreen(
             navigateBack = {
                 navController.popBackStack()
+            },
+            viewCharts = {
+                navController.navigate(
+                    Routes.Insights.getRoute(ChartType.CATEGORY_DEBIT_CREDIT_BAR_CHART)
+                ) {
+                    launchSingleTop = true
+                }
             },
             addNewCategory = {
                 navController.navigate(Routes.UpsertCategory.getRoute()) {
