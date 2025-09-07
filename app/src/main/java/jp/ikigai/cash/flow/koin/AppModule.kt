@@ -1,5 +1,6 @@
 package jp.ikigai.cash.flow.koin
 
+import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.viewmodels.charts.ChartsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ExportTransactionsScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
@@ -23,6 +24,8 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    single { CashFlowPreferencesDataStore(get()) }
+
     viewModel() { AuditLogsScreenViewModel() }
 
     viewModel() { ChartsScreenViewModel(get()) }
