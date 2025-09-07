@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("app.cash.sqldelight") version "2.1.0"
 }
 
@@ -65,6 +66,9 @@ dependencies {
     implementation("br.com.devsrsouza.compose.icons:$composeIconsVariant:1.1.0")
 
     implementation("androidx.navigation:navigation-compose:2.9.3")
+
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
 
     implementation("com.patrykandpatrick.vico:compose:2.1.3")
     implementation("com.patrykandpatrick.vico:compose-m3:2.1.3")
