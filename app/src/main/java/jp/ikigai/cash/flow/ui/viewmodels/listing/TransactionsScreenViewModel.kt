@@ -26,6 +26,7 @@ import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
+import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -56,6 +58,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class TransactionsScreenViewModel(
+    private val preferencesDataStore: CashFlowPreferencesDataStore,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
@@ -84,6 +87,7 @@ class TransactionsScreenViewModel(
     val event: Flow<Event> = _event.receiveAsFlow()
 
     init {
+        getSortPreferences()
         _filtersState.update {
             it.copy(
                 startDateString = it.startDate.getDateString(datePattern),
@@ -98,6 +102,20 @@ class TransactionsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         _event.close()
+    }
+
+    private fun getSortPreferences() = viewModelScope.launch {
+        preferencesDataStore
+            .getTransactionsScreenSortConfig()
+            .take(1)
+            .collectLatest { sortState ->
+                _sortConfigState.update {
+                    it.copy(
+                        sortField = sortState.sortField,
+                        sortDirection = sortState.sortDirection
+                    )
+                }
+            }
     }
 
     private fun getAccountQuery(): Flow<List<AccountWithTransactionMetadata>> {
@@ -243,12 +261,13 @@ class TransactionsScreenViewModel(
                 }
                 .debounce(300),
             _sortConfigState
-                .onEach {
+                .onEach { sortState ->
                     _state.update {
                         it.copy(
                             loading = true
                         )
                     }
+                    preferencesDataStore.saveTransactionsScreenSortConfig(sortState)
                 },
             _filtersState
                 .onEach {

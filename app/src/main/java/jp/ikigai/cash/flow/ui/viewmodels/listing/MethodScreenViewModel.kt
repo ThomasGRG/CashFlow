@@ -16,6 +16,7 @@ import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.CommonListingDTO
 import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.MethodScreenState
 import jp.ikigai.cash.flow.utils.getHighlightedString
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -39,6 +41,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MethodScreenViewModel(
+    private val preferencesDataStore: CashFlowPreferencesDataStore,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
@@ -56,8 +59,23 @@ class MethodScreenViewModel(
     val sortConfigState: StateFlow<SortConfigState> = _sortConfigState.asStateFlow()
 
     init {
+        getSortPreferences()
         getMethods()
         getCount()
+    }
+
+    private fun getSortPreferences() = viewModelScope.launch {
+        preferencesDataStore
+            .getMethodsScreenSortConfig()
+            .take(1)
+            .collectLatest { sortState ->
+                _sortConfigState.update {
+                    it.copy(
+                        sortField = sortState.sortField,
+                        sortDirection = sortState.sortDirection
+                    )
+                }
+            }
     }
 
     private fun getCount() = viewModelScope.launch {
@@ -84,12 +102,13 @@ class MethodScreenViewModel(
                 }
                 .debounce(300),
             _sortConfigState
-                .onEach {
+                .onEach { sortState ->
                     _state.update {
                         it.copy(
                             loading = true
                         )
                     }
+                    preferencesDataStore.saveMethodsScreenSortConfig(sortState)
                 }
         ) { searchText, sortConfig ->
             Pair(searchText, sortConfig)

@@ -20,6 +20,7 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.TemplateWithChips
 import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.TransactionTemplateScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -47,6 +49,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class TransactionTemplateScreenViewModel(
+    private val preferencesDataStore: CashFlowPreferencesDataStore,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
@@ -68,6 +71,7 @@ class TransactionTemplateScreenViewModel(
     val event: Flow<Event> = _event.receiveAsFlow()
 
     init {
+        getSortPreferences()
         getTemplates()
         getCount()
     }
@@ -75,6 +79,20 @@ class TransactionTemplateScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         _event.close()
+    }
+
+    private fun getSortPreferences() = viewModelScope.launch {
+        preferencesDataStore
+            .getTemplatesScreenSortConfig()
+            .take(1)
+            .collectLatest { sortState ->
+                _sortConfigState.update {
+                    it.copy(
+                        sortField = sortState.sortField,
+                        sortDirection = sortState.sortDirection
+                    )
+                }
+            }
     }
 
     private fun getCount() = viewModelScope.launch {
@@ -135,12 +153,13 @@ class TransactionTemplateScreenViewModel(
                 }
                 .debounce(300),
             _sortConfigState
-                .onEach {
+                .onEach { sortState ->
                     _state.update {
                         it.copy(
                             loading = true
                         )
                     }
+                    preferencesDataStore.saveTemplatesScreenSortConfig(sortState)
                 }
         ) { searchText, sortConfig ->
             Pair(searchText, sortConfig)

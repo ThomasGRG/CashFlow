@@ -16,6 +16,7 @@ import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.dto.AccountListingDTO
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.AccountScreenState
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -40,6 +42,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class AccountScreenViewModel(
+    private val preferencesDataStore: CashFlowPreferencesDataStore,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
@@ -58,8 +61,23 @@ class AccountScreenViewModel(
     val sortConfigState: StateFlow<SortConfigState> = _sortConfigState.asStateFlow()
 
     init {
+        getSortPreferences()
         getSources()
         getCount()
+    }
+
+    private fun getSortPreferences() = viewModelScope.launch {
+        preferencesDataStore
+            .getAccountsScreenSortConfig()
+            .take(1)
+            .collectLatest { sortState ->
+                _sortConfigState.update {
+                    it.copy(
+                        sortField = sortState.sortField,
+                        sortDirection = sortState.sortDirection
+                    )
+                }
+            }
     }
 
     private fun getCount() = viewModelScope.launch {
@@ -86,12 +104,13 @@ class AccountScreenViewModel(
                 }
                 .debounce(300),
             _sortConfigState
-                .onEach {
+                .onEach { sortState ->
                     _state.update {
                         it.copy(
                             loading = true
                         )
                     }
+                    preferencesDataStore.saveAccountsScreenSortConfig(sortState)
                 }
         ) { searchText, sortConfig ->
             Pair(searchText, sortConfig)

@@ -30,27 +30,27 @@ val appModule = module {
 
     viewModel() { ChartsScreenViewModel(get()) }
 
-    viewModel() { TransactionsScreenViewModel() }
+    viewModel() { TransactionsScreenViewModel(get()) }
     viewModel() { UpsertTransactionScreenViewModel(get()) }
 
-    viewModel() { CounterPartyScreenViewModel() }
+    viewModel() { CounterPartyScreenViewModel(get()) }
     viewModel() { UpsertCounterPartyScreenViewModel(get()) }
     viewModel() { MigrateCounterPartyScreenViewModel(get()) }
 
-    viewModel() { AccountScreenViewModel() }
+    viewModel() { AccountScreenViewModel(get()) }
     viewModel() { UpsertAccountScreenViewModel(get()) }
 
-    viewModel() { MethodScreenViewModel() }
+    viewModel() { MethodScreenViewModel(get()) }
     viewModel() { UpsertMethodScreenViewModel(get()) }
     viewModel() { MigrateMethodScreenViewModel(get()) }
 
-    viewModel() { CategoryScreenViewModel() }
+    viewModel() { CategoryScreenViewModel(get()) }
     viewModel() { UpsertCategoryScreenViewModel(get()) }
     viewModel() { MigrateCategoryScreenViewModel(get()) }
 
     viewModel() { ExportTransactionsScreenViewModel() }
     viewModel() { ImportBackupScreenViewModel() }
 
-    viewModel() { TransactionTemplateScreenViewModel() }
+    viewModel() { TransactionTemplateScreenViewModel(get()) }
     viewModel() { UpsertTransactionTemplateScreenViewModel(get()) }
 }
