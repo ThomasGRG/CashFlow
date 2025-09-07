@@ -19,11 +19,11 @@ import jp.ikigai.cash.flow.TransactionWithMetadata
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Database
 import jp.ikigai.cash.flow.data.Event
+import jp.ikigai.cash.flow.data.TransactionHeader
 import jp.ikigai.cash.flow.data.dto.ChipInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionScreenFlows
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
-import jp.ikigai.cash.flow.data.dto.TransactionsWithTotalAmount
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
@@ -50,7 +50,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -300,7 +299,8 @@ class TransactionsScreenViewModel(
                     transactionsHashCode = transactions.hashCode(),
                     transactions = getTransactionsMap(
                         transactions,
-                        searchState.value
+                        searchState.value,
+                        sortConfigState.value.sortField
                     ),
                     expenseTransactionsCount = numberFormatter.format(expenseTransactions.size)
                         .toString(),
@@ -418,25 +418,66 @@ class TransactionsScreenViewModel(
 
     private fun getTransactionsMap(
         transactions: List<TransactionWithMetadata>,
-        searchText: String
-    ): Map<LocalDate, TransactionsWithTotalAmount> {
-        val transactionsMap = transactions.groupBy { it.transactionDateTime.toLocalDate() }
-        val transactionDetailsMap = mutableMapOf<LocalDate, TransactionsWithTotalAmount>()
-        transactionsMap.forEach { (localDate, transactionsList) ->
-            val creditTransactions =
-                transactionsList.filter { it.transactionType == TransactionType.CREDIT }
-            val credit = creditTransactions.sumOf { it.transactionAmount }
+        searchText: String,
+        sortField: String,
+    ): Map<TransactionHeader, List<TransactionWithChips>> {
+        when (sortField) {
+            "transactionAmount" -> {
+                if (transactions.isEmpty()) {
+                    return emptyMap()
+                }
+                val maxAmount = currencyFormatter.format(
+                    transactions.maxOfOrNull { it.transactionAmount } ?: 0.0
+                )
+                val minAmount = currencyFormatter.format(
+                    transactions.minOfOrNull { it.transactionAmount } ?: 0.0
+                )
+                val header = TransactionHeader.AmountHeader(
+                    formattedAmountRange = "$maxAmount - $minAmount",
+                )
+                val transactionDetailsMap =
+                    mutableMapOf<TransactionHeader, List<TransactionWithChips>>()
+                transactionDetailsMap[header] = transactions.map {
+                    getTransactionWithChips(
+                        it,
+                        searchText
+                    )
+                }
+                return transactionDetailsMap
+            }
 
-            val debitTransactions =
-                transactionsList.filter { it.transactionType == TransactionType.DEBIT }
-            val debit = debitTransactions.sumOf { it.transactionAmount }
+            "transactionDateTime" -> {
+                val transactionsMap = transactions.groupBy { it.transactionDateTime.toLocalDate() }
+                val transactionDetailsMap =
+                    mutableMapOf<TransactionHeader, List<TransactionWithChips>>()
+                transactionsMap.forEach { (localDate, transactionsList) ->
+                    val creditTransactions =
+                        transactionsList.filter { it.transactionType == TransactionType.CREDIT }
+                    val credit = creditTransactions.sumOf { it.transactionAmount }
 
-            transactionDetailsMap[localDate] = TransactionsWithTotalAmount(
-                transactions = transactionsList.map { getTransactionWithChips(it, searchText) },
-                totalAmount = currencyFormatter.format(credit - debit).toString(),
-            )
+                    val debitTransactions =
+                        transactionsList.filter { it.transactionType == TransactionType.DEBIT }
+                    val debit = debitTransactions.sumOf { it.transactionAmount }
+
+                    val header = TransactionHeader.DateHeader(
+                        date = localDate,
+                        formattedAmount = currencyFormatter.format(credit - debit).toString(),
+                    )
+
+                    transactionDetailsMap[header] = transactionsList.map {
+                        getTransactionWithChips(
+                            it,
+                            searchText
+                        )
+                    }
+                }
+                return transactionDetailsMap
+            }
+
+            else -> {
+                return emptyMap()
+            }
         }
-        return transactionDetailsMap
     }
 
     private fun getTransactionWithChips(
@@ -573,9 +614,10 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setSortDirection(sortDirection: SortDirection) {
+    fun setSortConfig(field: String, sortDirection: SortDirection) {
         _sortConfigState.update {
             it.copy(
+                sortField = field,
                 sortDirection = sortDirection
             )
         }

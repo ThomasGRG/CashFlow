@@ -126,7 +126,8 @@
 
     <!--  Filter Chip Strings  -->
     <string name="migrate_transactions_chip_label">Migrate transactions (%1$s)</string>
-    <string name="sort_by_time_chip_label">Sort by: Time</string>
+    <string name="sort_by_chip_label">Sorted by: %1$s</string>
+    <string name="sort_by_time_chip_label">Sorted by: Time</string>
     <string name="amount_filter_chip_label">Amount: %1$s</string>
     <string name="selected_currency_chip_label">Currency: %1$s</string>
     <string name="currency_filter_chip_label">Currencies (%1$s)</string>

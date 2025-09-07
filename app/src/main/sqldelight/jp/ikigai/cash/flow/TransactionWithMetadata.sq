@@ -25,4 +25,6 @@ AND transactionCategoryId IN :selectedCategoryIds
 AND transactionCounterPartyId IN :selectedCounterPartyIds
 AND transactionMethodId IN :selectedMethodIds ORDER BY
 CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'ASC' THEN TransactionWithMetadata.transactionDateTime END ASC,
-CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'DESC' THEN TransactionWithMetadata.transactionDateTime END DESC;
+CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'DESC' THEN TransactionWithMetadata.transactionDateTime END DESC,
+CASE WHEN :sortField = 'transactionAmount' AND :sortDirection = 'ASC' THEN TransactionWithMetadata.transactionAmount END ASC,
+CASE WHEN :sortField = 'transactionAmount' AND :sortDirection = 'DESC' THEN TransactionWithMetadata.transactionAmount END DESC;

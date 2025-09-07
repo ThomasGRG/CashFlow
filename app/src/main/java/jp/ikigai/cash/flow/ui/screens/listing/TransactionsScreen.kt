@@ -57,6 +57,7 @@ import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.TransactionHeader
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -72,6 +73,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MoreOptionsSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
@@ -106,7 +108,7 @@ fun TransactionsScreen(
     setSelectedCounterParties: (Map<Long, Boolean>, Boolean) -> Unit,
     setSelectedMethods: (Map<Long, Boolean>) -> Unit,
     setSelectedTransactionTypes: (List<TransactionType>) -> Unit,
-    setSortDirection: (SortDirection) -> Unit,
+    setSortConfig: (String, SortDirection) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     cloneTransaction: (Long, Boolean) -> Unit,
     navigateToAccountsScreen: () -> Unit,
@@ -308,6 +310,21 @@ fun TransactionsScreen(
         mutableStateOf(filtersState.filterAmountRange)
     }
 
+    val sortFields = mapOf(
+        stringResource(id = R.string.amount_label) to "transactionAmount",
+        stringResource(id = R.string.time_field_label) to "transactionDateTime",
+    )
+
+    val sortField by remember(key1 = sortConfigState.sortField) {
+        mutableStateOf(sortConfigState.sortField)
+    }
+
+    val sortedBy by remember(key1 = sortField) {
+        mutableStateOf(
+            sortFields.entries.find { it.value == sortField }?.key
+        )
+    }
+
     val sortDirection by remember(key1 = sortConfigState.sortDirection) {
         mutableStateOf(sortConfigState.sortDirection)
     }
@@ -344,6 +361,7 @@ fun TransactionsScreen(
             TransactionScreenRoundedBottomBar(
                 selectedCurrencySymbol = selectedCurrencySymbol,
                 filterAmount = filterAmountRange,
+                sortField = sortedBy,
                 sortDirection = sortDirection,
                 selectedAccountCount = selectedAccountCount,
                 selectedCategoryCount = selectedCategoryCount,
@@ -352,11 +370,7 @@ fun TransactionsScreen(
                 selectedMethodCount = selectedMethodCount,
                 selectedTransactionTypeCount = selectedTransactionTypes.size,
                 onSortClick = {
-                    if (sortDirection == SortDirection.DESC) {
-                        setSortDirection(SortDirection.ASC)
-                    } else {
-                        setSortDirection(SortDirection.DESC)
-                    }
+                    sheetType = SheetType.SORT
                 },
                 onFilterByAmountClick = {
                     sheetType = SheetType.AMOUNT
@@ -457,15 +471,34 @@ fun TransactionsScreen(
                         }
                     }
                     transactions.forEach { entry ->
-                        stickyHeader {
-                            TransactionGroupHeader(
-                                date = entry.key,
-                                amount = entry.value.totalAmount
-                            )
+                        when (val header = entry.key) {
+                            is TransactionHeader.DateHeader -> {
+                                stickyHeader(
+                                    key = header.date,
+                                    contentType = "sticky_date_header"
+                                ) {
+                                    TransactionGroupHeader(
+                                        date = header.date,
+                                        amount = header.formattedAmount
+                                    )
+                                }
+                            }
+
+                            is TransactionHeader.AmountHeader -> {
+                                stickyHeader(
+                                    key = header.formattedAmountRange,
+                                    contentType = "sticky_amount_header"
+                                ) {
+                                    TransactionGroupHeader(
+                                        amountRange = header.formattedAmountRange
+                                    )
+                                }
+                            }
                         }
                         items(
-                            items = entry.value.transactions,
-                            key = { transactionWithChips -> transactionWithChips.id }
+                            items = entry.value,
+                            key = { transactionWithChips -> transactionWithChips.id },
+                            contentType = { "transaction_item" }
                         ) { transactionWithChips ->
                             TransactionCard(
                                 transactionWithChips = transactionWithChips,
@@ -695,6 +728,22 @@ fun TransactionsScreen(
                         )
                     }
 
+                    SheetType.SORT -> {
+                        SortConfigSheet(
+                            selectedField = sortField,
+                            selectedDirection = sortDirection,
+                            fields = sortFields,
+                            sort = setSortConfig,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion {
+                                        sheetType = SheetType.NONE
+                                    }
+                            }
+                        )
+                    }
+
                     else -> {}
                 }
             }
@@ -719,7 +768,7 @@ fun TransactionsScreenPreview() {
         setSelectedCounterParties = { _, _ -> },
         setSelectedMethods = {},
         setSelectedTransactionTypes = {},
-        setSortDirection = {},
+        setSortConfig = { _, _ -> },
         filterByAmount = { _, _ -> },
         cloneTransaction = { _, _ -> },
         navigateToAccountsScreen = {},
@@ -772,7 +821,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             setSelectedCounterParties = viewModel::setSelectedCounterParties,
             setSelectedMethods = viewModel::setSelectedMethods,
             setSelectedTransactionTypes = viewModel::setSelectedTransactionTypes,
-            setSortDirection = viewModel::setSortDirection,
+            setSortConfig = viewModel::setSortConfig,
             filterByAmount = viewModel::setFilterAmounts,
             cloneTransaction = viewModel::cloneTransaction,
             navigateToMethodsScreen = {

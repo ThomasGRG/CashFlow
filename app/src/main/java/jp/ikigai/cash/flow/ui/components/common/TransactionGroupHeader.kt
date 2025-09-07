@@ -59,6 +59,27 @@ fun TransactionGroupHeader(
 
 @Composable
 fun TransactionGroupHeader(
+    amountRange: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.background
+            )
+            .padding(top = 10.dp, bottom = 10.dp, start = 5.dp, end = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = amountRange,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun TransactionGroupHeader(
     date: LocalDate,
     enabled: Boolean,
     selected: Boolean,

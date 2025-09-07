@@ -5,16 +5,16 @@ import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.data.Constants
+import jp.ikigai.cash.flow.data.TransactionHeader
 import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
-import jp.ikigai.cash.flow.data.dto.TransactionsWithTotalAmount
+import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import java.time.LocalDate
 import java.util.Locale
 
 data class TransactionsScreenState(
     val transactionsHashCode: Int = 0,
-    val transactions: Map<LocalDate, TransactionsWithTotalAmount> = emptyMap(),
+    val transactions: Map<TransactionHeader, List<TransactionWithChips>> = emptyMap(),
     val income: String = "",
     val incomeTransactionsCount: String = "0",
     val expense: String = "",

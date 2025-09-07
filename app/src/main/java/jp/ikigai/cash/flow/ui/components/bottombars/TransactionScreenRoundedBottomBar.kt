@@ -21,6 +21,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -40,6 +43,7 @@ import jp.ikigai.cash.flow.data.enums.SortDirection
 @Composable
 fun TransactionScreenRoundedBottomBar(
     selectedCurrencySymbol: String,
+    sortField: String?,
     sortDirection: SortDirection,
     filterAmount: String,
     selectedAccountCount: String,
@@ -63,6 +67,20 @@ fun TransactionScreenRoundedBottomBar(
 ) {
     val haptics = LocalHapticFeedback.current
 
+    val sortIcon by remember(key1 = sortDirection) {
+        mutableStateOf(
+            if (sortDirection == SortDirection.DESC) {
+                TablerIcons.SortDescending
+            } else {
+                TablerIcons.SortAscending
+            }
+        )
+    }
+
+    val sortedBy by remember(key1 = sortField) {
+        mutableStateOf(sortField ?: "")
+    }
+
     Column {
         Row(
             modifier = Modifier
@@ -82,15 +100,11 @@ fun TransactionScreenRoundedBottomBar(
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = if (sortDirection == SortDirection.DESC) {
-                        TablerIcons.SortDescending
-                    } else {
-                        TablerIcons.SortAscending
-                    },
+                    imageVector = sortIcon,
                     contentDescription = "sort direction icon"
                 )
                 Text(
-                    text = stringResource(id = R.string.sort_by_time_chip_label),
+                    text = stringResource(id = R.string.sort_by_chip_label, sortedBy),
                     modifier = Modifier.padding(start = 6.dp),
                 )
             }
@@ -271,6 +285,7 @@ fun TransactionScreenRoundedBottomBar(
 fun TransactionScreenRoundedBottomBarPreview() {
     TransactionScreenRoundedBottomBar(
         selectedCurrencySymbol = Currency.getInstance("INR").symbol,
+        sortField = "transactionDateTime",
         sortDirection = SortDirection.DESC,
         filterAmount = "3000+",
         counterPartyFilterVisible = true,
