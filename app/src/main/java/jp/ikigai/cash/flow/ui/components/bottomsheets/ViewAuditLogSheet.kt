@@ -343,21 +343,21 @@ fun ViewAuditLogSheet(
                         modifier = Modifier.fillMaxWidth(0.98f)
                     )
                 }
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Text(
-                        text = auditLogDetails.formattedAfterBalance,
-                        style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.padding(end = 15.dp)
-                    )
                     Text(
                         text = auditLogDetails.formattedBeforeBalance,
                         style = MaterialTheme.typography.displaySmall,
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.alpha(0.6f)
+                    )
+                    Text(
+                        text = auditLogDetails.formattedAfterBalance,
+                        style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.padding(end = 15.dp)
                     )
                 }
             }
