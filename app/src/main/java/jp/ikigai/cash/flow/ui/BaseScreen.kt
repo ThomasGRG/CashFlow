@@ -1,5 +1,7 @@
 package jp.ikigai.cash.flow.ui
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.screens.charts.chartsScreen
 import jp.ikigai.cash.flow.ui.screens.common.exportTransactionsScreen
@@ -39,6 +42,30 @@ fun BaseScreen() {
             .background(MaterialTheme.colorScheme.background),
         navController = navController,
         startDestination = Routes.Transactions.route,
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
+                animationSpec = tween(Constants.TWEEN_DURATION)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
+                animationSpec = tween(Constants.TWEEN_DURATION)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
+                animationSpec = tween(Constants.TWEEN_DURATION)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
+                animationSpec = tween(Constants.TWEEN_DURATION)
+            )
+        }
     ) {
         auditLogsScreen(navController = navController)
 
