@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -26,16 +23,11 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
 import compose.icons.tablericons.BrandGithub
 import compose.icons.tablericons.BuildingBank
-import compose.icons.tablericons.CaretRight
-import compose.icons.tablericons.ClipboardCheck
 import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.CreditCard
-import compose.icons.tablericons.Download
 import compose.icons.tablericons.Settings
-import compose.icons.tablericons.Upload
 import compose.icons.tablericons.Users
 import jp.ikigai.cash.flow.R
-import kotlinx.coroutines.launch
 
 @Composable
 fun MoreOptionsSheet(
@@ -44,336 +36,195 @@ fun MoreOptionsSheet(
     navigateToMethodsScreen: () -> Unit,
     navigateToSourcesScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
-    navigateToImportScreen: () -> Unit,
-    navigateToExportScreen: () -> Unit,
-    navigateToAuditLogsScreen: () -> Unit,
     navigateToSettingsScreen: () -> Unit,
     openGithubReleasesPage: () -> Unit,
     dismiss: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
-    val scope = rememberCoroutineScope()
-
-    val pagerState = rememberPagerState(pageCount = { 2 })
-
-    HorizontalPager(
-        state = pagerState
-    ) { page ->
-        when (page) {
-            0 -> {
-                Column(
-                    modifier = Modifier
-                        .padding(start = 5.dp, end = 5.dp, bottom = 20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToCategoriesScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Archive,
-                                contentDescription = TablerIcons.Archive.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.categories_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToMethodsScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.CreditCard,
-                                contentDescription = TablerIcons.CreditCard.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.methods_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToCounterPartyScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Users,
-                                contentDescription = TablerIcons.Users.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.counter_parties_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToSourcesScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.BuildingBank,
-                                contentDescription = TablerIcons.BuildingBank.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.accounts_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToTemplatesScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.ClipboardList,
-                                contentDescription = TablerIcons.ClipboardList.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.templates_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                openGithubReleasesPage()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.BrandGithub,
-                                contentDescription = TablerIcons.BrandGithub.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.updates_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                scope.launch {
-                                    pagerState.animateScrollToPage(1)
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.CaretRight,
-                                contentDescription = TablerIcons.CaretRight.name
-                            )
-                            Text(
-                                text = stringResource(id = R.string.more_button_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .padding(start = 5.dp, end = 5.dp, bottom = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToSourcesScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.BuildingBank,
+                    contentDescription = TablerIcons.BuildingBank.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.accounts_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
-
-            1 -> {
-                Column(
-                    modifier = Modifier
-                        .padding(start = 5.dp, end = 5.dp, bottom = 20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToImportScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Download,
-                                contentDescription = TablerIcons.Download.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.import_transactions_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToExportScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Upload,
-                                contentDescription = TablerIcons.Upload.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.export_transactions_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToAuditLogsScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.ClipboardCheck,
-                                contentDescription = TablerIcons.ClipboardCheck.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.audit_log_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledTonalButton(
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                dismiss()
-                                navigateToSettingsScreen()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 58.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Settings,
-                                contentDescription = TablerIcons.Settings.name,
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                            Text(
-                                text = stringResource(id = R.string.settings_label),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
-                }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToCategoriesScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Archive,
+                    contentDescription = TablerIcons.Archive.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.categories_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToCounterPartyScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Users,
+                    contentDescription = TablerIcons.Users.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.counter_parties_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToMethodsScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.CreditCard,
+                    contentDescription = TablerIcons.CreditCard.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.methods_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToTemplatesScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.ClipboardList,
+                    contentDescription = TablerIcons.ClipboardList.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.templates_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    openGithubReleasesPage()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.BrandGithub,
+                    contentDescription = TablerIcons.BrandGithub.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.updates_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    navigateToSettingsScreen()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 58.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Settings,
+                    contentDescription = TablerIcons.Settings.name,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     }
@@ -389,9 +240,6 @@ fun MoreOptionsSheetPreview() {
         navigateToSourcesScreen = {},
         navigateToTemplatesScreen = {},
         navigateToSettingsScreen = {},
-        navigateToImportScreen = {},
-        navigateToExportScreen = {},
-        navigateToAuditLogsScreen = {},
         openGithubReleasesPage = {},
         dismiss = {}
     )

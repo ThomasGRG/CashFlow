@@ -33,6 +33,10 @@
     <!--  Chart Strings  -->
 
     <!--  Settings Strings  -->
+    <string name="auditing_settings_group_label">Auditing</string>
+    <string name="audit_logs_setting_label">Logs</string>
+    <string name="audit_logs_setting_description">View audit logs</string>
+    <string name="backup_restore_settings_group_label">Backup &amp; restore</string>
     <string name="sort_settings_group_label">Sorting</string>
     <string name="restore_sort_setting_label">Restore sort config</string>
     <string name="restore_sort_setting_description">Restore default sort config for selected screens</string>

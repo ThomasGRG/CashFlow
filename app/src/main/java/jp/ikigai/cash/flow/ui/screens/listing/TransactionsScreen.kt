@@ -116,9 +116,6 @@ fun TransactionsScreen(
     navigateToCounterPartyScreen: () -> Unit,
     navigateToMethodsScreen: () -> Unit,
     navigateToTemplatesScreen: () -> Unit,
-    navigateToImportScreen: () -> Unit,
-    navigateToExportScreen: () -> Unit,
-    navigateToAuditLogsScreen: () -> Unit,
     navigateToSettingsScreen: () -> Unit,
     openGithubPage: () -> Unit,
     events: Flow<Event>,
@@ -594,9 +591,6 @@ fun TransactionsScreen(
                             navigateToMethodsScreen = navigateToMethodsScreen,
                             navigateToSourcesScreen = navigateToAccountsScreen,
                             navigateToTemplatesScreen = navigateToTemplatesScreen,
-                            navigateToImportScreen = navigateToImportScreen,
-                            navigateToExportScreen = navigateToExportScreen,
-                            navigateToAuditLogsScreen = navigateToAuditLogsScreen,
                             navigateToSettingsScreen = navigateToSettingsScreen,
                             openGithubReleasesPage = openGithubPage,
                             dismiss = {
@@ -776,9 +770,6 @@ fun TransactionsScreenPreview() {
         navigateToCounterPartyScreen = {},
         navigateToMethodsScreen = {},
         navigateToTemplatesScreen = {},
-        navigateToImportScreen = {},
-        navigateToExportScreen = {},
-        navigateToAuditLogsScreen = {},
         navigateToSettingsScreen = {},
         openGithubPage = {},
         events = emptyList<Event>().asFlow(),
@@ -846,21 +837,6 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             },
             navigateToTemplatesScreen = {
                 navController.navigate(Routes.Templates.route) {
-                    launchSingleTop = true
-                }
-            },
-            navigateToImportScreen = {
-                navController.navigate(Routes.ImportBackup.route) {
-                    launchSingleTop = true
-                }
-            },
-            navigateToExportScreen = {
-                navController.navigate(Routes.ExportTransactions.route) {
-                    launchSingleTop = true
-                }
-            },
-            navigateToAuditLogsScreen = {
-                navController.navigate(Routes.AuditLogs.route) {
                     launchSingleTop = true
                 }
             },

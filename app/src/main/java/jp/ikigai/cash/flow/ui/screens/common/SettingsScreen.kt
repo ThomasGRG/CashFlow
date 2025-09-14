@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,6 +54,9 @@ import org.koin.compose.koinInject
 fun SettingsScreen(
     preferencesDataStore: CashFlowPreferencesDataStore,
     navigateBack: () -> Unit,
+    navigateToImportScreen: () -> Unit,
+    navigateToExportScreen: () -> Unit,
+    navigateToAuditLogsScreen: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -147,10 +152,96 @@ fun SettingsScreen(
     ) { _, _ ->
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(
+                    rememberScrollState()
+                ),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = stringResource(id = R.string.auditing_settings_group_label),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp),
+                textAlign = TextAlign.Start,
+            )
+            Column(
+                modifier = Modifier
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        navigateToAuditLogsScreen()
+                    }
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.audit_logs_setting_label),
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(id = R.string.audit_logs_setting_description),
+                    modifier = Modifier.alpha(0.8f),
+                    fontSize = 14.sp
+                )
+            }
+            Text(
+                text = stringResource(id = R.string.backup_restore_settings_group_label),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp),
+                textAlign = TextAlign.Start,
+            )
+            Column(
+                modifier = Modifier
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        navigateToImportScreen()
+                    }
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.import_button_label),
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(id = R.string.import_transactions_label),
+                    modifier = Modifier.alpha(0.8f),
+                    fontSize = 14.sp
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        navigateToExportScreen()
+                    }
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.export_button_label),
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(id = R.string.export_transactions_label),
+                    modifier = Modifier.alpha(0.8f),
+                    fontSize = 14.sp
+                )
+            }
             Text(
                 text = stringResource(id = R.string.sort_settings_group_label),
                 fontSize = 14.sp,
@@ -194,6 +285,9 @@ fun SettingsScreenPreview() {
     SettingsScreen(
         preferencesDataStore = CashFlowPreferencesDataStore(context),
         navigateBack = {},
+        navigateToImportScreen = {},
+        navigateToExportScreen = {},
+        navigateToAuditLogsScreen = {},
     )
 }
 
@@ -207,6 +301,21 @@ fun NavGraphBuilder.settingsScreen(navController: NavController) {
             preferencesDataStore = preferencesDataStore,
             navigateBack = {
                 navController.popBackStack()
+            },
+            navigateToImportScreen = {
+                navController.navigate(Routes.ImportBackup.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToExportScreen = {
+                navController.navigate(Routes.ExportTransactions.route) {
+                    launchSingleTop = true
+                }
+            },
+            navigateToAuditLogsScreen = {
+                navController.navigate(Routes.AuditLogs.route) {
+                    launchSingleTop = true
+                }
             },
         )
     }
