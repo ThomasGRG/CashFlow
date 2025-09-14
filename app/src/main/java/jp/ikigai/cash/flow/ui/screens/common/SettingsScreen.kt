@@ -12,8 +12,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -22,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import jp.ikigai.cash.flow.BuildConfig
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
@@ -36,6 +42,18 @@ fun SettingsScreen(
 ) {
     val haptics = LocalHapticFeedback.current
 
+    val buildVersionName by remember {
+        mutableStateOf(
+            BuildConfig.VERSION_NAME
+        )
+    }
+
+    val buildVersionCode by remember {
+        mutableIntStateOf(
+            BuildConfig.VERSION_CODE
+        )
+    }
+
     OneHandModeScaffold(
         loading = false,
         emptyPlaceholderText = "",
@@ -49,7 +67,18 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = stringResource(R.string.settings_label))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(text = stringResource(R.string.settings_label))
+                        Text(
+                            text = "v$buildVersionName ($buildVersionCode)",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.alpha(0.8f)
+                        )
+                    }
                 }
             )
         },
