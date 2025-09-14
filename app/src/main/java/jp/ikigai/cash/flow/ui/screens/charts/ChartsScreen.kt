@@ -76,7 +76,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.ChartsScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.ChartsScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MonthRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
@@ -250,7 +250,7 @@ fun ChartsScreen(
             )
         },
         bottomBar = {
-            ChartsScreenRoundedBottomBar(
+            ChartsScreenBottomAppBar(
                 enabled = !loading,
                 selectedChartType = selectedChartType,
                 startYearMonthString = startYearMonthString,

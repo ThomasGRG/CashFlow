@@ -58,7 +58,7 @@ import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
-import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -283,7 +283,7 @@ fun UpsertMethodScreen(
                         }
                     }
                 }
-                ThreeSlotRoundedBottomBar(
+                ThreeSlotBottomAppBar(
                     navigateBack = {
                         keyboardController?.hide()
                         if (enabled && hasUnsavedChanges) {

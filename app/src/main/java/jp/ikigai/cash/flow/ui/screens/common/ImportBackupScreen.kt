@@ -61,7 +61,7 @@ import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.ImportBackupScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.ImportBackupScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
@@ -720,7 +720,7 @@ fun ImportBackupScreen(
             )
         },
         bottomBar = {
-            ImportBackupScreenRoundedBottomBar(
+            ImportBackupScreenBottomAppBar(
                 enabled = enabled,
                 navigateBack = {
                     if (enabled) {

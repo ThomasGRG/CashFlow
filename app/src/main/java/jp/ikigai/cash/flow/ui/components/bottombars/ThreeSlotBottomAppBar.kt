@@ -2,12 +2,15 @@ package jp.ikigai.cash.flow.ui.components.bottombars
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -16,10 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun ThreeSlotRoundedBottomBar(
+fun ThreeSlotBottomAppBar(
     navigateBack: () -> Unit,
     enabled: Boolean,
     floatingButtonIcon: (@Composable () -> Unit)? = null,
@@ -29,7 +33,10 @@ fun ThreeSlotRoundedBottomBar(
 ) {
     val haptics = LocalHapticFeedback.current
 
-    RoundedBottomBar {
+    BottomAppBar(
+        modifier = Modifier.padding(top = 10.dp),
+        contentPadding = PaddingValues(4.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -95,9 +102,9 @@ fun ThreeSlotRoundedBottomBar(
 
 @Preview
 @Composable
-fun ThreeSlotRoundedBottomBarPreview() {
+fun ThreeSlotBottomAppBarPreview() {
     Column {
-        ThreeSlotRoundedBottomBar(
+        ThreeSlotBottomAppBar(
             navigateBack = {},
             enabled = true,
             floatingButtonIcon = {
@@ -112,7 +119,7 @@ fun ThreeSlotRoundedBottomBarPreview() {
             },
             extraButtonAction = {}
         )
-        ThreeSlotRoundedBottomBar(
+        ThreeSlotBottomAppBar(
             navigateBack = {},
             enabled = false,
             floatingButtonIcon = {
@@ -122,7 +129,7 @@ fun ThreeSlotRoundedBottomBarPreview() {
             extraButtonIcon = null,
             extraButtonAction = null
         )
-        ThreeSlotRoundedBottomBar(
+        ThreeSlotBottomAppBar(
             navigateBack = {},
             enabled = true,
             floatingButtonIcon = null,

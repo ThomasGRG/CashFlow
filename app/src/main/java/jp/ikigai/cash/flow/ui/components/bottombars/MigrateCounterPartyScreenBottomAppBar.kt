@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +38,7 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun MigrateCounterPartyScreenRoundedBottomBar(
+fun MigrateCounterPartyScreenBottomAppBar(
     navigateBack: () -> Unit,
     enabled: Boolean,
     migrateEnabled: Boolean,
@@ -66,7 +67,7 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
     Column {
         Row(
             modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
                 .horizontalScroll(
                     rememberScrollState()
                 ),
@@ -195,7 +196,9 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
                 )
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -280,12 +283,12 @@ fun MigrateCounterPartyScreenRoundedBottomBar(
 
 @Preview
 @Composable
-fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
+fun MigrateCounterPartyScreenBottomAppBarPreview() {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) {
-        MigrateCounterPartyScreenRoundedBottomBar(
+        MigrateCounterPartyScreenBottomAppBar(
             navigateBack = {},
             enabled = true,
             migrateEnabled = true,
@@ -309,7 +312,7 @@ fun MigrateCounterPartyScreenRoundedBottomBarPreview() {
             onSearchClick = {},
             onToggleSelectClick = {},
         )
-        MigrateCounterPartyScreenRoundedBottomBar(
+        MigrateCounterPartyScreenBottomAppBar(
             navigateBack = {},
             enabled = false,
             migrateEnabled = false,

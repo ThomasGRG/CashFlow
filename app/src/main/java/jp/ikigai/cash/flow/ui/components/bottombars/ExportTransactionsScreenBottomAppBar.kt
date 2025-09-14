@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +36,7 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun ExportTransactionsScreenRoundedBottomBar(
+fun ExportTransactionsScreenBottomAppBar(
     navigateBack: () -> Unit,
     enabled: Boolean,
     exportEnabled: Boolean,
@@ -67,7 +68,7 @@ fun ExportTransactionsScreenRoundedBottomBar(
     Column {
         Row(
             modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
                 .horizontalScroll(
                     rememberScrollState()
                 ),
@@ -215,7 +216,9 @@ fun ExportTransactionsScreenRoundedBottomBar(
                 )
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,

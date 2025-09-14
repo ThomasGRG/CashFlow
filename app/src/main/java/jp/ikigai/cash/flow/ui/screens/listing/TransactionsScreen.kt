@@ -61,7 +61,7 @@ import jp.ikigai.cash.flow.data.TransactionHeader
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CloneTransactionSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
@@ -358,7 +358,7 @@ fun TransactionsScreen(
             )
         },
         bottomBar = {
-            TransactionScreenRoundedBottomBar(
+            TransactionScreenBottomAppBar(
                 selectedCurrencySymbol = selectedCurrencySymbol,
                 filterAmount = filterAmountRange,
                 sortField = sortedBy,

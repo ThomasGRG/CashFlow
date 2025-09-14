@@ -24,7 +24,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
-import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +54,7 @@ fun SettingsScreen(
             )
         },
         bottomBar = {
-            ThreeSlotRoundedBottomBar(
+            ThreeSlotBottomAppBar(
                 navigateBack = navigateBack,
                 enabled = true
             )

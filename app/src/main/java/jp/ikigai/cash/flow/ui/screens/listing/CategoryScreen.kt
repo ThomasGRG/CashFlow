@@ -44,7 +44,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
-import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.InfoCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -198,7 +198,7 @@ fun CategoryScreen(
             )
         },
         bottomBar = {
-            ListingScreenRoundedBottomBar(
+            ListingScreenBottomAppBar(
                 navigateBack = navigateBack,
                 sortClick = if (count > 0) {
                     {

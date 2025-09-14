@@ -1,6 +1,6 @@
 package jp.ikigai.cash.flow.ui.components.bottombars
 
-import android.icu.util.Currency
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,80 +11,64 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CalendarEvent
+import compose.icons.tablericons.Replace
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.SortDirection
+import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
+import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun TransactionScreenRoundedBottomBar(
-    selectedCurrencySymbol: String,
-    sortField: String?,
+fun MigrateMethodScreenBottomAppBar(
+    navigateBack: () -> Unit,
+    enabled: Boolean,
+    migrateEnabled: Boolean,
+    allSelected: Boolean,
     sortDirection: SortDirection,
     filterAmount: String,
+    selectedCurrencyCount: String,
     selectedAccountCount: String,
     selectedCategoryCount: String,
     selectedCounterPartyCount: String,
     counterPartyFilterVisible: Boolean,
-    selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
     onFilterByTypeClick: () -> Unit,
+    onFilterByCurrencyClick: () -> Unit,
     onFilterByCategoryClick: () -> Unit,
     onFilterByCounterPartyClick: () -> Unit,
-    onFilterByMethodClick: () -> Unit,
     onFilterBySourceClick: () -> Unit,
-    onCurrencyClick: () -> Unit,
     onCalendarClick: () -> Unit,
-    addTransaction: () -> Unit,
+    migrateTransactions: () -> Unit,
     onSearchClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onToggleSelectClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-
-    val sortIcon by remember(key1 = sortDirection) {
-        mutableStateOf(
-            if (sortDirection == SortDirection.DESC) {
-                TablerIcons.SortDescending
-            } else {
-                TablerIcons.SortAscending
-            }
-        )
-    }
-
-    val sortedBy by remember(key1 = sortField) {
-        mutableStateOf(sortField ?: "")
-    }
 
     Column {
         Row(
             modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
                 .horizontalScroll(
                     rememberScrollState()
                 ),
@@ -96,15 +80,20 @@ fun TransactionScreenRoundedBottomBar(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onSortClick()
                 },
+                enabled = enabled,
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 shape = MaterialTheme.shapes.small
             ) {
                 Icon(
-                    imageVector = sortIcon,
+                    imageVector = if (sortDirection == SortDirection.DESC) {
+                        TablerIcons.SortDescending
+                    } else {
+                        TablerIcons.SortAscending
+                    },
                     contentDescription = "sort direction icon"
                 )
                 Text(
-                    text = stringResource(id = R.string.sort_by_chip_label, sortedBy),
+                    text = stringResource(id = R.string.sort_by_time_chip_label),
                     modifier = Modifier.padding(start = 6.dp),
                 )
             }
@@ -113,6 +102,7 @@ fun TransactionScreenRoundedBottomBar(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onFilterByTypeClick()
                 },
+                enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -129,6 +119,7 @@ fun TransactionScreenRoundedBottomBar(
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onFilterByAmountClick()
                 },
+                enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -140,8 +131,26 @@ fun TransactionScreenRoundedBottomBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCurrencyClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.currency_filter_chip_label,
+                        selectedCurrencyCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onFilterByCategoryClick()
                 },
+                enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -159,6 +168,7 @@ fun TransactionScreenRoundedBottomBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         onFilterByCounterPartyClick()
                     },
+                    enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small
                 ) {
@@ -174,24 +184,9 @@ fun TransactionScreenRoundedBottomBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByMethodClick()
-                },
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.method_filter_chip_label,
-                        selectedMethodCount
-                    ),
-                    modifier = Modifier.padding(10.dp),
-                )
-            }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onFilterBySourceClick()
                 },
+                enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
             ) {
@@ -204,7 +199,9 @@ fun TransactionScreenRoundedBottomBar(
                 )
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -213,19 +210,23 @@ fun TransactionScreenRoundedBottomBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCurrencyClick()
+                        navigateBack()
                     },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Text(text = selectedCurrencySymbol, fontSize = TextUnit(22f, TextUnitType.Sp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "navigate back"
+                    )
                 }
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         onCalendarClick()
                     },
+                    enabled = enabled,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
@@ -241,15 +242,16 @@ fun TransactionScreenRoundedBottomBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    FloatingActionButton(
+                    CustomFloatingActionButton(
                         onClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            addTransaction()
-                        }
+                            migrateTransactions()
+                        },
+                        enabled = migrateEnabled
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "add new transaction"
+                            imageVector = TablerIcons.Replace,
+                            contentDescription = "migrate transactions"
                         )
                     }
                 }
@@ -258,6 +260,7 @@ fun TransactionScreenRoundedBottomBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         onSearchClick()
                     },
+                    enabled = enabled,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
@@ -267,13 +270,14 @@ fun TransactionScreenRoundedBottomBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onMoreClick()
+                        onToggleSelectClick()
                     },
+                    enabled = enabled,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "more")
+                    AnimatedToggleSelectIcon(deselectVisible = allSelected)
                 }
             }
         }
@@ -282,29 +286,60 @@ fun TransactionScreenRoundedBottomBar(
 
 @Preview
 @Composable
-fun TransactionScreenRoundedBottomBarPreview() {
-    TransactionScreenRoundedBottomBar(
-        selectedCurrencySymbol = Currency.getInstance("INR").symbol,
-        sortField = "transactionDateTime",
-        sortDirection = SortDirection.DESC,
-        filterAmount = "3000+",
-        counterPartyFilterVisible = true,
-        selectedAccountCount = "1",
-        selectedCategoryCount = "1",
-        selectedCounterPartyCount = "1",
-        selectedMethodCount = "1",
-        selectedTransactionTypeCount = 2,
-        onSortClick = {},
-        onFilterByAmountClick = {},
-        onFilterByTypeClick = {},
-        onFilterByCategoryClick = {},
-        onFilterByCounterPartyClick = {},
-        onFilterByMethodClick = {},
-        onFilterBySourceClick = {},
-        onCurrencyClick = {},
-        onCalendarClick = {},
-        addTransaction = {},
-        onSearchClick = {},
-        onMoreClick = {},
-    )
+fun MigrateMethodScreenBottomAppBarPreview() {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+    ) {
+        MigrateMethodScreenBottomAppBar(
+            navigateBack = {},
+            enabled = true,
+            migrateEnabled = true,
+            allSelected = true,
+            sortDirection = SortDirection.DESC,
+            filterAmount = "3000+",
+            selectedCurrencyCount = "1",
+            selectedAccountCount = "1",
+            selectedCategoryCount = "1",
+            selectedCounterPartyCount = "1",
+            counterPartyFilterVisible = true,
+            selectedTransactionTypeCount = 2,
+            onSortClick = {},
+            onFilterByAmountClick = {},
+            onFilterByTypeClick = {},
+            onFilterByCurrencyClick = {},
+            onFilterByCategoryClick = {},
+            onFilterByCounterPartyClick = {},
+            onFilterBySourceClick = {},
+            onCalendarClick = {},
+            migrateTransactions = {},
+            onSearchClick = {},
+            onToggleSelectClick = {},
+        )
+        MigrateMethodScreenBottomAppBar(
+            navigateBack = {},
+            enabled = false,
+            migrateEnabled = false,
+            allSelected = false,
+            sortDirection = SortDirection.DESC,
+            filterAmount = "3000+",
+            selectedCurrencyCount = "1",
+            selectedAccountCount = "1",
+            selectedCategoryCount = "1",
+            selectedCounterPartyCount = "1",
+            counterPartyFilterVisible = true,
+            selectedTransactionTypeCount = 2,
+            onSortClick = {},
+            onFilterByAmountClick = {},
+            onFilterByTypeClick = {},
+            onFilterByCurrencyClick = {},
+            onFilterByCategoryClick = {},
+            onFilterByCounterPartyClick = {},
+            onFilterBySourceClick = {},
+            onCalendarClick = {},
+            migrateTransactions = {},
+            onSearchClick = {},
+            onToggleSelectClick = {},
+        )
+    }
 }

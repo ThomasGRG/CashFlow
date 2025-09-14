@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +38,7 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun MigrateMethodScreenRoundedBottomBar(
+fun MigrateCategoryScreenBottomAppBar(
     navigateBack: () -> Unit,
     enabled: Boolean,
     migrateEnabled: Boolean,
@@ -45,17 +46,17 @@ fun MigrateMethodScreenRoundedBottomBar(
     sortDirection: SortDirection,
     filterAmount: String,
     selectedCurrencyCount: String,
-    selectedAccountCount: String,
-    selectedCategoryCount: String,
-    selectedCounterPartyCount: String,
     counterPartyFilterVisible: Boolean,
+    selectedAccountCount: String,
+    selectedCounterPartyCount: String,
+    selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onFilterByAmountClick: () -> Unit,
     onFilterByTypeClick: () -> Unit,
     onFilterByCurrencyClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
     onFilterByCounterPartyClick: () -> Unit,
+    onFilterByMethodClick: () -> Unit,
     onFilterBySourceClick: () -> Unit,
     onCalendarClick: () -> Unit,
     migrateTransactions: () -> Unit,
@@ -67,7 +68,7 @@ fun MigrateMethodScreenRoundedBottomBar(
     Column {
         Row(
             modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
                 .horizontalScroll(
                     rememberScrollState()
                 ),
@@ -144,23 +145,6 @@ fun MigrateMethodScreenRoundedBottomBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
-                },
-                enabled = enabled,
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.category_filter_chip_label,
-                        selectedCategoryCount
-                    ),
-                    modifier = Modifier.padding(10.dp),
-                )
-            }
             if (counterPartyFilterVisible) {
                 FilledTonalButton(
                     onClick = {
@@ -183,6 +167,23 @@ fun MigrateMethodScreenRoundedBottomBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByMethodClick()
+                },
+                enabled = enabled,
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.method_filter_chip_label,
+                        selectedMethodCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onFilterBySourceClick()
                 },
                 enabled = enabled,
@@ -198,7 +199,9 @@ fun MigrateMethodScreenRoundedBottomBar(
                 )
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -283,12 +286,12 @@ fun MigrateMethodScreenRoundedBottomBar(
 
 @Preview
 @Composable
-fun MigrateMethodScreenRoundedBottomBarPreview() {
+fun MigrateCategoryScreenBottomAppBarPreview() {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) {
-        MigrateMethodScreenRoundedBottomBar(
+        MigrateCategoryScreenBottomAppBar(
             navigateBack = {},
             enabled = true,
             migrateEnabled = true,
@@ -296,24 +299,24 @@ fun MigrateMethodScreenRoundedBottomBarPreview() {
             sortDirection = SortDirection.DESC,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
-            selectedAccountCount = "1",
-            selectedCategoryCount = "1",
-            selectedCounterPartyCount = "1",
             counterPartyFilterVisible = true,
+            selectedAccountCount = "1",
+            selectedCounterPartyCount = "1",
+            selectedMethodCount = "1",
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},
             onFilterByTypeClick = {},
             onFilterByCurrencyClick = {},
-            onFilterByCategoryClick = {},
             onFilterByCounterPartyClick = {},
+            onFilterByMethodClick = {},
             onFilterBySourceClick = {},
             onCalendarClick = {},
             migrateTransactions = {},
             onSearchClick = {},
             onToggleSelectClick = {},
         )
-        MigrateMethodScreenRoundedBottomBar(
+        MigrateCategoryScreenBottomAppBar(
             navigateBack = {},
             enabled = false,
             migrateEnabled = false,
@@ -321,17 +324,17 @@ fun MigrateMethodScreenRoundedBottomBarPreview() {
             sortDirection = SortDirection.DESC,
             filterAmount = "3000+",
             selectedCurrencyCount = "1",
-            selectedAccountCount = "1",
-            selectedCategoryCount = "1",
-            selectedCounterPartyCount = "1",
             counterPartyFilterVisible = true,
+            selectedAccountCount = "1",
+            selectedCounterPartyCount = "1",
+            selectedMethodCount = "1",
             selectedTransactionTypeCount = 2,
             onSortClick = {},
             onFilterByAmountClick = {},
             onFilterByTypeClick = {},
             onFilterByCurrencyClick = {},
-            onFilterByCategoryClick = {},
             onFilterByCounterPartyClick = {},
+            onFilterByMethodClick = {},
             onFilterBySourceClick = {},
             onCalendarClick = {},
             migrateTransactions = {},

@@ -47,7 +47,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.MigrateMethodScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.MigrateMethodScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
@@ -442,7 +442,7 @@ fun MigrateMethodScreen(
             )
         },
         bottomBar = {
-            MigrateMethodScreenRoundedBottomBar(
+            MigrateMethodScreenBottomAppBar(
                 navigateBack = navigateBack,
                 enabled = enabled,
                 migrateEnabled = migrateEnabled,

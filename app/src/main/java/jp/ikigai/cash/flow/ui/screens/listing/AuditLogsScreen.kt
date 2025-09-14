@@ -36,7 +36,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.audit.AuditLogListItem
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
-import jp.ikigai.cash.flow.ui.components.bottombars.AuditLogsScreenRoundedBottomBar
+import jp.ikigai.cash.flow.ui.components.bottombars.AuditLogsScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ViewAuditLogSheet
 import jp.ikigai.cash.flow.ui.components.cards.AuditLogCard
@@ -187,7 +187,7 @@ fun AuditLogsScreen(
             )
         },
         bottomBar = {
-            AuditLogsScreenRoundedBottomBar(
+            AuditLogsScreenBottomAppBar(
                 navigateBack = navigateBack,
                 sortDirection = sortDirection,
                 onSortClick = {

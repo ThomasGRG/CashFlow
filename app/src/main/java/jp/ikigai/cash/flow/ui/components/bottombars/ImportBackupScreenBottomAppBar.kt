@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +48,7 @@ import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun ImportBackupScreenRoundedBottomBar(
+fun ImportBackupScreenBottomAppBar(
     enabled: Boolean,
     navigateBack: () -> Unit,
     navigateToNext: () -> Unit,
@@ -78,7 +79,7 @@ fun ImportBackupScreenRoundedBottomBar(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                    .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
                     .horizontalScroll(
                         rememberScrollState()
                     ),
@@ -157,7 +158,9 @@ fun ImportBackupScreenRoundedBottomBar(
                 }
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -318,9 +321,9 @@ fun ImportBackupScreenRoundedBottomBar(
 
 @Preview
 @Composable
-fun ImportBackupScreenRoundedBottomBarPreview() {
+fun ImportBackupScreenBottomAppBarPreview() {
     Column {
-        ImportBackupScreenRoundedBottomBar(
+        ImportBackupScreenBottomAppBar(
             enabled = true,
             navigateBack = {},
             navigateToNext = {},
@@ -341,7 +344,7 @@ fun ImportBackupScreenRoundedBottomBarPreview() {
             onToggleSelectClick = {},
             actionButtonClick = {}
         )
-        ImportBackupScreenRoundedBottomBar(
+        ImportBackupScreenBottomAppBar(
             enabled = false,
             navigateBack = {},
             navigateToNext = {},

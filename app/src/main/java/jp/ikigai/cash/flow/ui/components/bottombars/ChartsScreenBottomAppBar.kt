@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,7 +37,7 @@ import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 
 @Composable
-fun ChartsScreenRoundedBottomBar(
+fun ChartsScreenBottomAppBar(
     enabled: Boolean,
     selectedChartType: ChartType,
     startYearMonthString: String,
@@ -88,7 +89,7 @@ fun ChartsScreenRoundedBottomBar(
         )
         Row(
             modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 0.dp)
+                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 6.dp)
                 .horizontalScroll(
                     rememberScrollState()
                 ),
@@ -207,7 +208,9 @@ fun ChartsScreenRoundedBottomBar(
                 }
             }
         }
-        RoundedBottomBar {
+        BottomAppBar(
+            contentPadding = PaddingValues(4.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
