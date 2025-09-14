@@ -49,7 +49,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -107,13 +106,14 @@ class TransactionsScreenViewModel(
     private fun getSortPreferences() = viewModelScope.launch {
         preferencesDataStore
             .getTransactionsScreenSortConfig()
-            .take(1)
             .collectLatest { sortState ->
-                _sortConfigState.update {
-                    it.copy(
-                        sortField = sortState.sortField,
-                        sortDirection = sortState.sortDirection
-                    )
+                if (sortState.sortField != sortConfigState.value.sortField || sortState.sortDirection != sortConfigState.value.sortDirection) {
+                    _sortConfigState.update {
+                        it.copy(
+                            sortField = sortState.sortField,
+                            sortDirection = sortState.sortDirection
+                        )
+                    }
                 }
             }
     }
