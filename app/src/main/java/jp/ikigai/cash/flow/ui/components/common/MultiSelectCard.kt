@@ -59,6 +59,39 @@ fun MultiSelectCard(
 @Composable
 fun MultiSelectCard(
     checked: () -> Boolean,
+    label: String,
+    onClick: (Boolean) -> Unit,
+    modifier: Modifier
+) {
+    OutlinedCard(
+        onClick = {
+            onClick(!checked())
+        },
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = Color.Transparent
+        ),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Checkbox(checked = checked(), onCheckedChange = null)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
+}
+
+@Composable
+fun MultiSelectCard(
+    checked: () -> Boolean,
     label: AnnotatedString,
     icon: ImageVector,
     iconTint: Color = MaterialTheme.colorScheme.onBackground,

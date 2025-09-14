@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.MultiProcessDataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,6 +22,73 @@ class CashFlowPreferencesDataStore(context: Context) {
                 CashFlowPreferences()
             }
         )
+
+    suspend fun restoreDefaults(selectedScreens: Map<Int, Boolean>) {
+        cashFlowPreferences.updateData {
+            it.copy(
+                accountsScreenSortField = if (selectedScreens[R.string.accounts_screen_label] == true) {
+                    "transactionCount"
+                } else {
+                    it.accountsScreenSortField
+                },
+                accountsScreenSortDirection = if (selectedScreens[R.string.accounts_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.accountsScreenSortDirection
+                },
+                categoriesScreenSortField = if (selectedScreens[R.string.categories_screen_label] == true) {
+                    "transactionCount"
+                } else {
+                    it.categoriesScreenSortField
+                },
+                categoriesScreenSortDirection = if (selectedScreens[R.string.categories_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.categoriesScreenSortDirection
+                },
+                counterPartiesScreenSortField = if (selectedScreens[R.string.counter_parties_screen_label] == true) {
+                    "transactionCount"
+                } else {
+                    it.counterPartiesScreenSortField
+                },
+                counterPartiesScreenSortDirection = if (selectedScreens[R.string.counter_parties_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.categoriesScreenSortDirection
+                },
+                methodsScreenSortField = if (selectedScreens[R.string.methods_screen_label] == true) {
+                    "transactionCount"
+                } else {
+                    it.methodsScreenSortField
+                },
+                methodsScreenSortDirection = if (selectedScreens[R.string.methods_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.methodsScreenSortDirection
+                },
+                templatesScreenSortField = if (selectedScreens[R.string.templates_screen_label] == true) {
+                    "transactionCount"
+                } else {
+                    it.templatesScreenSortField
+                },
+                templatesScreenSortDirection = if (selectedScreens[R.string.templates_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.templatesScreenSortDirection
+                },
+                transactionsScreenSortField = if (selectedScreens[R.string.transactions_screen_label] == true) {
+                    "transactionDateTime"
+                } else {
+                    it.transactionsScreenSortField
+                },
+                transactionsScreenSortDirection = if (selectedScreens[R.string.transactions_screen_label] == true) {
+                    SortDirection.DESC
+                } else {
+                    it.transactionsScreenSortDirection
+                },
+            )
+        }
+    }
 
     fun getAccountsScreenSortConfig(): Flow<SortConfigState> {
         return cashFlowPreferences.data.map { preferences ->

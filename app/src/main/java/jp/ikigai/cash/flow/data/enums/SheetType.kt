@@ -26,4 +26,5 @@ enum class SheetType {
     AUDIT_LOG,
     MONTH_RANGE,
     CHART,
+    RESTORE_SORT,
 }

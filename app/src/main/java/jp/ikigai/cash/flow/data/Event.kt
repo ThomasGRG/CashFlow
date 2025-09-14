@@ -11,6 +11,7 @@ sealed class Event(@StringRes val message: Int) {
     data object MigrationSuccess : Event(R.string.migration_success_label)
     data object SaveSuccess : Event(R.string.save_success_label)
     data object DeleteSuccess : Event(R.string.delete_success_label)
+    data object RestoreSortSuccess : Event(R.string.restore_success_label)
     data object MinimumTwoFieldsRequired : Event(R.string.minimum_two_fields_required_error_label)
     data object AccountCategoryMethodRequired :
         Event(R.string.category_method_account_required_error_label)

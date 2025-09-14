@@ -32,6 +32,18 @@
     <string name="account_trends_line_chart">Account | Trends | Line chart</string>
     <!--  Chart Strings  -->
 
+    <!--  Settings Strings  -->
+    <string name="sort_settings_group_label">Sorting</string>
+    <string name="restore_sort_setting_label">Restore sort config</string>
+    <string name="restore_sort_setting_description">Restore default sort config for selected screens</string>
+    <string name="accounts_screen_label">Accounts screen</string>
+    <string name="categories_screen_label">Categories screen</string>
+    <string name="counter_parties_screen_label">Counter parties screen</string>
+    <string name="methods_screen_label">Methods screen</string>
+    <string name="templates_screen_label">Templates screen</string>
+    <string name="transactions_screen_label">Transactions screen</string>
+    <!--  Settings Strings  -->
+
     <!--  Hint Strings  -->
     <string name="new_category_label">A new category will be created</string>
     <string name="new_counterParty_label">A new counter party will be created</string>
@@ -104,6 +116,7 @@
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
+    <string name="restore_button_label">Restore</string>
     <string name="more_button_label">More</string>
     <string name="export_button_label">Export</string>
     <string name="import_button_label">Import</string>
@@ -195,6 +208,7 @@
     <string name="import_success_label">Successfully imported</string>
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
+    <string name="restore_success_label">Restored successfully</string>
     <string name="not_enough_balance_error_label">Insufficient balance</string>
     <string name="minimum_two_fields_required_error_label">Minimum two fields are required</string>
     <string name="category_method_account_required_error_label">At least one category, method and account are required to proceed</string>
