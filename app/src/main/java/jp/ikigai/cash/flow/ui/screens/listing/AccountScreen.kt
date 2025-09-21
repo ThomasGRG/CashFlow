@@ -1,6 +1,11 @@
 package jp.ikigai.cash.flow.ui.screens.listing
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -10,9 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +53,6 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.AccountCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.AccountScreenState
@@ -181,18 +185,23 @@ fun AccountScreen(
         } else {
             stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
         },
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     Column {
                         Text(text = stringResource(id = R.string.accounts_label))
                         Text(
-                            text = stringResource(id = R.string.account_count_label, countString),
+                            text = stringResource(
+                                id = R.string.account_count_label,
+                                countString
+                            ),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.alpha(0.8f)
                         )
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -219,44 +228,45 @@ fun AccountScreen(
                 } else null
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
-        Column {
-            AnimatedVisibility(visible = count > 0) {
-                SearchBox(
-                    modifier = Modifier
-                        .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
-                    searchText = searchText,
-                    setSearchText = setSearchText,
-                    focusRequester = focusRequester,
-                    interactionSource = interactionSource
-                )
-            }
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 10.dp, end = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp, end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            stickyHeader(
+                key = "search",
+                contentType = "search_box"
             ) {
-                item(
-                    key = "one-hand-mode-expand-row",
-                    contentType = "row"
+                AnimatedVisibility(
+                    visible = count > 0,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
                 ) {
-                    OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                }
-                items(
-                    items = accounts,
-                    key = { account -> account.id }
-                ) { account ->
-                    AccountCard(
-                        modifier = Modifier.animateItem(),
-                        data = account,
-                        onClick = { id ->
-                            resetOneHandMode()
-                            editTransactionSource(id)
-                        }
+                    SearchBox(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(top = 5.dp, bottom = 8.dp),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
                     )
                 }
+            }
+            items(
+                items = accounts,
+                key = { account -> account.id }
+            ) { account ->
+                AccountCard(
+                    modifier = Modifier.animateItem(),
+                    data = account,
+                    onClick = { id ->
+                        editTransactionSource(id)
+                    }
+                )
             }
         }
     }

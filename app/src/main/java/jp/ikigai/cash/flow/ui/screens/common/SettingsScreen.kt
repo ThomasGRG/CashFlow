@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -125,8 +125,8 @@ fun SettingsScreen(
         onDismissSheet = {
             sheetType = SheetType.NONE
         },
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -140,7 +140,9 @@ fun SettingsScreen(
                             modifier = Modifier.alpha(0.8f)
                         )
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -149,14 +151,14 @@ fun SettingsScreen(
                 enabled = true
             )
         }
-    ) { _, _ ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(
                     rememberScrollState()
                 ),
-            verticalArrangement = Arrangement.Bottom,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -166,7 +168,7 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 10.dp),
+                    .padding(start = 10.dp, top = 10.dp),
                 textAlign = TextAlign.Start,
             )
             Column(

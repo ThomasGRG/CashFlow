@@ -17,11 +17,11 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,7 +79,6 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.TimePickerSheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertTransactionScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
@@ -453,15 +452,17 @@ fun UpsertTransactionScreen(
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     if (transactionId == 0L) {
                         Text(text = stringResource(id = R.string.create_transaction_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_transaction_label))
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -499,20 +500,14 @@ fun UpsertTransactionScreen(
                 } else null
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp),
+                .padding(start = 10.dp, end = 10.dp, top = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item(
-                key = "one-hand-mode-expand-row",
-                contentType = "row"
-            ) {
-                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-            }
             item(
                 key = "title",
                 contentType = "type-enabled"
@@ -643,7 +638,6 @@ fun UpsertTransactionScreen(
                     placeHolder = "",
                     leadingIcon = transactionType.icon,
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.TYPE
                     },
                     modifier = Modifier.animateItem()
@@ -665,7 +659,6 @@ fun UpsertTransactionScreen(
                     placeHolder = "",
                     leadingIcon = TablerIcons.CalendarEvent,
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.DATE
                     },
                     modifier = Modifier.animateItem()
@@ -688,7 +681,6 @@ fun UpsertTransactionScreen(
                     isError = !timeValid,
                     errorHint = stringResource(id = R.string.future_time_error_label),
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.TIME
                     },
                     modifier = Modifier.animateItem()
@@ -710,7 +702,6 @@ fun UpsertTransactionScreen(
                     errorHint = stringResource(id = R.string.field_required_error_label),
                     leadingIcon = selectedCategory.icon,
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.CATEGORY
                     },
                     modifier = Modifier.animateItem()
@@ -753,7 +744,6 @@ fun UpsertTransactionScreen(
                         )
                     },
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.COUNTERPARTY
                     },
                     modifier = Modifier.animateItem()
@@ -775,7 +765,6 @@ fun UpsertTransactionScreen(
                     errorHint = stringResource(id = R.string.field_required_error_label),
                     leadingIcon = Constants.DEFAULT_METHOD_ICON,
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.METHOD
                     },
                     modifier = Modifier.animateItem()
@@ -797,7 +786,6 @@ fun UpsertTransactionScreen(
                     errorHint = stringResource(id = accountErrorStringRes),
                     leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                     onClick = {
-                        resetOneHandMode()
                         sheetType = SheetType.ACCOUNT
                     },
                     modifier = Modifier.animateItem()

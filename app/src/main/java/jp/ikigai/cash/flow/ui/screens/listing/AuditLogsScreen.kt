@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +42,6 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.ViewAuditLogSheet
 import jp.ikigai.cash.flow.ui.components.cards.AuditLogCard
 import jp.ikigai.cash.flow.ui.components.common.AuditLogGroupHeader
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.audit.AuditLogsScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.listing.audit.AuditLogsScreenState
@@ -168,8 +167,8 @@ fun AuditLogsScreen(
         },
         showEmptyPlaceholder = showEmptyPlaceholder,
         emptyPlaceholderText = stringResource(id = R.string.audit_logs_screen_empty_placeholder_label),
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     Column {
                         Text(text = stringResource(id = R.string.audit_log_label))
@@ -183,7 +182,9 @@ fun AuditLogsScreen(
                             modifier = Modifier.alpha(0.8f)
                         )
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -202,7 +203,7 @@ fun AuditLogsScreen(
                 }
             )
         },
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -210,12 +211,6 @@ fun AuditLogsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item(
-                key = "one-hand-mode-expand-row",
-                contentType = "row"
-            ) {
-                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-            }
             auditLogs.forEach { entry ->
                 stickyHeader {
                     AuditLogGroupHeader(date = entry.key)
@@ -240,7 +235,6 @@ fun AuditLogsScreen(
                                 modifier = Modifier.animateItem(),
                                 auditLogDetails = auditLogListItem,
                                 onClick = {
-                                    resetOneHandMode()
                                     selectedAuditLog = it
                                     sheetType = SheetType.AUDIT_LOG
                                 }
@@ -252,7 +246,6 @@ fun AuditLogsScreen(
                                 modifier = Modifier.animateItem(),
                                 auditLogDetails = auditLogListItem,
                                 onClick = {
-                                    resetOneHandMode()
                                     selectedAuditLog = it
                                     sheetType = SheetType.AUDIT_LOG
                                 }

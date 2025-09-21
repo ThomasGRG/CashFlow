@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +60,6 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
 import jp.ikigai.cash.flow.ui.screenStates.common.ExportTransactionsScreenState
@@ -469,8 +468,8 @@ fun ExportTransactionsScreen(
         onDismissSheet = {
             sheetType = SheetType.NONE
         },
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     Column {
                         Text(text = stringResource(id = R.string.export_transactions_label))
@@ -484,7 +483,9 @@ fun ExportTransactionsScreen(
                             modifier = Modifier.alpha(0.8f)
                         )
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -546,7 +547,7 @@ fun ExportTransactionsScreen(
                 onToggleSelectClick = toggleSelection
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) {
         Column {
             SearchBox(
                 modifier = Modifier
@@ -564,12 +565,6 @@ fun ExportTransactionsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                item(
-                    key = "one-hand-mode-expand-row",
-                    contentType = "row"
-                ) {
-                    OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                }
                 transactions.forEach { entry ->
                     stickyHeader {
                         TransactionGroupHeader(
@@ -577,7 +572,6 @@ fun ExportTransactionsScreen(
                             selected = selectedLocalDates.contains(entry.key),
                             enabled = enabled,
                             onClick = {
-                                resetOneHandMode()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 toggleLocalDateSelected(entry.key)
                             }
@@ -592,12 +586,10 @@ fun ExportTransactionsScreen(
                             enabled = enabled,
                             transactionWithChips = transactionWithChips,
                             onClick = {
-                                resetOneHandMode()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 toggleTransactionSelected(transactionWithChips.id)
                             },
                             onLongClick = {
-                                resetOneHandMode()
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             },
                             modifier = Modifier.animateItem()

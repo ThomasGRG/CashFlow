@@ -17,9 +17,9 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +62,6 @@ import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertMethodScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
@@ -246,15 +245,17 @@ fun UpsertMethodScreen(
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     if (methodId == 0L) {
                         Text(text = stringResource(id = R.string.create_method_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_method_label))
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -324,18 +325,17 @@ fun UpsertMethodScreen(
                 )
             }
         }
-    ) { oneHandModeBoxHeight, _ ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp)
+                .padding(all = 10.dp)
                 .verticalScroll(
                     rememberScrollState()
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
                 imageVector = Constants.DEFAULT_METHOD_ICON,
                 contentDescription = "default method icon",

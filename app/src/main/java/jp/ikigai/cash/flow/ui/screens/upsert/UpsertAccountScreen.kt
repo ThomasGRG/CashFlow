@@ -13,9 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,7 +59,6 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.RoundedCornerOutlinedTextField
 import jp.ikigai.cash.flow.ui.screenStates.upsert.UpsertAccountScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertAccountScreenViewModel
@@ -257,15 +256,17 @@ fun UpsertAccountScreen(
         },
         showEmptyPlaceholder = false,
         emptyPlaceholderText = "",
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     if (accountId == 0L) {
                         Text(text = stringResource(id = R.string.create_account_label))
                     } else {
                         Text(text = stringResource(id = R.string.update_account_label))
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -313,18 +314,17 @@ fun UpsertAccountScreen(
                 } else null
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 10.dp)
                 .verticalScroll(
                     rememberScrollState()
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
             Icon(
                 imageVector = Constants.DEFAULT_ACCOUNT_ICON,
                 contentDescription = "default source icon",
@@ -390,7 +390,6 @@ fun UpsertAccountScreen(
                 placeHolder = "",
                 leadingIcon = TablerIcons.CurrencyDollar,
                 onClick = {
-                    resetOneHandMode()
                     sheetType = SheetType.CURRENCY
                 }
             )

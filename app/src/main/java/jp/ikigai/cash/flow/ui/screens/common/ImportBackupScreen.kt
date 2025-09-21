@@ -17,9 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,7 +79,6 @@ import jp.ikigai.cash.flow.ui.components.cards.MapMethodCard
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.OneHandModeSpacer
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
@@ -667,8 +666,8 @@ fun ImportBackupScreen(
         onDismissSheet = {
             sheetType = SheetType.NONE
         },
-        topBar = {
-            TopAppBar(
+        topBar = { scrollBehavior, expandedHeight ->
+            LargeTopAppBar(
                 title = {
                     if (!dataLoadComplete) {
                         Text(text = stringResource(R.string.select_backup_label))
@@ -716,7 +715,9 @@ fun ImportBackupScreen(
                             }
                         }
                     }
-                }
+                },
+                expandedHeight = expandedHeight,
+                scrollBehavior = scrollBehavior,
             )
         },
         bottomBar = {
@@ -786,7 +787,7 @@ fun ImportBackupScreen(
                 }
             )
         }
-    ) { oneHandModeBoxHeight, resetOneHandMode ->
+    ) {
         if (!dataLoadComplete) {
             Text(
                 text = stringResource(R.string.select_backup_continue_label),
@@ -806,12 +807,6 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            item(
-                                key = "one-hand-mode-expand-row",
-                                contentType = "row"
-                            ) {
-                                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                            }
                             items(
                                 items = tempCategories,
                                 key = { tempCategory -> tempCategory.tempCategoryId }
@@ -862,12 +857,6 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            item(
-                                key = "one-hand-mode-expand-row",
-                                contentType = "row"
-                            ) {
-                                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                            }
                             items(
                                 items = tempCounterParties,
                                 key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
@@ -921,12 +910,6 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            item(
-                                key = "one-hand-mode-expand-row",
-                                contentType = "row"
-                            ) {
-                                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                            }
                             items(
                                 items = tempMethods,
                                 key = { tempMethod -> tempMethod.tempMethodId }
@@ -979,12 +962,6 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            item(
-                                key = "one-hand-mode-expand-row",
-                                contentType = "row"
-                            ) {
-                                OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                            }
                             items(
                                 items = tempAccounts,
                                 key = { tempAccount -> tempAccount.tempAccountId }
@@ -1061,12 +1038,6 @@ fun ImportBackupScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                item(
-                                    key = "one-hand-mode-expand-row",
-                                    contentType = "row"
-                                ) {
-                                    OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                                }
                                 items(
                                     items = tempTransactionTemplatesWithIcons,
                                     key = { templateWithChips -> templateWithChips.id }
@@ -1116,12 +1087,6 @@ fun ImportBackupScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                item(
-                                    key = "one-hand-mode-expand-row",
-                                    contentType = "row"
-                                ) {
-                                    OneHandModeSpacer(oneHandModeBoxHeight = oneHandModeBoxHeight)
-                                }
                                 transactions.forEach { entry ->
                                     stickyHeader {
                                         TransactionGroupHeader(
@@ -1131,7 +1096,6 @@ fun ImportBackupScreen(
                                                 entry.key
                                             ),
                                             onClick = {
-                                                resetOneHandMode()
                                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 toggleLocalDateSelected(
                                                     selectedLocalDates.contains(entry.key),
@@ -1153,12 +1117,10 @@ fun ImportBackupScreen(
                                             ),
                                             transactionWithChips = transactionWithChips,
                                             onClick = {
-                                                resetOneHandMode()
                                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 toggleTransactionSelected(transactionWithChips.id)
                                             },
                                             onLongClick = {
-                                                resetOneHandMode()
                                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                             },
                                             modifier = Modifier.animateItem()
