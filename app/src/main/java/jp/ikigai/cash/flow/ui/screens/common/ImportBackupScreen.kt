@@ -3,7 +3,14 @@ package jp.ikigai.cash.flow.ui.screens.common
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +23,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -417,18 +425,39 @@ fun ImportBackupScreen(
         mutableStateOf(filtersState.filterAmountRange)
     }
 
-    val headerPagerState = rememberPagerState(
-        pageCount = { 6 }
-    )
-
     val pagerState = rememberPagerState(
         pageCount = { 6 }
     )
 
-    LaunchedEffect(key1 = pagerState) {
-        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
-            headerPagerState.animateScrollToPage(page)
-        }
+    val headers by remember {
+        mutableStateOf(
+            listOf(
+                R.string.map_categories_label,
+                R.string.map_counter_parties_label,
+                R.string.map_methods_label,
+                R.string.map_accounts_label,
+                R.string.select_templates_label,
+                R.string.select_transactions_label,
+            )
+        )
+    }
+
+    val subHeaders by remember(
+        selectedTempCategoryCount,
+        selectedTempCounterPartyCount,
+        selectedTempMethodCount,
+        selectedTempAccountCount,
+        selectedTempTransactionTemplateCount,
+    ) {
+        mutableStateOf(
+            listOf(
+                selectedTempCategoryCount,
+                selectedTempCounterPartyCount,
+                selectedTempMethodCount,
+                selectedTempAccountCount,
+                selectedTempTransactionTemplateCount,
+            )
+        )
     }
 
     var showToastBar by remember { mutableStateOf(false) }
@@ -672,46 +701,49 @@ fun ImportBackupScreen(
                     if (!dataLoadComplete) {
                         Text(text = stringResource(R.string.select_backup_label))
                     } else {
-                        HorizontalPager(
-                            state = headerPagerState,
-                            modifier = Modifier.fillMaxSize(),
-                            userScrollEnabled = false,
-                        ) { pageNumber ->
-                            when (pageNumber) {
-                                0 -> {
-                                    Text(text = stringResource(id = R.string.map_categories_label))
-                                }
-
-                                1 -> {
-                                    Text(text = stringResource(id = R.string.map_counter_parties_label))
-                                }
-
-                                2 -> {
-                                    Text(text = stringResource(id = R.string.map_methods_label))
-                                }
-
-                                3 -> {
-                                    Text(text = stringResource(id = R.string.map_accounts_label))
-                                }
-
-                                4 -> {
-                                    Text(text = stringResource(id = R.string.select_templates_label))
-                                }
-
-                                5 -> {
-                                    Column {
-                                        Text(text = stringResource(id = R.string.select_transactions_label))
-                                        Text(
-                                            text = stringResource(
+                        AnimatedContent(
+                            targetState = pagerState.settledPage,
+                            label = "import_header_animated_content",
+                            transitionSpec = {
+                                if (targetState > initialState) {
+                                    // If the target page is larger, it slides from end and fades in
+                                    // while the initial (smaller) number slides out and fades out.
+                                    slideInHorizontally { width -> width } + fadeIn() togetherWith
+                                            slideOutHorizontally { width -> -width } + fadeOut()
+                                } else {
+                                    // If the target number is smaller, it slides from start and fades in
+                                    // while the initial number slides out and fades out.
+                                    slideInHorizontally { width -> -width } + fadeIn() togetherWith
+                                            slideOutHorizontally { width -> width } + fadeOut()
+                                }.using(
+                                    // Disable clipping since the faded slide-in/out should
+                                    // be displayed out of bounds.
+                                    SizeTransform(clip = false)
+                                )
+                            }
+                        ) {
+                            Column {
+                                Text(text = stringResource(id = headers[it]))
+                                Text(
+                                    text = when (it) {
+                                        5 -> {
+                                            stringResource(
                                                 id = dateRangeStringRes,
                                                 startDateString,
                                                 endDateString
-                                            ),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            modifier = Modifier.alpha(0.8f)
-                                        )
-                                    }
-                                }
+                                            )
+                                        }
+
+                                        else -> {
+                                            stringResource(
+                                                id = R.string.selected_count_label,
+                                                subHeaders[it],
+                                            )
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.alpha(0.8f),
+                                )
                             }
                         }
                     }
@@ -789,15 +821,23 @@ fun ImportBackupScreen(
         }
     ) {
         if (!dataLoadComplete) {
-            Text(
-                text = stringResource(R.string.select_backup_continue_label),
-                modifier = Modifier.align(Alignment.Center)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(
+                        rememberScrollState()
+                    ),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(text = stringResource(R.string.select_backup_continue_label))
+            }
         } else {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = false
+                userScrollEnabled = false,
+                contentPadding = PaddingValues(vertical = 10.dp),
             ) { pageNumber ->
                 when (pageNumber) {
                     0 -> {

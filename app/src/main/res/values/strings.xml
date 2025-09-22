@@ -117,6 +117,7 @@
     <string name="method_count_label">Method count : %1$s</string>
     <string name="account_count_label">Account count : %1$s</string>
     <string name="templates_count_label">Template count : %1$s</string>
+    <string name="selected_count_label">Selected count : %1$s</string>
     <!--  TopAppBar SubText Strings  -->
 
     <!--  Button Strings  -->
