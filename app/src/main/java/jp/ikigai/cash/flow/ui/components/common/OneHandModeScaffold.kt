@@ -2,14 +2,19 @@ package jp.ikigai.cash.flow.ui.components.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -22,8 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,10 +64,39 @@ fun OneHandModeScaffold(
     val density = LocalDensity.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val topAppBarState = rememberTopAppBarState()
+    val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        state = topAppBarState
+    )
 
     LaunchedEffect(key1 = showBottomSheet) {
         keyboardController?.hide()
+    }
+
+    val imeInsets = WindowInsets.ime
+
+    val imeVisible by remember(
+        key1 = imeInsets,
+        key2 = density,
+    ) {
+        derivedStateOf {
+            imeInsets.getBottom(density) > 0
+        }
+    }
+
+    LaunchedEffect(key1 = imeVisible) {
+        if (imeVisible) {
+            animate(
+                initialValue = topAppBarState.heightOffset,
+                targetValue = topAppBarState.heightOffsetLimit,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                )
+            ) { value, _ ->
+                topAppBarState.heightOffset = value
+            }
+        }
     }
 
     val expandedHeight by remember(key1 = windowInfo, key2 = density) {
@@ -77,9 +113,9 @@ fun OneHandModeScaffold(
             .navigationBarsPadding()
             .imePadding()
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
         topBar = {
-            topBar(scrollBehavior, expandedHeight)
+            topBar(topAppBarScrollBehavior, expandedHeight)
         },
         bottomBar = bottomBar
     ) { contentPadding ->
