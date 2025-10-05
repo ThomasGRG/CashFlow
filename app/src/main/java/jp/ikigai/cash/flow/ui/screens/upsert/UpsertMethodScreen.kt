@@ -243,8 +243,6 @@ fun UpsertMethodScreen(
         onDismissSheet = {
             sheetType = SheetType.NONE
         },
-        showEmptyPlaceholder = false,
-        emptyPlaceholderText = "",
         topBar = { scrollBehavior, expandedHeight ->
             LargeTopAppBar(
                 title = {
