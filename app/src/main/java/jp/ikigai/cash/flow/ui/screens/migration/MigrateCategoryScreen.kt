@@ -284,6 +284,10 @@ fun MigrateCategoryScreen(
         mutableStateOf(sortConfigState.sortDirection)
     }
 
+    val showEmptyPlaceholder by remember(key1 = state.filteredTransactions) {
+        mutableStateOf(state.filteredTransactions.isEmpty())
+    }
+
     val migrateEnabled by remember(
         key1 = state.selectedTransactionCount,
         key2 = state.enabled
@@ -303,8 +307,12 @@ fun MigrateCategoryScreen(
                 navigateBack()
             }
         },
-        showEmptyPlaceholder = false,
-        emptyPlaceholderText = "",
+        showEmptyPlaceholder = showEmptyPlaceholder,
+        emptyPlaceholderText = if (searchText.isNotBlank()) {
+            stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+        } else {
+            stringResource(id = R.string.no_results_found_filters_placeholder_label)
+        },
         sheetState = sheetState,
         showBottomSheet = sheetType != SheetType.NONE,
         bottomSheetContent = {
