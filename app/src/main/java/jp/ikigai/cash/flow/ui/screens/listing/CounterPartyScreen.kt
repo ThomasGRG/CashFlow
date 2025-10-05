@@ -155,9 +155,6 @@ fun CounterPartyScreen(
 
     OneHandModeScaffold(
         loading = loading,
-        showToastBar = false,
-        toastBarText = "",
-        onDismissToastBar = {},
         sheetState = sheetState,
         showBottomSheet = sheetType != SheetType.NONE,
         bottomSheetContent = {
