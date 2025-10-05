@@ -101,6 +101,11 @@ class ExportTransactionsScreenViewModel(
     }
 
     private fun loadData() = viewModelScope.launch {
+        val totalTransactionsCount = database
+            .transactionQueries
+            .getTotalCount()
+            .executeAsOne()
+
         val accounts = database
             .accountWithTransactionMetadataQueries
             .getAllAccountsSortedByTransactionCountDesc()
@@ -132,7 +137,8 @@ class ExportTransactionsScreenViewModel(
                 accounts = accounts,
                 categories = categories,
                 counterParties = counterParties,
-                methods = methods
+                methods = methods,
+                totalTransactionsCount = totalTransactionsCount,
             )
         }
 

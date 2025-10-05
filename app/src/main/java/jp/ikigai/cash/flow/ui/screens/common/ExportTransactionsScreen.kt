@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -171,6 +172,10 @@ fun ExportTransactionsScreen(
         mutableStateOf(state.enabled)
     }
 
+    val totalTransactionsCount by remember(key1 = state.totalTransactionsCount) {
+        mutableLongStateOf(state.totalTransactionsCount)
+    }
+
     val transactions by remember(
         key1 = state.filteredTransactions,
         key2 = state.transactionsHashCode
@@ -294,6 +299,10 @@ fun ExportTransactionsScreen(
         mutableStateOf(sortConfigState.sortDirection)
     }
 
+    val showEmptyPlaceholder by remember(key1 = state.filteredTransactions) {
+        mutableStateOf(state.filteredTransactions.isEmpty())
+    }
+
     val exportEnabled by remember(
         key1 = state.selectedTransactions,
         key2 = state.enabled
@@ -332,8 +341,12 @@ fun ExportTransactionsScreen(
                 navigateBack()
             }
         },
-        showEmptyPlaceholder = false,
-        emptyPlaceholderText = "",
+        showEmptyPlaceholder = showEmptyPlaceholder,
+        emptyPlaceholderText = if (totalTransactionsCount == 0L) {
+            stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+        } else {
+            stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+        },
         sheetState = sheetState,
         showBottomSheet = sheetType != SheetType.NONE,
         bottomSheetContent = {

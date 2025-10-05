@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS `Transaction` (
     transactionTemplateId INTEGER NOT NULL
 );
 
+getTotalCount:
+SELECT COUNT(*) FROM `Transaction`;
+
 getById:
 SELECT * FROM `Transaction` WHERE transactionId = :id;
 

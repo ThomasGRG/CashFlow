@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.util.Locale
 
 data class ExportTransactionsScreenState(
+    val totalTransactionsCount: Long = 0L,
     val transactionsHashCode: Int = 0,
     val filteredTransactions: Map<LocalDate, List<TransactionWithChips>> = emptyMap(),
     val selectedTransactions: Set<Long> = emptySet(),
