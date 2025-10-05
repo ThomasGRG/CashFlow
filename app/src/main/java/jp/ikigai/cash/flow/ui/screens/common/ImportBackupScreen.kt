@@ -11,13 +11,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,7 +28,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -381,6 +387,12 @@ fun ImportBackupScreen(
 
     val currencyAccountMap by remember(key1 = primaryState.currencyAccountMap) {
         mutableStateOf(primaryState.currencyAccountMap)
+    }
+
+    val hasDbAccounts by remember(key1 = primaryState.currencyAccountMap) {
+        mutableStateOf(
+            primaryState.currencyAccountMap.values.any { it.isNotEmpty() }
+        )
     }
 
     val accountMappings by remember(key1 = primaryState.accountMappings) {
@@ -847,6 +859,29 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            stickyHeader(
+                                key = "info",
+                                contentType = "info_header",
+                            ) {
+                                if (dbCategories.isEmpty()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(top = 5.dp, bottom = 15.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Info,
+                                            contentDescription = "info icon",
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.no_categories_available_for_mapping_label)
+                                        )
+                                    }
+                                }
+                            }
                             items(
                                 items = tempCategories,
                                 key = { tempCategory -> tempCategory.tempCategoryId }
@@ -863,6 +898,7 @@ fun ImportBackupScreen(
                                         lastUsed = null
                                     ),
                                     modifier = Modifier.animateItem(),
+                                    canSelect = dbCategories.isNotEmpty(),
                                     selected = selectedTempCategories.contains(tempCategory.tempCategoryId),
                                     conflicting = conflictingTempCategories.contains(tempCategory.tempCategoryId),
                                     selectCategory = {
@@ -900,6 +936,29 @@ fun ImportBackupScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
+                                stickyHeader(
+                                    key = "info",
+                                    contentType = "info_header",
+                                ) {
+                                    if (dbCounterParties.isEmpty()) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(MaterialTheme.colorScheme.background)
+                                                .padding(top = 5.dp, bottom = 15.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Info,
+                                                contentDescription = "info icon",
+                                            )
+                                            Text(
+                                                text = stringResource(id = R.string.no_counter_parties_available_for_mapping_label)
+                                            )
+                                        }
+                                    }
+                                }
                                 items(
                                     items = tempCounterParties,
                                     key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
@@ -915,6 +974,7 @@ fun ImportBackupScreen(
                                             lastUsed = null
                                         ),
                                         modifier = Modifier.animateItem(),
+                                        canSelect = dbCounterParties.isNotEmpty(),
                                         selected = selectedTempCounterParties.contains(
                                             tempCounterParty.tempCounterPartyId
                                         ),
@@ -960,6 +1020,29 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            stickyHeader(
+                                key = "info",
+                                contentType = "info_header",
+                            ) {
+                                if (dbMethods.isEmpty()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(top = 5.dp, bottom = 15.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Info,
+                                            contentDescription = "info icon",
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.no_methods_available_for_mapping_label)
+                                        )
+                                    }
+                                }
+                            }
                             items(
                                 items = tempMethods,
                                 key = { tempMethod -> tempMethod.tempMethodId }
@@ -975,6 +1058,7 @@ fun ImportBackupScreen(
                                         lastUsed = null
                                     ),
                                     modifier = Modifier.animateItem(),
+                                    canSelect = dbMethods.isNotEmpty(),
                                     selected = selectedTempMethods.contains(
                                         tempMethod.tempMethodId
                                     ),
@@ -1012,6 +1096,29 @@ fun ImportBackupScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            stickyHeader(
+                                key = "info",
+                                contentType = "info_header",
+                            ) {
+                                if (!hasDbAccounts) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(top = 5.dp, bottom = 15.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Info,
+                                            contentDescription = "info icon",
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.no_accounts_available_for_mapping_label)
+                                        )
+                                    }
+                                }
+                            }
                             items(
                                 items = tempAccounts,
                                 key = { tempAccount -> tempAccount.tempAccountId }
@@ -1030,6 +1137,7 @@ fun ImportBackupScreen(
                                         lastUsed = null
                                     ),
                                     modifier = Modifier.animateItem(),
+                                    canSelect = hasDbAccounts,
                                     selected = selectedTempAccounts.contains(
                                         tempAccount.tempAccountId
                                     ),

@@ -44,6 +44,7 @@ fun MapCategoryCard(
     modifier: Modifier = Modifier,
     tempCategory: TempCategory,
     mappedCategory: CategoryWithTransactionMetadata,
+    canSelect: Boolean,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -99,7 +100,7 @@ fun MapCategoryCard(
                 leadingIcon = mappedCategory.icon,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedCategory,
-                enabled = selected,
+                enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
                 onClick = selectCategory,
                 placeHolder = stringResource(id = R.string.select_category_placeholder_label),
@@ -108,7 +109,7 @@ fun MapCategoryCard(
                 errorHint = stringResource(id = R.string.category_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCategory.categoryId == 0L
+                visible = canSelect && selected && !conflicting && mappedCategory.categoryId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_category_label),
@@ -128,6 +129,7 @@ fun MapCounterPartyCard(
     modifier: Modifier = Modifier,
     tempCounterParty: TempCounterParty,
     mappedCounterParty: CounterPartyWithTransactionMetadata,
+    canSelect: Boolean,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -183,7 +185,7 @@ fun MapCounterPartyCard(
                 leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedCounterParty,
-                enabled = selected,
+                enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
                 onClick = selectCounterParty,
                 placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
@@ -192,7 +194,7 @@ fun MapCounterPartyCard(
                 errorHint = stringResource(id = R.string.counter_party_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedCounterParty.counterPartyId == 0L
+                visible = canSelect && selected && !conflicting && mappedCounterParty.counterPartyId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_counterParty_label),
@@ -212,6 +214,7 @@ fun MapMethodCard(
     modifier: Modifier = Modifier,
     tempMethod: TempMethod,
     mappedMethod: MethodWithTransactionMetadata,
+    canSelect: Boolean,
     selected: Boolean,
     conflicting: Boolean,
     toggleSelected: () -> Unit,
@@ -267,7 +270,7 @@ fun MapMethodCard(
                 leadingIcon = Constants.DEFAULT_METHOD_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedMethod,
-                enabled = selected,
+                enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
                 onClick = selectMethod,
                 placeHolder = stringResource(id = R.string.select_method_placeholder_label),
@@ -276,7 +279,7 @@ fun MapMethodCard(
                 errorHint = stringResource(id = R.string.method_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedMethod.methodId == 0L
+                visible = canSelect && selected && !conflicting && mappedMethod.methodId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_method_label),
@@ -296,6 +299,7 @@ fun MapAccountCard(
     modifier: Modifier = Modifier,
     tempAccount: TempAccountWithFormattedBalance,
     mappedAccount: AccountWithTransactionMetadata,
+    canSelect: Boolean,
     selected: Boolean,
     conflicting: Boolean,
     restoreBalance: Boolean,
@@ -396,7 +400,7 @@ fun MapAccountCard(
                 leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
                 trailingIcon = Icons.Filled.Clear,
                 onTrailingIconClick = clearSelectedSource,
-                enabled = selected,
+                enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
                 onClick = selectSource,
                 placeHolder = stringResource(id = R.string.select_account_placeholder_label),
@@ -405,7 +409,7 @@ fun MapAccountCard(
                 errorHint = stringResource(id = R.string.account_exists_error_label)
             )
             AnimatedVisibility(
-                visible = selected && !conflicting && mappedAccount.accountId == 0L
+                visible = canSelect && selected && !conflicting && mappedAccount.accountId == 0L
             ) {
                 Text(
                     text = stringResource(id = R.string.new_account_label),

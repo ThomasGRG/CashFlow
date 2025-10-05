@@ -50,9 +50,13 @@
 
     <!--  Hint Strings  -->
     <string name="new_category_label">A new category will be created</string>
+    <string name="no_categories_available_for_mapping_label">No categories available for mapping.</string>
     <string name="new_counterParty_label">A new counter party will be created</string>
+    <string name="no_counter_parties_available_for_mapping_label">No counter parties available for mapping.</string>
     <string name="new_method_label">A new method will be created</string>
+    <string name="no_methods_available_for_mapping_label">No methods available for mapping.</string>
     <string name="new_account_label">A new account will be created</string>
+    <string name="no_accounts_available_for_mapping_label">No accounts available for mapping.</string>
     <!--  Hint Strings  -->
 
     <!--  Non Translatable Strings  -->
