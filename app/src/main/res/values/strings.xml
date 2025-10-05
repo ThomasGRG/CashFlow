@@ -171,6 +171,7 @@
     <string name="methods_screen_empty_placeholder_label">You have not added any methods.</string>
     <string name="accounts_screen_empty_placeholder_label">You have not added any accounts.</string>
     <string name="templates_screen_empty_placeholder_label">You have not added any templates.</string>
+    <string name="no_counter_parties_to_import_placeholder_label">No counter parties found to import.</string>
     <string name="no_templates_to_import_placeholder_label">No templates found to import.</string>
     <!--  Empty Placeholder Strings  -->
 

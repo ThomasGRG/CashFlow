@@ -891,53 +891,63 @@ fun ImportBackupScreen(
                     }
 
                     1 -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            items(
-                                items = tempCounterParties,
-                                key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
-                            ) { tempCounterParty ->
-                                MapCounterPartyCard(
-                                    tempCounterParty = tempCounterParty,
-                                    mappedCounterParty = counterPartyMappings[
-                                        tempCounterParty.tempCounterPartyId
-                                    ] ?: CounterPartyWithTransactionMetadata(
-                                        counterPartyId = 0L,
-                                        counterPartyName = "",
-                                        transactionCount = 0L,
-                                        lastUsed = null
-                                    ),
-                                    modifier = Modifier.animateItem(),
-                                    selected = selectedTempCounterParties.contains(
-                                        tempCounterParty.tempCounterPartyId
-                                    ),
-                                    conflicting = conflictingTempCounterParties.contains(
-                                        tempCounterParty.tempCounterPartyId
-                                    ),
-                                    selectCounterParty = {
-                                        selectedTempCounterPartyId =
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                items(
+                                    items = tempCounterParties,
+                                    key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
+                                ) { tempCounterParty ->
+                                    MapCounterPartyCard(
+                                        tempCounterParty = tempCounterParty,
+                                        mappedCounterParty = counterPartyMappings[
                                             tempCounterParty.tempCounterPartyId
-                                        sheetType = SheetType.COUNTERPARTY
-                                    },
-                                    toggleSelected = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleCounterPartySelected(tempCounterParty.tempCounterPartyId)
-                                    },
-                                    clearSelectedCounterParty = {
-                                        setCounterPartyMapping(
-                                            tempCounterParty.tempCounterPartyId,
-                                            CounterPartyWithTransactionMetadata(
-                                                counterPartyId = 0L,
-                                                counterPartyName = "",
-                                                transactionCount = 0L,
-                                                lastUsed = null
+                                        ] ?: CounterPartyWithTransactionMetadata(
+                                            counterPartyId = 0L,
+                                            counterPartyName = "",
+                                            transactionCount = 0L,
+                                            lastUsed = null
+                                        ),
+                                        modifier = Modifier.animateItem(),
+                                        selected = selectedTempCounterParties.contains(
+                                            tempCounterParty.tempCounterPartyId
+                                        ),
+                                        conflicting = conflictingTempCounterParties.contains(
+                                            tempCounterParty.tempCounterPartyId
+                                        ),
+                                        selectCounterParty = {
+                                            selectedTempCounterPartyId =
+                                                tempCounterParty.tempCounterPartyId
+                                            sheetType = SheetType.COUNTERPARTY
+                                        },
+                                        toggleSelected = {
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            toggleCounterPartySelected(tempCounterParty.tempCounterPartyId)
+                                        },
+                                        clearSelectedCounterParty = {
+                                            setCounterPartyMapping(
+                                                tempCounterParty.tempCounterPartyId,
+                                                CounterPartyWithTransactionMetadata(
+                                                    counterPartyId = 0L,
+                                                    counterPartyName = "",
+                                                    transactionCount = 0L,
+                                                    lastUsed = null
+                                                )
                                             )
-                                        )
-                                    }
+                                        }
+                                    )
+                                }
+                            }
+                            if (tempCounterParties.isEmpty()) {
+                                Text(
+                                    text = stringResource(id = R.string.no_counter_parties_to_import_placeholder_label),
+                                    modifier = Modifier.align(Alignment.Center)
                                 )
                             }
                         }
@@ -1105,68 +1115,87 @@ fun ImportBackupScreen(
                     }
 
                     5 -> {
-                        Column {
-                            SearchBox(
-                                modifier = Modifier
-                                    .padding(
-                                        top = 5.dp,
-                                        start = 10.dp,
-                                        end = 10.dp,
-                                        bottom = 10.dp
-                                    ),
-                                searchText = searchText,
-                                setSearchText = setSearchText,
-                                enabled = enabled,
-                                focusRequester = focusRequester,
-                                interactionSource = interactionSource
-                            )
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 10.dp, end = 10.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                transactions.forEach { entry ->
-                                    stickyHeader {
-                                        TransactionGroupHeader(
-                                            date = entry.key,
-                                            selected = selectedLocalDates.contains(entry.key),
-                                            enabled = enabled && enabledLocalDates.contains(
-                                                entry.key
-                                            ),
-                                            onClick = {
-                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                toggleLocalDateSelected(
-                                                    selectedLocalDates.contains(entry.key),
-                                                    transactions[entry.key] ?: emptyList()
-                                                )
-                                            }
-                                        )
-                                    }
-                                    items(
-                                        items = entry.value,
-                                        key = { transactionWithChips -> transactionWithChips.id }
-                                    ) { transactionWithChips ->
-                                        TransactionCard(
-                                            checked = enabledTempTransactions.contains(
-                                                transactionWithChips.id
-                                            ) && selectedTransactions.contains(transactionWithChips.id),
-                                            enabled = enabled && enabledTempTransactions.contains(
-                                                transactionWithChips.id
-                                            ),
-                                            transactionWithChips = transactionWithChips,
-                                            onClick = {
-                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                toggleTransactionSelected(transactionWithChips.id)
-                                            },
-                                            onLongClick = {
-                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            },
-                                            modifier = Modifier.animateItem()
-                                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Column {
+                                SearchBox(
+                                    modifier = Modifier
+                                        .padding(
+                                            top = 5.dp,
+                                            start = 10.dp,
+                                            end = 10.dp,
+                                            bottom = 10.dp
+                                        ),
+                                    searchText = searchText,
+                                    setSearchText = setSearchText,
+                                    enabled = enabled,
+                                    focusRequester = focusRequester,
+                                    interactionSource = interactionSource
+                                )
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(start = 10.dp, end = 10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    transactions.forEach { entry ->
+                                        stickyHeader {
+                                            TransactionGroupHeader(
+                                                date = entry.key,
+                                                selected = selectedLocalDates.contains(entry.key),
+                                                enabled = enabled && enabledLocalDates.contains(
+                                                    entry.key
+                                                ),
+                                                onClick = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    toggleLocalDateSelected(
+                                                        selectedLocalDates.contains(entry.key),
+                                                        transactions[entry.key] ?: emptyList()
+                                                    )
+                                                }
+                                            )
+                                        }
+                                        items(
+                                            items = entry.value,
+                                            key = { transactionWithChips -> transactionWithChips.id }
+                                        ) { transactionWithChips ->
+                                            TransactionCard(
+                                                checked = enabledTempTransactions.contains(
+                                                    transactionWithChips.id
+                                                ) && selectedTransactions.contains(
+                                                    transactionWithChips.id
+                                                ),
+                                                enabled = enabled && enabledTempTransactions.contains(
+                                                    transactionWithChips.id
+                                                ),
+                                                transactionWithChips = transactionWithChips,
+                                                onClick = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    toggleTransactionSelected(transactionWithChips.id)
+                                                },
+                                                onLongClick = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                },
+                                                modifier = Modifier.animateItem()
+                                            )
+                                        }
                                     }
                                 }
+                            }
+                            if (!loading && transactions.isEmpty()) {
+                                Text(
+                                    text = if (searchText.isNotBlank()) {
+                                        stringResource(
+                                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                                            searchText
+                                        )
+                                    } else {
+                                        stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                                    },
+                                    modifier = Modifier.align(Alignment.Center),
+                                )
                             }
                         }
                     }
