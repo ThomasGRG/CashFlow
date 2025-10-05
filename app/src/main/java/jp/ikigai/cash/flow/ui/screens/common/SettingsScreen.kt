@@ -94,10 +94,7 @@ fun SettingsScreen(
     }
 
     OneHandModeScaffold(
-        loading = false,
         sheetState = sheetState,
-        emptyPlaceholderText = "",
-        showEmptyPlaceholder = false,
         showToastBar = showToastBar,
         toastBarText = currentEvent?.let {
             stringResource(id = it.message)
