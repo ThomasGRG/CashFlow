@@ -3,6 +3,11 @@ package jp.ikigai.cash.flow.ui.screens.common
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -562,15 +567,21 @@ fun ExportTransactionsScreen(
         }
     ) {
         Column {
-            SearchBox(
-                modifier = Modifier
-                    .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
-                searchText = searchText,
-                setSearchText = setSearchText,
-                enabled = enabled,
-                focusRequester = focusRequester,
-                interactionSource = interactionSource
-            )
+            AnimatedVisibility(
+                visible = totalTransactionsCount > 0,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                SearchBox(
+                    modifier = Modifier
+                        .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
+                    searchText = searchText,
+                    setSearchText = setSearchText,
+                    enabled = enabled,
+                    focusRequester = focusRequester,
+                    interactionSource = interactionSource
+                )
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
