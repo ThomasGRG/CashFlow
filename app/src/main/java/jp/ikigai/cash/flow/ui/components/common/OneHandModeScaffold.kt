@@ -377,3 +377,116 @@ fun OneHandModeScaffold(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OneHandModeScaffold(
+    loading: Boolean,
+    showToastBar: Boolean,
+    toastBarText: String,
+    onDismissToastBar: () -> Unit,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    showBottomSheet: Boolean = false,
+    bottomSheetContent: @Composable () -> Unit = {},
+    onDismissSheet: () -> Unit = {},
+    topBar: @Composable (TopAppBarScrollBehavior, Dp) -> Unit = { _, _ -> },
+    bottomBar: @Composable () -> Unit = {},
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val topAppBarState = rememberTopAppBarState()
+    val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        state = topAppBarState
+    )
+
+    LaunchedEffect(key1 = showBottomSheet) {
+        keyboardController?.hide()
+    }
+
+    val imeInsets = WindowInsets.ime
+
+    val imeVisible by remember(
+        key1 = imeInsets,
+        key2 = density,
+    ) {
+        derivedStateOf {
+            imeInsets.getBottom(density) > 0
+        }
+    }
+
+    LaunchedEffect(key1 = imeVisible) {
+        if (imeVisible) {
+            animate(
+                initialValue = topAppBarState.heightOffset,
+                targetValue = topAppBarState.heightOffsetLimit,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                )
+            ) { value, _ ->
+                topAppBarState.heightOffset = value
+            }
+        }
+    }
+
+    val expandedHeight by remember(key1 = windowInfo, key2 = density) {
+        mutableStateOf(
+            with(density) {
+                (windowInfo.containerSize.height / 3).toDp()
+            }
+        )
+    }
+
+    Scaffold(
+        modifier = Modifier
+            .animateContentSize()
+            .navigationBarsPadding()
+            .imePadding()
+            .fillMaxSize()
+            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
+        topBar = {
+            topBar(topAppBarScrollBehavior, expandedHeight)
+        },
+        bottomBar = bottomBar
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+        ) {
+            content()
+            if (loading) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                )
+            }
+            AnimatedVisibility(
+                visible = showToastBar,
+                enter = fadeIn() + scaleIn(initialScale = 0.6f),
+                exit = fadeOut() + scaleOut(targetScale = 0.6f),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .align(Alignment.BottomCenter)
+            ) {
+                ToastBar(
+                    message = toastBarText,
+                    onDismiss = onDismissToastBar
+                )
+            }
+        }
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = onDismissSheet,
+                sheetState = sheetState,
+//                sheetGesturesEnabled: Boolean = false, TODO()
+            ) {
+                bottomSheetContent()
+            }
+        }
+    }
+}
