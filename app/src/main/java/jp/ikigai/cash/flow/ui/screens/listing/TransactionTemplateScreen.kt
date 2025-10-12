@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +43,8 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
@@ -53,6 +57,7 @@ import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
@@ -83,6 +88,8 @@ fun TransactionTemplateScreen(
 ) {
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -180,123 +187,221 @@ fun TransactionTemplateScreen(
         mutableStateOf(state.templates.isEmpty())
     }
 
-    OneHandModeScaffold(
-        loading = loading,
-        showToastBar = showToastBar,
-        toastBarText = currentEvent?.let {
-            stringResource(id = it.message)
-        } ?: "",
-        onDismissToastBar = {
-            showToastBar = false
-        },
-        sheetState = sheetState,
-        showBottomSheet = sheetType != SheetType.NONE,
-        bottomSheetContent = {
-            SortConfigSheet(
-                selectedField = sortField,
-                selectedDirection = sortDirection,
-                fields = sortFields,
-                sort = setSortConfig,
-                dismiss = {
-                    scope
-                        .launch { sheetState.hide() }
-                        .invokeOnCompletion {
-                            sheetType = SheetType.NONE
-                        }
-                }
-            )
-        },
-        onDismissSheet = {
-            sheetType = SheetType.NONE
-        },
-        showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (count == 0L) {
-            stringResource(id = R.string.templates_screen_empty_placeholder_label)
-        } else {
-            stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
-        },
-        topBar = { scrollBehavior, expandedHeight ->
-            LargeTopAppBar(
-                title = {
-                    Column {
-                        Text(text = stringResource(id = R.string.templates_label))
-                        Text(
-                            text = stringResource(
-                                id = R.string.templates_count_label,
-                                countString
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
-                },
-                expandedHeight = expandedHeight,
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        bottomBar = {
-            ListingScreenBottomAppBar(
-                navigateBack = navigateBack,
-                sortClick = if (count > 0) {
-                    {
-                        sheetType = SheetType.SORT
-                    }
-                } else null,
-                sortIcon = sortIcon,
-                addClick = addNewTransactionTemplate,
-                searchClick = if (count > 0) {
-                    {
-                        if (isFocused) {
-                            keyboardController?.show()
-                        } else {
-                            focusRequester.requestFocus()
-                        }
-                    }
-                } else null,
-                graphClick = if (count > 0) {
-                    viewCharts
-                } else null
-            )
-        }
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            stickyHeader(
-                key = "search",
-                contentType = "search_box"
-            ) {
-                AnimatedVisibility(
-                    visible = count > 0,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    SearchBox(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.background)
-                            .padding(top = 5.dp, bottom = 8.dp),
-                        searchText = searchText,
-                        setSearchText = setSearchText,
-                        focusRequester = focusRequester,
-                        interactionSource = interactionSource
-                    )
-                }
-            }
-            items(
-                items = templates,
-                key = { template -> template.id }
-            ) { transactionTemplate ->
-                TransactionTemplateCard(
-                    modifier = Modifier.animateItem(),
-                    templateWithChips = transactionTemplate,
-                    onClick = { id ->
-                        editTransactionTemplate(id)
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                SortConfigSheet(
+                    selectedField = sortField,
+                    selectedDirection = sortDirection,
+                    fields = sortFields,
+                    sort = setSortConfig,
+                    dismiss = {
+                        scope
+                            .launch { sheetState.hide() }
+                            .invokeOnCompletion {
+                                sheetType = SheetType.NONE
+                            }
                     }
                 )
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = if (count == 0L) {
+                stringResource(id = R.string.templates_screen_empty_placeholder_label)
+            } else {
+                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+            },
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AnimatedVisibility(
+                        visible = count > 0,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        SearchBox(
+                            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    ListingScreenBottomAppBar(
+                        title = stringResource(id = R.string.templates_label),
+                        subTitle = stringResource(
+                            id = R.string.templates_count_label,
+                            countString
+                        ),
+                        navigateBack = navigateBack,
+                        sortClick = {
+                            if (count > 0) {
+                                sheetType = SheetType.SORT
+                            }
+                        },
+                        sortIcon = sortIcon,
+                        addClick = addNewTransactionTemplate,
+                        graphClick = {
+                            if (count > 0) {
+                                viewCharts()
+                            }
+                        },
+                    )
+                }
+            },
+            secondColContent = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    items(
+                        items = templates,
+                        key = { template -> template.id }
+                    ) { transactionTemplate ->
+                        TransactionTemplateCard(
+                            modifier = Modifier.animateItem(),
+                            templateWithChips = transactionTemplate,
+                            onClick = { id ->
+                                editTransactionTemplate(id)
+                            }
+                        )
+                    }
+                }
+            }
+        )
+    } else {
+        OneHandModeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+            },
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                SortConfigSheet(
+                    selectedField = sortField,
+                    selectedDirection = sortDirection,
+                    fields = sortFields,
+                    sort = setSortConfig,
+                    dismiss = {
+                        scope
+                            .launch { sheetState.hide() }
+                            .invokeOnCompletion {
+                                sheetType = SheetType.NONE
+                            }
+                    }
+                )
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = if (count == 0L) {
+                stringResource(id = R.string.templates_screen_empty_placeholder_label)
+            } else {
+                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+            },
+            topBar = { scrollBehavior, expandedHeight ->
+                LargeTopAppBar(
+                    title = {
+                        Column {
+                            Text(text = stringResource(id = R.string.templates_label))
+                            Text(
+                                text = stringResource(
+                                    id = R.string.templates_count_label,
+                                    countString
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
+                    },
+                    expandedHeight = expandedHeight,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                ListingScreenBottomAppBar(
+                    navigateBack = navigateBack,
+                    sortClick = if (count > 0) {
+                        {
+                            sheetType = SheetType.SORT
+                        }
+                    } else null,
+                    sortIcon = sortIcon,
+                    addClick = addNewTransactionTemplate,
+                    searchClick = if (count > 0) {
+                        {
+                            if (isFocused) {
+                                keyboardController?.show()
+                            } else {
+                                focusRequester.requestFocus()
+                            }
+                        }
+                    } else null,
+                    graphClick = if (count > 0) {
+                        viewCharts
+                    } else null
+                )
+            }
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 10.dp, end = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                stickyHeader(
+                    key = "search",
+                    contentType = "search_box"
+                ) {
+                    AnimatedVisibility(
+                        visible = count > 0,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        SearchBox(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.background)
+                                .padding(top = 5.dp, bottom = 8.dp),
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
+                }
+                items(
+                    items = templates,
+                    key = { template -> template.id }
+                ) { transactionTemplate ->
+                    TransactionTemplateCard(
+                        modifier = Modifier.animateItem(),
+                        templateWithChips = transactionTemplate,
+                        onClick = { id ->
+                            editTransactionTemplate(id)
+                        }
+                    )
+                }
             }
         }
     }
