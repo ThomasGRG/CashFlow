@@ -269,30 +269,6 @@ fun UpsertCounterPartyScreen(
                         }
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    if (transactionCount > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            FilledTonalButton(
-                                onClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    migrateTransactions(counterPartyId)
-                                },
-                                contentPadding = PaddingValues(0.dp),
-                                shape = MaterialTheme.shapes.small
-                            ) {
-                                Text(
-                                    text = stringResource(
-                                        id = R.string.migrate_transactions_chip_label,
-                                        formattedTransactionCount
-                                    ),
-                                    modifier = Modifier.padding(10.dp),
-                                )
-                            }
-                        }
-                    }
                     UpsertScreenBottomAppBar(
                         title = if (counterPartyId == 0L) {
                             stringResource(id = R.string.create_counter_party_label)
@@ -321,7 +297,11 @@ fun UpsertCounterPartyScreen(
                                     SheetType.CONFIRM_DELETE
                                 }
                             }
-                        } else null
+                        } else null,
+                        migrateClick = if (transactionCount > 0) {
+                            { migrateTransactions(counterPartyId) }
+                        } else null,
+                        transactionCount = formattedTransactionCount,
                     )
                 }
             },

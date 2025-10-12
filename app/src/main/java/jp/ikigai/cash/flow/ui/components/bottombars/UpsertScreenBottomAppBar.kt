@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.DeviceFloppy
+import compose.icons.tablericons.Replace
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
@@ -146,6 +149,107 @@ fun UpsertScreenBottomAppBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "navigate back"
+                )
+            }
+            deleteClick?.let {
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        deleteClick()
+                    },
+                    enabled = enabled
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = Icons.Outlined.Delete.name,
+                    )
+                }
+            }
+            CustomFloatingActionButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    saveClick()
+                },
+                enabled = enabled
+            ) {
+                Icon(
+                    imageVector = TablerIcons.DeviceFloppy,
+                    contentDescription = TablerIcons.DeviceFloppy.name,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UpsertScreenBottomAppBar(
+    title: String,
+    enabled: Boolean,
+    navigateBack: () -> Unit,
+    saveClick: () -> Unit,
+    deleteClick: (() -> Unit)? = null,
+    migrateClick: (() -> Unit)? = null,
+    transactionCount: String,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(
+                RoundedCornerShape(20.dp)
+            )
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(all = 10.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(vertical = 10.dp)
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 10.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateBack()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "navigate back"
+                )
+            }
+            migrateClick?.let {
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            content = {
+                                Text(text = transactionCount)
+                            },
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    },
+                    content = {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                migrateClick()
+                            },
+                            enabled = enabled
+                        ) {
+                            Icon(
+                                imageVector = TablerIcons.Replace,
+                                contentDescription = TablerIcons.Replace.name,
+                            )
+                        }
+                    }
                 )
             }
             deleteClick?.let {
