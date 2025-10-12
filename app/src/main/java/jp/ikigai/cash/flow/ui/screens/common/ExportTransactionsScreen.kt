@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +50,8 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -65,6 +69,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
@@ -113,6 +118,8 @@ fun ExportTransactionsScreen(
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -334,292 +341,571 @@ fun ExportTransactionsScreen(
         }
     )
 
-    OneHandModeScaffold(
-        loading = loading,
-        showToastBar = showToastBar,
-        toastBarText = currentEvent?.let {
-            stringResource(id = it.message)
-        } ?: "",
-        onDismissToastBar = {
-            showToastBar = false
-            if (currentEvent == Event.ExportSuccess) {
-                navigateBack()
-            }
-        },
-        showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = if (totalTransactionsCount == 0L) {
-            stringResource(id = R.string.transactions_screen_empty_placeholder_label)
-        } else if (searchText.isNotBlank()) {
-            stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
-        } else {
-            stringResource(id = R.string.no_results_found_filters_placeholder_label)
-        },
-        sheetState = sheetState,
-        showBottomSheet = sheetType != SheetType.NONE,
-        bottomSheetContent = {
-            when (sheetType) {
-                SheetType.DATE_RANGE -> {
-                    DateRangePickerSheet(
-                        startDate = startDate,
-                        endDate = endDate,
-                        filter = setStartDateAndEndDate,
-                        reset = {
-                            setStartDateAndEndDate(null, null)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+                if (currentEvent == Event.ExportSuccess) {
+                    navigateBack()
                 }
-
-                SheetType.CURRENCY -> {
-                    FilterCurrencySheet(
-                        selectedCurrencyCodes = selectedCurrencies,
-                        currencies = currencies,
-                        filter = setSelectedCurrencies,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.AMOUNT -> {
-                    AmountFilterSheet(
-                        minAmount = filterAmountMin,
-                        maxAmount = filterAmountMax,
-                        filter = filterByAmount,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.CATEGORY -> {
-                    FilterCategorySheet(
-                        selectedCategoryIds = selectedCategories,
-                        categories = categories,
-                        filter = setSelectedCategories,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.COUNTERPARTY -> {
-                    FilterCounterPartySheet(
-                        selectedCounterPartyIds = selectedCounterParties,
-                        includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
-                        counterParties = counterParties,
-                        filter = setSelectedCounterParties,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.METHOD -> {
-                    FilterMethodSheet(
-                        selectedMethodIds = selectedMethods,
-                        methods = methods,
-                        filter = setSelectedMethods,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.ACCOUNT -> {
-                    FilterAccountSheet(
-                        selectedAccountIds = selectedAccounts,
-                        accounts = accounts,
-                        filter = setSelectedAccounts,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.TYPE -> {
-                    FilterTransactionTypeSheet(
-                        selectedTransactionTypes = selectedTransactionTypes,
-                        filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.EXPORT -> {
-                    ExportSheet(
-                        selectedTransactionCount = selectedTransactions.size,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        },
-                        export = {
-                            includeTemplates = it
-                            exportDirectoryPicker.launch(
-                                getExportFileName(locale)
-                            )
-                        }
-                    )
-                }
-
-                else -> {}
-            }
-        },
-        onDismissSheet = {
-            sheetType = SheetType.NONE
-        },
-        topBar = { scrollBehavior, expandedHeight ->
-            LargeTopAppBar(
-                title = {
-                    Column {
-                        Text(text = stringResource(id = R.string.export_transactions_label))
-                        Text(
-                            text = stringResource(
-                                id = dateRangeStringRes,
-                                startDateString,
-                                endDateString
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
-                },
-                expandedHeight = expandedHeight,
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        bottomBar = {
-            ExportTransactionsScreenBottomAppBar(
-                navigateBack = navigateBack,
-                enabled = enabled,
-                exportEnabled = exportEnabled,
-                allSelected = allSelected,
-                sortDirection = sortDirection,
-                filterAmount = filterAmountRange,
-                selectedCurrencyCount = selectedCurrencyCount,
-                selectedAccountCount = selectedAccountCount,
-                selectedCategoryCount = selectedCategoryCount,
-                selectedCounterPartyCount = selectedCounterPartyCount,
-                counterPartyFilterVisible = counterParties.isNotEmpty(),
-                selectedMethodCount = selectedMethodCount,
-                selectedTransactionTypeCount = selectedTransactionTypes.size,
-                onSortClick = {
-                    if (sortDirection == SortDirection.DESC) {
-                        setSortDirection(SortDirection.ASC)
-                    } else {
-                        setSortDirection(SortDirection.DESC)
-                    }
-                },
-                onFilterByAmountClick = {
-                    sheetType = SheetType.AMOUNT
-                },
-                onFilterByTypeClick = {
-                    sheetType = SheetType.TYPE
-                },
-                onFilterByCurrencyClick = {
-                    sheetType = SheetType.CURRENCY
-                },
-                onFilterByCategoryClick = {
-                    sheetType = SheetType.CATEGORY
-                },
-                onFilterByCounterPartyClick = {
-                    sheetType = SheetType.COUNTERPARTY
-                },
-                onFilterByMethodClick = {
-                    sheetType = SheetType.METHOD
-                },
-                onFilterBySourceClick = {
-                    sheetType = SheetType.ACCOUNT
-                },
-                onCalendarClick = {
-                    sheetType = SheetType.DATE_RANGE
-                },
-                exportTransactions = {
-                    sheetType = SheetType.EXPORT
-                },
-                onSearchClick = {
-                    if (isFocused) {
-                        keyboardController?.show()
-                    } else {
-                        focusRequester.requestFocus()
-                    }
-                },
-                onToggleSelectClick = toggleSelection
-            )
-        }
-    ) {
-        Column {
-            AnimatedVisibility(
-                visible = totalTransactionsCount > 0,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                SearchBox(
-                    modifier = Modifier
-                        .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
-                    searchText = searchText,
-                    setSearchText = setSearchText,
-                    enabled = enabled,
-                    focusRequester = focusRequester,
-                    interactionSource = interactionSource
-                )
-            }
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 10.dp, end = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                transactions.forEach { entry ->
-                    stickyHeader {
-                        TransactionGroupHeader(
-                            date = entry.key,
-                            selected = selectedLocalDates.contains(entry.key),
-                            enabled = enabled,
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                toggleLocalDateSelected(entry.key)
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = if (totalTransactionsCount == 0L) {
+                stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+            } else if (searchText.isNotBlank()) {
+                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+            } else {
+                stringResource(id = R.string.no_results_found_filters_placeholder_label)
+            },
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
                             }
                         )
                     }
-                    items(
-                        items = entry.value,
-                        key = { transactionWithChips -> transactionWithChips.id }
-                    ) { transactionWithChips ->
-                        TransactionCard(
-                            checked = selectedTransactions.contains(transactionWithChips.id),
-                            enabled = enabled,
-                            transactionWithChips = transactionWithChips,
-                            onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                toggleTransactionSelected(transactionWithChips.id)
-                            },
-                            onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            },
-                            modifier = Modifier.animateItem()
+
+                    SheetType.CURRENCY -> {
+                        FilterCurrencySheet(
+                            selectedCurrencyCodes = selectedCurrencies,
+                            currencies = currencies,
+                            filter = setSelectedCurrencies,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
+                    }
+
+                    SheetType.AMOUNT -> {
+                        AmountFilterSheet(
+                            minAmount = filterAmountMin,
+                            maxAmount = filterAmountMax,
+                            filter = filterByAmount,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CATEGORY -> {
+                        FilterCategorySheet(
+                            selectedCategoryIds = selectedCategories,
+                            categories = categories,
+                            filter = setSelectedCategories,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.COUNTERPARTY -> {
+                        FilterCounterPartySheet(
+                            selectedCounterPartyIds = selectedCounterParties,
+                            includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
+                            counterParties = counterParties,
+                            filter = setSelectedCounterParties,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.METHOD -> {
+                        FilterMethodSheet(
+                            selectedMethodIds = selectedMethods,
+                            methods = methods,
+                            filter = setSelectedMethods,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.ACCOUNT -> {
+                        FilterAccountSheet(
+                            selectedAccountIds = selectedAccounts,
+                            accounts = accounts,
+                            filter = setSelectedAccounts,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.TYPE -> {
+                        FilterTransactionTypeSheet(
+                            selectedTransactionTypes = selectedTransactionTypes,
+                            filter = setSelectedTransactionTypes,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.EXPORT -> {
+                        ExportSheet(
+                            selectedTransactionCount = selectedTransactions.size,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            },
+                            export = {
+                                includeTemplates = it
+                                exportDirectoryPicker.launch(
+                                    getExportFileName(locale)
+                                )
+                            }
+                        )
+                    }
+
+                    else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AnimatedVisibility(
+                        visible = totalTransactionsCount > 0,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        SearchBox(
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            enabled = enabled,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    ExportTransactionsScreenBottomAppBar(
+                        title = stringResource(id = R.string.export_transactions_label),
+                        subTitle = stringResource(
+                            id = dateRangeStringRes,
+                            startDateString,
+                            endDateString
+                        ),
+                        navigateBack = navigateBack,
+                        enabled = enabled,
+                        exportEnabled = exportEnabled,
+                        allSelected = allSelected,
+                        sortDirection = sortDirection,
+                        filterAmount = filterAmountRange,
+                        selectedCurrencyCount = selectedCurrencyCount,
+                        selectedAccountCount = selectedAccountCount,
+                        selectedCategoryCount = selectedCategoryCount,
+                        selectedCounterPartyCount = selectedCounterPartyCount,
+                        counterPartyFilterVisible = counterParties.isNotEmpty(),
+                        selectedMethodCount = selectedMethodCount,
+                        selectedTransactionTypeCount = selectedTransactionTypes.size,
+                        onSortClick = {
+                            if (sortDirection == SortDirection.DESC) {
+                                setSortDirection(SortDirection.ASC)
+                            } else {
+                                setSortDirection(SortDirection.DESC)
+                            }
+                        },
+                        onFilterByAmountClick = {
+                            sheetType = SheetType.AMOUNT
+                        },
+                        onFilterByTypeClick = {
+                            sheetType = SheetType.TYPE
+                        },
+                        onFilterByCurrencyClick = {
+                            sheetType = SheetType.CURRENCY
+                        },
+                        onFilterByCategoryClick = {
+                            sheetType = SheetType.CATEGORY
+                        },
+                        onFilterByCounterPartyClick = {
+                            sheetType = SheetType.COUNTERPARTY
+                        },
+                        onFilterByMethodClick = {
+                            sheetType = SheetType.METHOD
+                        },
+                        onFilterBySourceClick = {
+                            sheetType = SheetType.ACCOUNT
+                        },
+                        onCalendarClick = {
+                            sheetType = SheetType.DATE_RANGE
+                        },
+                        exportTransactions = {
+                            sheetType = SheetType.EXPORT
+                        },
+                        onToggleSelectClick = toggleSelection
+                    )
+                }
+            },
+            secondColContent = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    transactions.forEach { entry ->
+                        stickyHeader {
+                            TransactionGroupHeader(
+                                date = entry.key,
+                                selected = selectedLocalDates.contains(entry.key),
+                                enabled = enabled,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    toggleLocalDateSelected(entry.key)
+                                }
+                            )
+                        }
+                        items(
+                            items = entry.value,
+                            key = { transactionWithChips -> transactionWithChips.id }
+                        ) { transactionWithChips ->
+                            TransactionCard(
+                                checked = selectedTransactions.contains(transactionWithChips.id),
+                                enabled = enabled,
+                                transactionWithChips = transactionWithChips,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    toggleTransactionSelected(transactionWithChips.id)
+                                },
+                                onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    } else {
+        OneHandModeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+                if (currentEvent == Event.ExportSuccess) {
+                    navigateBack()
+                }
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = if (totalTransactionsCount == 0L) {
+                stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+            } else if (searchText.isNotBlank()) {
+                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+            } else {
+                stringResource(id = R.string.no_results_found_filters_placeholder_label)
+            },
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CURRENCY -> {
+                        FilterCurrencySheet(
+                            selectedCurrencyCodes = selectedCurrencies,
+                            currencies = currencies,
+                            filter = setSelectedCurrencies,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.AMOUNT -> {
+                        AmountFilterSheet(
+                            minAmount = filterAmountMin,
+                            maxAmount = filterAmountMax,
+                            filter = filterByAmount,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CATEGORY -> {
+                        FilterCategorySheet(
+                            selectedCategoryIds = selectedCategories,
+                            categories = categories,
+                            filter = setSelectedCategories,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.COUNTERPARTY -> {
+                        FilterCounterPartySheet(
+                            selectedCounterPartyIds = selectedCounterParties,
+                            includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
+                            counterParties = counterParties,
+                            filter = setSelectedCounterParties,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.METHOD -> {
+                        FilterMethodSheet(
+                            selectedMethodIds = selectedMethods,
+                            methods = methods,
+                            filter = setSelectedMethods,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.ACCOUNT -> {
+                        FilterAccountSheet(
+                            selectedAccountIds = selectedAccounts,
+                            accounts = accounts,
+                            filter = setSelectedAccounts,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.TYPE -> {
+                        FilterTransactionTypeSheet(
+                            selectedTransactionTypes = selectedTransactionTypes,
+                            filter = setSelectedTransactionTypes,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.EXPORT -> {
+                        ExportSheet(
+                            selectedTransactionCount = selectedTransactions.size,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            },
+                            export = {
+                                includeTemplates = it
+                                exportDirectoryPicker.launch(
+                                    getExportFileName(locale)
+                                )
+                            }
+                        )
+                    }
+
+                    else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            topBar = { scrollBehavior, expandedHeight ->
+                LargeTopAppBar(
+                    title = {
+                        Column {
+                            Text(text = stringResource(id = R.string.export_transactions_label))
+                            Text(
+                                text = stringResource(
+                                    id = dateRangeStringRes,
+                                    startDateString,
+                                    endDateString
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
+                    },
+                    expandedHeight = expandedHeight,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                ExportTransactionsScreenBottomAppBar(
+                    navigateBack = navigateBack,
+                    enabled = enabled,
+                    exportEnabled = exportEnabled,
+                    allSelected = allSelected,
+                    sortDirection = sortDirection,
+                    filterAmount = filterAmountRange,
+                    selectedCurrencyCount = selectedCurrencyCount,
+                    selectedAccountCount = selectedAccountCount,
+                    selectedCategoryCount = selectedCategoryCount,
+                    selectedCounterPartyCount = selectedCounterPartyCount,
+                    counterPartyFilterVisible = counterParties.isNotEmpty(),
+                    selectedMethodCount = selectedMethodCount,
+                    selectedTransactionTypeCount = selectedTransactionTypes.size,
+                    onSortClick = {
+                        if (sortDirection == SortDirection.DESC) {
+                            setSortDirection(SortDirection.ASC)
+                        } else {
+                            setSortDirection(SortDirection.DESC)
+                        }
+                    },
+                    onFilterByAmountClick = {
+                        sheetType = SheetType.AMOUNT
+                    },
+                    onFilterByTypeClick = {
+                        sheetType = SheetType.TYPE
+                    },
+                    onFilterByCurrencyClick = {
+                        sheetType = SheetType.CURRENCY
+                    },
+                    onFilterByCategoryClick = {
+                        sheetType = SheetType.CATEGORY
+                    },
+                    onFilterByCounterPartyClick = {
+                        sheetType = SheetType.COUNTERPARTY
+                    },
+                    onFilterByMethodClick = {
+                        sheetType = SheetType.METHOD
+                    },
+                    onFilterBySourceClick = {
+                        sheetType = SheetType.ACCOUNT
+                    },
+                    onCalendarClick = {
+                        sheetType = SheetType.DATE_RANGE
+                    },
+                    exportTransactions = {
+                        sheetType = SheetType.EXPORT
+                    },
+                    onSearchClick = {
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
+                        }
+                    },
+                    onToggleSelectClick = toggleSelection
+                )
+            }
+        ) {
+            Column {
+                AnimatedVisibility(
+                    visible = totalTransactionsCount > 0,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    SearchBox(
+                        modifier = Modifier
+                            .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        enabled = enabled,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
+                    )
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    transactions.forEach { entry ->
+                        stickyHeader {
+                            TransactionGroupHeader(
+                                date = entry.key,
+                                selected = selectedLocalDates.contains(entry.key),
+                                enabled = enabled,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    toggleLocalDateSelected(entry.key)
+                                }
+                            )
+                        }
+                        items(
+                            items = entry.value,
+                            key = { transactionWithChips -> transactionWithChips.id }
+                        ) { transactionWithChips ->
+                            TransactionCard(
+                                checked = selectedTransactions.contains(transactionWithChips.id),
+                                enabled = enabled,
+                                transactionWithChips = transactionWithChips,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    toggleTransactionSelected(transactionWithChips.id)
+                                },
+                                onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
                     }
                 }
             }
