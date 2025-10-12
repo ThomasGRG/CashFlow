@@ -226,7 +226,7 @@ fun AccountScreen(
                         },
                         sortIcon = sortIcon,
                         addClick = addNewAccount,
-                        graphClick = {
+                        chartClick = {
                             if (count > 0) {
                                 viewCharts()
                             }
@@ -324,7 +324,7 @@ fun AccountScreen(
                             }
                         }
                     },
-                    graphClick = {
+                    chartClick = {
                         if (count > 0) {
                             viewCharts()
                         }

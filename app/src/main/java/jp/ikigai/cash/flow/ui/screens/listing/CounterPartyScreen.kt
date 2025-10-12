@@ -225,7 +225,7 @@ fun CounterPartyScreen(
                         },
                         sortIcon = sortIcon,
                         addClick = addNewCounterParty,
-                        graphClick = {
+                        chartClick = {
                             if (count > 0) {
                                 viewCharts()
                             }
@@ -323,7 +323,7 @@ fun CounterPartyScreen(
                             }
                         }
                     },
-                    graphClick = {
+                    chartClick = {
                         if (count > 0) {
                             viewCharts()
                         }

@@ -42,7 +42,7 @@ fun ListingScreenBottomAppBar(
     sortClick: () -> Unit,
     sortIcon: ImageVector = TablerIcons.SortDescending,
     searchClick: () -> Unit,
-    graphClick: () -> Unit,
+    chartClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -130,7 +130,7 @@ fun ListingScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        graphClick()
+                        chartClick()
                     }
                 ) {
                     Icon(
@@ -151,7 +151,7 @@ fun ListingScreenBottomAppBar(
     addClick: () -> Unit,
     sortClick: () -> Unit,
     sortIcon: ImageVector = TablerIcons.SortDescending,
-    graphClick: () -> Unit,
+    chartClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -206,7 +206,7 @@ fun ListingScreenBottomAppBar(
             IconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    graphClick()
+                    chartClick()
                 }
             ) {
                 Icon(
@@ -239,7 +239,7 @@ fun ListingScreenBottomAppBarPreview() {
             sortIcon = TablerIcons.SortDescending,
             addClick = {},
             searchClick = {},
-            graphClick = {}
+            chartClick = {}
         )
         ListingScreenBottomAppBar(
             title = stringResource(id = R.string.categories_label),
@@ -248,7 +248,7 @@ fun ListingScreenBottomAppBarPreview() {
             sortClick = {},
             sortIcon = TablerIcons.SortDescending,
             addClick = {},
-            graphClick = {}
+            chartClick = {}
         )
     }
 }

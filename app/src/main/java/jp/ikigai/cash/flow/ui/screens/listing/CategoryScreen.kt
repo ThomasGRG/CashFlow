@@ -225,7 +225,7 @@ fun CategoryScreen(
                         },
                         sortIcon = sortIcon,
                         addClick = addNewCategory,
-                        graphClick = {
+                        chartClick = {
                             if (count > 0) {
                                 viewCharts()
                             }
@@ -323,7 +323,7 @@ fun CategoryScreen(
                             }
                         }
                     },
-                    graphClick = {
+                    chartClick = {
                         if (count > 0) {
                             viewCharts()
                         }

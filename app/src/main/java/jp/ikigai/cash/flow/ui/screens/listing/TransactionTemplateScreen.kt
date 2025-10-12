@@ -252,7 +252,7 @@ fun TransactionTemplateScreen(
                         },
                         sortIcon = sortIcon,
                         addClick = addNewTransactionTemplate,
-                        graphClick = {
+                        chartClick = {
                             if (count > 0) {
                                 viewCharts()
                             }
@@ -357,7 +357,7 @@ fun TransactionTemplateScreen(
                             }
                         }
                     },
-                    graphClick = {
+                    chartClick = {
                         if (count > 0) {
                             viewCharts()
                         }

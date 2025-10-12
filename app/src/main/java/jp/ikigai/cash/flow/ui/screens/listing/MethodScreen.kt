@@ -225,7 +225,7 @@ fun MethodScreen(
                         },
                         sortIcon = sortIcon,
                         addClick = addNewTransactionMethod,
-                        graphClick = {
+                        chartClick = {
                             if (count > 0) {
                                 viewCharts()
                             }
@@ -323,7 +323,7 @@ fun MethodScreen(
                             }
                         }
                     },
-                    graphClick = {
+                    chartClick = {
                         if (count > 0) {
                             viewCharts()
                         }
