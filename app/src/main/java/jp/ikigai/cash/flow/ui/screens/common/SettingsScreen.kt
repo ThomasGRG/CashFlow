@@ -3,15 +3,19 @@ package jp.ikigai.cash.flow.ui.screens.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +40,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Settings
 import jp.ikigai.cash.flow.BuildConfig
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
@@ -44,6 +52,7 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.RestoreSortConfigSheet
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,7 +67,7 @@ fun SettingsScreen(
     navigateToExportScreen: () -> Unit,
     navigateToAuditLogsScreen: () -> Unit,
 ) {
-    val haptics = LocalHapticFeedback.current
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -93,185 +102,270 @@ fun SettingsScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    OneHandModeScaffold(
-        sheetState = sheetState,
-        showToastBar = showToastBar,
-        toastBarText = currentEvent?.let {
-            stringResource(id = it.message)
-        } ?: "",
-        onDismissToastBar = {
-            showToastBar = false
-        },
-        showBottomSheet = sheetType != SheetType.NONE,
-        bottomSheetContent = {
-            RestoreSortConfigSheet(
-                restore = { selectedScreens ->
-                    scope.launch {
-                        preferencesDataStore.restoreDefaults(selectedScreens)
-                        currentEvent = Event.RestoreSortSuccess
-                        showToastBar = true
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            sheetState = sheetState,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+            },
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                RestoreSortConfigSheet(
+                    restore = { selectedScreens ->
+                        scope.launch {
+                            preferencesDataStore.restoreDefaults(selectedScreens)
+                            currentEvent = Event.RestoreSortSuccess
+                            showToastBar = true
+                        }
+                    },
+                    dismiss = {
+                        scope
+                            .launch { sheetState.hide() }
+                            .invokeOnCompletion { sheetType = SheetType.NONE }
                     }
-                },
-                dismiss = {
-                    scope
-                        .launch { sheetState.hide() }
-                        .invokeOnCompletion { sheetType = SheetType.NONE }
+                )
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        imageVector = TablerIcons.Settings,
+                        contentDescription = "settings icon",
+                        modifier = Modifier.size(120.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ThreeSlotBottomAppBar(
+                        title = stringResource(R.string.settings_label),
+                        navigateBack = navigateBack,
+                        enabled = true
+                    )
                 }
-            )
-        },
-        onDismissSheet = {
-            sheetType = SheetType.NONE
-        },
-        topBar = { scrollBehavior, expandedHeight ->
-            LargeTopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.SpaceEvenly,
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(text = stringResource(R.string.settings_label))
-                        Text(
-                            text = "v$buildVersionName ($buildVersionCode)",
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
-                },
-                expandedHeight = expandedHeight,
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        bottomBar = {
-            ThreeSlotBottomAppBar(
-                navigateBack = navigateBack,
-                enabled = true
-            )
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                ),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = stringResource(id = R.string.auditing_settings_group_label),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, top = 10.dp),
-                textAlign = TextAlign.Start,
-            )
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navigateToAuditLogsScreen()
-                    }
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.audit_logs_setting_label),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(id = R.string.audit_logs_setting_description),
-                    modifier = Modifier.alpha(0.8f),
-                    fontSize = 14.sp
-                )
-            }
-            Text(
-                text = stringResource(id = R.string.backup_restore_settings_group_label),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp),
-                textAlign = TextAlign.Start,
-            )
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navigateToImportScreen()
-                    }
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.import_button_label),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(id = R.string.import_transactions_label),
-                    modifier = Modifier.alpha(0.8f),
-                    fontSize = 14.sp
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navigateToExportScreen()
-                    }
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.export_button_label),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(id = R.string.export_transactions_label),
-                    modifier = Modifier.alpha(0.8f),
-                    fontSize = 14.sp
-                )
-            }
-            Text(
-                text = stringResource(id = R.string.sort_settings_group_label),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp),
-                textAlign = TextAlign.Start,
-            )
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            },
+            secondColContent = {
+                SettingsScreenContent(
+                    navigateToImportScreen = navigateToImportScreen,
+                    navigateToExportScreen = navigateToExportScreen,
+                    navigateToAuditLogsScreen = navigateToAuditLogsScreen,
+                    resetSortClick = {
                         sheetType = SheetType.RESTORE_SORT
                     }
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text(
-                    text = stringResource(id = R.string.restore_sort_setting_label),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = stringResource(id = R.string.restore_sort_setting_description),
-                    modifier = Modifier.alpha(0.8f),
-                    fontSize = 14.sp
                 )
             }
+        )
+    } else {
+        OneHandModeScaffold(
+            sheetState = sheetState,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+            },
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                RestoreSortConfigSheet(
+                    restore = { selectedScreens ->
+                        scope.launch {
+                            preferencesDataStore.restoreDefaults(selectedScreens)
+                            currentEvent = Event.RestoreSortSuccess
+                            showToastBar = true
+                        }
+                    },
+                    dismiss = {
+                        scope
+                            .launch { sheetState.hide() }
+                            .invokeOnCompletion { sheetType = SheetType.NONE }
+                    }
+                )
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            topBar = { scrollBehavior, expandedHeight ->
+                LargeTopAppBar(
+                    title = {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(text = stringResource(R.string.settings_label))
+                            Text(
+                                text = "v$buildVersionName ($buildVersionCode)",
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
+                    },
+                    expandedHeight = expandedHeight,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                ThreeSlotBottomAppBar(
+                    navigateBack = navigateBack,
+                    enabled = true
+                )
+            }
+        ) {
+            SettingsScreenContent(
+                navigateToImportScreen = navigateToImportScreen,
+                navigateToExportScreen = navigateToExportScreen,
+                navigateToAuditLogsScreen = navigateToAuditLogsScreen,
+                resetSortClick = {
+                    sheetType = SheetType.RESTORE_SORT
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsScreenContent(
+    navigateToImportScreen: () -> Unit,
+    navigateToExportScreen: () -> Unit,
+    navigateToAuditLogsScreen: () -> Unit,
+    resetSortClick: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(
+                rememberScrollState()
+            ),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(id = R.string.auditing_settings_group_label),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp, top = 10.dp),
+            textAlign = TextAlign.Start,
+        )
+        Column(
+            modifier = Modifier
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateToAuditLogsScreen()
+                }
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(
+                text = stringResource(id = R.string.audit_logs_setting_label),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(id = R.string.audit_logs_setting_description),
+                modifier = Modifier.alpha(0.8f),
+                fontSize = 14.sp
+            )
+        }
+        Text(
+            text = stringResource(id = R.string.backup_restore_settings_group_label),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp),
+            textAlign = TextAlign.Start,
+        )
+        Column(
+            modifier = Modifier
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateToImportScreen()
+                }
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(
+                text = stringResource(id = R.string.import_button_label),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(id = R.string.import_transactions_label),
+                modifier = Modifier.alpha(0.8f),
+                fontSize = 14.sp
+            )
+        }
+        Column(
+            modifier = Modifier
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateToExportScreen()
+                }
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(
+                text = stringResource(id = R.string.export_button_label),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(id = R.string.export_transactions_label),
+                modifier = Modifier.alpha(0.8f),
+                fontSize = 14.sp
+            )
+        }
+        Text(
+            text = stringResource(id = R.string.sort_settings_group_label),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 10.dp),
+            textAlign = TextAlign.Start,
+        )
+        Column(
+            modifier = Modifier
+                .clickable {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    resetSortClick()
+                }
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Text(
+                text = stringResource(id = R.string.restore_sort_setting_label),
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(id = R.string.restore_sort_setting_description),
+                modifier = Modifier.alpha(0.8f),
+                fontSize = 14.sp
+            )
         }
     }
 }
