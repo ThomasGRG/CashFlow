@@ -10,8 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,16 +25,16 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.DeviceFloppy
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
-fun ThreeSlotBottomAppBar(
-    navigateBack: () -> Unit,
+fun UpsertScreenBottomAppBar(
     enabled: Boolean,
-    floatingButtonIcon: (@Composable () -> Unit)? = null,
-    floatingButtonAction: (() -> Unit)? = null,
-    extraButtonIcon: (@Composable () -> Unit)? = null,
-    extraButtonAction: (() -> Unit)? = null,
+    navigateBack: () -> Unit,
+    saveClick: () -> Unit,
+    deleteClick: (() -> Unit)? = null,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -60,7 +59,7 @@ fun ThreeSlotBottomAppBar(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "navigate back"
+                        contentDescription = "navigate back",
                     )
                 }
             }
@@ -69,18 +68,17 @@ fun ThreeSlotBottomAppBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                floatingButtonIcon?.let {
-                    CustomFloatingActionButton(
-                        onClick = {
-                            floatingButtonAction?.let {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                floatingButtonAction()
-                            }
-                        },
-                        enabled = enabled
-                    ) {
-                        floatingButtonIcon()
-                    }
+                CustomFloatingActionButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        saveClick()
+                    },
+                    enabled = enabled
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.DeviceFloppy,
+                        contentDescription = TablerIcons.DeviceFloppy.name,
+                    )
                 }
             }
             Row(
@@ -88,17 +86,18 @@ fun ThreeSlotBottomAppBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                extraButtonIcon?.let {
+                deleteClick?.let {
                     IconButton(
                         onClick = {
-                            extraButtonAction?.let {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                extraButtonAction()
-                            }
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            deleteClick()
                         },
                         enabled = enabled
                     ) {
-                        extraButtonIcon()
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = Icons.Outlined.Delete.name,
+                        )
                     }
                 }
             }
@@ -107,14 +106,12 @@ fun ThreeSlotBottomAppBar(
 }
 
 @Composable
-fun ThreeSlotBottomAppBar(
+fun UpsertScreenBottomAppBar(
     title: String,
-    navigateBack: () -> Unit,
     enabled: Boolean,
-    floatingButtonIcon: (@Composable () -> Unit)? = null,
-    floatingButtonAction: (() -> Unit)? = null,
-    extraButtonIcon: (@Composable () -> Unit)? = null,
-    extraButtonAction: (() -> Unit)? = null,
+    navigateBack: () -> Unit,
+    saveClick: () -> Unit,
+    deleteClick: (() -> Unit)? = null,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -151,31 +148,31 @@ fun ThreeSlotBottomAppBar(
                     contentDescription = "navigate back"
                 )
             }
-            extraButtonIcon?.let {
+            deleteClick?.let {
                 IconButton(
                     onClick = {
-                        extraButtonAction?.let {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            extraButtonAction()
-                        }
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        deleteClick()
                     },
                     enabled = enabled
                 ) {
-                    extraButtonIcon()
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = Icons.Outlined.Delete.name,
+                    )
                 }
             }
-            floatingButtonIcon?.let {
-                CustomFloatingActionButton(
-                    onClick = {
-                        floatingButtonAction?.let {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            floatingButtonAction()
-                        }
-                    },
-                    enabled = enabled
-                ) {
-                    floatingButtonIcon()
-                }
+            CustomFloatingActionButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    saveClick()
+                },
+                enabled = enabled
+            ) {
+                Icon(
+                    imageVector = TablerIcons.DeviceFloppy,
+                    contentDescription = TablerIcons.DeviceFloppy.name,
+                )
             }
         }
     }
@@ -183,40 +180,19 @@ fun ThreeSlotBottomAppBar(
 
 @Preview
 @Composable
-fun ThreeSlotBottomAppBarPreview() {
+fun UpsertScreenBottomAppBarPreview() {
     Column {
-        ThreeSlotBottomAppBar(
-            navigateBack = {},
+        UpsertScreenBottomAppBar(
             enabled = true,
-            floatingButtonIcon = {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
-            },
-            floatingButtonAction = {},
-            extraButtonIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = Icons.Filled.Delete.name
-                )
-            },
-            extraButtonAction = {}
-        )
-        ThreeSlotBottomAppBar(
             navigateBack = {},
+            saveClick = {},
+            deleteClick = {},
+        )
+        UpsertScreenBottomAppBar(
             enabled = false,
-            floatingButtonIcon = {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = Icons.Filled.Add.name)
-            },
-            floatingButtonAction = {},
-            extraButtonIcon = null,
-            extraButtonAction = null
-        )
-        ThreeSlotBottomAppBar(
             navigateBack = {},
-            enabled = true,
-            floatingButtonIcon = null,
-            floatingButtonAction = null,
-            extraButtonIcon = null,
-            extraButtonAction = null
+            saveClick = {},
+            deleteClick = null,
         )
     }
 }

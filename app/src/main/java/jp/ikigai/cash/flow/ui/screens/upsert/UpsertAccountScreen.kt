@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -50,14 +48,13 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.CurrencyDollar
-import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
-import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
@@ -283,12 +280,13 @@ fun UpsertAccountScreen(
                         }
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    ThreeSlotBottomAppBar(
+                    UpsertScreenBottomAppBar(
                         title = if (accountId == 0L) {
                             stringResource(id = R.string.create_account_label)
                         } else {
                             stringResource(id = R.string.update_account_label)
                         },
+                        enabled = enabled,
                         navigateBack = {
                             keyboardController?.hide()
                             if (enabled && hasUnsavedChanges) {
@@ -297,14 +295,7 @@ fun UpsertAccountScreen(
                                 navigateBack()
                             }
                         },
-                        enabled = enabled,
-                        floatingButtonIcon = {
-                            Icon(
-                                imageVector = TablerIcons.DeviceFloppy,
-                                contentDescription = TablerIcons.DeviceFloppy.name
-                            )
-                        },
-                        floatingButtonAction = {
+                        saveClick = {
                             if (enabled) {
                                 upsertTransactionSource(
                                     name.trim(),
@@ -313,15 +304,7 @@ fun UpsertAccountScreen(
                                 )
                             }
                         },
-                        extraButtonIcon = if (accountId > 0) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = Icons.Outlined.Delete.name,
-                                )
-                            }
-                        } else null,
-                        extraButtonAction = if (accountId > 0 && enabled) {
+                        deleteClick = if (accountId > 0 && enabled) {
                             {
                                 sheetType = if (hasTransactions) {
                                     SheetType.WARN_DELETE
@@ -491,7 +474,8 @@ fun UpsertAccountScreen(
                 )
             },
             bottomBar = {
-                ThreeSlotBottomAppBar(
+                UpsertScreenBottomAppBar(
+                    enabled = enabled,
                     navigateBack = {
                         keyboardController?.hide()
                         if (enabled && hasUnsavedChanges) {
@@ -500,14 +484,7 @@ fun UpsertAccountScreen(
                             navigateBack()
                         }
                     },
-                    enabled = enabled,
-                    floatingButtonIcon = {
-                        Icon(
-                            imageVector = TablerIcons.DeviceFloppy,
-                            contentDescription = TablerIcons.DeviceFloppy.name
-                        )
-                    },
-                    floatingButtonAction = {
+                    saveClick = {
                         if (enabled) {
                             upsertTransactionSource(
                                 name.trim(),
@@ -516,15 +493,7 @@ fun UpsertAccountScreen(
                             )
                         }
                     },
-                    extraButtonIcon = if (accountId > 0) {
-                        {
-                            Icon(
-                                imageVector = Icons.Outlined.Delete,
-                                contentDescription = Icons.Outlined.Delete.name,
-                            )
-                        }
-                    } else null,
-                    extraButtonAction = if (accountId > 0 && enabled) {
+                    deleteClick = if (accountId > 0 && enabled) {
                         {
                             sheetType = if (hasTransactions) {
                                 SheetType.WARN_DELETE

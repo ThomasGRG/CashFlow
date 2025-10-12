@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -57,14 +55,13 @@ import androidx.navigation.navArgument
 import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import compose.icons.TablerIcons
-import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
-import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ChooseIconSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
@@ -340,12 +337,13 @@ fun UpsertCategoryScreen(
                             }
                         }
                     }
-                    ThreeSlotBottomAppBar(
+                    UpsertScreenBottomAppBar(
                         title = if (categoryId == 0L) {
                             stringResource(id = R.string.create_category_label)
                         } else {
                             stringResource(id = R.string.update_category_label)
                         },
+                        enabled = enabled,
                         navigateBack = {
                             keyboardController?.hide()
                             if (enabled && hasUnsavedChanges) {
@@ -354,27 +352,12 @@ fun UpsertCategoryScreen(
                                 navigateBack()
                             }
                         },
-                        enabled = enabled,
-                        floatingButtonIcon = {
-                            Icon(
-                                imageVector = TablerIcons.DeviceFloppy,
-                                contentDescription = TablerIcons.DeviceFloppy.name
-                            )
-                        },
-                        floatingButtonAction = {
+                        saveClick = {
                             if (enabled) {
                                 upsertCategory(selectedIcon, name.trim())
                             }
                         },
-                        extraButtonIcon = if (categoryId > 0) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = Icons.Outlined.Delete.name,
-                                )
-                            }
-                        } else null,
-                        extraButtonAction = if (categoryId > 0 && enabled) {
+                        deleteClick = if (categoryId > 0 && enabled) {
                             {
                                 sheetType = if (transactionCount > 0) {
                                     SheetType.WARN_DELETE
@@ -544,7 +527,8 @@ fun UpsertCategoryScreen(
                             }
                         }
                     }
-                    ThreeSlotBottomAppBar(
+                    UpsertScreenBottomAppBar(
+                        enabled = enabled,
                         navigateBack = {
                             keyboardController?.hide()
                             if (enabled && hasUnsavedChanges) {
@@ -553,27 +537,12 @@ fun UpsertCategoryScreen(
                                 navigateBack()
                             }
                         },
-                        enabled = enabled,
-                        floatingButtonIcon = {
-                            Icon(
-                                imageVector = TablerIcons.DeviceFloppy,
-                                contentDescription = TablerIcons.DeviceFloppy.name
-                            )
-                        },
-                        floatingButtonAction = {
+                        saveClick = {
                             if (enabled) {
                                 upsertCategory(selectedIcon, name.trim())
                             }
                         },
-                        extraButtonIcon = if (categoryId > 0) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = Icons.Outlined.Delete.name,
-                                )
-                            }
-                        } else null,
-                        extraButtonAction = if (categoryId > 0 && enabled) {
+                        deleteClick = if (categoryId > 0 && enabled) {
                             {
                                 sheetType = if (transactionCount > 0) {
                                     SheetType.WARN_DELETE
