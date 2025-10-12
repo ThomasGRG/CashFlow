@@ -144,7 +144,7 @@ class UpsertAccountScreenViewModel(
         }
     }
 
-    fun upsertSource(
+    fun upsertAccount(
         newName: String,
         newCurrency: String,
         newBalance: Double?
@@ -208,7 +208,7 @@ class UpsertAccountScreenViewModel(
         }
     }
 
-    fun deleteSource() = viewModelScope.launch {
+    fun deleteAccount() = viewModelScope.launch {
         if (accountId > 0) {
             _state.update {
                 it.copy(

@@ -79,8 +79,8 @@ fun UpsertAccountScreen(
     setName: (String) -> Unit,
     setBalance: (String) -> Unit,
     setCurrency: (String) -> Unit,
-    upsertTransactionSource: (String, String, Double?) -> Unit,
-    deleteSource: () -> Unit,
+    upsertAccount: (String, String, Double?) -> Unit,
+    deleteAccount: () -> Unit,
     events: Flow<Event>,
     state: UpsertAccountScreenState,
 ) {
@@ -232,7 +232,7 @@ fun UpsertAccountScreen(
                     SheetType.CONFIRM_DELETE -> {
                         ConfirmDeleteSheet(
                             message = stringResource(id = R.string.delete_account_confirmation_label),
-                            delete = deleteSource,
+                            delete = deleteAccount,
                             dismiss = {
                                 scope
                                     .launch { sheetState.hide() }
@@ -244,7 +244,7 @@ fun UpsertAccountScreen(
                     SheetType.WARN_DELETE -> {
                         ConfirmDeleteSheet(
                             message = stringResource(id = R.string.account_transactions_deletion_warning_label),
-                            delete = deleteSource,
+                            delete = deleteAccount,
                             dismiss = {
                                 scope
                                     .launch { sheetState.hide() }
@@ -270,7 +270,7 @@ fun UpsertAccountScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
                         imageVector = Constants.DEFAULT_ACCOUNT_ICON,
-                        contentDescription = "default source icon",
+                        contentDescription = "default account icon",
                         modifier = Modifier
                             .size(120.dp),
                         tint = if (enabled) {
@@ -297,7 +297,7 @@ fun UpsertAccountScreen(
                         },
                         saveClick = {
                             if (enabled) {
-                                upsertTransactionSource(
+                                upsertAccount(
                                     name.trim(),
                                     selectedCurrency,
                                     balance.toDoubleOrNull()
@@ -433,7 +433,7 @@ fun UpsertAccountScreen(
                     SheetType.CONFIRM_DELETE -> {
                         ConfirmDeleteSheet(
                             message = stringResource(id = R.string.delete_account_confirmation_label),
-                            delete = deleteSource,
+                            delete = deleteAccount,
                             dismiss = {
                                 scope
                                     .launch { sheetState.hide() }
@@ -445,7 +445,7 @@ fun UpsertAccountScreen(
                     SheetType.WARN_DELETE -> {
                         ConfirmDeleteSheet(
                             message = stringResource(id = R.string.account_transactions_deletion_warning_label),
-                            delete = deleteSource,
+                            delete = deleteAccount,
                             dismiss = {
                                 scope
                                     .launch { sheetState.hide() }
@@ -486,7 +486,7 @@ fun UpsertAccountScreen(
                     },
                     saveClick = {
                         if (enabled) {
-                            upsertTransactionSource(
+                            upsertAccount(
                                 name.trim(),
                                 selectedCurrency,
                                 balance.toDoubleOrNull()
@@ -517,7 +517,7 @@ fun UpsertAccountScreen(
             ) {
                 Icon(
                     imageVector = Constants.DEFAULT_ACCOUNT_ICON,
-                    contentDescription = "default source icon",
+                    contentDescription = "default account icon",
                     modifier = Modifier
                         .size(120.dp),
                     tint = if (enabled) {
@@ -590,15 +590,15 @@ fun UpsertAccountScreen(
 
 @Preview
 @Composable
-fun UpsertSourceScreenPreview() {
+fun UpsertAccountScreenPreview() {
     UpsertAccountScreen(
         navigateBack = {},
         checkNameAlreadyInUse = {},
         setName = {},
         setBalance = {},
         setCurrency = {},
-        upsertTransactionSource = { _, _, _ -> },
-        deleteSource = {},
+        upsertAccount = { _, _, _ -> },
+        deleteAccount = {},
         events = emptyList<Event>().asFlow(),
         state = UpsertAccountScreenState()
     )
@@ -625,8 +625,8 @@ fun NavGraphBuilder.upsertAccountScreen(navController: NavController) {
             setName = viewModel::setName,
             setBalance = viewModel::setBalance,
             setCurrency = viewModel::setCurrency,
-            upsertTransactionSource = viewModel::upsertSource,
-            deleteSource = viewModel::deleteSource,
+            upsertAccount = viewModel::upsertAccount,
+            deleteAccount = viewModel::deleteAccount,
             events = viewModel.event,
             state = state
         )
