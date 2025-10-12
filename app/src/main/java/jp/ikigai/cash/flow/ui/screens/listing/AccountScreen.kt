@@ -308,25 +308,27 @@ fun AccountScreen(
             bottomBar = {
                 ListingScreenBottomAppBar(
                     navigateBack = navigateBack,
-                    sortClick = if (count > 0) {
-                        {
+                    sortClick = {
+                        if (count > 0) {
                             sheetType = SheetType.SORT
                         }
-                    } else null,
+                    },
                     sortIcon = sortIcon,
                     addClick = addNewAccount,
-                    searchClick = if (count > 0) {
-                        {
+                    searchClick = {
+                        if (count > 0) {
                             if (isFocused) {
                                 keyboardController?.show()
                             } else {
                                 focusRequester.requestFocus()
                             }
                         }
-                    } else null,
-                    graphClick = if (count > 0) {
-                        viewCharts
-                    } else null
+                    },
+                    graphClick = {
+                        if (count > 0) {
+                            viewCharts()
+                        }
+                    }
                 )
             }
         ) {

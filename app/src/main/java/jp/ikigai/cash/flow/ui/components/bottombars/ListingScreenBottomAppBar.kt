@@ -39,10 +39,10 @@ import jp.ikigai.cash.flow.R
 fun ListingScreenBottomAppBar(
     navigateBack: () -> Unit,
     addClick: () -> Unit,
-    sortClick: (() -> Unit)? = null,
-    sortIcon: ImageVector? = null,
-    searchClick: (() -> Unit)? = null,
-    graphClick: (() -> Unit)? = null,
+    sortClick: () -> Unit,
+    sortIcon: ImageVector = TablerIcons.SortDescending,
+    searchClick: () -> Unit,
+    graphClick: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -76,18 +76,16 @@ fun ListingScreenBottomAppBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (sortClick != null && sortIcon != null) {
-                    IconButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            sortClick()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = sortIcon,
-                            contentDescription = "sort"
-                        )
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        sortClick()
                     }
+                ) {
+                    Icon(
+                        imageVector = sortIcon,
+                        contentDescription = "sort"
+                    )
                 }
             }
             Row(
@@ -112,18 +110,16 @@ fun ListingScreenBottomAppBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                searchClick?.let {
-                    IconButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            searchClick()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = "search"
-                        )
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        searchClick()
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = "search"
+                    )
                 }
             }
             Row(
@@ -131,18 +127,16 @@ fun ListingScreenBottomAppBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                graphClick?.let {
-                    IconButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            graphClick()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = TablerIcons.ChartPie,
-                            contentDescription = "graph"
-                        )
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        graphClick()
                     }
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.ChartPie,
+                        contentDescription = "graph"
+                    )
                 }
             }
         }
