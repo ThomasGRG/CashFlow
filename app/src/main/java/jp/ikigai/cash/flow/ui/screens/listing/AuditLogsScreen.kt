@@ -2,14 +2,19 @@ package jp.ikigai.cash.flow.ui.screens.listing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +36,10 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Book
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.audit.AuditLogListItem
@@ -41,6 +50,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ViewAuditLogSheet
 import jp.ikigai.cash.flow.ui.components.cards.AuditLogCard
 import jp.ikigai.cash.flow.ui.components.common.AuditLogGroupHeader
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.audit.AuditLogsScreenFiltersState
@@ -63,6 +73,9 @@ fun AuditLogsScreen(
     sortConfigState: SortConfigState
 ) {
     val configuration = LocalConfiguration.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -120,133 +133,272 @@ fun AuditLogsScreen(
         mutableStateOf(null)
     }
 
-    OneHandModeScaffold(
-        loading = loading,
-        sheetState = sheetState,
-        showBottomSheet = sheetType != SheetType.NONE,
-        bottomSheetContent = {
-            when (sheetType) {
-                SheetType.DATE_RANGE -> {
-                    DateRangePickerSheet(
-                        startDate = startDate,
-                        endDate = endDate,
-                        filter = setStartDateAndEndDate,
-                        reset = {
-                            setStartDateAndEndDate(null, null)
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.AUDIT_LOG -> {
+                        when (val log = selectedAuditLog) {
+                            is AuditLogListItem.TransactionLog -> {
+                                ViewAuditLogSheet(auditLogDetails = log)
+                            }
+
+                            is AuditLogListItem.AccountLog -> {
+                                ViewAuditLogSheet(auditLogDetails = log)
+                            }
+
+                            null -> {}
+                        }
+                    }
+
+                    else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = stringResource(id = R.string.audit_logs_screen_empty_placeholder_label),
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        imageVector = TablerIcons.Book,
+                        contentDescription = "logs icon",
+                        modifier = Modifier.size(120.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    AuditLogsScreenBottomAppBar(
+                        title = stringResource(id = R.string.audit_log_label),
+                        subTitle = stringResource(
+                            id = dateRangeStringRes,
+                            startDateString,
+                            endDateString
+                        ),
+                        navigateBack = navigateBack,
+                        sortDirection = sortDirection,
+                        onSortClick = {
+                            if (sortDirection == SortDirection.DESC) {
+                                setSortDirection(SortDirection.ASC)
+                            } else {
+                                setSortDirection(SortDirection.DESC)
+                            }
                         },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
+                        onCalendarClick = {
+                            sheetType = SheetType.DATE_RANGE
                         }
                     )
                 }
-
-                SheetType.AUDIT_LOG -> {
-                    when (val log = selectedAuditLog) {
-                        is AuditLogListItem.TransactionLog -> {
-                            ViewAuditLogSheet(auditLogDetails = log)
+            },
+            secondColContent = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    auditLogs.forEach { entry ->
+                        stickyHeader {
+                            AuditLogGroupHeader(date = entry.key)
                         }
+                        items(
+                            items = entry.value,
+                            key = { auditLogListItem ->
+                                when (auditLogListItem) {
+                                    is AuditLogListItem.AccountLog -> {
+                                        auditLogListItem.logId
+                                    }
 
-                        is AuditLogListItem.AccountLog -> {
-                            ViewAuditLogSheet(auditLogDetails = log)
+                                    is AuditLogListItem.TransactionLog -> {
+                                        auditLogListItem.logId
+                                    }
+                                }
+                            }
+                        ) { auditLogListItem ->
+                            when (auditLogListItem) {
+                                is AuditLogListItem.AccountLog -> {
+                                    AuditLogCard(
+                                        modifier = Modifier.animateItem(),
+                                        auditLogDetails = auditLogListItem,
+                                        onClick = {
+                                            selectedAuditLog = it
+                                            sheetType = SheetType.AUDIT_LOG
+                                        }
+                                    )
+                                }
+
+                                is AuditLogListItem.TransactionLog -> {
+                                    AuditLogCard(
+                                        modifier = Modifier.animateItem(),
+                                        auditLogDetails = auditLogListItem,
+                                        onClick = {
+                                            selectedAuditLog = it
+                                            sheetType = SheetType.AUDIT_LOG
+                                        }
+                                    )
+                                }
+                            }
                         }
-
-                        null -> {}
                     }
                 }
-
-                else -> {}
             }
-        },
-        onDismissSheet = {
-            sheetType = SheetType.NONE
-        },
-        showEmptyPlaceholder = showEmptyPlaceholder,
-        emptyPlaceholderText = stringResource(id = R.string.audit_logs_screen_empty_placeholder_label),
-        topBar = { scrollBehavior, expandedHeight ->
-            LargeTopAppBar(
-                title = {
-                    Column {
-                        Text(text = stringResource(id = R.string.audit_log_label))
-                        Text(
-                            text = stringResource(
-                                id = dateRangeStringRes,
-                                startDateString,
-                                endDateString
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
+        )
+    } else {
+        OneHandModeScaffold(
+            loading = loading,
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
-                },
-                expandedHeight = expandedHeight,
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        bottomBar = {
-            AuditLogsScreenBottomAppBar(
-                navigateBack = navigateBack,
-                sortDirection = sortDirection,
-                onSortClick = {
-                    if (sortDirection == SortDirection.DESC) {
-                        setSortDirection(SortDirection.ASC)
-                    } else {
-                        setSortDirection(SortDirection.DESC)
+
+                    SheetType.AUDIT_LOG -> {
+                        when (val log = selectedAuditLog) {
+                            is AuditLogListItem.TransactionLog -> {
+                                ViewAuditLogSheet(auditLogDetails = log)
+                            }
+
+                            is AuditLogListItem.AccountLog -> {
+                                ViewAuditLogSheet(auditLogDetails = log)
+                            }
+
+                            null -> {}
+                        }
                     }
-                },
-                onCalendarClick = {
-                    sheetType = SheetType.DATE_RANGE
+
+                    else -> {}
                 }
-            )
-        },
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            showEmptyPlaceholder = showEmptyPlaceholder,
+            emptyPlaceholderText = stringResource(id = R.string.audit_logs_screen_empty_placeholder_label),
+            topBar = { scrollBehavior, expandedHeight ->
+                LargeTopAppBar(
+                    title = {
+                        Column {
+                            Text(text = stringResource(id = R.string.audit_log_label))
+                            Text(
+                                text = stringResource(
+                                    id = dateRangeStringRes,
+                                    startDateString,
+                                    endDateString
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
+                    },
+                    expandedHeight = expandedHeight,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                AuditLogsScreenBottomAppBar(
+                    navigateBack = navigateBack,
+                    sortDirection = sortDirection,
+                    onSortClick = {
+                        if (sortDirection == SortDirection.DESC) {
+                            setSortDirection(SortDirection.ASC)
+                        } else {
+                            setSortDirection(SortDirection.DESC)
+                        }
+                    },
+                    onCalendarClick = {
+                        sheetType = SheetType.DATE_RANGE
+                    }
+                )
+            },
         ) {
-            auditLogs.forEach { entry ->
-                stickyHeader {
-                    AuditLogGroupHeader(date = entry.key)
-                }
-                items(
-                    items = entry.value,
-                    key = { auditLogListItem ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, end = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                auditLogs.forEach { entry ->
+                    stickyHeader {
+                        AuditLogGroupHeader(date = entry.key)
+                    }
+                    items(
+                        items = entry.value,
+                        key = { auditLogListItem ->
+                            when (auditLogListItem) {
+                                is AuditLogListItem.AccountLog -> {
+                                    auditLogListItem.logId
+                                }
+
+                                is AuditLogListItem.TransactionLog -> {
+                                    auditLogListItem.logId
+                                }
+                            }
+                        }
+                    ) { auditLogListItem ->
                         when (auditLogListItem) {
                             is AuditLogListItem.AccountLog -> {
-                                auditLogListItem.logId
+                                AuditLogCard(
+                                    modifier = Modifier.animateItem(),
+                                    auditLogDetails = auditLogListItem,
+                                    onClick = {
+                                        selectedAuditLog = it
+                                        sheetType = SheetType.AUDIT_LOG
+                                    }
+                                )
                             }
 
                             is AuditLogListItem.TransactionLog -> {
-                                auditLogListItem.logId
+                                AuditLogCard(
+                                    modifier = Modifier.animateItem(),
+                                    auditLogDetails = auditLogListItem,
+                                    onClick = {
+                                        selectedAuditLog = it
+                                        sheetType = SheetType.AUDIT_LOG
+                                    }
+                                )
                             }
-                        }
-                    }
-                ) { auditLogListItem ->
-                    when (auditLogListItem) {
-                        is AuditLogListItem.AccountLog -> {
-                            AuditLogCard(
-                                modifier = Modifier.animateItem(),
-                                auditLogDetails = auditLogListItem,
-                                onClick = {
-                                    selectedAuditLog = it
-                                    sheetType = SheetType.AUDIT_LOG
-                                }
-                            )
-                        }
-
-                        is AuditLogListItem.TransactionLog -> {
-                            AuditLogCard(
-                                modifier = Modifier.animateItem(),
-                                auditLogDetails = auditLogListItem,
-                                onClick = {
-                                    selectedAuditLog = it
-                                    sheetType = SheetType.AUDIT_LOG
-                                }
-                            )
                         }
                     }
                 }
