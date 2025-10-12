@@ -50,7 +50,7 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
-import jp.ikigai.cash.flow.ui.components.bottombars.ThreeSlotBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottombars.SettingsScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.RestoreSortConfigSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -148,10 +148,10 @@ fun SettingsScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    ThreeSlotBottomAppBar(
+                    SettingsScreenBottomAppBar(
                         title = stringResource(R.string.settings_label),
+                        subTitle = "v$buildVersionName ($buildVersionCode)",
                         navigateBack = navigateBack,
-                        enabled = true
                     )
                 }
             },
@@ -217,9 +217,8 @@ fun SettingsScreen(
                 )
             },
             bottomBar = {
-                ThreeSlotBottomAppBar(
-                    navigateBack = navigateBack,
-                    enabled = true
+                SettingsScreenBottomAppBar(
+                    navigateBack = navigateBack
                 )
             }
         ) {
