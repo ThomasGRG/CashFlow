@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -27,6 +28,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +56,8 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -75,6 +79,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.MoreOptionsSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
@@ -126,6 +131,8 @@ fun TransactionsScreen(
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -330,226 +337,21 @@ fun TransactionsScreen(
         mutableLongStateOf(0L)
     }
 
-    Scaffold(
-        modifier = Modifier
-            .animateContentSize()
-            .navigationBarsPadding()
-            .imePadding()
-            .fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(text = stringResource(id = R.string.transactions_label))
-                        Text(
-                            text = stringResource(
-                                id = R.string.date_range_label,
-                                startDateString,
-                                endDateString
-                            ),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f)
-                        )
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            TransactionScreenBottomAppBar(
-                selectedCurrencySymbol = selectedCurrencySymbol,
-                filterAmount = filterAmountRange,
-                sortField = sortedBy,
-                sortDirection = sortDirection,
-                selectedAccountCount = selectedAccountCount,
-                selectedCategoryCount = selectedCategoryCount,
-                selectedCounterPartyCount = selectedCounterPartyCount,
-                counterPartyFilterVisible = counterParties.isNotEmpty(),
-                selectedMethodCount = selectedMethodCount,
-                selectedTransactionTypeCount = selectedTransactionTypes.size,
-                onSortClick = {
-                    sheetType = SheetType.SORT
-                },
-                onFilterByAmountClick = {
-                    sheetType = SheetType.AMOUNT
-                },
-                onFilterByTypeClick = {
-                    sheetType = SheetType.TYPE
-                },
-                onFilterByCategoryClick = {
-                    sheetType = SheetType.CATEGORY
-                },
-                onFilterByCounterPartyClick = {
-                    sheetType = SheetType.COUNTERPARTY
-                },
-                onFilterByMethodClick = {
-                    sheetType = SheetType.METHOD
-                },
-                onFilterBySourceClick = {
-                    sheetType = SheetType.ACCOUNT
-                },
-                onCurrencyClick = {
-                    sheetType = SheetType.CURRENCY
-                },
-                onCalendarClick = {
-                    sheetType = SheetType.DATE_RANGE
-                },
-                addTransaction = {
-                    if (canAddTransaction()) {
-                        if (templates.isEmpty()) {
-                            addTransaction(0L)
-                        } else {
-                            sheetType = SheetType.TEMPLATES
-                        }
-                    }
-                },
-                onSearchClick = {
-                    if (!(transactions.isEmpty() && searchText.isEmpty())) {
-                        if (isFocused) {
-                            keyboardController?.show()
-                        } else {
-                            focusRequester.requestFocus()
-                        }
-                    }
-                },
-                onMoreClick = {
-                    sheetType = SheetType.MORE_OPTIONS
-                }
-            )
-        }
-    ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-        ) {
-            Column {
-                AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
-                    SearchBox(
-                        modifier = Modifier
-                            .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
-                        searchText = searchText,
-                        setSearchText = setSearchText,
-                        focusRequester = focusRequester,
-                        interactionSource = interactionSource
-                    )
-                }
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 10.dp, end = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (searchText.isBlank()) {
-                        item(
-                            key = "totalBalance"
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = balance,
-                                    style = MaterialTheme.typography.displaySmall
-                                )
-                            }
-                        }
-                        item(
-                            key = "infoRow"
-                        ) {
-                            TotalTransactionInfo(
-                                expenses = totalExpense,
-                                expensesCount = expenseTransactionsCount,
-                                income = totalIncome,
-                                incomeCount = incomeTransactionsCount
-                            )
-                        }
-                    }
-                    transactions.forEach { entry ->
-                        when (val header = entry.key) {
-                            is TransactionHeader.DateHeader -> {
-                                stickyHeader(
-                                    key = header.date,
-                                    contentType = "sticky_date_header"
-                                ) {
-                                    TransactionGroupHeader(
-                                        date = header.date,
-                                        amount = header.formattedAmount
-                                    )
-                                }
-                            }
-
-                            is TransactionHeader.AmountHeader -> {
-                                stickyHeader(
-                                    key = header.formattedAmountRange,
-                                    contentType = "sticky_amount_header"
-                                ) {
-                                    TransactionGroupHeader(
-                                        amountRange = header.formattedAmountRange
-                                    )
-                                }
-                            }
-                        }
-                        items(
-                            items = entry.value,
-                            key = { transactionWithChips -> transactionWithChips.id },
-                            contentType = { "transaction_item" }
-                        ) { transactionWithChips ->
-                            TransactionCard(
-                                transactionWithChips = transactionWithChips,
-                                onClick = { id ->
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    editTransaction(id)
-                                },
-                                onLongClick = { id ->
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    selectedTransactionId = id
-                                    sheetType = SheetType.CLONE_TRANSACTION
-                                },
-                                modifier = Modifier.animateItem()
-                            )
-                        }
-                    }
-                }
-            }
-            if (loading) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter)
-                )
-            } else if (searchText.isEmpty() && transactions.isEmpty()) {
-                Text(
-                    text = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
-                    modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
-            }
-            AnimatedVisibility(
-                visible = showToastBar,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                ToastBar(
-                    message = currentEvent?.let { stringResource(id = it.message) } ?: "",
-                    onDismiss = {
-                        showToastBar = false
-                    }
-                )
-            }
-        }
-        if (sheetType != SheetType.NONE) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    sheetType = SheetType.NONE
-                },
-                sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
-            ) {
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+            },
+            showEmptyPlaceholder = searchText.isEmpty() && transactions.isEmpty(),
+            emptyPlaceholderText = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CURRENCY -> {
                         CurrencySheet(
@@ -739,6 +541,582 @@ fun TransactionsScreen(
                     }
 
                     else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
+                        SearchBox(
+                            modifier = Modifier.padding(bottom = 10.dp),
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TransactionScreenBottomAppBar(
+                        title = stringResource(id = R.string.transactions_label),
+                        subTitle = stringResource(
+                            id = R.string.date_range_label,
+                            startDateString,
+                            endDateString
+                        ),
+                        selectedCurrencySymbol = selectedCurrencySymbol,
+                        filterAmount = filterAmountRange,
+                        sortField = sortedBy,
+                        sortDirection = sortDirection,
+                        selectedAccountCount = selectedAccountCount,
+                        selectedCategoryCount = selectedCategoryCount,
+                        selectedCounterPartyCount = selectedCounterPartyCount,
+                        counterPartyFilterVisible = counterParties.isNotEmpty(),
+                        selectedMethodCount = selectedMethodCount,
+                        selectedTransactionTypeCount = selectedTransactionTypes.size,
+                        onSortClick = {
+                            sheetType = SheetType.SORT
+                        },
+                        onFilterByAmountClick = {
+                            sheetType = SheetType.AMOUNT
+                        },
+                        onFilterByTypeClick = {
+                            sheetType = SheetType.TYPE
+                        },
+                        onFilterByCategoryClick = {
+                            sheetType = SheetType.CATEGORY
+                        },
+                        onFilterByCounterPartyClick = {
+                            sheetType = SheetType.COUNTERPARTY
+                        },
+                        onFilterByMethodClick = {
+                            sheetType = SheetType.METHOD
+                        },
+                        onFilterBySourceClick = {
+                            sheetType = SheetType.ACCOUNT
+                        },
+                        onCurrencyClick = {
+                            sheetType = SheetType.CURRENCY
+                        },
+                        onCalendarClick = {
+                            sheetType = SheetType.DATE_RANGE
+                        },
+                        addTransaction = {
+                            if (canAddTransaction()) {
+                                if (templates.isEmpty()) {
+                                    addTransaction(0L)
+                                } else {
+                                    sheetType = SheetType.TEMPLATES
+                                }
+                            }
+                        },
+                        onMoreClick = {
+                            sheetType = SheetType.MORE_OPTIONS
+                        }
+                    )
+                }
+            },
+            secondColContent = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (searchText.isBlank()) {
+                        item(
+                            key = "totalBalance"
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = balance,
+                                    style = MaterialTheme.typography.displaySmall
+                                )
+                            }
+                        }
+                        item(
+                            key = "infoRow"
+                        ) {
+                            TotalTransactionInfo(
+                                expenses = totalExpense,
+                                expensesCount = expenseTransactionsCount,
+                                income = totalIncome,
+                                incomeCount = incomeTransactionsCount
+                            )
+                        }
+                    }
+                    transactions.forEach { entry ->
+                        when (val header = entry.key) {
+                            is TransactionHeader.DateHeader -> {
+                                stickyHeader(
+                                    key = header.date,
+                                    contentType = "sticky_date_header"
+                                ) {
+                                    TransactionGroupHeader(
+                                        date = header.date,
+                                        amount = header.formattedAmount
+                                    )
+                                }
+                            }
+
+                            is TransactionHeader.AmountHeader -> {
+                                stickyHeader(
+                                    key = header.formattedAmountRange,
+                                    contentType = "sticky_amount_header"
+                                ) {
+                                    TransactionGroupHeader(
+                                        amountRange = header.formattedAmountRange
+                                    )
+                                }
+                            }
+                        }
+                        items(
+                            items = entry.value,
+                            key = { transactionWithChips -> transactionWithChips.id },
+                            contentType = { "transaction_item" }
+                        ) { transactionWithChips ->
+                            TransactionCard(
+                                transactionWithChips = transactionWithChips,
+                                onClick = { id ->
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    editTransaction(id)
+                                },
+                                onLongClick = { id ->
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    selectedTransactionId = id
+                                    sheetType = SheetType.CLONE_TRANSACTION
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    } else {
+        Scaffold(
+            modifier = Modifier
+                .animateContentSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(text = stringResource(id = R.string.transactions_label))
+                            Text(
+                                text = stringResource(
+                                    id = R.string.date_range_label,
+                                    startDateString,
+                                    endDateString
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.alpha(0.8f)
+                            )
+                        }
+                    }
+                )
+            },
+            bottomBar = {
+                TransactionScreenBottomAppBar(
+                    selectedCurrencySymbol = selectedCurrencySymbol,
+                    filterAmount = filterAmountRange,
+                    sortField = sortedBy,
+                    sortDirection = sortDirection,
+                    selectedAccountCount = selectedAccountCount,
+                    selectedCategoryCount = selectedCategoryCount,
+                    selectedCounterPartyCount = selectedCounterPartyCount,
+                    counterPartyFilterVisible = counterParties.isNotEmpty(),
+                    selectedMethodCount = selectedMethodCount,
+                    selectedTransactionTypeCount = selectedTransactionTypes.size,
+                    onSortClick = {
+                        sheetType = SheetType.SORT
+                    },
+                    onFilterByAmountClick = {
+                        sheetType = SheetType.AMOUNT
+                    },
+                    onFilterByTypeClick = {
+                        sheetType = SheetType.TYPE
+                    },
+                    onFilterByCategoryClick = {
+                        sheetType = SheetType.CATEGORY
+                    },
+                    onFilterByCounterPartyClick = {
+                        sheetType = SheetType.COUNTERPARTY
+                    },
+                    onFilterByMethodClick = {
+                        sheetType = SheetType.METHOD
+                    },
+                    onFilterBySourceClick = {
+                        sheetType = SheetType.ACCOUNT
+                    },
+                    onCurrencyClick = {
+                        sheetType = SheetType.CURRENCY
+                    },
+                    onCalendarClick = {
+                        sheetType = SheetType.DATE_RANGE
+                    },
+                    addTransaction = {
+                        if (canAddTransaction()) {
+                            if (templates.isEmpty()) {
+                                addTransaction(0L)
+                            } else {
+                                sheetType = SheetType.TEMPLATES
+                            }
+                        }
+                    },
+                    onSearchClick = {
+                        if (!(transactions.isEmpty() && searchText.isEmpty())) {
+                            if (isFocused) {
+                                keyboardController?.show()
+                            } else {
+                                focusRequester.requestFocus()
+                            }
+                        }
+                    },
+                    onMoreClick = {
+                        sheetType = SheetType.MORE_OPTIONS
+                    }
+                )
+            }
+        ) { contentPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+            ) {
+                Column {
+                    AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
+                        SearchBox(
+                            modifier = Modifier
+                                .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (searchText.isBlank()) {
+                            item(
+                                key = "totalBalance"
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = balance,
+                                        style = MaterialTheme.typography.displaySmall
+                                    )
+                                }
+                            }
+                            item(
+                                key = "infoRow"
+                            ) {
+                                TotalTransactionInfo(
+                                    expenses = totalExpense,
+                                    expensesCount = expenseTransactionsCount,
+                                    income = totalIncome,
+                                    incomeCount = incomeTransactionsCount
+                                )
+                            }
+                        }
+                        transactions.forEach { entry ->
+                            when (val header = entry.key) {
+                                is TransactionHeader.DateHeader -> {
+                                    stickyHeader(
+                                        key = header.date,
+                                        contentType = "sticky_date_header"
+                                    ) {
+                                        TransactionGroupHeader(
+                                            date = header.date,
+                                            amount = header.formattedAmount
+                                        )
+                                    }
+                                }
+
+                                is TransactionHeader.AmountHeader -> {
+                                    stickyHeader(
+                                        key = header.formattedAmountRange,
+                                        contentType = "sticky_amount_header"
+                                    ) {
+                                        TransactionGroupHeader(
+                                            amountRange = header.formattedAmountRange
+                                        )
+                                    }
+                                }
+                            }
+                            items(
+                                items = entry.value,
+                                key = { transactionWithChips -> transactionWithChips.id },
+                                contentType = { "transaction_item" }
+                            ) { transactionWithChips ->
+                                TransactionCard(
+                                    transactionWithChips = transactionWithChips,
+                                    onClick = { id ->
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        editTransaction(id)
+                                    },
+                                    onLongClick = { id ->
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        selectedTransactionId = id
+                                        sheetType = SheetType.CLONE_TRANSACTION
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+                    }
+                }
+                if (loading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.TopCenter)
+                    )
+                } else if (searchText.isEmpty() && transactions.isEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
+                    )
+                }
+                AnimatedVisibility(
+                    visible = showToastBar,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    ToastBar(
+                        message = currentEvent?.let { stringResource(id = it.message) } ?: "",
+                        onDismiss = {
+                            showToastBar = false
+                        }
+                    )
+                }
+            }
+            if (sheetType != SheetType.NONE) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        sheetType = SheetType.NONE
+                    },
+                    sheetState = sheetState,
+//                sheetGesturesEnabled: Boolean = false, TODO()
+                ) {
+                    when (sheetType) {
+                        SheetType.CURRENCY -> {
+                            CurrencySheet(
+                                index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
+                                selectedCurrency = selectedCurrency,
+                                setSelectedCurrency = { currency ->
+                                    setCurrency(currency)
+                                },
+                                currencies = currencies,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.DATE_RANGE -> {
+                            DateRangePickerSheet(
+                                startDate = startDate,
+                                endDate = endDate,
+                                filter = setStartDateAndEndDate,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.MORE_OPTIONS -> {
+                            MoreOptionsSheet(
+                                navigateToCategoriesScreen = navigateToCategoriesScreen,
+                                navigateToCounterPartyScreen = navigateToCounterPartyScreen,
+                                navigateToMethodsScreen = navigateToMethodsScreen,
+                                navigateToSourcesScreen = navigateToAccountsScreen,
+                                navigateToTemplatesScreen = navigateToTemplatesScreen,
+                                navigateToSettingsScreen = navigateToSettingsScreen,
+                                openGithubReleasesPage = openGithubPage,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.AMOUNT -> {
+                            AmountFilterSheet(
+                                minAmount = filterAmountMin,
+                                maxAmount = filterAmountMax,
+                                filter = filterByAmount,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.CATEGORY -> {
+                            FilterCategorySheet(
+                                selectedCategoryMap = selectedCategories,
+                                filter = setSelectedCategories,
+                                categories = categories,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.COUNTERPARTY -> {
+                            FilterCounterPartySheet(
+                                selectedCounterPartyMap = selectedCounterParties,
+                                includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
+                                counterParties = counterParties,
+                                filter = setSelectedCounterParties,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.METHOD -> {
+                            FilterMethodSheet(
+                                selectedMethodsMap = selectedMethods,
+                                filter = setSelectedMethods,
+                                methods = methods,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.ACCOUNT -> {
+                            FilterAccountSheet(
+                                selectedAccountsMap = selectedAccounts,
+                                filter = setSelectedAccounts,
+                                accounts = accounts,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.TYPE -> {
+                            FilterTransactionTypeSheet(
+                                selectedTransactionTypes = selectedTransactionTypes,
+                                filter = setSelectedTransactionTypes,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.TEMPLATES -> {
+                            SelectTemplateSheet(
+                                templates = templates,
+                                addNewTransaction = addTransaction,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.CLONE_TRANSACTION -> {
+                            CloneTransactionSheet(
+                                cloneTransaction = { setCurrentDateTime ->
+                                    cloneTransaction(selectedTransactionId, setCurrentDateTime)
+                                },
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.SORT -> {
+                            SortConfigSheet(
+                                selectedField = sortField,
+                                selectedDirection = sortDirection,
+                                fields = sortFields,
+                                sort = setSortConfig,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        else -> {}
+                    }
                 }
             }
         }
