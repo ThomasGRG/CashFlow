@@ -1,6 +1,7 @@
 package jp.ikigai.cash.flow.ui.components.bottombars
 
 import android.icu.util.Currency
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +30,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -277,6 +282,246 @@ fun TransactionScreenBottomAppBar(
                         .fillMaxSize()
                 ) {
                     Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "more")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionScreenBottomAppBar(
+    title: String,
+    subTitle: String,
+    selectedCurrencySymbol: String,
+    sortField: String?,
+    sortDirection: SortDirection,
+    filterAmount: String,
+    selectedAccountCount: String,
+    selectedCategoryCount: String,
+    selectedCounterPartyCount: String,
+    counterPartyFilterVisible: Boolean,
+    selectedMethodCount: String,
+    selectedTransactionTypeCount: Int,
+    onSortClick: () -> Unit,
+    onFilterByAmountClick: () -> Unit,
+    onFilterByTypeClick: () -> Unit,
+    onFilterByCategoryClick: () -> Unit,
+    onFilterByCounterPartyClick: () -> Unit,
+    onFilterByMethodClick: () -> Unit,
+    onFilterBySourceClick: () -> Unit,
+    onCurrencyClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    addTransaction: () -> Unit,
+    onMoreClick: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val sortIcon by remember(key1 = sortDirection) {
+        mutableStateOf(
+            if (sortDirection == SortDirection.DESC) {
+                TablerIcons.SortDescending
+            } else {
+                TablerIcons.SortAscending
+            }
+        )
+    }
+
+    val sortedBy by remember(key1 = sortField) {
+        mutableStateOf(sortField ?: "")
+    }
+
+    Column {
+        Row(
+            modifier = Modifier
+                .padding(top = 10.dp, bottom = 10.dp)
+                .horizontalScroll(
+                    rememberScrollState()
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSortClick()
+                },
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(
+                    imageVector = sortIcon,
+                    contentDescription = "sort direction icon"
+                )
+                Text(
+                    text = stringResource(id = R.string.sort_by_chip_label, sortedBy),
+                    modifier = Modifier.padding(start = 6.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByTypeClick()
+                },
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.transaction_type_filter_chip_label,
+                        selectedTransactionTypeCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByAmountClick()
+                },
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(id = R.string.amount_filter_chip_label, filterAmount),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByCategoryClick()
+                },
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.category_filter_chip_label,
+                        selectedCategoryCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            if (counterPartyFilterVisible) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByCounterPartyClick()
+                    },
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.counter_party_filter_chip_label,
+                            selectedCounterPartyCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterByMethodClick()
+                },
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.method_filter_chip_label,
+                        selectedMethodCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFilterBySourceClick()
+                },
+                contentPadding = PaddingValues(0.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.account_filter_chip_label,
+                        selectedAccountCount
+                    ),
+                    modifier = Modifier.padding(10.dp),
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(20.dp)
+                )
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(all = 10.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = subTitle,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.alpha(0.8f)
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onMoreClick()
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "more"
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCalendarClick()
+                    },
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.CalendarEvent,
+                        contentDescription = "select time period"
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCurrencyClick()
+                    },
+                ) {
+                    Text(
+                        text = selectedCurrencySymbol,
+                        fontSize = TextUnit(22f, TextUnitType.Sp)
+                    )
+                }
+                FloatingActionButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        addTransaction()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "add new transaction"
+                    )
                 }
             }
         }
