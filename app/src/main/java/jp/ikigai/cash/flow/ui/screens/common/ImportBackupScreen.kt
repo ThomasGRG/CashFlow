@@ -4,34 +4,20 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,14 +33,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +51,6 @@ import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
@@ -86,19 +68,18 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
-import jp.ikigai.cash.flow.ui.components.cards.MapAccountCard
-import jp.ikigai.cash.flow.ui.components.cards.MapCategoryCard
-import jp.ikigai.cash.flow.ui.components.cards.MapCounterPartyCard
-import jp.ikigai.cash.flow.ui.components.cards.MapMethodCard
-import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
-import jp.ikigai.cash.flow.ui.components.cards.TransactionTemplateCard
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
-import jp.ikigai.cash.flow.ui.components.common.SearchBox
-import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenDefaultContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapAccountsContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapCategoriesContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapCounterPartiesContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapMethodsContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenSelectTemplatesContent
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenSelectTransactionsContent
 import jp.ikigai.cash.flow.ui.viewmodels.common.ImportBackupScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -144,7 +125,6 @@ fun ImportBackupScreen(
     filtersState: ImportBackupScreenFiltersState,
     sortConfigState: SortConfigState
 ) {
-    val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -833,17 +813,7 @@ fun ImportBackupScreen(
         }
     ) {
         if (!dataLoadComplete) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(
-                        rememberScrollState()
-                    ),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(text = stringResource(R.string.select_backup_continue_label))
-            }
+            ImportScreenDefaultContent()
         } else {
             HorizontalPager(
                 state = pagerState,
@@ -853,459 +823,97 @@ fun ImportBackupScreen(
             ) { pageNumber ->
                 when (pageNumber) {
                     0 -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            stickyHeader(
-                                key = "info",
-                                contentType = "info_header",
-                            ) {
-                                if (dbCategories.isEmpty()) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .padding(top = 5.dp, bottom = 15.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Info,
-                                            contentDescription = "info icon",
-                                        )
-                                        Text(
-                                            text = stringResource(id = R.string.no_categories_available_for_mapping_label)
-                                        )
-                                    }
-                                }
-                            }
-                            items(
-                                items = tempCategories,
-                                key = { tempCategory -> tempCategory.tempCategoryId }
-                            ) { tempCategory ->
-                                MapCategoryCard(
-                                    tempCategory = tempCategory,
-                                    mappedCategory = categoryMappings[
-                                        tempCategory.tempCategoryId
-                                    ] ?: CategoryWithTransactionMetadata(
-                                        categoryId = 0L,
-                                        categoryName = "",
-                                        icon = Constants.DEFAULT_CATEGORY_ICON,
-                                        transactionCount = 0L,
-                                        lastUsed = null
-                                    ),
-                                    modifier = Modifier.animateItem(),
-                                    canSelect = dbCategories.isNotEmpty(),
-                                    selected = selectedTempCategories.contains(tempCategory.tempCategoryId),
-                                    conflicting = conflictingTempCategories.contains(tempCategory.tempCategoryId),
-                                    selectCategory = {
-                                        selectedTempCategoryId = tempCategory.tempCategoryId
-                                        sheetType = SheetType.CATEGORY
-                                    },
-                                    toggleSelected = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleCategorySelected(tempCategory.tempCategoryId)
-                                    },
-                                    clearSelectedCategory = {
-                                        setCategoryMapping(
-                                            tempCategory.tempCategoryId,
-                                            CategoryWithTransactionMetadata(
-                                                categoryId = 0L,
-                                                categoryName = "",
-                                                icon = Constants.DEFAULT_CATEGORY_ICON,
-                                                transactionCount = 0L,
-                                                lastUsed = null
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                        ImportScreenMapCategoriesContent(
+                            dbCategories = dbCategories,
+                            tempCategories = tempCategories,
+                            categoryMappings = categoryMappings,
+                            selectedTempCategories = selectedTempCategories,
+                            conflictingTempCategories = conflictingTempCategories,
+                            selectCategory = { tempCategoryId ->
+                                selectedTempCategoryId = tempCategoryId
+                                sheetType = SheetType.CATEGORY
+                            },
+                            toggleSelected = toggleCategorySelected,
+                            setCategoryMapping = setCategoryMapping,
+                        )
                     }
 
                     1 -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                stickyHeader(
-                                    key = "info",
-                                    contentType = "info_header",
-                                ) {
-                                    if (dbCounterParties.isEmpty()) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(MaterialTheme.colorScheme.background)
-                                                .padding(top = 5.dp, bottom = 15.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Info,
-                                                contentDescription = "info icon",
-                                            )
-                                            Text(
-                                                text = stringResource(id = R.string.no_counter_parties_available_for_mapping_label)
-                                            )
-                                        }
-                                    }
-                                }
-                                items(
-                                    items = tempCounterParties,
-                                    key = { tempCounterParty -> tempCounterParty.tempCounterPartyId }
-                                ) { tempCounterParty ->
-                                    MapCounterPartyCard(
-                                        tempCounterParty = tempCounterParty,
-                                        mappedCounterParty = counterPartyMappings[
-                                            tempCounterParty.tempCounterPartyId
-                                        ] ?: CounterPartyWithTransactionMetadata(
-                                            counterPartyId = 0L,
-                                            counterPartyName = "",
-                                            transactionCount = 0L,
-                                            lastUsed = null
-                                        ),
-                                        modifier = Modifier.animateItem(),
-                                        canSelect = dbCounterParties.isNotEmpty(),
-                                        selected = selectedTempCounterParties.contains(
-                                            tempCounterParty.tempCounterPartyId
-                                        ),
-                                        conflicting = conflictingTempCounterParties.contains(
-                                            tempCounterParty.tempCounterPartyId
-                                        ),
-                                        selectCounterParty = {
-                                            selectedTempCounterPartyId =
-                                                tempCounterParty.tempCounterPartyId
-                                            sheetType = SheetType.COUNTERPARTY
-                                        },
-                                        toggleSelected = {
-                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            toggleCounterPartySelected(tempCounterParty.tempCounterPartyId)
-                                        },
-                                        clearSelectedCounterParty = {
-                                            setCounterPartyMapping(
-                                                tempCounterParty.tempCounterPartyId,
-                                                CounterPartyWithTransactionMetadata(
-                                                    counterPartyId = 0L,
-                                                    counterPartyName = "",
-                                                    transactionCount = 0L,
-                                                    lastUsed = null
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                            if (tempCounterParties.isEmpty()) {
-                                Text(
-                                    text = stringResource(id = R.string.no_counter_parties_to_import_placeholder_label),
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
-                        }
+                        ImportScreenMapCounterPartiesContent(
+                            dbCounterParties = dbCounterParties,
+                            tempCounterParties = tempCounterParties,
+                            counterPartyMappings = counterPartyMappings,
+                            selectedTempCounterParties = selectedTempCounterParties,
+                            conflictingTempCounterParties = conflictingTempCounterParties,
+                            selectCounterParty = { tempCounterPartyId ->
+                                selectedTempCounterPartyId = tempCounterPartyId
+                                sheetType = SheetType.COUNTERPARTY
+                            },
+                            toggleSelected = toggleCounterPartySelected,
+                            setCounterPartyMapping = setCounterPartyMapping,
+                        )
                     }
 
                     2 -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            stickyHeader(
-                                key = "info",
-                                contentType = "info_header",
-                            ) {
-                                if (dbMethods.isEmpty()) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .padding(top = 5.dp, bottom = 15.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Info,
-                                            contentDescription = "info icon",
-                                        )
-                                        Text(
-                                            text = stringResource(id = R.string.no_methods_available_for_mapping_label)
-                                        )
-                                    }
-                                }
-                            }
-                            items(
-                                items = tempMethods,
-                                key = { tempMethod -> tempMethod.tempMethodId }
-                            ) { tempMethod ->
-                                MapMethodCard(
-                                    tempMethod = tempMethod,
-                                    mappedMethod = methodMappings[
-                                        tempMethod.tempMethodId
-                                    ] ?: MethodWithTransactionMetadata(
-                                        methodId = 0L,
-                                        methodName = "",
-                                        transactionCount = 0L,
-                                        lastUsed = null
-                                    ),
-                                    modifier = Modifier.animateItem(),
-                                    canSelect = dbMethods.isNotEmpty(),
-                                    selected = selectedTempMethods.contains(
-                                        tempMethod.tempMethodId
-                                    ),
-                                    conflicting = conflictingTempMethods.contains(
-                                        tempMethod.tempMethodId
-                                    ),
-                                    selectMethod = {
-                                        selectedTempMethodId = tempMethod.tempMethodId
-                                        sheetType = SheetType.METHOD
-                                    },
-                                    toggleSelected = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleMethodSelected(tempMethod.tempMethodId)
-                                    },
-                                    clearSelectedMethod = {
-                                        setMethodMapping(
-                                            tempMethod.tempMethodId,
-                                            MethodWithTransactionMetadata(
-                                                methodId = 0L,
-                                                methodName = "",
-                                                transactionCount = 0L,
-                                                lastUsed = null
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                        ImportScreenMapMethodsContent(
+                            dbMethods = dbMethods,
+                            tempMethods = tempMethods,
+                            methodMappings = methodMappings,
+                            selectedTempMethods = selectedTempMethods,
+                            conflictingTempMethods = conflictingTempMethods,
+                            selectMethod = { tempMethodId ->
+                                selectedTempMethodId = tempMethodId
+                                sheetType = SheetType.METHOD
+                            },
+                            toggleSelected = toggleMethodSelected,
+                            setMethodMapping = setMethodMapping,
+                        )
                     }
 
                     3 -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            stickyHeader(
-                                key = "info",
-                                contentType = "info_header",
-                            ) {
-                                if (!hasDbAccounts) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.background)
-                                            .padding(top = 5.dp, bottom = 15.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Info,
-                                            contentDescription = "info icon",
-                                        )
-                                        Text(
-                                            text = stringResource(id = R.string.no_accounts_available_for_mapping_label)
-                                        )
-                                    }
-                                }
-                            }
-                            items(
-                                items = tempAccounts,
-                                key = { tempAccount -> tempAccount.tempAccountId }
-                            ) { tempAccount ->
-                                MapAccountCard(
-                                    tempAccount = tempAccount,
-                                    mappedAccount = accountMappings[
-                                        tempAccount.tempAccountId
-                                    ] ?: AccountWithTransactionMetadata(
-                                        accountId = 0L,
-                                        accountName = "",
-                                        currency = "INR",
-                                        balance = 0.0,
-                                        formattedBalance = "",
-                                        transactionCount = 0L,
-                                        lastUsed = null
-                                    ),
-                                    modifier = Modifier.animateItem(),
-                                    canSelect = hasDbAccounts,
-                                    selected = selectedTempAccounts.contains(
-                                        tempAccount.tempAccountId
-                                    ),
-                                    restoreBalance = restoreBalanceAccounts.contains(
-                                        tempAccount.tempAccountId
-                                    ),
-                                    conflicting = conflictingTempAccounts.contains(
-                                        tempAccount.tempAccountId
-                                    ),
-                                    selectSource = {
-                                        selectedTempAccountId = tempAccount.tempAccountId
-                                        selectedTempAccountCurrency =
-                                            tempAccount.tempAccountCurrency
-                                        sheetType = SheetType.ACCOUNT
-                                    },
-                                    toggleSelected = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleAccountSelected(tempAccount.tempAccountId)
-                                    },
-                                    toggleRestoreBalance = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        toggleRestoreBalance(tempAccount.tempAccountId)
-                                    },
-                                    clearSelectedSource = {
-                                        setAccountMapping(
-                                            tempAccount.tempAccountId,
-                                            AccountWithTransactionMetadata(
-                                                accountId = 0L,
-                                                accountName = "",
-                                                currency = "INR",
-                                                balance = 0.0,
-                                                formattedBalance = "",
-                                                transactionCount = 0L,
-                                                lastUsed = null
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                        ImportScreenMapAccountsContent(
+                            hasDbAccounts = hasDbAccounts,
+                            tempAccounts = tempAccounts,
+                            accountMappings = accountMappings,
+                            selectedTempAccounts = selectedTempAccounts,
+                            restoreBalanceAccounts = restoreBalanceAccounts,
+                            conflictingTempAccounts = conflictingTempAccounts,
+                            selectAccount = { tempAccountId, tempAccountCurrency ->
+                                selectedTempAccountId = tempAccountId
+                                selectedTempAccountCurrency = tempAccountCurrency
+                                sheetType = SheetType.ACCOUNT
+                            },
+                            toggleAccountSelected = toggleAccountSelected,
+                            toggleRestoreBalance = toggleRestoreBalance,
+                            setAccountMapping = setAccountMapping,
+                        )
                     }
 
                     4 -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            AnimatedVisibility(
-                                visible = tempTransactionTemplatesWithIcons.isEmpty(),
-                                modifier = Modifier.align(alignment = Alignment.Center)
-                            ) {
-                                Text(text = stringResource(id = R.string.no_templates_to_import_placeholder_label))
-                            }
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                items(
-                                    items = tempTransactionTemplatesWithIcons,
-                                    key = { templateWithChips -> templateWithChips.id }
-                                ) { templateWithChips ->
-                                    TransactionTemplateCard(
-                                        checked = enabledTempTransactionTemplates.contains(
-                                            templateWithChips.id
-                                        ) && selectedTempTransactionTemplates.contains(
-                                            templateWithChips.id
-                                        ),
-                                        enabled = enabledTempTransactionTemplates.contains(
-                                            templateWithChips.id
-                                        ),
-                                        modifier = Modifier.animateItem(),
-                                        templateWithChips = templateWithChips,
-                                        onClick = {
-                                            toggleTransactionTemplateSelected(
-                                                templateWithChips.id
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        ImportScreenSelectTemplatesContent(
+                            tempTransactionTemplatesWithIcons = tempTransactionTemplatesWithIcons,
+                            enabledTempTransactionTemplates = enabledTempTransactionTemplates,
+                            selectedTempTransactionTemplates = selectedTempTransactionTemplates,
+                            toggleTransactionTemplateSelected = toggleTransactionTemplateSelected,
+                        )
                     }
 
                     5 -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Column {
-                                SearchBox(
-                                    modifier = Modifier
-                                        .padding(
-                                            top = 5.dp,
-                                            start = 10.dp,
-                                            end = 10.dp,
-                                            bottom = 10.dp
-                                        ),
-                                    searchText = searchText,
-                                    setSearchText = setSearchText,
-                                    enabled = enabled,
-                                    focusRequester = focusRequester,
-                                    interactionSource = interactionSource
-                                )
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(start = 10.dp, end = 10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    transactions.forEach { entry ->
-                                        stickyHeader {
-                                            TransactionGroupHeader(
-                                                date = entry.key,
-                                                selected = selectedLocalDates.contains(entry.key),
-                                                enabled = enabled && enabledLocalDates.contains(
-                                                    entry.key
-                                                ),
-                                                onClick = {
-                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    toggleLocalDateSelected(
-                                                        selectedLocalDates.contains(entry.key),
-                                                        transactions[entry.key] ?: emptyList()
-                                                    )
-                                                }
-                                            )
-                                        }
-                                        items(
-                                            items = entry.value,
-                                            key = { transactionWithChips -> transactionWithChips.id }
-                                        ) { transactionWithChips ->
-                                            TransactionCard(
-                                                checked = enabledTempTransactions.contains(
-                                                    transactionWithChips.id
-                                                ) && selectedTransactions.contains(
-                                                    transactionWithChips.id
-                                                ),
-                                                enabled = enabled && enabledTempTransactions.contains(
-                                                    transactionWithChips.id
-                                                ),
-                                                transactionWithChips = transactionWithChips,
-                                                onClick = {
-                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    toggleTransactionSelected(transactionWithChips.id)
-                                                },
-                                                onLongClick = {
-                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                },
-                                                modifier = Modifier.animateItem()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            if (!loading && transactions.isEmpty()) {
-                                Text(
-                                    text = if (searchText.isNotBlank()) {
-                                        stringResource(
-                                            id = R.string.choose_icon_screen_empty_placeholder_label,
-                                            searchText
-                                        )
-                                    } else {
-                                        stringResource(id = R.string.no_results_found_filters_placeholder_label)
-                                    },
-                                    modifier = Modifier.align(Alignment.Center),
-                                )
-                            }
-                        }
+                        ImportScreenSelectTransactionsContent(
+                            loading = loading,
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            enabled = enabled,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource,
+                            transactions = transactions,
+                            selectedLocalDates = selectedLocalDates,
+                            enabledLocalDates = enabledLocalDates,
+                            enabledTempTransactions = enabledTempTransactions,
+                            selectedTransactions = selectedTransactions,
+                            toggleLocalDateSelected = toggleLocalDateSelected,
+                            toggleTransactionSelected = toggleTransactionSelected,
+                        )
                     }
                 }
             }
