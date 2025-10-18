@@ -20,5 +20,5 @@ AND (tempTransactionDateTime BETWEEN :startDate AND :endDate)
 AND tempTransactionCurrency IN :selectedCurrencies
 AND (tempTransactionAmount BETWEEN :minAmount AND :maxAmount)
 AND tempTransactionType IN :selectedTypes ORDER BY
-CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'ASC' THEN TempTransactionWithMetadata.tempTransactionDateTime END ASC,
-CASE WHEN :sortField = 'transactionDateTime' AND :sortDirection = 'DESC' THEN TempTransactionWithMetadata.tempTransactionDateTime END DESC;
+CASE WHEN :sortField = 'tempTransactionDateTime' AND :sortDirection = 'ASC' THEN TempTransactionWithMetadata.tempTransactionDateTime END ASC,
+CASE WHEN :sortField = 'tempTransactionDateTime' AND :sortDirection = 'DESC' THEN TempTransactionWithMetadata.tempTransactionDateTime END DESC;
