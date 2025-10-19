@@ -1,8 +1,6 @@
 package jp.ikigai.cash.flow.ui.components.bottombars
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -11,9 +9,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +52,7 @@ import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenAnimatedTitleContent
 
 @Composable
 fun ImportBackupScreenBottomAppBar(
@@ -467,54 +463,15 @@ fun ImportBackupScreenBottomAppBar(
                     modifier = Modifier.alpha(0.8f),
                 )
             } else {
-                AnimatedContent(
-                    targetState = currentPage,
-                    label = "import_header_animated_content",
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            // If the target page is larger, it slides from end and fades in
-                            // while the initial (smaller) number slides out and fades out.
-                            slideInHorizontally { width -> width } + fadeIn() togetherWith
-                                    slideOutHorizontally { width -> -width } + fadeOut()
-                        } else {
-                            // If the target number is smaller, it slides from start and fades in
-                            // while the initial number slides out and fades out.
-                            slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                                    slideOutHorizontally { width -> width } + fadeOut()
-                        }.using(
-                            // Disable clipping since the faded slide-in/out should
-                            // be displayed out of bounds.
-                            SizeTransform(clip = false)
-                        )
-                    }
-                ) {
-                    Column {
-                        Text(
-                            text = stringResource(id = headers[it]),
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-                        Text(
-                            text = when (it) {
-                                5 -> {
-                                    stringResource(
-                                        id = dateRangeStringRes,
-                                        startDateString,
-                                        endDateString
-                                    )
-                                }
-
-                                else -> {
-                                    stringResource(
-                                        id = R.string.selected_count_label,
-                                        subHeaders[it],
-                                    )
-                                }
-                            },
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.alpha(0.8f),
-                        )
-                    }
-                }
+                ImportScreenAnimatedTitleContent(
+                    currentPage = currentPage,
+                    headers = headers,
+                    subHeaders = subHeaders,
+                    dateRangeStringRes = dateRangeStringRes,
+                    startDateString = startDateString,
+                    endDateString = endDateString,
+                    titleStyle = MaterialTheme.typography.titleLarge,
+                )
             }
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 10.dp)

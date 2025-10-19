@@ -3,16 +3,11 @@ package jp.ikigai.cash.flow.ui.screens.common
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -85,6 +80,7 @@ import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenSecondaryState
+import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenAnimatedTitleContent
 import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenDefaultContent
 import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapAccountsContent
 import jp.ikigai.cash.flow.ui.screens.common.restore.ImportScreenMapCategoriesContent
@@ -1095,51 +1091,14 @@ fun ImportBackupScreen(
                                 )
                             }
                         } else {
-                            AnimatedContent(
-                                targetState = pagerState.currentPage,
-                                label = "import_header_animated_content",
-                                transitionSpec = {
-                                    if (targetState > initialState) {
-                                        // If the target page is larger, it slides from end and fades in
-                                        // while the initial (smaller) number slides out and fades out.
-                                        slideInHorizontally { width -> width } + fadeIn() togetherWith
-                                                slideOutHorizontally { width -> -width } + fadeOut()
-                                    } else {
-                                        // If the target number is smaller, it slides from start and fades in
-                                        // while the initial number slides out and fades out.
-                                        slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                                                slideOutHorizontally { width -> width } + fadeOut()
-                                    }.using(
-                                        // Disable clipping since the faded slide-in/out should
-                                        // be displayed out of bounds.
-                                        SizeTransform(clip = false)
-                                    )
-                                }
-                            ) {
-                                Column {
-                                    Text(text = stringResource(id = headers[it]))
-                                    Text(
-                                        text = when (it) {
-                                            5 -> {
-                                                stringResource(
-                                                    id = dateRangeStringRes,
-                                                    startDateString,
-                                                    endDateString
-                                                )
-                                            }
-
-                                            else -> {
-                                                stringResource(
-                                                    id = R.string.selected_count_label,
-                                                    subHeaders[it],
-                                                )
-                                            }
-                                        },
-                                        style = MaterialTheme.typography.titleSmall,
-                                        modifier = Modifier.alpha(0.8f),
-                                    )
-                                }
-                            }
+                            ImportScreenAnimatedTitleContent(
+                                currentPage = pagerState.currentPage,
+                                headers = headers,
+                                subHeaders = subHeaders,
+                                dateRangeStringRes = dateRangeStringRes,
+                                startDateString = startDateString,
+                                endDateString = endDateString,
+                            )
                         }
                     },
                     expandedHeight = expandedHeight,
