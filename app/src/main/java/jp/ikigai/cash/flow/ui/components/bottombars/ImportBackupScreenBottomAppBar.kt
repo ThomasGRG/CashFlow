@@ -1,6 +1,8 @@
 package jp.ikigai.cash.flow.ui.components.bottombars
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -9,6 +11,10 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,14 +22,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +40,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -311,6 +322,336 @@ fun ImportBackupScreenBottomAppBar(
                             enabled = enabled
                         ) {
                             AnimatedToggleSelectIcon(deselectVisible = allSelected)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImportBackupScreenBottomAppBar(
+    settledPage: Int,
+    headers: List<Int>,
+    subHeaders: List<String>,
+    dateRangeStringRes: Int,
+    startDateString: String,
+    endDateString: String,
+    enabled: Boolean,
+    navigateBack: () -> Unit,
+    navigateToNext: () -> Unit,
+    isSelectTransactionsScreen: Boolean,
+    importEnabled: Boolean,
+    dataLoaded: Boolean,
+    allSelected: Boolean,
+    sortDirection: SortDirection,
+    filterAmount: String,
+    selectedCurrencyCount: String,
+    selectedTransactionTypeCount: Int,
+    onSortClick: () -> Unit,
+    onFilterByAmountClick: () -> Unit,
+    onFilterByTypeClick: () -> Unit,
+    onFilterByCurrencyClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    onToggleSelectClick: () -> Unit,
+    actionButtonClick: () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Column {
+        AnimatedVisibility(
+            visible = dataLoaded && isSelectTransactionsScreen,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 10.dp)
+                    .horizontalScroll(
+                        rememberScrollState()
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSortClick()
+                    },
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                    shape = MaterialTheme.shapes.small,
+                    enabled = enabled
+                ) {
+                    Icon(
+                        imageVector = if (sortDirection == SortDirection.DESC) {
+                            TablerIcons.SortDescending
+                        } else {
+                            TablerIcons.SortAscending
+                        },
+                        contentDescription = "sort direction icon"
+                    )
+                    Text(
+                        text = stringResource(id = R.string.sort_by_time_chip_label),
+                        modifier = Modifier.padding(start = 6.dp),
+                    )
+                }
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByTypeClick()
+                    },
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small,
+                    enabled = enabled
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.transaction_type_filter_chip_label,
+                            selectedTransactionTypeCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByAmountClick()
+                    },
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small,
+                    enabled = enabled
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.amount_filter_chip_label, filterAmount),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onFilterByCurrencyClick()
+                    },
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small,
+                    enabled = enabled
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.currency_filter_chip_label,
+                            selectedCurrencyCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(20.dp)
+                )
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(all = 10.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            if (!dataLoaded) {
+                Text(
+                    text = stringResource(R.string.import_transactions_label),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = stringResource(R.string.select_backup_label),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.alpha(0.8f),
+                )
+            } else {
+                AnimatedContent(
+                    targetState = settledPage,
+                    label = "import_header_animated_content",
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            // If the target page is larger, it slides from end and fades in
+                            // while the initial (smaller) number slides out and fades out.
+                            slideInHorizontally { width -> width } + fadeIn() togetherWith
+                                    slideOutHorizontally { width -> -width } + fadeOut()
+                        } else {
+                            // If the target number is smaller, it slides from start and fades in
+                            // while the initial number slides out and fades out.
+                            slideInHorizontally { width -> -width } + fadeIn() togetherWith
+                                    slideOutHorizontally { width -> width } + fadeOut()
+                        }.using(
+                            // Disable clipping since the faded slide-in/out should
+                            // be displayed out of bounds.
+                            SizeTransform(clip = false)
+                        )
+                    }
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(id = headers[it]),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            text = when (it) {
+                                5 -> {
+                                    stringResource(
+                                        id = dateRangeStringRes,
+                                        startDateString,
+                                        endDateString
+                                    )
+                                }
+
+                                else -> {
+                                    stringResource(
+                                        id = R.string.selected_count_label,
+                                        subHeaders[it],
+                                    )
+                                }
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.alpha(0.8f),
+                        )
+                    }
+                }
+            }
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(66.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    IconButton(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            navigateBack()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "navigate back"
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    AnimatedVisibility(
+                        visible = dataLoaded && isSelectTransactionsScreen,
+                        enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onCalendarClick()
+                            },
+                            enabled = enabled
+                        ) {
+                            Icon(
+                                imageVector = TablerIcons.CalendarEvent,
+                                contentDescription = "select time period"
+                            )
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    AnimatedVisibility(
+                        visible = dataLoaded && isSelectTransactionsScreen,
+                        enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut(),
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onToggleSelectClick()
+                            },
+                            enabled = enabled
+                        ) {
+                            AnimatedToggleSelectIcon(deselectVisible = allSelected)
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    AnimatedVisibility(
+                        visible = dataLoaded && !isSelectTransactionsScreen,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                navigateToNext()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "navigate to next screen"
+                            )
+                        }
+                    }
+                    AnimatedVisibility(
+                        visible = dataLoaded && isSelectTransactionsScreen,
+                        enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+                        exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
+                    ) {
+                        CustomFloatingActionButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                actionButtonClick()
+                            },
+                            enabled = enabled && importEnabled
+                        ) {
+                            Icon(
+                                imageVector = TablerIcons.DatabaseImport,
+                                contentDescription = "import data"
+                            )
+                        }
+                    }
+                    AnimatedVisibility(
+                        visible = !dataLoaded,
+                        enter = fadeIn() + expandHorizontally(),
+                        exit = fadeOut() + shrinkHorizontally(),
+                    ) {
+                        CustomFloatingActionButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                actionButtonClick()
+                            },
+                            enabled = true
+                        ) {
+                            Icon(
+                                imageVector = TablerIcons.FileImport,
+                                contentDescription = "select backup file"
+                            )
                         }
                     }
                 }

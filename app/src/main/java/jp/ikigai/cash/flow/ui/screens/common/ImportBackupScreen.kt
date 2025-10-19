@@ -12,15 +12,19 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -46,6 +51,8 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
@@ -68,6 +75,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
@@ -128,6 +136,8 @@ fun ImportBackupScreen(
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -505,415 +515,784 @@ fun ImportBackupScreen(
         }
     )
 
-    OneHandModeScaffold(
-        loading = loading,
-        showToastBar = showToastBar,
-        toastBarText = currentEvent?.let {
-            stringResource(id = it.message)
-        } ?: "",
-        onDismissToastBar = {
-            showToastBar = false
-            if (currentEvent == Event.ImportSuccess) {
-                navigateBack()
-            }
-        },
-        showEmptyPlaceholder = false,
-        emptyPlaceholderText = "",
-        sheetState = sheetState,
-        showBottomSheet = sheetType != SheetType.NONE,
-        bottomSheetContent = {
-            when (sheetType) {
-                SheetType.REVIEW -> {
-                    ReviewDetailsSheet(
-                        selectedTempCategoryCount = selectedTempCategoryCount,
-                        selectedTempCounterPartyCount = selectedTempCounterPartyCount,
-                        selectedTempMethodCount = selectedTempMethodCount,
-                        selectedTempAccountCount = selectedTempAccountCount,
-                        selectedTempTransactionTemplateCount = selectedTempTransactionTemplateCount,
-                        selectedTransactionsCount = selectedTransactionsCount,
-                        complete = import,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+                if (currentEvent == Event.ImportSuccess) {
+                    navigateBack()
                 }
-
-                SheetType.CONFIRM_NAVIGATION -> {
-                    ConfirmNavigationSheet(
-                        message = stringResource(id = R.string.navigation_confirmation_label),
-                        navigate = navigateBack,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.DATE_RANGE -> {
-                    DateRangePickerSheet(
-                        startDate = startDate,
-                        endDate = endDate,
-                        filter = setStartDateAndEndDate,
-                        reset = {
-                            setStartDateAndEndDate(null, null)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.CURRENCY -> {
-                    FilterCurrencySheet(
-                        selectedCurrencyCodes = selectedCurrencies,
-                        currencies = currencies,
-                        filter = setSelectedCurrencies,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.AMOUNT -> {
-                    AmountFilterSheet(
-                        minAmount = filterAmountMin,
-                        maxAmount = filterAmountMax,
-                        filter = filterByAmount,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.CATEGORY -> {
-                    SelectCategorySheet(
-                        index = dbCategories
-                            .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
-                            .coerceAtLeast(0),
-                        selectedCategoryId = categoryMappings[selectedTempCategoryId]?.categoryId
-                            ?: 0L,
-                        categories = dbCategories,
-                        setSelectedCategory = {
-                            setCategoryMapping(selectedTempCategoryId, it)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.COUNTERPARTY -> {
-                    SelectCounterPartySheet(
-                        index = dbCounterParties
-                            .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
-                            .coerceAtLeast(0),
-                        selectedCounterPartyId = counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId
-                            ?: 0L,
-                        counterParties = dbCounterParties,
-                        setSelectedCounterParty = {
-                            setCounterPartyMapping(selectedTempCounterPartyId, it)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.METHOD -> {
-                    SelectMethodSheet(
-                        index = dbMethods
-                            .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
-                            .coerceAtLeast(0),
-                        selectedMethodId = methodMappings[selectedTempMethodId]?.methodId ?: 0L,
-                        methods = dbMethods,
-                        setSelectedMethod = {
-                            setMethodMapping(selectedTempMethodId, it)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.ACCOUNT -> {
-                    SelectAccountSheet(
-                        index = currencyAccountMap[selectedTempAccountCurrency]
-                            ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
-                            ?.coerceAtLeast(0) ?: 0,
-                        selectedAccountId = accountMappings[selectedTempAccountId]?.accountId ?: 0L,
-                        accounts = currencyAccountMap[selectedTempAccountCurrency]
-                            ?: emptyList(),
-                        setSelectedAccount = {
-                            setAccountMapping(selectedTempAccountId, it)
-                        },
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                SheetType.TYPE -> {
-                    FilterTransactionTypeSheet(
-                        selectedTransactionTypes = selectedTransactionTypes,
-                        filter = setSelectedTransactionTypes,
-                        dismiss = {
-                            scope
-                                .launch { sheetState.hide() }
-                                .invokeOnCompletion { sheetType = SheetType.NONE }
-                        }
-                    )
-                }
-
-                else -> {}
-            }
-        },
-        onDismissSheet = {
-            sheetType = SheetType.NONE
-        },
-        topBar = { scrollBehavior, expandedHeight ->
-            LargeTopAppBar(
-                title = {
-                    if (!dataLoadComplete) {
-                        Text(text = stringResource(R.string.select_backup_label))
-                    } else {
-                        AnimatedContent(
-                            targetState = pagerState.settledPage,
-                            label = "import_header_animated_content",
-                            transitionSpec = {
-                                if (targetState > initialState) {
-                                    // If the target page is larger, it slides from end and fades in
-                                    // while the initial (smaller) number slides out and fades out.
-                                    slideInHorizontally { width -> width } + fadeIn() togetherWith
-                                            slideOutHorizontally { width -> -width } + fadeOut()
-                                } else {
-                                    // If the target number is smaller, it slides from start and fades in
-                                    // while the initial number slides out and fades out.
-                                    slideInHorizontally { width -> -width } + fadeIn() togetherWith
-                                            slideOutHorizontally { width -> width } + fadeOut()
-                                }.using(
-                                    // Disable clipping since the faded slide-in/out should
-                                    // be displayed out of bounds.
-                                    SizeTransform(clip = false)
-                                )
+            },
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.REVIEW -> {
+                        ReviewDetailsSheet(
+                            selectedTempCategoryCount = selectedTempCategoryCount,
+                            selectedTempCounterPartyCount = selectedTempCounterPartyCount,
+                            selectedTempMethodCount = selectedTempMethodCount,
+                            selectedTempAccountCount = selectedTempAccountCount,
+                            selectedTempTransactionTemplateCount = selectedTempTransactionTemplateCount,
+                            selectedTransactionsCount = selectedTransactionsCount,
+                            complete = import,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
                             }
-                        ) {
-                            Column {
-                                Text(text = stringResource(id = headers[it]))
-                                Text(
-                                    text = when (it) {
-                                        5 -> {
-                                            stringResource(
-                                                id = dateRangeStringRes,
-                                                startDateString,
-                                                endDateString
-                                            )
-                                        }
+                        )
+                    }
 
-                                        else -> {
-                                            stringResource(
-                                                id = R.string.selected_count_label,
-                                                subHeaders[it],
-                                            )
-                                        }
+                    SheetType.CONFIRM_NAVIGATION -> {
+                        ConfirmNavigationSheet(
+                            message = stringResource(id = R.string.navigation_confirmation_label),
+                            navigate = navigateBack,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CURRENCY -> {
+                        FilterCurrencySheet(
+                            selectedCurrencyCodes = selectedCurrencies,
+                            currencies = currencies,
+                            filter = setSelectedCurrencies,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.AMOUNT -> {
+                        AmountFilterSheet(
+                            minAmount = filterAmountMin,
+                            maxAmount = filterAmountMax,
+                            filter = filterByAmount,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CATEGORY -> {
+                        SelectCategorySheet(
+                            index = dbCategories
+                                .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
+                                .coerceAtLeast(0),
+                            selectedCategoryId = categoryMappings[selectedTempCategoryId]?.categoryId
+                                ?: 0L,
+                            categories = dbCategories,
+                            setSelectedCategory = {
+                                setCategoryMapping(selectedTempCategoryId, it)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.COUNTERPARTY -> {
+                        SelectCounterPartySheet(
+                            index = dbCounterParties
+                                .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
+                                .coerceAtLeast(0),
+                            selectedCounterPartyId = counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId
+                                ?: 0L,
+                            counterParties = dbCounterParties,
+                            setSelectedCounterParty = {
+                                setCounterPartyMapping(selectedTempCounterPartyId, it)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.METHOD -> {
+                        SelectMethodSheet(
+                            index = dbMethods
+                                .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
+                                .coerceAtLeast(0),
+                            selectedMethodId = methodMappings[selectedTempMethodId]?.methodId ?: 0L,
+                            methods = dbMethods,
+                            setSelectedMethod = {
+                                setMethodMapping(selectedTempMethodId, it)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.ACCOUNT -> {
+                        SelectAccountSheet(
+                            index = currencyAccountMap[selectedTempAccountCurrency]
+                                ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
+                                ?.coerceAtLeast(0) ?: 0,
+                            selectedAccountId = accountMappings[selectedTempAccountId]?.accountId
+                                ?: 0L,
+                            accounts = currencyAccountMap[selectedTempAccountCurrency]
+                                ?: emptyList(),
+                            setSelectedAccount = {
+                                setAccountMapping(selectedTempAccountId, it)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.TYPE -> {
+                        FilterTransactionTypeSheet(
+                            selectedTransactionTypes = selectedTransactionTypes,
+                            filter = setSelectedTransactionTypes,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    ImportBackupScreenBottomAppBar(
+                        settledPage = pagerState.settledPage,
+                        headers = headers,
+                        subHeaders = subHeaders,
+                        dateRangeStringRes = dateRangeStringRes,
+                        startDateString = startDateString,
+                        endDateString = endDateString,
+                        enabled = enabled,
+                        navigateBack = {
+                            if (enabled) {
+                                if (pagerState.currentPage > 0) {
+                                    scope.launch {
+                                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                    }
+                                } else if (dataLoadComplete) {
+                                    sheetType = SheetType.CONFIRM_NAVIGATION
+                                }
+                            } else {
+                                navigateBack()
+                            }
+                        },
+                        navigateToNext = {
+                            if (pagerState.currentPage < 5) {
+                                checkPageValidity(pagerState.currentPage)
+                            }
+                        },
+                        isSelectTransactionsScreen = pagerState.currentPage == 5,
+                        allSelected = allSelected,
+                        importEnabled = selectedTransactionsCount.isNotEmpty(),
+                        dataLoaded = dataLoadComplete,
+                        sortDirection = sortDirection,
+                        filterAmount = filterAmountRange,
+                        selectedCurrencyCount = selectedCurrencyCount,
+                        selectedTransactionTypeCount = selectedTransactionTypes.size,
+                        onSortClick = {
+                            if (sortDirection == SortDirection.DESC) {
+                                setSortDirection(SortDirection.ASC)
+                            } else {
+                                setSortDirection(SortDirection.DESC)
+                            }
+                        },
+                        onFilterByAmountClick = {
+                            sheetType = SheetType.AMOUNT
+                        },
+                        onFilterByTypeClick = {
+                            sheetType = SheetType.TYPE
+                        },
+                        onFilterByCurrencyClick = {
+                            sheetType = SheetType.CURRENCY
+                        },
+                        onToggleSelectClick = {
+                            toggleSelection(allSelected)
+                        },
+                        onCalendarClick = {
+                            sheetType = SheetType.DATE_RANGE
+                        },
+                        actionButtonClick = {
+                            if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
+                                sheetType = SheetType.REVIEW
+                            } else {
+                                importFilePicker.launch("application/json")
+                            }
+                        }
+                    )
+                }
+            },
+            secondColContent = {
+                if (!dataLoadComplete) {
+                    ImportScreenDefaultContent()
+                } else {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize(),
+                        userScrollEnabled = false,
+                        contentPadding = PaddingValues(vertical = 10.dp),
+                    ) { pageNumber ->
+                        when (pageNumber) {
+                            0 -> {
+                                ImportScreenMapCategoriesContent(
+                                    dbCategories = dbCategories,
+                                    tempCategories = tempCategories,
+                                    categoryMappings = categoryMappings,
+                                    selectedTempCategories = selectedTempCategories,
+                                    conflictingTempCategories = conflictingTempCategories,
+                                    selectCategory = { tempCategoryId ->
+                                        selectedTempCategoryId = tempCategoryId
+                                        sheetType = SheetType.CATEGORY
                                     },
-                                    style = MaterialTheme.typography.titleSmall,
-                                    modifier = Modifier.alpha(0.8f),
+                                    toggleSelected = toggleCategorySelected,
+                                    setCategoryMapping = setCategoryMapping,
+                                )
+                            }
+
+                            1 -> {
+                                ImportScreenMapCounterPartiesContent(
+                                    dbCounterParties = dbCounterParties,
+                                    tempCounterParties = tempCounterParties,
+                                    counterPartyMappings = counterPartyMappings,
+                                    selectedTempCounterParties = selectedTempCounterParties,
+                                    conflictingTempCounterParties = conflictingTempCounterParties,
+                                    selectCounterParty = { tempCounterPartyId ->
+                                        selectedTempCounterPartyId = tempCounterPartyId
+                                        sheetType = SheetType.COUNTERPARTY
+                                    },
+                                    toggleSelected = toggleCounterPartySelected,
+                                    setCounterPartyMapping = setCounterPartyMapping,
+                                )
+                            }
+
+                            2 -> {
+                                ImportScreenMapMethodsContent(
+                                    dbMethods = dbMethods,
+                                    tempMethods = tempMethods,
+                                    methodMappings = methodMappings,
+                                    selectedTempMethods = selectedTempMethods,
+                                    conflictingTempMethods = conflictingTempMethods,
+                                    selectMethod = { tempMethodId ->
+                                        selectedTempMethodId = tempMethodId
+                                        sheetType = SheetType.METHOD
+                                    },
+                                    toggleSelected = toggleMethodSelected,
+                                    setMethodMapping = setMethodMapping,
+                                )
+                            }
+
+                            3 -> {
+                                ImportScreenMapAccountsContent(
+                                    hasDbAccounts = hasDbAccounts,
+                                    tempAccounts = tempAccounts,
+                                    accountMappings = accountMappings,
+                                    selectedTempAccounts = selectedTempAccounts,
+                                    restoreBalanceAccounts = restoreBalanceAccounts,
+                                    conflictingTempAccounts = conflictingTempAccounts,
+                                    selectAccount = { tempAccountId, tempAccountCurrency ->
+                                        selectedTempAccountId = tempAccountId
+                                        selectedTempAccountCurrency = tempAccountCurrency
+                                        sheetType = SheetType.ACCOUNT
+                                    },
+                                    toggleAccountSelected = toggleAccountSelected,
+                                    toggleRestoreBalance = toggleRestoreBalance,
+                                    setAccountMapping = setAccountMapping,
+                                )
+                            }
+
+                            4 -> {
+                                ImportScreenSelectTemplatesContent(
+                                    tempTransactionTemplatesWithIcons = tempTransactionTemplatesWithIcons,
+                                    enabledTempTransactionTemplates = enabledTempTransactionTemplates,
+                                    selectedTempTransactionTemplates = selectedTempTransactionTemplates,
+                                    toggleTransactionTemplateSelected = toggleTransactionTemplateSelected,
+                                )
+                            }
+
+                            5 -> {
+                                ImportScreenSelectTransactionsContent(
+                                    loading = loading,
+                                    searchText = searchText,
+                                    setSearchText = setSearchText,
+                                    enabled = enabled,
+                                    focusRequester = focusRequester,
+                                    interactionSource = interactionSource,
+                                    transactions = transactions,
+                                    selectedLocalDates = selectedLocalDates,
+                                    enabledLocalDates = enabledLocalDates,
+                                    enabledTempTransactions = enabledTempTransactions,
+                                    selectedTransactions = selectedTransactions,
+                                    toggleLocalDateSelected = toggleLocalDateSelected,
+                                    toggleTransactionSelected = toggleTransactionSelected,
                                 )
                             }
                         }
                     }
-                },
-                expandedHeight = expandedHeight,
-                scrollBehavior = scrollBehavior,
-            )
-        },
-        bottomBar = {
-            ImportBackupScreenBottomAppBar(
-                enabled = enabled,
-                navigateBack = {
-                    if (enabled) {
-                        if (pagerState.currentPage > 0) {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        } else if (dataLoadComplete) {
-                            sheetType = SheetType.CONFIRM_NAVIGATION
-                        }
-                    } else {
-                        navigateBack()
-                    }
-                },
-                navigateToNext = {
-                    if (pagerState.currentPage < 5) {
-                        checkPageValidity(pagerState.currentPage)
-                    }
-                },
-                isSelectTransactionsScreen = pagerState.currentPage == 5,
-                allSelected = allSelected,
-                importEnabled = selectedTransactionsCount.isNotEmpty(),
-                dataLoaded = dataLoadComplete,
-                sortDirection = sortDirection,
-                filterAmount = filterAmountRange,
-                selectedCurrencyCount = selectedCurrencyCount,
-                selectedTransactionTypeCount = selectedTransactionTypes.size,
-                onSortClick = {
-                    if (sortDirection == SortDirection.DESC) {
-                        setSortDirection(SortDirection.ASC)
-                    } else {
-                        setSortDirection(SortDirection.DESC)
-                    }
-                },
-                onFilterByAmountClick = {
-                    sheetType = SheetType.AMOUNT
-                },
-                onFilterByTypeClick = {
-                    sheetType = SheetType.TYPE
-                },
-                onFilterByCurrencyClick = {
-                    sheetType = SheetType.CURRENCY
-                },
-                onSearchClick = {
-                    if (isFocused) {
-                        keyboardController?.show()
-                    } else {
-                        focusRequester.requestFocus()
-                    }
-                },
-                onToggleSelectClick = {
-                    toggleSelection(allSelected)
-                },
-                onCalendarClick = {
-                    sheetType = SheetType.DATE_RANGE
-                },
-                actionButtonClick = {
-                    if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
-                        sheetType = SheetType.REVIEW
-                    } else {
-                        importFilePicker.launch("application/json")
-                    }
                 }
-            )
-        }
-    ) {
-        if (!dataLoadComplete) {
-            ImportScreenDefaultContent()
-        } else {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = false,
-                contentPadding = PaddingValues(vertical = 10.dp),
-            ) { pageNumber ->
-                when (pageNumber) {
-                    0 -> {
-                        ImportScreenMapCategoriesContent(
-                            dbCategories = dbCategories,
-                            tempCategories = tempCategories,
-                            categoryMappings = categoryMappings,
-                            selectedTempCategories = selectedTempCategories,
-                            conflictingTempCategories = conflictingTempCategories,
-                            selectCategory = { tempCategoryId ->
-                                selectedTempCategoryId = tempCategoryId
-                                sheetType = SheetType.CATEGORY
+            }
+        )
+    } else {
+        OneHandModeScaffold(
+            loading = loading,
+            showToastBar = showToastBar,
+            toastBarText = currentEvent?.let {
+                stringResource(id = it.message)
+            } ?: "",
+            onDismissToastBar = {
+                showToastBar = false
+                if (currentEvent == Event.ImportSuccess) {
+                    navigateBack()
+                }
+            },
+            showEmptyPlaceholder = false,
+            emptyPlaceholderText = "",
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
+                when (sheetType) {
+                    SheetType.REVIEW -> {
+                        ReviewDetailsSheet(
+                            selectedTempCategoryCount = selectedTempCategoryCount,
+                            selectedTempCounterPartyCount = selectedTempCounterPartyCount,
+                            selectedTempMethodCount = selectedTempMethodCount,
+                            selectedTempAccountCount = selectedTempAccountCount,
+                            selectedTempTransactionTemplateCount = selectedTempTransactionTemplateCount,
+                            selectedTransactionsCount = selectedTransactionsCount,
+                            complete = import,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CONFIRM_NAVIGATION -> {
+                        ConfirmNavigationSheet(
+                            message = stringResource(id = R.string.navigation_confirmation_label),
+                            navigate = navigateBack,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.DATE_RANGE -> {
+                        DateRangePickerSheet(
+                            startDate = startDate,
+                            endDate = endDate,
+                            filter = setStartDateAndEndDate,
+                            reset = {
+                                setStartDateAndEndDate(null, null)
                             },
-                            toggleSelected = toggleCategorySelected,
-                            setCategoryMapping = setCategoryMapping,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
 
-                    1 -> {
-                        ImportScreenMapCounterPartiesContent(
-                            dbCounterParties = dbCounterParties,
-                            tempCounterParties = tempCounterParties,
-                            counterPartyMappings = counterPartyMappings,
-                            selectedTempCounterParties = selectedTempCounterParties,
-                            conflictingTempCounterParties = conflictingTempCounterParties,
-                            selectCounterParty = { tempCounterPartyId ->
-                                selectedTempCounterPartyId = tempCounterPartyId
-                                sheetType = SheetType.COUNTERPARTY
+                    SheetType.CURRENCY -> {
+                        FilterCurrencySheet(
+                            selectedCurrencyCodes = selectedCurrencies,
+                            currencies = currencies,
+                            filter = setSelectedCurrencies,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.AMOUNT -> {
+                        AmountFilterSheet(
+                            minAmount = filterAmountMin,
+                            maxAmount = filterAmountMax,
+                            filter = filterByAmount,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
+                        )
+                    }
+
+                    SheetType.CATEGORY -> {
+                        SelectCategorySheet(
+                            index = dbCategories
+                                .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
+                                .coerceAtLeast(0),
+                            selectedCategoryId = categoryMappings[selectedTempCategoryId]?.categoryId
+                                ?: 0L,
+                            categories = dbCategories,
+                            setSelectedCategory = {
+                                setCategoryMapping(selectedTempCategoryId, it)
                             },
-                            toggleSelected = toggleCounterPartySelected,
-                            setCounterPartyMapping = setCounterPartyMapping,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
 
-                    2 -> {
-                        ImportScreenMapMethodsContent(
-                            dbMethods = dbMethods,
-                            tempMethods = tempMethods,
-                            methodMappings = methodMappings,
-                            selectedTempMethods = selectedTempMethods,
-                            conflictingTempMethods = conflictingTempMethods,
-                            selectMethod = { tempMethodId ->
-                                selectedTempMethodId = tempMethodId
-                                sheetType = SheetType.METHOD
+                    SheetType.COUNTERPARTY -> {
+                        SelectCounterPartySheet(
+                            index = dbCounterParties
+                                .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
+                                .coerceAtLeast(0),
+                            selectedCounterPartyId = counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId
+                                ?: 0L,
+                            counterParties = dbCounterParties,
+                            setSelectedCounterParty = {
+                                setCounterPartyMapping(selectedTempCounterPartyId, it)
                             },
-                            toggleSelected = toggleMethodSelected,
-                            setMethodMapping = setMethodMapping,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
 
-                    3 -> {
-                        ImportScreenMapAccountsContent(
-                            hasDbAccounts = hasDbAccounts,
-                            tempAccounts = tempAccounts,
-                            accountMappings = accountMappings,
-                            selectedTempAccounts = selectedTempAccounts,
-                            restoreBalanceAccounts = restoreBalanceAccounts,
-                            conflictingTempAccounts = conflictingTempAccounts,
-                            selectAccount = { tempAccountId, tempAccountCurrency ->
-                                selectedTempAccountId = tempAccountId
-                                selectedTempAccountCurrency = tempAccountCurrency
-                                sheetType = SheetType.ACCOUNT
+                    SheetType.METHOD -> {
+                        SelectMethodSheet(
+                            index = dbMethods
+                                .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
+                                .coerceAtLeast(0),
+                            selectedMethodId = methodMappings[selectedTempMethodId]?.methodId ?: 0L,
+                            methods = dbMethods,
+                            setSelectedMethod = {
+                                setMethodMapping(selectedTempMethodId, it)
                             },
-                            toggleAccountSelected = toggleAccountSelected,
-                            toggleRestoreBalance = toggleRestoreBalance,
-                            setAccountMapping = setAccountMapping,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
 
-                    4 -> {
-                        ImportScreenSelectTemplatesContent(
-                            tempTransactionTemplatesWithIcons = tempTransactionTemplatesWithIcons,
-                            enabledTempTransactionTemplates = enabledTempTransactionTemplates,
-                            selectedTempTransactionTemplates = selectedTempTransactionTemplates,
-                            toggleTransactionTemplateSelected = toggleTransactionTemplateSelected,
+                    SheetType.ACCOUNT -> {
+                        SelectAccountSheet(
+                            index = currencyAccountMap[selectedTempAccountCurrency]
+                                ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
+                                ?.coerceAtLeast(0) ?: 0,
+                            selectedAccountId = accountMappings[selectedTempAccountId]?.accountId
+                                ?: 0L,
+                            accounts = currencyAccountMap[selectedTempAccountCurrency]
+                                ?: emptyList(),
+                            setSelectedAccount = {
+                                setAccountMapping(selectedTempAccountId, it)
+                            },
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
                     }
 
-                    5 -> {
-                        ImportScreenSelectTransactionsContent(
-                            loading = loading,
-                            searchText = searchText,
-                            setSearchText = setSearchText,
-                            enabled = enabled,
-                            focusRequester = focusRequester,
-                            interactionSource = interactionSource,
-                            transactions = transactions,
-                            selectedLocalDates = selectedLocalDates,
-                            enabledLocalDates = enabledLocalDates,
-                            enabledTempTransactions = enabledTempTransactions,
-                            selectedTransactions = selectedTransactions,
-                            toggleLocalDateSelected = toggleLocalDateSelected,
-                            toggleTransactionSelected = toggleTransactionSelected,
+                    SheetType.TYPE -> {
+                        FilterTransactionTypeSheet(
+                            selectedTransactionTypes = selectedTransactionTypes,
+                            filter = setSelectedTransactionTypes,
+                            dismiss = {
+                                scope
+                                    .launch { sheetState.hide() }
+                                    .invokeOnCompletion { sheetType = SheetType.NONE }
+                            }
                         )
+                    }
+
+                    else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            topBar = { scrollBehavior, expandedHeight ->
+                LargeTopAppBar(
+                    title = {
+                        if (!dataLoadComplete) {
+                            Text(text = stringResource(R.string.select_backup_label))
+                        } else {
+                            AnimatedContent(
+                                targetState = pagerState.settledPage,
+                                label = "import_header_animated_content",
+                                transitionSpec = {
+                                    if (targetState > initialState) {
+                                        // If the target page is larger, it slides from end and fades in
+                                        // while the initial (smaller) number slides out and fades out.
+                                        slideInHorizontally { width -> width } + fadeIn() togetherWith
+                                                slideOutHorizontally { width -> -width } + fadeOut()
+                                    } else {
+                                        // If the target number is smaller, it slides from start and fades in
+                                        // while the initial number slides out and fades out.
+                                        slideInHorizontally { width -> -width } + fadeIn() togetherWith
+                                                slideOutHorizontally { width -> width } + fadeOut()
+                                    }.using(
+                                        // Disable clipping since the faded slide-in/out should
+                                        // be displayed out of bounds.
+                                        SizeTransform(clip = false)
+                                    )
+                                }
+                            ) {
+                                Column {
+                                    Text(text = stringResource(id = headers[it]))
+                                    Text(
+                                        text = when (it) {
+                                            5 -> {
+                                                stringResource(
+                                                    id = dateRangeStringRes,
+                                                    startDateString,
+                                                    endDateString
+                                                )
+                                            }
+
+                                            else -> {
+                                                stringResource(
+                                                    id = R.string.selected_count_label,
+                                                    subHeaders[it],
+                                                )
+                                            }
+                                        },
+                                        style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier.alpha(0.8f),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    expandedHeight = expandedHeight,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                ImportBackupScreenBottomAppBar(
+                    enabled = enabled,
+                    navigateBack = {
+                        if (enabled) {
+                            if (pagerState.currentPage > 0) {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                }
+                            } else if (dataLoadComplete) {
+                                sheetType = SheetType.CONFIRM_NAVIGATION
+                            }
+                        } else {
+                            navigateBack()
+                        }
+                    },
+                    navigateToNext = {
+                        if (pagerState.currentPage < 5) {
+                            checkPageValidity(pagerState.currentPage)
+                        }
+                    },
+                    isSelectTransactionsScreen = pagerState.currentPage == 5,
+                    allSelected = allSelected,
+                    importEnabled = selectedTransactionsCount.isNotEmpty(),
+                    dataLoaded = dataLoadComplete,
+                    sortDirection = sortDirection,
+                    filterAmount = filterAmountRange,
+                    selectedCurrencyCount = selectedCurrencyCount,
+                    selectedTransactionTypeCount = selectedTransactionTypes.size,
+                    onSortClick = {
+                        if (sortDirection == SortDirection.DESC) {
+                            setSortDirection(SortDirection.ASC)
+                        } else {
+                            setSortDirection(SortDirection.DESC)
+                        }
+                    },
+                    onFilterByAmountClick = {
+                        sheetType = SheetType.AMOUNT
+                    },
+                    onFilterByTypeClick = {
+                        sheetType = SheetType.TYPE
+                    },
+                    onFilterByCurrencyClick = {
+                        sheetType = SheetType.CURRENCY
+                    },
+                    onSearchClick = {
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
+                        }
+                    },
+                    onToggleSelectClick = {
+                        toggleSelection(allSelected)
+                    },
+                    onCalendarClick = {
+                        sheetType = SheetType.DATE_RANGE
+                    },
+                    actionButtonClick = {
+                        if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
+                            sheetType = SheetType.REVIEW
+                        } else {
+                            importFilePicker.launch("application/json")
+                        }
+                    }
+                )
+            }
+        ) {
+            if (!dataLoadComplete) {
+                ImportScreenDefaultContent()
+            } else {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    userScrollEnabled = false,
+                    contentPadding = PaddingValues(vertical = 10.dp),
+                ) { pageNumber ->
+                    when (pageNumber) {
+                        0 -> {
+                            ImportScreenMapCategoriesContent(
+                                dbCategories = dbCategories,
+                                tempCategories = tempCategories,
+                                categoryMappings = categoryMappings,
+                                selectedTempCategories = selectedTempCategories,
+                                conflictingTempCategories = conflictingTempCategories,
+                                selectCategory = { tempCategoryId ->
+                                    selectedTempCategoryId = tempCategoryId
+                                    sheetType = SheetType.CATEGORY
+                                },
+                                toggleSelected = toggleCategorySelected,
+                                setCategoryMapping = setCategoryMapping,
+                            )
+                        }
+
+                        1 -> {
+                            ImportScreenMapCounterPartiesContent(
+                                dbCounterParties = dbCounterParties,
+                                tempCounterParties = tempCounterParties,
+                                counterPartyMappings = counterPartyMappings,
+                                selectedTempCounterParties = selectedTempCounterParties,
+                                conflictingTempCounterParties = conflictingTempCounterParties,
+                                selectCounterParty = { tempCounterPartyId ->
+                                    selectedTempCounterPartyId = tempCounterPartyId
+                                    sheetType = SheetType.COUNTERPARTY
+                                },
+                                toggleSelected = toggleCounterPartySelected,
+                                setCounterPartyMapping = setCounterPartyMapping,
+                            )
+                        }
+
+                        2 -> {
+                            ImportScreenMapMethodsContent(
+                                dbMethods = dbMethods,
+                                tempMethods = tempMethods,
+                                methodMappings = methodMappings,
+                                selectedTempMethods = selectedTempMethods,
+                                conflictingTempMethods = conflictingTempMethods,
+                                selectMethod = { tempMethodId ->
+                                    selectedTempMethodId = tempMethodId
+                                    sheetType = SheetType.METHOD
+                                },
+                                toggleSelected = toggleMethodSelected,
+                                setMethodMapping = setMethodMapping,
+                            )
+                        }
+
+                        3 -> {
+                            ImportScreenMapAccountsContent(
+                                hasDbAccounts = hasDbAccounts,
+                                tempAccounts = tempAccounts,
+                                accountMappings = accountMappings,
+                                selectedTempAccounts = selectedTempAccounts,
+                                restoreBalanceAccounts = restoreBalanceAccounts,
+                                conflictingTempAccounts = conflictingTempAccounts,
+                                selectAccount = { tempAccountId, tempAccountCurrency ->
+                                    selectedTempAccountId = tempAccountId
+                                    selectedTempAccountCurrency = tempAccountCurrency
+                                    sheetType = SheetType.ACCOUNT
+                                },
+                                toggleAccountSelected = toggleAccountSelected,
+                                toggleRestoreBalance = toggleRestoreBalance,
+                                setAccountMapping = setAccountMapping,
+                            )
+                        }
+
+                        4 -> {
+                            ImportScreenSelectTemplatesContent(
+                                tempTransactionTemplatesWithIcons = tempTransactionTemplatesWithIcons,
+                                enabledTempTransactionTemplates = enabledTempTransactionTemplates,
+                                selectedTempTransactionTemplates = selectedTempTransactionTemplates,
+                                toggleTransactionTemplateSelected = toggleTransactionTemplateSelected,
+                            )
+                        }
+
+                        5 -> {
+                            ImportScreenSelectTransactionsContent(
+                                loading = loading,
+                                searchText = searchText,
+                                setSearchText = setSearchText,
+                                enabled = enabled,
+                                focusRequester = focusRequester,
+                                interactionSource = interactionSource,
+                                transactions = transactions,
+                                selectedLocalDates = selectedLocalDates,
+                                enabledLocalDates = enabledLocalDates,
+                                enabledTempTransactions = enabledTempTransactions,
+                                selectedTransactions = selectedTransactions,
+                                toggleLocalDateSelected = toggleLocalDateSelected,
+                                toggleTransactionSelected = toggleTransactionSelected,
+                            )
+                        }
                     }
                 }
             }
