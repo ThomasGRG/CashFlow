@@ -6,7 +6,10 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -17,6 +20,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +42,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
@@ -84,6 +90,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectChartTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
+import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.charts.ChartsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.charts.ChartsScreenViewModel
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
@@ -111,6 +118,8 @@ fun ChartsScreen(
     loading: Boolean
 ) {
     val configuration = LocalConfiguration.current
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val locale by remember(key1 = configuration) {
         mutableStateOf(configuration.locales[0])
@@ -232,129 +241,17 @@ fun ChartsScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    Scaffold(
-        modifier = Modifier
-            .animateContentSize()
-            .navigationBarsPadding()
-            .imePadding()
-            .fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(
-                            id = R.string.charts_label
-                        )
-                    )
-                }
-            )
-        },
-        bottomBar = {
-            ChartsScreenBottomAppBar(
-                enabled = !loading,
-                selectedChartType = selectedChartType,
-                startYearMonthString = startYearMonthString,
-                endYearMonthString = endYearMonthString,
-                yearMonthRangeStringRes = yearMonthRangeStringRes,
-                selectedCurrency = selectedCurrency,
-                selectedAccount = selectedAccount.accountName,
-                selectedCategory = selectedCategory.categoryName,
-                selectedCounterParty = selectedCounterParty.counterPartyName,
-                selectedMethod = selectedMethod.methodName,
-                navigateBack = navigateBack,
-                onSelectChartClick = {
-                    sheetType = SheetType.CHART
-                },
-                onSelectCurrencyClick = {
-                    sheetType = SheetType.CURRENCY
-                },
-                onSelectAccountClick = {
-                    sheetType = SheetType.ACCOUNT
-                },
-                onSelectCategoryClick = {
-                    sheetType = SheetType.CATEGORY
-                },
-                onSelectCounterPartyClick = {
-                    sheetType = SheetType.COUNTERPARTY
-                },
-                onSelectMethodClick = {
-                    sheetType = SheetType.METHOD
-                },
-                onSelectYearMonthClick = {
-                    sheetType = SheetType.MONTH_RANGE
-                },
-            )
-        }
-    ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .padding(contentPadding)
-                .fillMaxSize()
-        ) {
-            if (loading) {
+    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+        LandscapeScaffold(
+            loading = loading,
+            loadingIndicator = {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
-            } else {
-                if (hasData) {
-                    if (transactionCountChartTypes.contains(selectedChartType)) {
-                        TransactionCountBarChart(
-                            modelProducer = modelProducer,
-                            labelComponent = labelComponent,
-                            labelKey = labelKey
-                        )
-                    } else if (totalAmountChartTypes.contains(selectedChartType)) {
-                        TotalAmountBarChart(
-                            modelProducer = modelProducer,
-                            labelComponent = labelComponent,
-                            labelKey = labelKey,
-                            shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
-                                selectedCurrency
-                            ),
-                            currencyFormatter = currencyFormatterMap.getValue(
-                                selectedCurrency
-                            )
-                        )
-                    } else if (selectedChartType == ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) {
-                        TotalDebitCreditBarChart(
-                            modelProducer = modelProducer,
-                            labelComponent = labelComponent,
-                            shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
-                                selectedCurrency
-                            ),
-                            currencyFormatter = currencyFormatterMap.getValue(
-                                selectedCurrency
-                            )
-                        )
-                    } else {
-                        TrendsLineChart(
-                            modelProducer = modelProducer,
-                            labelComponent = labelComponent,
-                            labelKey = labelKey,
-                            shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
-                                selectedCurrency
-                            ),
-                            currencyFormatter = currencyFormatterMap.getValue(
-                                selectedCurrency
-                            )
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(id = R.string.charts_screen_empty_placeholder_label),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
-        }
-        if (sheetType != SheetType.NONE) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    sheetType = SheetType.NONE
-                },
-                sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
-            ) {
+            },
+            sheetState = sheetState,
+            showBottomSheet = sheetType != SheetType.NONE,
+            bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CHART -> {
                         SelectChartTypeSheet(
@@ -481,6 +378,353 @@ fun ChartsScreen(
                     }
 
                     else -> {}
+                }
+            },
+            onDismissSheet = {
+                sheetType = SheetType.NONE
+            },
+            showEmptyPlaceholder = !hasData,
+            emptyPlaceholderText = stringResource(id = R.string.charts_screen_empty_placeholder_label),
+            firstColContent = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 2.dp),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    ChartsScreenBottomAppBar(
+                        title = stringResource(id = R.string.charts_label),
+                        enabled = !loading,
+                        selectedChartType = selectedChartType,
+                        startYearMonthString = startYearMonthString,
+                        endYearMonthString = endYearMonthString,
+                        yearMonthRangeStringRes = yearMonthRangeStringRes,
+                        selectedCurrency = selectedCurrency,
+                        selectedAccount = selectedAccount.accountName,
+                        selectedCategory = selectedCategory.categoryName,
+                        selectedCounterParty = selectedCounterParty.counterPartyName,
+                        selectedMethod = selectedMethod.methodName,
+                        navigateBack = navigateBack,
+                        onSelectChartClick = {
+                            sheetType = SheetType.CHART
+                        },
+                        onSelectCurrencyClick = {
+                            sheetType = SheetType.CURRENCY
+                        },
+                        onSelectAccountClick = {
+                            sheetType = SheetType.ACCOUNT
+                        },
+                        onSelectCategoryClick = {
+                            sheetType = SheetType.CATEGORY
+                        },
+                        onSelectCounterPartyClick = {
+                            sheetType = SheetType.COUNTERPARTY
+                        },
+                        onSelectMethodClick = {
+                            sheetType = SheetType.METHOD
+                        },
+                        onSelectYearMonthClick = {
+                            sheetType = SheetType.MONTH_RANGE
+                        },
+                    )
+                }
+            },
+            secondColContent = {
+                if (transactionCountChartTypes.contains(selectedChartType)) {
+                    TransactionCountBarChart(
+                        modelProducer = modelProducer,
+                        labelComponent = labelComponent,
+                        labelKey = labelKey
+                    )
+                } else if (totalAmountChartTypes.contains(selectedChartType)) {
+                    TotalAmountBarChart(
+                        modelProducer = modelProducer,
+                        labelComponent = labelComponent,
+                        labelKey = labelKey,
+                        shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                            selectedCurrency
+                        ),
+                        currencyFormatter = currencyFormatterMap.getValue(
+                            selectedCurrency
+                        )
+                    )
+                } else if (selectedChartType == ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) {
+                    TotalDebitCreditBarChart(
+                        modelProducer = modelProducer,
+                        labelComponent = labelComponent,
+                        shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                            selectedCurrency
+                        ),
+                        currencyFormatter = currencyFormatterMap.getValue(
+                            selectedCurrency
+                        )
+                    )
+                } else {
+                    TrendsLineChart(
+                        modelProducer = modelProducer,
+                        labelComponent = labelComponent,
+                        labelKey = labelKey,
+                        shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                            selectedCurrency
+                        ),
+                        currencyFormatter = currencyFormatterMap.getValue(
+                            selectedCurrency
+                        )
+                    )
+                }
+            }
+        )
+    } else {
+        Scaffold(
+            modifier = Modifier
+                .animateContentSize()
+                .navigationBarsPadding()
+                .imePadding()
+                .fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.charts_label)
+                        )
+                    },
+                )
+            },
+            bottomBar = {
+                ChartsScreenBottomAppBar(
+                    enabled = !loading,
+                    selectedChartType = selectedChartType,
+                    startYearMonthString = startYearMonthString,
+                    endYearMonthString = endYearMonthString,
+                    yearMonthRangeStringRes = yearMonthRangeStringRes,
+                    selectedCurrency = selectedCurrency,
+                    selectedAccount = selectedAccount.accountName,
+                    selectedCategory = selectedCategory.categoryName,
+                    selectedCounterParty = selectedCounterParty.counterPartyName,
+                    selectedMethod = selectedMethod.methodName,
+                    navigateBack = navigateBack,
+                    onSelectChartClick = {
+                        sheetType = SheetType.CHART
+                    },
+                    onSelectCurrencyClick = {
+                        sheetType = SheetType.CURRENCY
+                    },
+                    onSelectAccountClick = {
+                        sheetType = SheetType.ACCOUNT
+                    },
+                    onSelectCategoryClick = {
+                        sheetType = SheetType.CATEGORY
+                    },
+                    onSelectCounterPartyClick = {
+                        sheetType = SheetType.COUNTERPARTY
+                    },
+                    onSelectMethodClick = {
+                        sheetType = SheetType.METHOD
+                    },
+                    onSelectYearMonthClick = {
+                        sheetType = SheetType.MONTH_RANGE
+                    },
+                )
+            }
+        ) { contentPadding ->
+            Box(
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .fillMaxSize()
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else {
+                    if (hasData) {
+                        if (transactionCountChartTypes.contains(selectedChartType)) {
+                            TransactionCountBarChart(
+                                modelProducer = modelProducer,
+                                labelComponent = labelComponent,
+                                labelKey = labelKey
+                            )
+                        } else if (totalAmountChartTypes.contains(selectedChartType)) {
+                            TotalAmountBarChart(
+                                modelProducer = modelProducer,
+                                labelComponent = labelComponent,
+                                labelKey = labelKey,
+                                shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                                    selectedCurrency
+                                ),
+                                currencyFormatter = currencyFormatterMap.getValue(
+                                    selectedCurrency
+                                )
+                            )
+                        } else if (selectedChartType == ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) {
+                            TotalDebitCreditBarChart(
+                                modelProducer = modelProducer,
+                                labelComponent = labelComponent,
+                                shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                                    selectedCurrency
+                                ),
+                                currencyFormatter = currencyFormatterMap.getValue(
+                                    selectedCurrency
+                                )
+                            )
+                        } else {
+                            TrendsLineChart(
+                                modelProducer = modelProducer,
+                                labelComponent = labelComponent,
+                                labelKey = labelKey,
+                                shortCurrencyFormatter = shortCurrencyFormatterMap.getValue(
+                                    selectedCurrency
+                                ),
+                                currencyFormatter = currencyFormatterMap.getValue(
+                                    selectedCurrency
+                                )
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(id = R.string.charts_screen_empty_placeholder_label),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                }
+            }
+            if (sheetType != SheetType.NONE) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        sheetType = SheetType.NONE
+                    },
+                    sheetState = sheetState,
+//                sheetGesturesEnabled: Boolean = false, TODO()
+                ) {
+                    when (sheetType) {
+                        SheetType.CHART -> {
+                            SelectChartTypeSheet(
+                                index = chartTypes
+                                    .indexOfFirst { it == selectedChartType }
+                                    .coerceAtLeast(0),
+                                selectedChartType = selectedChartType,
+                                setSelectedChartType = setChartType,
+                                chartTypes = chartTypes,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.MONTH_RANGE -> {
+                            MonthRangePickerSheet(
+                                start = yearMonthSelectionStart,
+                                end = yearMonthSelectionEnd,
+                                filter = setYearMonthRange,
+                                reset = {
+                                    setYearMonthRange(null, null)
+                                },
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.CURRENCY -> {
+                            CurrencySheet(
+                                index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
+                                selectedCurrency = selectedCurrency,
+                                setSelectedCurrency = setSelectedCurrency,
+                                currencies = currencies,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.ACCOUNT -> {
+                            SelectAccountSheet(
+                                index = accounts
+                                    .indexOfFirst { it.accountId == selectedAccount.accountId }
+                                    .coerceAtLeast(0),
+                                selectedAccountId = selectedAccount.accountId,
+                                setSelectedAccount = setSelectedAccount,
+                                accounts = accounts,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.CATEGORY -> {
+                            SelectCategorySheet(
+                                index = categories
+                                    .indexOfFirst { it.categoryId == selectedCategory.categoryId }
+                                    .coerceAtLeast(0),
+                                selectedCategoryId = selectedCategory.categoryId,
+                                setSelectedCategory = setSelectedCategory,
+                                categories = categories,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.COUNTERPARTY -> {
+                            SelectCounterPartySheet(
+                                index = counterParties
+                                    .indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
+                                    .coerceAtLeast(0),
+                                selectedCounterPartyId = selectedCounterParty.counterPartyId,
+                                setSelectedCounterParty = setSelectedCounterParty,
+                                counterParties = counterParties,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        SheetType.METHOD -> {
+                            SelectMethodSheet(
+                                index = methods
+                                    .indexOfFirst { it.methodId == selectedMethod.methodId }
+                                    .coerceAtLeast(0),
+                                selectedMethodId = selectedMethod.methodId,
+                                setSelectedMethod = setSelectedMethod,
+                                methods = methods,
+                                dismiss = {
+                                    scope
+                                        .launch { sheetState.hide() }
+                                        .invokeOnCompletion {
+                                            sheetType = SheetType.NONE
+                                        }
+                                }
+                            )
+                        }
+
+                        else -> {}
+                    }
                 }
             }
         }
