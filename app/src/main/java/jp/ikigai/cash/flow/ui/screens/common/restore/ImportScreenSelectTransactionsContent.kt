@@ -124,3 +124,85 @@ fun ImportScreenSelectTransactionsContent(
         }
     }
 }
+
+@Composable
+fun ImportScreenSelectTransactionsContent(
+    loading: Boolean,
+    searchText: String,
+    enabled: Boolean,
+    transactions: Map<LocalDate, List<TransactionWithChips>>,
+    selectedLocalDates: Set<LocalDate>,
+    enabledLocalDates: Set<LocalDate>,
+    enabledTempTransactions: Set<Long>,
+    selectedTransactions: Set<Long>,
+    toggleLocalDateSelected: (Boolean, List<TransactionWithChips>) -> Unit,
+    toggleTransactionSelected: (Long) -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 10.dp, end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            transactions.forEach { entry ->
+                stickyHeader {
+                    TransactionGroupHeader(
+                        date = entry.key,
+                        selected = selectedLocalDates.contains(entry.key),
+                        enabled = enabled && enabledLocalDates.contains(
+                            entry.key
+                        ),
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            toggleLocalDateSelected(
+                                selectedLocalDates.contains(entry.key),
+                                transactions[entry.key] ?: emptyList()
+                            )
+                        }
+                    )
+                }
+                items(
+                    items = entry.value,
+                    key = { transactionWithChips -> transactionWithChips.id }
+                ) { transactionWithChips ->
+                    TransactionCard(
+                        checked = enabledTempTransactions.contains(
+                            transactionWithChips.id
+                        ) && selectedTransactions.contains(
+                            transactionWithChips.id
+                        ),
+                        enabled = enabled && enabledTempTransactions.contains(
+                            transactionWithChips.id
+                        ),
+                        transactionWithChips = transactionWithChips,
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            toggleTransactionSelected(transactionWithChips.id)
+                        },
+                        onLongClick = {},
+                        modifier = Modifier.animateItem()
+                    )
+                }
+            }
+        }
+        if (!loading && transactions.isEmpty()) {
+            Text(
+                text = if (searchText.isNotBlank()) {
+                    stringResource(
+                        id = R.string.choose_icon_screen_empty_placeholder_label,
+                        searchText
+                    )
+                } else {
+                    stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                },
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
