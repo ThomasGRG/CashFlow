@@ -1069,7 +1069,16 @@ fun ImportBackupScreen(
                 LargeTopAppBar(
                     title = {
                         if (!dataLoadComplete) {
-                            Text(text = stringResource(R.string.select_backup_label))
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.import_transactions_label),
+                                )
+                                Text(
+                                    text = stringResource(R.string.select_backup_label),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.alpha(0.8f),
+                                )
+                            }
                         } else {
                             AnimatedContent(
                                 targetState = pagerState.settledPage,
