@@ -725,7 +725,7 @@ fun ImportBackupScreen(
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     ImportBackupScreenBottomAppBar(
-                        settledPage = pagerState.settledPage,
+                        currentPage = pagerState.currentPage,
                         headers = headers,
                         subHeaders = subHeaders,
                         dateRangeStringRes = dateRangeStringRes,
@@ -1096,7 +1096,7 @@ fun ImportBackupScreen(
                             }
                         } else {
                             AnimatedContent(
-                                targetState = pagerState.settledPage,
+                                targetState = pagerState.currentPage,
                                 label = "import_header_animated_content",
                                 transitionSpec = {
                                     if (targetState > initialState) {

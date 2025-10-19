@@ -332,7 +332,7 @@ fun ImportBackupScreenBottomAppBar(
 
 @Composable
 fun ImportBackupScreenBottomAppBar(
-    settledPage: Int,
+    currentPage: Int,
     headers: List<Int>,
     subHeaders: List<String>,
     dateRangeStringRes: Int,
@@ -468,7 +468,7 @@ fun ImportBackupScreenBottomAppBar(
                 )
             } else {
                 AnimatedContent(
-                    targetState = settledPage,
+                    targetState = currentPage,
                     label = "import_header_animated_content",
                     transitionSpec = {
                         if (targetState > initialState) {
