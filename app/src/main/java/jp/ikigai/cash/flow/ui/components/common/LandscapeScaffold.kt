@@ -115,6 +115,14 @@ fun LandscapeScaffold(
 @Composable
 fun LandscapeScaffold(
     loading: Boolean,
+    loadingIndicator: @Composable BoxScope.() -> Unit = {
+        LinearProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
+                .align(Alignment.TopCenter)
+        )
+    },
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     showBottomSheet: Boolean = false,
     bottomSheetContent: @Composable () -> Unit = {},
@@ -151,12 +159,7 @@ fun LandscapeScaffold(
             ) {
                 secondColContent()
                 if (loading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp)
-                            .align(Alignment.TopCenter)
-                    )
+                    loadingIndicator()
                 } else {
                     if (showEmptyPlaceholder) {
                         Text(
