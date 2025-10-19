@@ -12,7 +12,6 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -79,6 +78,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.MoreOptionsSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
+import jp.ikigai.cash.flow.ui.components.common.BalanceCard
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
@@ -635,17 +635,10 @@ fun TransactionsScreen(
                         item(
                             key = "totalBalance"
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = balance,
-                                    style = MaterialTheme.typography.displaySmall
-                                )
-                            }
+                            BalanceCard(
+                                modifier = Modifier.padding(top = 8.dp),
+                                balance = balance
+                            )
                         }
                         item(
                             key = "infoRow"
@@ -821,17 +814,7 @@ fun TransactionsScreen(
                             item(
                                 key = "totalBalance"
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Start,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = balance,
-                                        style = MaterialTheme.typography.displaySmall
-                                    )
-                                }
+                                BalanceCard(balance = balance)
                             }
                             item(
                                 key = "infoRow"
