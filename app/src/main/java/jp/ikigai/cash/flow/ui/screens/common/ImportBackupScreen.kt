@@ -4,9 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -77,6 +80,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
+import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenFiltersState
 import jp.ikigai.cash.flow.ui.screenStates.common.restore.ImportBackupScreenPrimaryState
@@ -705,6 +709,20 @@ fun ImportBackupScreen(
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    AnimatedVisibility(
+                        visible = pagerState.currentPage == 5,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        SearchBox(
+                            modifier = Modifier.padding(bottom = 10.dp),
+                            searchText = searchText,
+                            setSearchText = setSearchText,
+                            enabled = enabled,
+                            focusRequester = focusRequester,
+                            interactionSource = interactionSource
+                        )
+                    }
                     Spacer(modifier = Modifier.weight(1f))
                     ImportBackupScreenBottomAppBar(
                         settledPage = pagerState.settledPage,
@@ -863,10 +881,7 @@ fun ImportBackupScreen(
                                 ImportScreenSelectTransactionsContent(
                                     loading = loading,
                                     searchText = searchText,
-                                    setSearchText = setSearchText,
                                     enabled = enabled,
-                                    focusRequester = focusRequester,
-                                    interactionSource = interactionSource,
                                     transactions = transactions,
                                     selectedLocalDates = selectedLocalDates,
                                     enabledLocalDates = enabledLocalDates,
