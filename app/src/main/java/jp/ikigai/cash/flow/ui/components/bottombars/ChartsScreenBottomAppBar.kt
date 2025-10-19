@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -425,6 +426,11 @@ fun ChartsScreenBottomAppBar(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = stringResource(id = R.string.charts_subtext_label),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.alpha(0.8f)
             )
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 10.dp)
