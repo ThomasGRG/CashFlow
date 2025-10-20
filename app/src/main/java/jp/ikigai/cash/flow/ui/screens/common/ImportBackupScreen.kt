@@ -794,7 +794,6 @@ fun ImportBackupScreen(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                         userScrollEnabled = false,
-                        contentPadding = PaddingValues(vertical = 10.dp),
                     ) { pageNumber ->
                         when (pageNumber) {
                             0 -> {
@@ -1196,6 +1195,7 @@ fun ImportBackupScreen(
                                 },
                                 toggleSelected = toggleCategorySelected,
                                 setCategoryMapping = setCategoryMapping,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             )
                         }
 
@@ -1212,6 +1212,7 @@ fun ImportBackupScreen(
                                 },
                                 toggleSelected = toggleCounterPartySelected,
                                 setCounterPartyMapping = setCounterPartyMapping,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             )
                         }
 
@@ -1228,6 +1229,7 @@ fun ImportBackupScreen(
                                 },
                                 toggleSelected = toggleMethodSelected,
                                 setMethodMapping = setMethodMapping,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             )
                         }
 
@@ -1247,6 +1249,7 @@ fun ImportBackupScreen(
                                 toggleAccountSelected = toggleAccountSelected,
                                 toggleRestoreBalance = toggleRestoreBalance,
                                 setAccountMapping = setAccountMapping,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             )
                         }
 
@@ -1256,6 +1259,7 @@ fun ImportBackupScreen(
                                 enabledTempTransactionTemplates = enabledTempTransactionTemplates,
                                 selectedTempTransactionTemplates = selectedTempTransactionTemplates,
                                 toggleTransactionTemplateSelected = toggleTransactionTemplateSelected,
+                                contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
                             )
                         }
 

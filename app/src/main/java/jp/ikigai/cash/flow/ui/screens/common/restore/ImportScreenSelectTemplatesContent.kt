@@ -25,6 +25,7 @@ fun ImportScreenSelectTemplatesContent(
     enabledTempTransactionTemplates: Set<Long>,
     selectedTempTransactionTemplates: Set<Long>,
     toggleTransactionTemplateSelected: (Long) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -39,7 +40,7 @@ fun ImportScreenSelectTemplatesContent(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

@@ -38,12 +38,13 @@ fun ImportScreenMapAccountsContent(
     toggleAccountSelected: (Long) -> Unit,
     toggleRestoreBalance: (Long) -> Unit,
     setAccountMapping: (Long, AccountWithTransactionMetadata) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val haptics = LocalHapticFeedback.current
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+        contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

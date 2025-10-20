@@ -15,11 +15,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -68,7 +71,13 @@ fun LandscapeScaffold(
                     .fillMaxHeight()
                     .imePadding()
             ) {
-                secondColContent()
+                Surface(
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    secondColContent()
+                }
                 if (loading) {
                     LinearProgressIndicator(
                         modifier = Modifier
@@ -157,7 +166,13 @@ fun LandscapeScaffold(
                     .fillMaxHeight()
                     .imePadding()
             ) {
-                secondColContent()
+                Surface(
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    secondColContent()
+                }
                 if (loading) {
                     loadingIndicator()
                 } else {
@@ -221,7 +236,13 @@ fun LandscapeScaffold(
                     .fillMaxHeight()
                     .imePadding()
             ) {
-                secondColContent()
+                Surface(
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    secondColContent()
+                }
                 if (loading) {
                     LinearProgressIndicator(
                         modifier = Modifier
@@ -295,7 +316,13 @@ fun LandscapeScaffold(
                     .fillMaxHeight()
                     .imePadding()
             ) {
-                secondColContent()
+                Surface(
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    secondColContent()
+                }
                 androidx.compose.animation.AnimatedVisibility(
                     visible = showToastBar,
                     enter = fadeIn() + scaleIn(initialScale = 0.6f),

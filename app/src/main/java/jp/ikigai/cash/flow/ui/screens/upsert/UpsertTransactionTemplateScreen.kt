@@ -414,9 +414,7 @@ fun UpsertTransactionTemplateScreen(
             },
             secondColContent = {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(all = 10.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {

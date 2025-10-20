@@ -358,7 +358,6 @@ fun UpsertCategoryScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(all = 10.dp)
                         .verticalScroll(
                             rememberScrollState()
                         ),

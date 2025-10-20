@@ -9,6 +9,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
@@ -439,7 +440,7 @@ fun ChartsScreen(
                     TransactionCountBarChart(
                         modelProducer = modelProducer,
                         labelComponent = labelComponent,
-                        labelKey = labelKey
+                        labelKey = labelKey,
                     )
                 } else if (totalAmountChartTypes.contains(selectedChartType)) {
                     TotalAmountBarChart(
@@ -451,7 +452,7 @@ fun ChartsScreen(
                         ),
                         currencyFormatter = currencyFormatterMap.getValue(
                             selectedCurrency
-                        )
+                        ),
                     )
                 } else if (selectedChartType == ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) {
                     TotalDebitCreditBarChart(
@@ -462,7 +463,7 @@ fun ChartsScreen(
                         ),
                         currencyFormatter = currencyFormatterMap.getValue(
                             selectedCurrency
-                        )
+                        ),
                     )
                 } else {
                     TrendsLineChart(
@@ -474,7 +475,7 @@ fun ChartsScreen(
                         ),
                         currencyFormatter = currencyFormatterMap.getValue(
                             selectedCurrency
-                        )
+                        ),
                     )
                 }
             }
@@ -557,7 +558,8 @@ fun ChartsScreen(
                             TransactionCountBarChart(
                                 modelProducer = modelProducer,
                                 labelComponent = labelComponent,
-                                labelKey = labelKey
+                                labelKey = labelKey,
+                                padding = PaddingValues(all = 15.dp),
                             )
                         } else if (totalAmountChartTypes.contains(selectedChartType)) {
                             TotalAmountBarChart(
@@ -569,7 +571,8 @@ fun ChartsScreen(
                                 ),
                                 currencyFormatter = currencyFormatterMap.getValue(
                                     selectedCurrency
-                                )
+                                ),
+                                padding = PaddingValues(all = 15.dp),
                             )
                         } else if (selectedChartType == ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) {
                             TotalDebitCreditBarChart(
@@ -580,7 +583,8 @@ fun ChartsScreen(
                                 ),
                                 currencyFormatter = currencyFormatterMap.getValue(
                                     selectedCurrency
-                                )
+                                ),
+                                padding = PaddingValues(all = 15.dp),
                             )
                         } else {
                             TrendsLineChart(
@@ -592,7 +596,8 @@ fun ChartsScreen(
                                 ),
                                 currencyFormatter = currencyFormatterMap.getValue(
                                     selectedCurrency
-                                )
+                                ),
+                                padding = PaddingValues(all = 15.dp),
                             )
                         }
                     } else {
@@ -750,7 +755,8 @@ fun TrendsLineChart(
     labelComponent: TextComponent,
     labelKey: ExtraStore.Key<List<String>>,
     shortCurrencyFormatter: LocalizedNumberFormatter,
-    currencyFormatter: LocalizedNumberFormatter
+    currencyFormatter: LocalizedNumberFormatter,
+    padding: PaddingValues = PaddingValues(0.dp),
 ) {
     val creditLine = LineCartesianLayer.rememberLine(
         fill = LineCartesianLayer.LineFill.single(
@@ -838,7 +844,7 @@ fun TrendsLineChart(
         ),
         modelProducer = modelProducer,
         modifier = Modifier
-            .padding(15.dp)
+            .padding(padding)
             .fillMaxSize()
     )
 }
@@ -848,6 +854,7 @@ fun TransactionCountBarChart(
     modelProducer: CartesianChartModelProducer,
     labelComponent: TextComponent,
     labelKey: ExtraStore.Key<List<String>>,
+    padding: PaddingValues = PaddingValues(0.dp),
 ) {
     CartesianChartHost(
         chart = rememberCartesianChart(
@@ -885,7 +892,7 @@ fun TransactionCountBarChart(
         ),
         modelProducer = modelProducer,
         modifier = Modifier
-            .padding(15.dp)
+            .padding(padding)
             .fillMaxSize()
     )
 }
@@ -896,7 +903,8 @@ fun TotalAmountBarChart(
     labelComponent: TextComponent,
     labelKey: ExtraStore.Key<List<String>>,
     shortCurrencyFormatter: LocalizedNumberFormatter,
-    currencyFormatter: LocalizedNumberFormatter
+    currencyFormatter: LocalizedNumberFormatter,
+    padding: PaddingValues = PaddingValues(0.dp),
 ) {
     val creditColumn = rememberLineComponent(
         fill = fill(TransactionType.CREDIT.color),
@@ -978,7 +986,7 @@ fun TotalAmountBarChart(
         ),
         modelProducer = modelProducer,
         modifier = Modifier
-            .padding(15.dp)
+            .padding(padding)
             .fillMaxSize()
     )
 }
@@ -988,7 +996,8 @@ fun TotalDebitCreditBarChart(
     modelProducer: CartesianChartModelProducer,
     labelComponent: TextComponent,
     shortCurrencyFormatter: LocalizedNumberFormatter,
-    currencyFormatter: LocalizedNumberFormatter
+    currencyFormatter: LocalizedNumberFormatter,
+    padding: PaddingValues = PaddingValues(0.dp),
 ) {
     val creditLabel = stringResource(id = TransactionType.CREDIT.label)
     val debitLabel = stringResource(id = TransactionType.DEBIT.label)
@@ -1080,7 +1089,7 @@ fun TotalDebitCreditBarChart(
         ),
         modelProducer = modelProducer,
         modifier = Modifier
-            .padding(15.dp)
+            .padding(padding)
             .fillMaxSize()
     )
 }

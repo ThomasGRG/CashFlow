@@ -262,9 +262,7 @@ fun TransactionTemplateScreen(
             },
             secondColContent = {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(all = 10.dp),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

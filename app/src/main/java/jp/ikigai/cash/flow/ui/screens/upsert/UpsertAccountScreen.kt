@@ -320,7 +320,6 @@ fun UpsertAccountScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(start = 10.dp, end = 10.dp, top = 10.dp)
                         .verticalScroll(
                             rememberScrollState()
                         ),

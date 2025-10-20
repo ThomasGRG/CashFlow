@@ -37,6 +37,7 @@ fun ImportScreenMapCounterPartiesContent(
     selectCounterParty: (Long) -> Unit,
     toggleSelected: (Long) -> Unit,
     setCounterPartyMapping: (Long, CounterPartyWithTransactionMetadata) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -45,7 +46,7 @@ fun ImportScreenMapCounterPartiesContent(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 10.dp, end = 10.dp),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
