@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -413,231 +414,181 @@ fun UpsertTransactionTemplateScreen(
                 }
             },
             secondColContent = {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(
+                            rememberScrollState()
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    item(
-                        key = "name",
-                        contentType = "type-enabled"
-                    ) {
-                        RoundedCornerOutlinedTextField(
-                            value = name,
-                            onValueChange = setName,
-                            enabled = enabled,
-                            label = stringResource(id = R.string.template_name_field_label),
-                            placeHolder = stringResource(id = R.string.template_name_placeholder_label),
-                            icon = TablerIcons.Typography,
-                            iconDescription = "name icon",
-                            isError = !nameValid,
-                            errorHint = stringResource(id = nameErrorStringRes),
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words,
-                                imeAction = ImeAction.Done
-                            ),
-                            onDone = {
-                                keyboardController?.hide()
-                            },
-                            boxModifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "title",
-                        contentType = "type-enabled"
-                    ) {
-                        RoundedCornerOutlinedTextField(
-                            value = title,
-                            onValueChange = setTitle,
-                            enabled = enabled,
-                            label = stringResource(id = R.string.title_field_label),
-                            placeHolder = stringResource(id = R.string.title_placeholder_label),
-                            icon = TablerIcons.LetterCase,
-                            iconDescription = "title icon",
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Words,
-                                imeAction = ImeAction.Done
-                            ),
-                            onDone = {
-                                keyboardController?.hide()
-                            },
-                            boxModifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "description",
-                        contentType = "type-enabled"
-                    ) {
-                        RoundedCornerOutlinedTextField(
-                            value = description,
-                            onValueChange = setDescription,
-                            enabled = enabled,
-                            label = stringResource(id = R.string.description_field_label),
-                            placeHolder = stringResource(id = R.string.description_placeholder_label),
-                            icon = TablerIcons.FileText,
-                            iconDescription = "description icon",
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences,
-                                imeAction = ImeAction.Done
-                            ),
-                            onDone = {
-                                keyboardController?.hide()
-                            },
-                            boxModifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "amount",
-                        contentType = "type-enabled"
-                    ) {
-                        RoundedCornerOutlinedTextField(
-                            value = amount,
-                            onValueChange = setAmount,
-                            enabled = enabled,
-                            label = stringResource(id = R.string.amount_label),
-                            placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
-                            icon = TablerIcons.CashBanknote,
-                            iconDescription = "amount icon",
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.None,
-                                autoCorrectEnabled = false,
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            onDone = {
-                                keyboardController?.hide()
-                            },
-                            boxModifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "transactionType",
-                        contentType = "dropDown"
-                    ) {
-                        CustomOutlinedButton(
-                            enabled = enabled,
-                            value = stringResource(id = transactionType.label),
-                            label = stringResource(id = R.string.transaction_type_field_label),
-                            placeHolder = "",
-                            leadingIcon = transactionType.icon,
-                            onClick = {
-                                sheetType = SheetType.TYPE
-                            },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "category",
-                        contentType = "dropDown"
-                    ) {
-                        CustomOutlinedButton(
-                            enabled = enabled,
-                            value = selectedCategory.categoryName,
-                            label = stringResource(id = R.string.category_field_label),
-                            placeHolder = stringResource(id = R.string.select_category_placeholder_label),
-                            leadingIcon = selectedCategory.icon,
-                            trailingIcon = Icons.Filled.Clear,
-                            onTrailingIconClick = {
-                                setSelectedCategory(
-                                    CategoryWithTransactionMetadata(
-                                        categoryId = 0,
-                                        categoryName = "",
-                                        icon = TablerIcons.Archive,
-                                        transactionCount = 0,
-                                        lastUsed = null
-                                    )
+                    RoundedCornerOutlinedTextField(
+                        value = name,
+                        onValueChange = setName,
+                        enabled = enabled,
+                        label = stringResource(id = R.string.template_name_field_label),
+                        placeHolder = stringResource(id = R.string.template_name_placeholder_label),
+                        icon = TablerIcons.Typography,
+                        iconDescription = "name icon",
+                        isError = !nameValid,
+                        errorHint = stringResource(id = nameErrorStringRes),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Done
+                        ),
+                        onDone = {
+                            keyboardController?.hide()
+                        },
+                    )
+                    RoundedCornerOutlinedTextField(
+                        value = title,
+                        onValueChange = setTitle,
+                        enabled = enabled,
+                        label = stringResource(id = R.string.title_field_label),
+                        placeHolder = stringResource(id = R.string.title_placeholder_label),
+                        icon = TablerIcons.LetterCase,
+                        iconDescription = "title icon",
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Done
+                        ),
+                        onDone = {
+                            keyboardController?.hide()
+                        },
+                    )
+                    RoundedCornerOutlinedTextField(
+                        value = description,
+                        onValueChange = setDescription,
+                        enabled = enabled,
+                        label = stringResource(id = R.string.description_field_label),
+                        placeHolder = stringResource(id = R.string.description_placeholder_label),
+                        icon = TablerIcons.FileText,
+                        iconDescription = "description icon",
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Done
+                        ),
+                        onDone = {
+                            keyboardController?.hide()
+                        },
+                    )
+                    RoundedCornerOutlinedTextField(
+                        value = amount,
+                        onValueChange = setAmount,
+                        enabled = enabled,
+                        label = stringResource(id = R.string.amount_label),
+                        placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
+                        icon = TablerIcons.CashBanknote,
+                        iconDescription = "amount icon",
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.None,
+                            autoCorrectEnabled = false,
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        onDone = {
+                            keyboardController?.hide()
+                        },
+                    )
+                    CustomOutlinedButton(
+                        enabled = enabled,
+                        value = stringResource(id = transactionType.label),
+                        label = stringResource(id = R.string.transaction_type_field_label),
+                        placeHolder = "",
+                        leadingIcon = transactionType.icon,
+                        onClick = {
+                            sheetType = SheetType.TYPE
+                        },
+                    )
+                    CustomOutlinedButton(
+                        enabled = enabled,
+                        value = selectedCategory.categoryName,
+                        label = stringResource(id = R.string.category_field_label),
+                        placeHolder = stringResource(id = R.string.select_category_placeholder_label),
+                        leadingIcon = selectedCategory.icon,
+                        trailingIcon = Icons.Filled.Clear,
+                        onTrailingIconClick = {
+                            setSelectedCategory(
+                                CategoryWithTransactionMetadata(
+                                    categoryId = 0,
+                                    categoryName = "",
+                                    icon = TablerIcons.Archive,
+                                    transactionCount = 0,
+                                    lastUsed = null
                                 )
-                            },
-                            onClick = {
-                                sheetType = SheetType.CATEGORY
-                            },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "counterParty",
-                        contentType = "dropDown"
-                    ) {
-                        CustomOutlinedButton(
-                            enabled = enabled,
-                            value = selectedCounterParty.counterPartyName,
-                            label = stringResource(id = R.string.counter_party_field_label),
-                            placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                            leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                            trailingIcon = Icons.Filled.Clear,
-                            onTrailingIconClick = {
-                                setSelectedCounterParty(
-                                    CounterPartyWithTransactionMetadata(
-                                        counterPartyId = 0,
-                                        counterPartyName = "",
-                                        transactionCount = 0,
-                                        lastUsed = null
-                                    )
+                            )
+                        },
+                        onClick = {
+                            sheetType = SheetType.CATEGORY
+                        },
+                    )
+                    CustomOutlinedButton(
+                        enabled = enabled,
+                        value = selectedCounterParty.counterPartyName,
+                        label = stringResource(id = R.string.counter_party_field_label),
+                        placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
+                        leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
+                        trailingIcon = Icons.Filled.Clear,
+                        onTrailingIconClick = {
+                            setSelectedCounterParty(
+                                CounterPartyWithTransactionMetadata(
+                                    counterPartyId = 0,
+                                    counterPartyName = "",
+                                    transactionCount = 0,
+                                    lastUsed = null
                                 )
-                            },
-                            onClick = {
-                                sheetType = SheetType.COUNTERPARTY
-                            },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "method",
-                        contentType = "dropDown"
-                    ) {
-                        CustomOutlinedButton(
-                            enabled = enabled,
-                            value = selectedMethod.methodName,
-                            label = stringResource(id = R.string.method_field_label),
-                            placeHolder = stringResource(id = R.string.select_method_placeholder_label),
-                            leadingIcon = Constants.DEFAULT_METHOD_ICON,
-                            trailingIcon = Icons.Filled.Clear,
-                            onTrailingIconClick = {
-                                setSelectedMethod(
-                                    MethodWithTransactionMetadata(
-                                        methodId = 0,
-                                        methodName = "",
-                                        transactionCount = 0,
-                                        lastUsed = null
-                                    )
+                            )
+                        },
+                        onClick = {
+                            sheetType = SheetType.COUNTERPARTY
+                        },
+                    )
+                    CustomOutlinedButton(
+                        enabled = enabled,
+                        value = selectedMethod.methodName,
+                        label = stringResource(id = R.string.method_field_label),
+                        placeHolder = stringResource(id = R.string.select_method_placeholder_label),
+                        leadingIcon = Constants.DEFAULT_METHOD_ICON,
+                        trailingIcon = Icons.Filled.Clear,
+                        onTrailingIconClick = {
+                            setSelectedMethod(
+                                MethodWithTransactionMetadata(
+                                    methodId = 0,
+                                    methodName = "",
+                                    transactionCount = 0,
+                                    lastUsed = null
                                 )
-                            },
-                            onClick = {
-                                sheetType = SheetType.METHOD
-                            },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
-                    item(
-                        key = "account",
-                        contentType = "dropDown"
-                    ) {
-                        CustomOutlinedButton(
-                            enabled = enabled,
-                            value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
-                            label = stringResource(id = R.string.account_field_label),
-                            placeHolder = stringResource(id = R.string.select_account_placeholder_label),
-                            leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
-                            trailingIcon = Icons.Filled.Clear,
-                            onTrailingIconClick = {
-                                setSelectedAccount(
-                                    AccountWithTransactionMetadata(
-                                        accountId = 0,
-                                        accountName = "",
-                                        balance = 0.0,
-                                        currency = "INR",
-                                        formattedBalance = "",
-                                        transactionCount = 0,
-                                        lastUsed = null
-                                    )
+                            )
+                        },
+                        onClick = {
+                            sheetType = SheetType.METHOD
+                        },
+                    )
+                    CustomOutlinedButton(
+                        enabled = enabled,
+                        value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
+                        label = stringResource(id = R.string.account_field_label),
+                        placeHolder = stringResource(id = R.string.select_account_placeholder_label),
+                        leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
+                        trailingIcon = Icons.Filled.Clear,
+                        onTrailingIconClick = {
+                            setSelectedAccount(
+                                AccountWithTransactionMetadata(
+                                    accountId = 0,
+                                    accountName = "",
+                                    balance = 0.0,
+                                    currency = "INR",
+                                    formattedBalance = "",
+                                    transactionCount = 0,
+                                    lastUsed = null
                                 )
-                            },
-                            onClick = {
-                                sheetType = SheetType.ACCOUNT
-                            },
-                            modifier = Modifier.animateItem()
-                        )
-                    }
+                            )
+                        },
+                        onClick = {
+                            sheetType = SheetType.ACCOUNT
+                        },
+                    )
                 }
             }
         )
@@ -803,233 +754,182 @@ fun UpsertTransactionTemplateScreen(
                 )
             }
         ) {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 10.dp, end = 10.dp, top = 10.dp),
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp)
+                    .verticalScroll(
+                        rememberScrollState()
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                item(
-                    key = "name",
-                    contentType = "type-enabled"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = name,
-                        onValueChange = setName,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.template_name_field_label),
-                        placeHolder = stringResource(id = R.string.template_name_placeholder_label),
-                        icon = TablerIcons.Typography,
-                        iconDescription = "name icon",
-                        isError = !nameValid,
-                        errorHint = stringResource(id = nameErrorStringRes),
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Words,
-                            imeAction = ImeAction.Done
-                        ),
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "title",
-                    contentType = "type-enabled"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = title,
-                        onValueChange = setTitle,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.title_field_label),
-                        placeHolder = stringResource(id = R.string.title_placeholder_label),
-                        icon = TablerIcons.LetterCase,
-                        iconDescription = "title icon",
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Words,
-                            imeAction = ImeAction.Done
-                        ),
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "description",
-                    contentType = "type-enabled"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = description,
-                        onValueChange = setDescription,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.description_field_label),
-                        placeHolder = stringResource(id = R.string.description_placeholder_label),
-                        icon = TablerIcons.FileText,
-                        iconDescription = "description icon",
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Sentences,
-                            imeAction = ImeAction.Done
-                        ),
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "amount",
-                    contentType = "type-enabled"
-                ) {
-                    RoundedCornerOutlinedTextField(
-                        value = amount,
-                        onValueChange = setAmount,
-                        enabled = enabled,
-                        label = stringResource(id = R.string.amount_label),
-                        placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
-                        icon = TablerIcons.CashBanknote,
-                        iconDescription = "amount icon",
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrectEnabled = false,
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        onDone = {
-                            keyboardController?.hide()
-                        },
-                        boxModifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "transactionType",
-                    contentType = "dropDown"
-                ) {
-                    CustomOutlinedButton(
-                        enabled = enabled,
-                        value = stringResource(id = transactionType.label),
-                        label = stringResource(id = R.string.transaction_type_field_label),
-                        placeHolder = "",
-                        leadingIcon = transactionType.icon,
-                        onClick = {
-                            sheetType = SheetType.TYPE
-                        },
-                        modifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "category",
-                    contentType = "dropDown"
-                ) {
-                    CustomOutlinedButton(
-                        enabled = enabled,
-                        value = selectedCategory.categoryName,
-                        label = stringResource(id = R.string.category_field_label),
-                        placeHolder = stringResource(id = R.string.select_category_placeholder_label),
-                        leadingIcon = selectedCategory.icon,
-                        trailingIcon = Icons.Filled.Clear,
-                        onTrailingIconClick = {
-                            setSelectedCategory(
-                                CategoryWithTransactionMetadata(
-                                    categoryId = 0,
-                                    categoryName = "",
-                                    icon = TablerIcons.Archive,
-                                    transactionCount = 0,
-                                    lastUsed = null
-                                )
+                RoundedCornerOutlinedTextField(
+                    value = name,
+                    onValueChange = setName,
+                    enabled = enabled,
+                    label = stringResource(id = R.string.template_name_field_label),
+                    placeHolder = stringResource(id = R.string.template_name_placeholder_label),
+                    icon = TablerIcons.Typography,
+                    iconDescription = "name icon",
+                    isError = !nameValid,
+                    errorHint = stringResource(id = nameErrorStringRes),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
+                    onDone = {
+                        keyboardController?.hide()
+                    },
+                )
+                RoundedCornerOutlinedTextField(
+                    value = title,
+                    onValueChange = setTitle,
+                    enabled = enabled,
+                    label = stringResource(id = R.string.title_field_label),
+                    placeHolder = stringResource(id = R.string.title_placeholder_label),
+                    icon = TablerIcons.LetterCase,
+                    iconDescription = "title icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Done
+                    ),
+                    onDone = {
+                        keyboardController?.hide()
+                    },
+                )
+                RoundedCornerOutlinedTextField(
+                    value = description,
+                    onValueChange = setDescription,
+                    enabled = enabled,
+                    label = stringResource(id = R.string.description_field_label),
+                    placeHolder = stringResource(id = R.string.description_placeholder_label),
+                    icon = TablerIcons.FileText,
+                    iconDescription = "description icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done
+                    ),
+                    onDone = {
+                        keyboardController?.hide()
+                    },
+                )
+                RoundedCornerOutlinedTextField(
+                    value = amount,
+                    onValueChange = setAmount,
+                    enabled = enabled,
+                    label = stringResource(id = R.string.amount_label),
+                    placeHolder = stringResource(id = R.string.transaction_amount_placeholder_label),
+                    icon = TablerIcons.CashBanknote,
+                    iconDescription = "amount icon",
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false,
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    onDone = {
+                        keyboardController?.hide()
+                    },
+                )
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = stringResource(id = transactionType.label),
+                    label = stringResource(id = R.string.transaction_type_field_label),
+                    placeHolder = "",
+                    leadingIcon = transactionType.icon,
+                    onClick = {
+                        sheetType = SheetType.TYPE
+                    },
+                )
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = selectedCategory.categoryName,
+                    label = stringResource(id = R.string.category_field_label),
+                    placeHolder = stringResource(id = R.string.select_category_placeholder_label),
+                    leadingIcon = selectedCategory.icon,
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        setSelectedCategory(
+                            CategoryWithTransactionMetadata(
+                                categoryId = 0,
+                                categoryName = "",
+                                icon = TablerIcons.Archive,
+                                transactionCount = 0,
+                                lastUsed = null
                             )
-                        },
-                        onClick = {
-                            sheetType = SheetType.CATEGORY
-                        },
-                        modifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "counterParty",
-                    contentType = "dropDown"
-                ) {
-                    CustomOutlinedButton(
-                        enabled = enabled,
-                        value = selectedCounterParty.counterPartyName,
-                        label = stringResource(id = R.string.counter_party_field_label),
-                        placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
-                        leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                        trailingIcon = Icons.Filled.Clear,
-                        onTrailingIconClick = {
-                            setSelectedCounterParty(
-                                CounterPartyWithTransactionMetadata(
-                                    counterPartyId = 0,
-                                    counterPartyName = "",
-                                    transactionCount = 0,
-                                    lastUsed = null
-                                )
+                        )
+                    },
+                    onClick = {
+                        sheetType = SheetType.CATEGORY
+                    },
+                )
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = selectedCounterParty.counterPartyName,
+                    label = stringResource(id = R.string.counter_party_field_label),
+                    placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
+                    leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        setSelectedCounterParty(
+                            CounterPartyWithTransactionMetadata(
+                                counterPartyId = 0,
+                                counterPartyName = "",
+                                transactionCount = 0,
+                                lastUsed = null
                             )
-                        },
-                        onClick = {
-                            sheetType = SheetType.COUNTERPARTY
-                        },
-                        modifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "method",
-                    contentType = "dropDown"
-                ) {
-                    CustomOutlinedButton(
-                        enabled = enabled,
-                        value = selectedMethod.methodName,
-                        label = stringResource(id = R.string.method_field_label),
-                        placeHolder = stringResource(id = R.string.select_method_placeholder_label),
-                        leadingIcon = Constants.DEFAULT_METHOD_ICON,
-                        trailingIcon = Icons.Filled.Clear,
-                        onTrailingIconClick = {
-                            setSelectedMethod(
-                                MethodWithTransactionMetadata(
-                                    methodId = 0,
-                                    methodName = "",
-                                    transactionCount = 0,
-                                    lastUsed = null
-                                )
+                        )
+                    },
+                    onClick = {
+                        sheetType = SheetType.COUNTERPARTY
+                    },
+                )
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = selectedMethod.methodName,
+                    label = stringResource(id = R.string.method_field_label),
+                    placeHolder = stringResource(id = R.string.select_method_placeholder_label),
+                    leadingIcon = Constants.DEFAULT_METHOD_ICON,
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        setSelectedMethod(
+                            MethodWithTransactionMetadata(
+                                methodId = 0,
+                                methodName = "",
+                                transactionCount = 0,
+                                lastUsed = null
                             )
-                        },
-                        onClick = {
-                            sheetType = SheetType.METHOD
-                        },
-                        modifier = Modifier.animateItem()
-                    )
-                }
-                item(
-                    key = "account",
-                    contentType = "dropDown"
-                ) {
-                    CustomOutlinedButton(
-                        enabled = enabled,
-                        value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
-                        label = stringResource(id = R.string.account_field_label),
-                        placeHolder = stringResource(id = R.string.select_account_placeholder_label),
-                        leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
-                        trailingIcon = Icons.Filled.Clear,
-                        onTrailingIconClick = {
-                            setSelectedAccount(
-                                AccountWithTransactionMetadata(
-                                    accountId = 0,
-                                    accountName = "",
-                                    balance = 0.0,
-                                    currency = "INR",
-                                    formattedBalance = "",
-                                    transactionCount = 0,
-                                    lastUsed = null
-                                )
+                        )
+                    },
+                    onClick = {
+                        sheetType = SheetType.METHOD
+                    },
+                )
+                CustomOutlinedButton(
+                    enabled = enabled,
+                    value = if (selectedAccount.accountId > 0) "${selectedAccount.accountName} - ${selectedAccount.formattedBalance}" else "",
+                    label = stringResource(id = R.string.account_field_label),
+                    placeHolder = stringResource(id = R.string.select_account_placeholder_label),
+                    leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
+                    trailingIcon = Icons.Filled.Clear,
+                    onTrailingIconClick = {
+                        setSelectedAccount(
+                            AccountWithTransactionMetadata(
+                                accountId = 0,
+                                accountName = "",
+                                balance = 0.0,
+                                currency = "INR",
+                                formattedBalance = "",
+                                transactionCount = 0,
+                                lastUsed = null
                             )
-                        },
-                        onClick = {
-                            sheetType = SheetType.ACCOUNT
-                        },
-                        modifier = Modifier.animateItem()
-                    )
-                }
+                        )
+                    },
+                    onClick = {
+                        sheetType = SheetType.ACCOUNT
+                    },
+                )
             }
         }
     }
