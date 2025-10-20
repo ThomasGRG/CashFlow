@@ -37,6 +37,7 @@ import compose.icons.tablericons.DatabaseExport
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -57,17 +58,9 @@ fun ExportTransactionsScreenBottomAppBar(
     selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterByMethodClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCalendarClick: () -> Unit,
-    exportTransactions: () -> Unit,
     onSearchClick: () -> Unit,
     onToggleSelectClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -106,7 +99,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -123,7 +116,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -137,7 +130,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCurrencyClick()
+                    setSheetType(SheetType.CURRENCY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -154,7 +147,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -172,7 +165,7 @@ fun ExportTransactionsScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
@@ -190,7 +183,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByMethodClick()
+                    setSheetType(SheetType.METHOD)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -207,7 +200,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -247,7 +240,7 @@ fun ExportTransactionsScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
                     modifier = Modifier
@@ -268,7 +261,7 @@ fun ExportTransactionsScreenBottomAppBar(
                     CustomFloatingActionButton(
                         onClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            exportTransactions()
+                            setSheetType(SheetType.EXPORT)
                         },
                         enabled = exportEnabled
                     ) {
@@ -325,16 +318,8 @@ fun ExportTransactionsScreenBottomAppBar(
     selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterByMethodClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCalendarClick: () -> Unit,
-    exportTransactions: () -> Unit,
     onToggleSelectClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -373,7 +358,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -390,7 +375,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -404,7 +389,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCurrencyClick()
+                    setSheetType(SheetType.CURRENCY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -421,7 +406,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -439,7 +424,7 @@ fun ExportTransactionsScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
@@ -457,7 +442,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByMethodClick()
+                    setSheetType(SheetType.METHOD)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -474,7 +459,7 @@ fun ExportTransactionsScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -531,7 +516,7 @@ fun ExportTransactionsScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
                 ) {
@@ -552,7 +537,7 @@ fun ExportTransactionsScreenBottomAppBar(
                 CustomFloatingActionButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        exportTransactions()
+                        setSheetType(SheetType.EXPORT)
                     },
                     enabled = exportEnabled,
                 ) {

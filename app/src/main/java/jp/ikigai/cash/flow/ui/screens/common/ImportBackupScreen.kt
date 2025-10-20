@@ -761,20 +761,8 @@ fun ImportBackupScreen(
                                 setSortDirection(SortDirection.DESC)
                             }
                         },
-                        onFilterByAmountClick = {
-                            sheetType = SheetType.AMOUNT
-                        },
-                        onFilterByTypeClick = {
-                            sheetType = SheetType.TYPE
-                        },
-                        onFilterByCurrencyClick = {
-                            sheetType = SheetType.CURRENCY
-                        },
                         onToggleSelectClick = {
                             toggleSelection(allSelected)
-                        },
-                        onCalendarClick = {
-                            sheetType = SheetType.DATE_RANGE
                         },
                         actionButtonClick = {
                             if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
@@ -782,7 +770,10 @@ fun ImportBackupScreen(
                             } else {
                                 importFilePicker.launch("application/json")
                             }
-                        }
+                        },
+                        setSheetType = {
+                            sheetType = it
+                        },
                     )
                 }
             },
@@ -1140,15 +1131,6 @@ fun ImportBackupScreen(
                             setSortDirection(SortDirection.DESC)
                         }
                     },
-                    onFilterByAmountClick = {
-                        sheetType = SheetType.AMOUNT
-                    },
-                    onFilterByTypeClick = {
-                        sheetType = SheetType.TYPE
-                    },
-                    onFilterByCurrencyClick = {
-                        sheetType = SheetType.CURRENCY
-                    },
                     onSearchClick = {
                         if (isFocused) {
                             keyboardController?.show()
@@ -1159,16 +1141,16 @@ fun ImportBackupScreen(
                     onToggleSelectClick = {
                         toggleSelection(allSelected)
                     },
-                    onCalendarClick = {
-                        sheetType = SheetType.DATE_RANGE
-                    },
                     actionButtonClick = {
                         if (dataLoadComplete && selectedTransactionsCount.isNotEmpty()) {
                             sheetType = SheetType.REVIEW
                         } else {
                             importFilePicker.launch("application/json")
                         }
-                    }
+                    },
+                    setSheetType = {
+                        sheetType = it
+                    },
                 )
             }
         ) {

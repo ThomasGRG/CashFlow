@@ -545,34 +545,10 @@ fun ExportTransactionsScreen(
                                 setSortDirection(SortDirection.DESC)
                             }
                         },
-                        onFilterByAmountClick = {
-                            sheetType = SheetType.AMOUNT
-                        },
-                        onFilterByTypeClick = {
-                            sheetType = SheetType.TYPE
-                        },
-                        onFilterByCurrencyClick = {
-                            sheetType = SheetType.CURRENCY
-                        },
-                        onFilterByCategoryClick = {
-                            sheetType = SheetType.CATEGORY
-                        },
-                        onFilterByCounterPartyClick = {
-                            sheetType = SheetType.COUNTERPARTY
-                        },
-                        onFilterByMethodClick = {
-                            sheetType = SheetType.METHOD
-                        },
-                        onFilterBySourceClick = {
-                            sheetType = SheetType.ACCOUNT
-                        },
-                        onCalendarClick = {
-                            sheetType = SheetType.DATE_RANGE
-                        },
-                        exportTransactions = {
-                            sheetType = SheetType.EXPORT
-                        },
-                        onToggleSelectClick = toggleSelection
+                        onToggleSelectClick = toggleSelection,
+                        setSheetType = {
+                            sheetType = it
+                        }
                     )
                 }
             },
@@ -813,33 +789,6 @@ fun ExportTransactionsScreen(
                             setSortDirection(SortDirection.DESC)
                         }
                     },
-                    onFilterByAmountClick = {
-                        sheetType = SheetType.AMOUNT
-                    },
-                    onFilterByTypeClick = {
-                        sheetType = SheetType.TYPE
-                    },
-                    onFilterByCurrencyClick = {
-                        sheetType = SheetType.CURRENCY
-                    },
-                    onFilterByCategoryClick = {
-                        sheetType = SheetType.CATEGORY
-                    },
-                    onFilterByCounterPartyClick = {
-                        sheetType = SheetType.COUNTERPARTY
-                    },
-                    onFilterByMethodClick = {
-                        sheetType = SheetType.METHOD
-                    },
-                    onFilterBySourceClick = {
-                        sheetType = SheetType.ACCOUNT
-                    },
-                    onCalendarClick = {
-                        sheetType = SheetType.DATE_RANGE
-                    },
-                    exportTransactions = {
-                        sheetType = SheetType.EXPORT
-                    },
                     onSearchClick = {
                         if (isFocused) {
                             keyboardController?.show()
@@ -847,7 +796,10 @@ fun ExportTransactionsScreen(
                             focusRequester.requestFocus()
                         }
                     },
-                    onToggleSelectClick = toggleSelection
+                    onToggleSelectClick = toggleSelection,
+                    setSheetType = {
+                        sheetType = it
+                    },
                 )
             }
         ) {

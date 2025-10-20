@@ -49,6 +49,7 @@ import compose.icons.tablericons.FileImport
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -68,13 +69,10 @@ fun ImportBackupScreenBottomAppBar(
     selectedCurrencyCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onCalendarClick: () -> Unit,
     onToggleSelectClick: () -> Unit,
-    actionButtonClick: () -> Unit
+    actionButtonClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -118,7 +116,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByTypeClick()
+                        setSheetType(SheetType.TYPE)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -135,7 +133,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByAmountClick()
+                        setSheetType(SheetType.AMOUNT)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -149,7 +147,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCurrencyClick()
+                        setSheetType(SheetType.CURRENCY)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -199,7 +197,7 @@ fun ImportBackupScreenBottomAppBar(
                         IconButton(
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onCalendarClick()
+                                setSheetType(SheetType.DATE_RANGE)
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -346,12 +344,9 @@ fun ImportBackupScreenBottomAppBar(
     selectedCurrencyCount: String,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
-    onCalendarClick: () -> Unit,
     onToggleSelectClick: () -> Unit,
-    actionButtonClick: () -> Unit
+    actionButtonClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -395,7 +390,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByTypeClick()
+                        setSheetType(SheetType.TYPE)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -412,7 +407,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByAmountClick()
+                        setSheetType(SheetType.AMOUNT)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -426,7 +421,7 @@ fun ImportBackupScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCurrencyClick()
+                        setSheetType(SheetType.CURRENCY)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small,
@@ -517,7 +512,7 @@ fun ImportBackupScreenBottomAppBar(
                         IconButton(
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onCalendarClick()
+                                setSheetType(SheetType.DATE_RANGE)
                             },
                             enabled = enabled
                         ) {
@@ -634,13 +629,10 @@ fun ImportBackupScreenBottomAppBarPreview() {
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",
             onSortClick = {},
-            onFilterByAmountClick = {},
-            onFilterByTypeClick = {},
-            onFilterByCurrencyClick = {},
             onSearchClick = {},
-            onCalendarClick = {},
             onToggleSelectClick = {},
-            actionButtonClick = {}
+            actionButtonClick = {},
+            setSheetType = {},
         )
         ImportBackupScreenBottomAppBar(
             enabled = false,
@@ -655,13 +647,10 @@ fun ImportBackupScreenBottomAppBarPreview() {
             selectedTransactionTypeCount = 2,
             filterAmount = "3000+",
             onSortClick = {},
-            onFilterByAmountClick = {},
-            onFilterByTypeClick = {},
-            onFilterByCurrencyClick = {},
             onSearchClick = {},
-            onCalendarClick = {},
             onToggleSelectClick = {},
-            actionButtonClick = {}
+            actionButtonClick = {},
+            setSheetType = {},
         )
     }
 }

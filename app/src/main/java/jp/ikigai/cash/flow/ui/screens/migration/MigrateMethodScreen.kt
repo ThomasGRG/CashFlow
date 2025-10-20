@@ -480,31 +480,10 @@ fun MigrateMethodScreen(
                                 setSortDirection(SortDirection.DESC)
                             }
                         },
-                        onFilterByAmountClick = {
-                            sheetType = SheetType.AMOUNT
+                        onToggleSelectClick = toggleSelection,
+                        setSheetType = {
+                            sheetType = it
                         },
-                        onFilterByTypeClick = {
-                            sheetType = SheetType.TYPE
-                        },
-                        onFilterByCurrencyClick = {
-                            sheetType = SheetType.CURRENCY
-                        },
-                        onFilterByCategoryClick = {
-                            sheetType = SheetType.CATEGORY
-                        },
-                        onFilterByCounterPartyClick = {
-                            sheetType = SheetType.COUNTERPARTY
-                        },
-                        onFilterBySourceClick = {
-                            sheetType = SheetType.ACCOUNT
-                        },
-                        onCalendarClick = {
-                            sheetType = SheetType.DATE_RANGE
-                        },
-                        migrateTransactions = {
-                            sheetType = SheetType.METHOD
-                        },
-                        onToggleSelectClick = toggleSelection
                     )
                 }
             },
@@ -725,30 +704,6 @@ fun MigrateMethodScreen(
                             setSortDirection(SortDirection.DESC)
                         }
                     },
-                    onFilterByAmountClick = {
-                        sheetType = SheetType.AMOUNT
-                    },
-                    onFilterByTypeClick = {
-                        sheetType = SheetType.TYPE
-                    },
-                    onFilterByCurrencyClick = {
-                        sheetType = SheetType.CURRENCY
-                    },
-                    onFilterByCategoryClick = {
-                        sheetType = SheetType.CATEGORY
-                    },
-                    onFilterByCounterPartyClick = {
-                        sheetType = SheetType.COUNTERPARTY
-                    },
-                    onFilterBySourceClick = {
-                        sheetType = SheetType.ACCOUNT
-                    },
-                    onCalendarClick = {
-                        sheetType = SheetType.DATE_RANGE
-                    },
-                    migrateTransactions = {
-                        sheetType = SheetType.METHOD
-                    },
                     onSearchClick = {
                         if (isFocused) {
                             keyboardController?.show()
@@ -756,7 +711,10 @@ fun MigrateMethodScreen(
                             focusRequester.requestFocus()
                         }
                     },
-                    onToggleSelectClick = toggleSelection
+                    onToggleSelectClick = toggleSelection,
+                    setSheetType = {
+                        sheetType = it
+                    },
                 )
             }
         ) {

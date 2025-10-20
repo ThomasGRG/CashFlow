@@ -38,6 +38,7 @@ import compose.icons.tablericons.Replace
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.common.AnimatedToggleSelectIcon
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
@@ -57,16 +58,9 @@ fun MigrateMethodScreenBottomAppBar(
     counterPartyFilterVisible: Boolean,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCalendarClick: () -> Unit,
-    migrateTransactions: () -> Unit,
     onSearchClick: () -> Unit,
     onToggleSelectClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -105,7 +99,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -122,7 +116,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -136,7 +130,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCurrencyClick()
+                    setSheetType(SheetType.CURRENCY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -153,7 +147,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -171,7 +165,7 @@ fun MigrateMethodScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
@@ -189,7 +183,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -229,7 +223,7 @@ fun MigrateMethodScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
                     modifier = Modifier
@@ -250,7 +244,7 @@ fun MigrateMethodScreenBottomAppBar(
                     CustomFloatingActionButton(
                         onClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            migrateTransactions()
+                            setSheetType(SheetType.METHOD)
                         },
                         enabled = migrateEnabled
                     ) {
@@ -306,15 +300,8 @@ fun MigrateMethodScreenBottomAppBar(
     counterPartyFilterVisible: Boolean,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCurrencyClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCalendarClick: () -> Unit,
-    migrateTransactions: () -> Unit,
     onToggleSelectClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -353,7 +340,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -370,7 +357,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -384,7 +371,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCurrencyClick()
+                    setSheetType(SheetType.CURRENCY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -401,7 +388,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -419,7 +406,7 @@ fun MigrateMethodScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     enabled = enabled,
                     contentPadding = PaddingValues(0.dp),
@@ -437,7 +424,7 @@ fun MigrateMethodScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 enabled = enabled,
                 contentPadding = PaddingValues(0.dp),
@@ -494,7 +481,7 @@ fun MigrateMethodScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
                 ) {
@@ -515,7 +502,7 @@ fun MigrateMethodScreenBottomAppBar(
                 CustomFloatingActionButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        migrateTransactions()
+                        setSheetType(SheetType.METHOD)
                     },
                     enabled = migrateEnabled,
                 ) {
@@ -550,16 +537,9 @@ fun MigrateMethodScreenBottomAppBarPreview() {
             counterPartyFilterVisible = true,
             selectedTransactionTypeCount = 2,
             onSortClick = {},
-            onFilterByAmountClick = {},
-            onFilterByTypeClick = {},
-            onFilterByCurrencyClick = {},
-            onFilterByCategoryClick = {},
-            onFilterByCounterPartyClick = {},
-            onFilterBySourceClick = {},
-            onCalendarClick = {},
-            migrateTransactions = {},
             onSearchClick = {},
             onToggleSelectClick = {},
+            setSheetType = {},
         )
         MigrateMethodScreenBottomAppBar(
             navigateBack = {},
@@ -575,16 +555,9 @@ fun MigrateMethodScreenBottomAppBarPreview() {
             counterPartyFilterVisible = true,
             selectedTransactionTypeCount = 2,
             onSortClick = {},
-            onFilterByAmountClick = {},
-            onFilterByTypeClick = {},
-            onFilterByCurrencyClick = {},
-            onFilterByCategoryClick = {},
-            onFilterByCounterPartyClick = {},
-            onFilterBySourceClick = {},
-            onCalendarClick = {},
-            migrateTransactions = {},
             onSearchClick = {},
             onToggleSelectClick = {},
+            setSheetType = {},
         )
     }
 }

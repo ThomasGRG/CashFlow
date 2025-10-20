@@ -45,6 +45,7 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 
 @Composable
@@ -59,18 +60,9 @@ fun TransactionScreenBottomAppBar(
     counterPartyFilterVisible: Boolean,
     selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
-    onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterByMethodClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCurrencyClick: () -> Unit,
-    onCalendarClick: () -> Unit,
     addTransaction: () -> Unit,
     onSearchClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -101,7 +93,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSortClick()
+                    setSheetType(SheetType.SORT)
                 },
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 shape = MaterialTheme.shapes.small
@@ -118,7 +110,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -134,7 +126,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -147,7 +139,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -164,7 +156,7 @@ fun TransactionScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small
@@ -181,7 +173,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByMethodClick()
+                    setSheetType(SheetType.METHOD)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -197,7 +189,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -222,7 +214,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCurrencyClick()
+                        setSheetType(SheetType.CURRENCY)
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -233,7 +225,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -276,7 +268,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onMoreClick()
+                        setSheetType(SheetType.MORE_OPTIONS)
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -303,17 +295,8 @@ fun TransactionScreenBottomAppBar(
     counterPartyFilterVisible: Boolean,
     selectedMethodCount: String,
     selectedTransactionTypeCount: Int,
-    onSortClick: () -> Unit,
-    onFilterByAmountClick: () -> Unit,
-    onFilterByTypeClick: () -> Unit,
-    onFilterByCategoryClick: () -> Unit,
-    onFilterByCounterPartyClick: () -> Unit,
-    onFilterByMethodClick: () -> Unit,
-    onFilterBySourceClick: () -> Unit,
-    onCurrencyClick: () -> Unit,
-    onCalendarClick: () -> Unit,
     addTransaction: () -> Unit,
-    onMoreClick: () -> Unit,
+    setSheetType: (SheetType) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
@@ -344,7 +327,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSortClick()
+                    setSheetType(SheetType.SORT)
                 },
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                 shape = MaterialTheme.shapes.small
@@ -361,7 +344,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByTypeClick()
+                    setSheetType(SheetType.TYPE)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -377,7 +360,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByAmountClick()
+                    setSheetType(SheetType.AMOUNT)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -390,7 +373,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByCategoryClick()
+                    setSheetType(SheetType.CATEGORY)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -407,7 +390,7 @@ fun TransactionScreenBottomAppBar(
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onFilterByCounterPartyClick()
+                        setSheetType(SheetType.COUNTERPARTY)
                     },
                     contentPadding = PaddingValues(0.dp),
                     shape = MaterialTheme.shapes.small
@@ -424,7 +407,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterByMethodClick()
+                    setSheetType(SheetType.METHOD)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -440,7 +423,7 @@ fun TransactionScreenBottomAppBar(
             FilledTonalButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFilterBySourceClick()
+                    setSheetType(SheetType.ACCOUNT)
                 },
                 contentPadding = PaddingValues(0.dp),
                 shape = MaterialTheme.shapes.small
@@ -485,7 +468,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onMoreClick()
+                        setSheetType(SheetType.MORE_OPTIONS)
                     },
                 ) {
                     Icon(
@@ -496,7 +479,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
+                        setSheetType(SheetType.DATE_RANGE)
                     },
                 ) {
                     Icon(
@@ -507,7 +490,7 @@ fun TransactionScreenBottomAppBar(
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCurrencyClick()
+                        setSheetType(SheetType.CURRENCY)
                     },
                 ) {
                     Text(
@@ -545,17 +528,8 @@ fun TransactionScreenBottomAppBarPreview() {
         selectedCounterPartyCount = "1",
         selectedMethodCount = "1",
         selectedTransactionTypeCount = 2,
-        onSortClick = {},
-        onFilterByAmountClick = {},
-        onFilterByTypeClick = {},
-        onFilterByCategoryClick = {},
-        onFilterByCounterPartyClick = {},
-        onFilterByMethodClick = {},
-        onFilterBySourceClick = {},
-        onCurrencyClick = {},
-        onCalendarClick = {},
         addTransaction = {},
         onSearchClick = {},
-        onMoreClick = {},
+        setSheetType = {},
     )
 }

@@ -582,33 +582,6 @@ fun TransactionsScreen(
                         counterPartyFilterVisible = counterParties.isNotEmpty(),
                         selectedMethodCount = selectedMethodCount,
                         selectedTransactionTypeCount = selectedTransactionTypes.size,
-                        onSortClick = {
-                            sheetType = SheetType.SORT
-                        },
-                        onFilterByAmountClick = {
-                            sheetType = SheetType.AMOUNT
-                        },
-                        onFilterByTypeClick = {
-                            sheetType = SheetType.TYPE
-                        },
-                        onFilterByCategoryClick = {
-                            sheetType = SheetType.CATEGORY
-                        },
-                        onFilterByCounterPartyClick = {
-                            sheetType = SheetType.COUNTERPARTY
-                        },
-                        onFilterByMethodClick = {
-                            sheetType = SheetType.METHOD
-                        },
-                        onFilterBySourceClick = {
-                            sheetType = SheetType.ACCOUNT
-                        },
-                        onCurrencyClick = {
-                            sheetType = SheetType.CURRENCY
-                        },
-                        onCalendarClick = {
-                            sheetType = SheetType.DATE_RANGE
-                        },
                         addTransaction = {
                             if (canAddTransaction()) {
                                 if (templates.isEmpty()) {
@@ -618,9 +591,9 @@ fun TransactionsScreen(
                                 }
                             }
                         },
-                        onMoreClick = {
-                            sheetType = SheetType.MORE_OPTIONS
-                        }
+                        setSheetType = {
+                            sheetType = it
+                        },
                     )
                 }
             },
@@ -738,33 +711,6 @@ fun TransactionsScreen(
                     counterPartyFilterVisible = counterParties.isNotEmpty(),
                     selectedMethodCount = selectedMethodCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
-                    onSortClick = {
-                        sheetType = SheetType.SORT
-                    },
-                    onFilterByAmountClick = {
-                        sheetType = SheetType.AMOUNT
-                    },
-                    onFilterByTypeClick = {
-                        sheetType = SheetType.TYPE
-                    },
-                    onFilterByCategoryClick = {
-                        sheetType = SheetType.CATEGORY
-                    },
-                    onFilterByCounterPartyClick = {
-                        sheetType = SheetType.COUNTERPARTY
-                    },
-                    onFilterByMethodClick = {
-                        sheetType = SheetType.METHOD
-                    },
-                    onFilterBySourceClick = {
-                        sheetType = SheetType.ACCOUNT
-                    },
-                    onCurrencyClick = {
-                        sheetType = SheetType.CURRENCY
-                    },
-                    onCalendarClick = {
-                        sheetType = SheetType.DATE_RANGE
-                    },
                     addTransaction = {
                         if (canAddTransaction()) {
                             if (templates.isEmpty()) {
@@ -783,9 +729,9 @@ fun TransactionsScreen(
                             }
                         }
                     },
-                    onMoreClick = {
-                        sheetType = SheetType.MORE_OPTIONS
-                    }
+                    setSheetType = {
+                        sheetType = it
+                    },
                 )
             }
         ) { contentPadding ->
