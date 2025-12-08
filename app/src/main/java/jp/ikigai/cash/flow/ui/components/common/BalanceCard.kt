@@ -18,7 +18,9 @@ fun BalanceCard(
     balance: String,
 ) {
     ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp),
     ) {
         Row(
             modifier = Modifier

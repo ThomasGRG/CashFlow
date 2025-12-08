@@ -744,7 +744,7 @@ fun TransactionsScreen(
                     AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
                         SearchBox(
                             modifier = Modifier
-                                .padding(top = 5.dp, start = 10.dp, end = 10.dp, bottom = 10.dp),
+                                .padding(top = 5.dp, start = 10.dp, end = 10.dp),
                             searchText = searchText,
                             setSearchText = setSearchText,
                             focusRequester = focusRequester,
