@@ -113,7 +113,7 @@ fun ImportScreenSelectTransactionsContent(
             Text(
                 text = if (searchText.isNotBlank()) {
                     stringResource(
-                        id = R.string.choose_icon_screen_empty_placeholder_label,
+                        id = R.string.no_results_found_search_placeholder_label,
                         searchText
                     )
                 } else {
@@ -193,7 +193,7 @@ fun ImportScreenSelectTransactionsContent(
             Text(
                 text = if (searchText.isNotBlank()) {
                     stringResource(
-                        id = R.string.choose_icon_screen_empty_placeholder_label,
+                        id = R.string.no_results_found_search_placeholder_label,
                         searchText
                     )
                 } else {

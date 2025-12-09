@@ -166,7 +166,7 @@
     <!--  Filter Chip Strings  -->
 
     <!--  Empty Placeholder Strings  -->
-    <string name="choose_icon_screen_empty_placeholder_label">No results found for \"%1$s\"</string>
+    <string name="no_results_found_search_placeholder_label">No results found for \"%1$s\"</string>
     <string name="no_results_found_filters_placeholder_label">No results found for selected filters.</string>
     <string name="charts_screen_empty_placeholder_label">No data found.</string>
     <string name="audit_logs_screen_empty_placeholder_label">No logs found.</string>

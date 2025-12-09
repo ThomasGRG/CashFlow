@@ -145,7 +145,7 @@ fun CurrencySheet(
                 ) {
                     Text(
                         text = stringResource(
-                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            id = R.string.no_results_found_search_placeholder_label,
                             searchText
                         ),
                         color = MaterialTheme.colorScheme.onBackground,
@@ -316,7 +316,7 @@ fun FilterCurrencySheet(
                 ) {
                     Text(
                         text = stringResource(
-                            id = R.string.choose_icon_screen_empty_placeholder_label,
+                            id = R.string.no_results_found_search_placeholder_label,
                             searchText
                         ),
                         color = MaterialTheme.colorScheme.onBackground,

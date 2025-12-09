@@ -187,7 +187,7 @@ fun CategoryScreen(
             emptyPlaceholderText = if (count == 0L) {
                 stringResource(id = R.string.categories_screen_empty_placeholder_label)
             } else {
-                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+                stringResource(id = R.string.no_results_found_search_placeholder_label, searchText)
             },
             firstColContent = {
                 Column(
@@ -281,7 +281,7 @@ fun CategoryScreen(
             emptyPlaceholderText = if (count == 0L) {
                 stringResource(id = R.string.categories_screen_empty_placeholder_label)
             } else {
-                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+                stringResource(id = R.string.no_results_found_search_placeholder_label, searchText)
             },
             topBar = { scrollBehavior, expandedHeight ->
                 LargeTopAppBar(

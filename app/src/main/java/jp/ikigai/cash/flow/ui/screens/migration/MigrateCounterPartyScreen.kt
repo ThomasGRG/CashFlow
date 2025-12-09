@@ -313,7 +313,7 @@ fun MigrateCounterPartyScreen(
             },
             showEmptyPlaceholder = showEmptyPlaceholder,
             emptyPlaceholderText = if (searchText.isNotBlank()) {
-                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+                stringResource(id = R.string.no_results_found_search_placeholder_label, searchText)
             } else {
                 stringResource(id = R.string.no_results_found_filters_placeholder_label)
             },
@@ -537,7 +537,7 @@ fun MigrateCounterPartyScreen(
             },
             showEmptyPlaceholder = showEmptyPlaceholder,
             emptyPlaceholderText = if (searchText.isNotBlank()) {
-                stringResource(id = R.string.choose_icon_screen_empty_placeholder_label, searchText)
+                stringResource(id = R.string.no_results_found_search_placeholder_label, searchText)
             } else {
                 stringResource(id = R.string.no_results_found_filters_placeholder_label)
             },
