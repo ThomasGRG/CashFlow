@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import jp.ikigai.cash.flow.R
 
 sealed class Event(@StringRes val message: Int) {
+    data object InsufficientBalance : Event(R.string.not_enough_balance_error_label)
     data object InternalError : Event(R.string.internal_error_label)
     data object IOError : Event(R.string.io_error_label)
     data object ExportSuccess : Event(R.string.export_success_label)

@@ -691,6 +691,11 @@ class TransactionsScreenViewModel(
             )
             .executeAsOne()
 
+        if (transaction.transactionType == TransactionType.DEBIT && account.balance - transaction.transactionAmount < 0) {
+            _event.send(Event.InsufficientBalance)
+            return@launch
+        }
+
         val dateTime = if (setCurrentDateTime) {
             ZonedDateTime.now(ZoneId.systemDefault())
         } else {
