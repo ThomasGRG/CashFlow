@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CalendarEvent
@@ -43,18 +42,18 @@ import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 import jp.ikigai.cash.flow.ui.components.common.FilterContainer
 
 @Composable
-fun MigrateCategoryScreenBottomAppBar(
+fun MigrateScreenBottomAppBar(
     navigateBack: () -> Unit,
     enabled: Boolean,
     migrateEnabled: Boolean,
     allSelected: Boolean,
     sortDirection: SortDirection,
     filterAmount: String,
-    selectedCurrencyCount: String,
-    counterPartyFilterVisible: Boolean,
     selectedAccountCount: String,
-    selectedCounterPartyCount: String,
-    selectedMethodCount: String,
+    selectedCategoryCount: String?,
+    selectedCounterPartyCount: String?,
+    selectedCurrencyCount: String,
+    selectedMethodCount: String?,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onSearchClick: () -> Unit,
@@ -140,7 +139,26 @@ fun MigrateCategoryScreenBottomAppBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            if (counterPartyFilterVisible) {
+            if (selectedCategoryCount != null) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.CATEGORY)
+                    },
+                    enabled = enabled,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.category_filter_chip_label,
+                            selectedCategoryCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+            if (selectedCounterPartyCount != null) {
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -159,22 +177,24 @@ fun MigrateCategoryScreenBottomAppBar(
                     )
                 }
             }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    setSheetType(SheetType.METHOD)
-                },
-                enabled = enabled,
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.method_filter_chip_label,
-                        selectedMethodCount
-                    ),
-                    modifier = Modifier.padding(10.dp),
-                )
+            if (selectedMethodCount != null) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.METHOD)
+                    },
+                    enabled = enabled,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.method_filter_chip_label,
+                            selectedMethodCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
             }
             FilledTonalButton(
                 onClick = {
@@ -280,20 +300,20 @@ fun MigrateCategoryScreenBottomAppBar(
 }
 
 @Composable
-fun MigrateCategoryScreenBottomAppBar(
+fun MigrateScreenBottomAppBar(
+    navigateBack: () -> Unit,
     title: String,
     subTitle: String,
-    navigateBack: () -> Unit,
     enabled: Boolean,
     migrateEnabled: Boolean,
     allSelected: Boolean,
     sortDirection: SortDirection,
     filterAmount: String,
-    selectedCurrencyCount: String,
-    counterPartyFilterVisible: Boolean,
     selectedAccountCount: String,
-    selectedCounterPartyCount: String,
-    selectedMethodCount: String,
+    selectedCategoryCount: String?,
+    selectedCounterPartyCount: String?,
+    selectedCurrencyCount: String,
+    selectedMethodCount: String?,
     selectedTransactionTypeCount: Int,
     onSortClick: () -> Unit,
     onToggleSelectClick: () -> Unit,
@@ -375,7 +395,26 @@ fun MigrateCategoryScreenBottomAppBar(
                     modifier = Modifier.padding(10.dp),
                 )
             }
-            if (counterPartyFilterVisible) {
+            if (selectedCategoryCount != null) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.CATEGORY)
+                    },
+                    enabled = enabled,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.category_filter_chip_label,
+                            selectedCategoryCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
+            }
+            if (selectedCounterPartyCount != null) {
                 FilledTonalButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -394,22 +433,24 @@ fun MigrateCategoryScreenBottomAppBar(
                     )
                 }
             }
-            FilledTonalButton(
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    setSheetType(SheetType.METHOD)
-                },
-                enabled = enabled,
-                contentPadding = PaddingValues(0.dp),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text(
-                    text = stringResource(
-                        id = R.string.method_filter_chip_label,
-                        selectedMethodCount
-                    ),
-                    modifier = Modifier.padding(10.dp),
-                )
+            if (selectedMethodCount != null) {
+                FilledTonalButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.METHOD)
+                    },
+                    enabled = enabled,
+                    contentPadding = PaddingValues(0.dp),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.method_filter_chip_label,
+                            selectedMethodCount
+                        ),
+                        modifier = Modifier.padding(10.dp),
+                    )
+                }
             }
             FilledTonalButton(
                 onClick = {
@@ -503,51 +544,5 @@ fun MigrateCategoryScreenBottomAppBar(
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun MigrateCategoryScreenBottomAppBarPreview() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.background(MaterialTheme.colorScheme.background)
-    ) {
-        MigrateCategoryScreenBottomAppBar(
-            navigateBack = {},
-            enabled = true,
-            migrateEnabled = true,
-            allSelected = true,
-            sortDirection = SortDirection.DESC,
-            filterAmount = "3000+",
-            selectedCurrencyCount = "1",
-            counterPartyFilterVisible = true,
-            selectedAccountCount = "1",
-            selectedCounterPartyCount = "1",
-            selectedMethodCount = "1",
-            selectedTransactionTypeCount = 2,
-            onSortClick = {},
-            onSearchClick = {},
-            onToggleSelectClick = {},
-            setSheetType = {},
-        )
-        MigrateCategoryScreenBottomAppBar(
-            navigateBack = {},
-            enabled = false,
-            migrateEnabled = false,
-            allSelected = false,
-            sortDirection = SortDirection.DESC,
-            filterAmount = "3000+",
-            selectedCurrencyCount = "1",
-            counterPartyFilterVisible = true,
-            selectedAccountCount = "1",
-            selectedCounterPartyCount = "1",
-            selectedMethodCount = "1",
-            selectedTransactionTypeCount = 2,
-            onSortClick = {},
-            onSearchClick = {},
-            onToggleSelectClick = {},
-            setSheetType = {},
-        )
     }
 }

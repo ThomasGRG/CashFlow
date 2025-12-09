@@ -51,7 +51,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.MigrateCategoryScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottombars.MigrateScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
@@ -251,8 +251,17 @@ fun MigrateCategoryScreen(
         mutableStateOf(filtersState.selectedCounterParties)
     }
 
-    val selectedCounterPartyCount by remember(key1 = filtersState.selectedCounterPartyCount) {
-        mutableStateOf(filtersState.selectedCounterPartyCount)
+    val selectedCounterPartyCount by remember(
+        key1 = state.counterParties,
+        key2 = filtersState.selectedCounterPartyCount
+    ) {
+        mutableStateOf(
+            if (state.counterParties.isNotEmpty()) {
+                filtersState.selectedCounterPartyCount
+            } else {
+                null
+            }
+        )
     }
 
     val includeNoCounterPartyTransactions by remember(key1 = filtersState.includeNoCounterPartyTransactions) {
@@ -454,23 +463,23 @@ fun MigrateCategoryScreen(
                         interactionSource = interactionSource
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    MigrateCategoryScreenBottomAppBar(
+                    MigrateScreenBottomAppBar(
+                        navigateBack = navigateBack,
                         title = stringResource(id = R.string.migrate_transactions_label),
                         subTitle = stringResource(
                             id = dateRangeStringRes,
                             startDateString,
                             endDateString
                         ),
-                        navigateBack = navigateBack,
                         enabled = enabled,
                         migrateEnabled = migrateEnabled,
                         allSelected = allSelected,
                         sortDirection = sortDirection,
                         filterAmount = filterAmountRange,
-                        selectedCurrencyCount = selectedCurrencyCount,
                         selectedAccountCount = selectedAccountCount,
+                        selectedCategoryCount = null,
                         selectedCounterPartyCount = selectedCounterPartyCount,
-                        counterPartyFilterVisible = counterParties.isNotEmpty(),
+                        selectedCurrencyCount = selectedCurrencyCount,
                         selectedMethodCount = selectedMethodCount,
                         selectedTransactionTypeCount = selectedTransactionTypes.size,
                         onSortClick = {
@@ -684,17 +693,17 @@ fun MigrateCategoryScreen(
                 )
             },
             bottomBar = {
-                MigrateCategoryScreenBottomAppBar(
+                MigrateScreenBottomAppBar(
                     navigateBack = navigateBack,
                     enabled = enabled,
                     migrateEnabled = migrateEnabled,
                     allSelected = allSelected,
                     sortDirection = sortDirection,
                     filterAmount = filterAmountRange,
-                    selectedCurrencyCount = selectedCurrencyCount,
                     selectedAccountCount = selectedAccountCount,
+                    selectedCategoryCount = null,
                     selectedCounterPartyCount = selectedCounterPartyCount,
-                    counterPartyFilterVisible = counterParties.isNotEmpty(),
+                    selectedCurrencyCount = selectedCurrencyCount,
                     selectedMethodCount = selectedMethodCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
                     onSortClick = {

@@ -51,7 +51,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
-import jp.ikigai.cash.flow.ui.components.bottombars.MigrateCounterPartyScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottombars.MigrateScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
@@ -449,22 +449,23 @@ fun MigrateCounterPartyScreen(
                         interactionSource = interactionSource
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    MigrateCounterPartyScreenBottomAppBar(
+                    MigrateScreenBottomAppBar(
+                        navigateBack = navigateBack,
                         title = stringResource(id = R.string.migrate_transactions_label),
                         subTitle = stringResource(
                             id = dateRangeStringRes,
                             startDateString,
                             endDateString
                         ),
-                        navigateBack = navigateBack,
                         enabled = enabled,
                         migrateEnabled = migrateEnabled,
                         allSelected = allSelected,
                         sortDirection = sortDirection,
                         filterAmount = filterAmountRange,
-                        selectedCurrencyCount = selectedCurrencyCount,
                         selectedAccountCount = selectedAccountCount,
                         selectedCategoryCount = selectedCategoryCount,
+                        selectedCounterPartyCount = null,
+                        selectedCurrencyCount = selectedCurrencyCount,
                         selectedMethodCount = selectedMethodCount,
                         selectedTransactionTypeCount = selectedTransactionTypes.size,
                         onSortClick = {
@@ -677,16 +678,17 @@ fun MigrateCounterPartyScreen(
                 )
             },
             bottomBar = {
-                MigrateCounterPartyScreenBottomAppBar(
+                MigrateScreenBottomAppBar(
                     navigateBack = navigateBack,
                     enabled = enabled,
                     migrateEnabled = migrateEnabled,
                     allSelected = allSelected,
                     sortDirection = sortDirection,
                     filterAmount = filterAmountRange,
-                    selectedCurrencyCount = selectedCurrencyCount,
                     selectedAccountCount = selectedAccountCount,
                     selectedCategoryCount = selectedCategoryCount,
+                    selectedCounterPartyCount = null,
+                    selectedCurrencyCount = selectedCurrencyCount,
                     selectedMethodCount = selectedMethodCount,
                     selectedTransactionTypeCount = selectedTransactionTypes.size,
                     onSortClick = {
