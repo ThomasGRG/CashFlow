@@ -273,6 +273,7 @@
     <string name="update_label">updated</string>
     <string name="delete_label">deleted</string>
     <string name="balance_updated_label">balance updated</string>
+    <string name="total_balance_label">Total balance</string>
     <string name="transaction_label">Transaction</string>
     <!--  Card Strings  -->
 </resources>
