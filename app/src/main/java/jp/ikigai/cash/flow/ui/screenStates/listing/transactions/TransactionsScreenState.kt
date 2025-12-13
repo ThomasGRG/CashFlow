@@ -9,6 +9,7 @@ import jp.ikigai.cash.flow.data.TransactionHeader
 import jp.ikigai.cash.flow.data.dto.CurrencyInfo
 import jp.ikigai.cash.flow.data.dto.SelectTemplateInfoDTO
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
+import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.util.Locale
 
@@ -26,6 +27,8 @@ data class TransactionsScreenState(
     val transactionTypes: List<TransactionType> = TransactionType.entries,
     val templates: List<SelectTemplateInfoDTO> = emptyList(),
     val currencies: List<CurrencyInfo> = Constants.currencyList,
+    val sortField: String = "transactionDateTime",
+    val sortDirection: SortDirection = SortDirection.DESC,
     val balance: String = "",
     val loading: Boolean = true,
     val locale: Locale? = null

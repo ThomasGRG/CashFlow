@@ -85,7 +85,6 @@ import jp.ikigai.cash.flow.ui.components.common.SearchBox
 import jp.ikigai.cash.flow.ui.components.common.ToastBar
 import jp.ikigai.cash.flow.ui.components.common.TotalTransactionInfo
 import jp.ikigai.cash.flow.ui.components.common.TransactionGroupHeader
-import jp.ikigai.cash.flow.ui.screenStates.common.SortConfigState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.FiltersState
 import jp.ikigai.cash.flow.ui.screenStates.listing.transactions.TransactionsScreenState
 import jp.ikigai.cash.flow.ui.viewmodels.listing.TransactionsScreenViewModel
@@ -127,7 +126,6 @@ fun TransactionsScreen(
     events: Flow<Event>,
     state: TransactionsScreenState,
     filtersState: FiltersState,
-    sortConfigState: SortConfigState
 ) {
     val configuration = LocalConfiguration.current
     val haptics = LocalHapticFeedback.current
@@ -320,8 +318,8 @@ fun TransactionsScreen(
         stringResource(id = R.string.time_field_label) to "transactionDateTime",
     )
 
-    val sortField by remember(key1 = sortConfigState.sortField) {
-        mutableStateOf(sortConfigState.sortField)
+    val sortField by remember(key1 = state.sortField) {
+        mutableStateOf(state.sortField)
     }
 
     val sortedBy by remember(key1 = sortField) {
@@ -330,8 +328,8 @@ fun TransactionsScreen(
         )
     }
 
-    val sortDirection by remember(key1 = sortConfigState.sortDirection) {
-        mutableStateOf(sortConfigState.sortDirection)
+    val sortDirection by remember(key1 = state.sortDirection) {
+        mutableStateOf(state.sortDirection)
     }
 
     var selectedTransactionId by remember {
@@ -1084,7 +1082,6 @@ fun TransactionsScreenPreview() {
         events = emptyList<Event>().asFlow(),
         state = TransactionsScreenState(),
         filtersState = FiltersState(),
-        sortConfigState = SortConfigState(sortField = "transactionDateTime")
     )
 }
 
@@ -1097,7 +1094,6 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
         val filtersState by viewModel.filtersState.collectAsState()
-        val sortConfigState by viewModel.sortConfigState.collectAsState()
 
         TransactionsScreen(
             canAddTransaction = viewModel::canAddTransaction,
@@ -1160,7 +1156,6 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             events = viewModel.event,
             state = state,
             filtersState = filtersState,
-            sortConfigState = sortConfigState
         )
     }
 }

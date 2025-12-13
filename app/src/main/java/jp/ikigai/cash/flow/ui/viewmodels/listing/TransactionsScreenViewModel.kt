@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -77,16 +78,10 @@ class TransactionsScreenViewModel(
     private val _searchState = MutableStateFlow("")
     val searchState: StateFlow<String> = _searchState.asStateFlow()
 
-    private val _sortConfigState = MutableStateFlow(
-        SortConfigState(sortField = "transactionDateTime")
-    )
-    val sortConfigState: StateFlow<SortConfigState> = _sortConfigState.asStateFlow()
-
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()
 
     init {
-        getSortPreferences()
         _filtersState.update {
             it.copy(
                 startDateString = it.startDate.getDateString(datePattern),
@@ -101,21 +96,6 @@ class TransactionsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         _event.close()
-    }
-
-    private fun getSortPreferences() = viewModelScope.launch {
-        preferencesDataStore
-            .getTransactionsScreenSortConfig()
-            .collectLatest { sortState ->
-                if (sortState.sortField != sortConfigState.value.sortField || sortState.sortDirection != sortConfigState.value.sortDirection) {
-                    _sortConfigState.update {
-                        it.copy(
-                            sortField = sortState.sortField,
-                            sortDirection = sortState.sortDirection
-                        )
-                    }
-                }
-            }
     }
 
     private fun getAccountQuery(): Flow<List<AccountWithTransactionMetadata>> {
@@ -260,14 +240,16 @@ class TransactionsScreenViewModel(
                     }
                 }
                 .debounce(300),
-            _sortConfigState
-                .onEach { sortState ->
+            preferencesDataStore
+                .getTransactionsScreenSortConfig()
+                .onEach { sortConfig ->
                     _state.update {
                         it.copy(
-                            loading = true
+                            sortField = sortConfig.sortField,
+                            sortDirection = sortConfig.sortDirection,
+                            loading = true,
                         )
                     }
-                    preferencesDataStore.saveTransactionsScreenSortConfig(sortState)
                 },
             _filtersState
                 .onEach {
@@ -281,7 +263,7 @@ class TransactionsScreenViewModel(
             Triple(searchText, sortConfig, filters)
         }.flatMapLatest { (searchText, sortConfig, filters) ->
             val selectedCounterPartyIds = filters.selectedCounterParties.filter { it.value }.keys
-            database
+            val transactionsFlow = database
                 .transactionWithMetadataQueries
                 .getTransactions(
                     searchText = searchText.trim(),
@@ -304,7 +286,9 @@ class TransactionsScreenViewModel(
                 )
                 .asFlow()
                 .mapToList(Dispatchers.IO)
-        }.collectLatest { transactions ->
+            val sortConfigFlow = flowOf(sortConfig)
+            combine(transactionsFlow, sortConfigFlow, ::Pair)
+        }.collectLatest { (transactions, sortConfig) ->
             val incomeTransactions = transactions
                 .filter { it.transactionType == TransactionType.CREDIT }
             val income = incomeTransactions.sumOf { it.transactionAmount }
@@ -319,7 +303,7 @@ class TransactionsScreenViewModel(
                     transactions = getTransactionsMap(
                         transactions,
                         searchState.value,
-                        sortConfigState.value.sortField
+                        sortConfig.sortField,
                     ),
                     expenseTransactionsCount = numberFormatter.format(expenseTransactions.size)
                         .toString(),
@@ -633,13 +617,14 @@ class TransactionsScreenViewModel(
         }
     }
 
-    fun setSortConfig(field: String, sortDirection: SortDirection) {
-        _sortConfigState.update {
-            it.copy(
-                sortField = field,
-                sortDirection = sortDirection
+    fun setSortConfig(field: String, sortDirection: SortDirection) = viewModelScope.launch {
+        preferencesDataStore
+            .saveTransactionsScreenSortConfig(
+                SortConfigState(
+                    sortField = field,
+                    sortDirection = sortDirection,
+                )
             )
-        }
     }
 
     fun setFilterAmounts(min: Double, max: Double) {
