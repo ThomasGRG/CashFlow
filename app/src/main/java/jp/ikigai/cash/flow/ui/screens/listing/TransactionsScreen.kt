@@ -575,7 +575,7 @@ fun TransactionsScreen(
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
+                    AnimatedVisibility(visible = transactionCount != 0L) {
                         SearchBox(
                             modifier = Modifier.padding(bottom = 10.dp),
                             searchText = searchText,
@@ -761,7 +761,7 @@ fun TransactionsScreen(
                     .padding(contentPadding)
             ) {
                 Column {
-                    AnimatedVisibility(visible = !(transactions.isEmpty() && searchText.isEmpty())) {
+                    AnimatedVisibility(visible = transactionCount != 0L) {
                         SearchBox(
                             modifier = Modifier
                                 .padding(top = 5.dp, start = 10.dp, end = 10.dp),
