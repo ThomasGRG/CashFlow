@@ -14,6 +14,8 @@ import jp.ikigai.cash.flow.data.enums.TransactionType
 import java.util.Locale
 
 data class TransactionsScreenState(
+    val totalTransactionCount: Long = 0,
+    val transactionCount: Long = 0,
     val transactionsHashCode: Int = 0,
     val transactions: Map<TransactionHeader, List<TransactionWithChips>> = emptyMap(),
     val income: String = "",

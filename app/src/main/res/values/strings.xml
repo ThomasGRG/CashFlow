@@ -167,7 +167,10 @@
 
     <!--  Empty Placeholder Strings  -->
     <string name="no_results_found_search_placeholder_label">No results found for \"%1$s\"</string>
-    <string name="no_results_found_filters_placeholder_label">No results found for selected filters.</string>
+    <string name="no_results_found_filters_placeholder_label">No results found for the selected filters.</string>
+    <string name="no_transactions_found_date_range_currency_placeholder_label">
+        No transactions found for the selected currency and date range.
+    </string>
     <string name="charts_screen_empty_placeholder_label">No data found.</string>
     <string name="audit_logs_screen_empty_placeholder_label">No logs found.</string>
     <string name="transactions_screen_empty_placeholder_label">You have not added any transactions.</string>

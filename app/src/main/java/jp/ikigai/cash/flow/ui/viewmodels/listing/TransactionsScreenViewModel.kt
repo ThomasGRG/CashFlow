@@ -91,6 +91,8 @@ class TransactionsScreenViewModel(
         loadData()
         loadBalance()
         loadTransactions()
+        getTotalTransactionCount()
+        getTransactionCount()
     }
 
     override fun onCleared() {
@@ -204,6 +206,42 @@ class TransactionsScreenViewModel(
                         .toString(),
                     selectedMethods = selectedMethods,
                     selectedMethodCount = numberFormatter.format(selectedMethodCount).toString()
+                )
+            }
+        }
+    }
+
+    private fun getTotalTransactionCount() = viewModelScope.launch {
+        database
+            .transactionQueries
+            .getTotalCount()
+            .asFlow()
+            .mapToOne(Dispatchers.IO)
+            .collectLatest { count ->
+                _state.update {
+                    it.copy(
+                        totalTransactionCount = count,
+                    )
+                }
+            }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun getTransactionCount() = viewModelScope.launch {
+        filtersState.flatMapLatest {
+            database
+                .transactionQueries
+                .getTransactionCountForDateRangeAndCurrency(
+                    startDate = it.startDate,
+                    endDate = it.endDate,
+                    currency = it.selectedCurrency,
+                )
+                .asFlow()
+                .mapToOne(Dispatchers.IO)
+        }.collectLatest { count ->
+            _state.update {
+                it.copy(
+                    transactionCount = count,
                 )
             }
         }

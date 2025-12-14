@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
@@ -191,6 +192,14 @@ fun TransactionsScreen(
 
     val transactions by remember(key1 = state.transactions, key2 = state.transactionsHashCode) {
         mutableStateOf(state.transactions)
+    }
+
+    val totalTransactionCount by remember(key1 = state.totalTransactionCount) {
+        mutableLongStateOf(state.totalTransactionCount)
+    }
+
+    val transactionCount by remember(key1 = state.transactionCount) {
+        mutableLongStateOf(state.transactionCount)
     }
 
     val templates by remember(key1 = state.templates) {
@@ -346,8 +355,21 @@ fun TransactionsScreen(
             onDismissToastBar = {
                 showToastBar = false
             },
-            showEmptyPlaceholder = searchText.isEmpty() && transactions.isEmpty(),
-            emptyPlaceholderText = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
+            showEmptyPlaceholder = transactions.isEmpty(),
+            emptyPlaceholderText = if (totalTransactionCount == 0L) {
+                stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+            } else if (transactionCount != 0L) {
+                if (searchText.isNotBlank()) {
+                    stringResource(
+                        id = R.string.no_results_found_search_placeholder_label,
+                        searchText
+                    )
+                } else {
+                    stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                }
+            } else {
+                stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
+            },
             sheetState = sheetState,
             showBottomSheet = sheetType != SheetType.NONE,
             bottomSheetContent = {
@@ -826,9 +848,23 @@ fun TransactionsScreen(
                             .fillMaxWidth()
                             .align(Alignment.TopCenter)
                     )
-                } else if (searchText.isEmpty() && transactions.isEmpty()) {
+                } else if (transactions.isEmpty()) {
                     Text(
-                        text = stringResource(id = R.string.transactions_screen_empty_placeholder_label),
+                        text = if (totalTransactionCount == 0L) {
+                            stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+                        } else if (transactionCount != 0L) {
+                            if (searchText.isNotBlank()) {
+                                stringResource(
+                                    id = R.string.no_results_found_search_placeholder_label,
+                                    searchText
+                                )
+                            } else {
+                                stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                            }
+                        } else {
+                            stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
+                        },
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.align(
                             Alignment.Center
                         )

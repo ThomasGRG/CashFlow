@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS `Transaction` (
 getTotalCount:
 SELECT COUNT(*) FROM `Transaction`;
 
+getTransactionCountForDateRangeAndCurrency:
+SELECT COUNT(*) FROM `Transaction` WHERE transactionDateTime BETWEEN :startDate AND :endDate AND transactionCurrency = :currency;
+
 getById:
 SELECT * FROM `Transaction` WHERE transactionId = :id;
 
