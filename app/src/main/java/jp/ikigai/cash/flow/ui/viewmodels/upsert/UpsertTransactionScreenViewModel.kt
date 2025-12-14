@@ -377,7 +377,12 @@ class UpsertTransactionScreenViewModel(
         var accountValid = true
         var accountErrorStringRes = R.string.field_required_error_label
         if (selectedAccount.accountId > 0) {
-            if (state.value.type == TransactionType.DEBIT && amount > selectedAccount.balance) {
+            val balance = if (selectedAccount.accountId == previousAccount?.accountId) {
+                previousBalance
+            } else {
+                selectedAccount.balance
+            }
+            if (state.value.type == TransactionType.DEBIT && amount > balance) {
                 accountValid = false
                 accountErrorStringRes = R.string.not_enough_balance_error_label
             }
@@ -410,7 +415,12 @@ class UpsertTransactionScreenViewModel(
         var accountValid = true
         var accountErrorStringRes = R.string.field_required_error_label
         if (type == TransactionType.DEBIT) {
-            if (amount > 0.0 && account.accountId > 0 && amount > account.balance) {
+            val balance = if (account.accountId == previousAccount?.accountId) {
+                previousBalance
+            } else {
+                account.balance
+            }
+            if (amount > 0.0 && account.accountId > 0 && amount > balance) {
                 accountValid = false
                 accountErrorStringRes = R.string.not_enough_balance_error_label
             }
