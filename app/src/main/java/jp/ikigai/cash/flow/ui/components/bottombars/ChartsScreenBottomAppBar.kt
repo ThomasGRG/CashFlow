@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -284,7 +285,9 @@ fun ChartsScreenBottomAppBar(
         mutableStateOf(selectedChartType == ChartType.METHOD_TRENDS_LINE_CHART)
     }
 
-    Column {
+    Column(
+        modifier = Modifier.fillMaxHeight(),
+    ) {
         CustomOutlinedButton(
             modifier = Modifier.height(IntrinsicSize.Min),
             enabled = enabled,
@@ -294,6 +297,7 @@ fun ChartsScreenBottomAppBar(
             leadingIcon = TablerIcons.ChartBar,
             onClick = onSelectChartClick
         )
+        Spacer(modifier = Modifier.weight(1f))
         Row(
             modifier = Modifier
                 .padding(top = 6.dp, bottom = 6.dp)
