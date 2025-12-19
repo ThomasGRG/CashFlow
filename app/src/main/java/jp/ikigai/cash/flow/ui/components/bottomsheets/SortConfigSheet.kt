@@ -67,7 +67,9 @@ fun SortConfigSheet(
                 )
             }
         }
-        SingleChoiceSegmentedButtonRow {
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             SegmentedButton(
                 selected = direction == SortDirection.ASC,
                 onClick = {
