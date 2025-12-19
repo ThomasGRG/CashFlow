@@ -749,5 +749,27 @@ class TransactionsScreenViewModel(
             },
             accountId = account.accountId
         )
+
+        _event.send(Event.CloneTransactionSuccess)
+    }
+
+    fun createTemplateFromTransaction(transactionId: Long) = viewModelScope.launch {
+        val transaction = database.transactionQueries.getById(transactionId).executeAsOne()
+
+        database
+            .transactionTemplateQueries
+            .insert(
+                templateName = "${transaction.transactionTitle} - ${System.currentTimeMillis()}",
+                templateTitle = transaction.transactionTitle,
+                templateDescription = transaction.transactionDescription,
+                templateAmount = transaction.transactionAmount,
+                templateType = transaction.transactionType,
+                templateAccountId = transaction.transactionAccountId,
+                templateCategoryId = transaction.transactionCategoryId,
+                templateCounterPartyId = transaction.transactionCounterPartyId,
+                templateMethodId = transaction.transactionMethodId,
+            )
+
+        _event.send(Event.CreateTemplateFromTransactionSuccess)
     }
 }

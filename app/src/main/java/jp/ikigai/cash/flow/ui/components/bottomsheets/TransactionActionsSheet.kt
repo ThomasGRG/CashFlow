@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.dp
 import jp.ikigai.cash.flow.R
 
 @Composable
-fun CloneTransactionSheet(
+fun TransactionActionsSheet(
     cloneTransaction: (Boolean) -> Unit,
+    createTemplate: () -> Unit,
     dismiss: () -> Unit
 ) {
     val haptics = LocalHapticFeedback.current
@@ -63,6 +64,19 @@ fun CloneTransactionSheet(
             onClick = {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 dismiss()
+                createTemplate()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(35)
+        ) {
+            Text(text = stringResource(id = R.string.create_template_from_transaction_button_label))
+        }
+        FilledTonalButton(
+            onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                dismiss()
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -76,9 +90,10 @@ fun CloneTransactionSheet(
 
 @Preview
 @Composable
-fun CloneTransactionSheetPreview() {
-    CloneTransactionSheet(
+fun TransactionActionsSheetPreview() {
+    TransactionActionsSheet(
         cloneTransaction = {},
+        createTemplate = {},
         dismiss = {}
     )
 }

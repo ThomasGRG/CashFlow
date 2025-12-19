@@ -144,6 +144,7 @@
     <string name="new_transaction_button_label">New</string>
     <string name="clone_transaction_button_label">Clone transaction</string>
     <string name="clone_transaction_current_date_button_label">Clone transaction with current time</string>
+    <string name="create_template_from_transaction_button_label">Create template from transaction</string>
     <string name="save_button_label">Save</string>
     <!--  Button Strings  -->
 
@@ -224,6 +225,8 @@
     <string name="save_success_label">Saved successfully</string>
     <string name="delete_success_label">Deleted successfully</string>
     <string name="restore_success_label">Restored successfully</string>
+    <string name="clone_transaction_success_label">Transaction cloned successfully</string>
+    <string name="create_template_from_transaction_success_label">Template created successfully</string>
     <string name="not_enough_balance_error_label">Insufficient balance</string>
     <string name="minimum_two_fields_required_error_label">Minimum two fields are required</string>
     <string name="category_method_account_required_error_label">At least one category, method and account are required to proceed</string>

@@ -68,7 +68,6 @@ import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
-import jp.ikigai.cash.flow.ui.components.bottomsheets.CloneTransactionSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
@@ -79,6 +78,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MoreOptionsSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.TransactionActionsSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.BalanceCard
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
@@ -117,6 +117,7 @@ fun TransactionsScreen(
     setSortConfig: (String, SortDirection) -> Unit,
     filterByAmount: (Double, Double) -> Unit,
     cloneTransaction: (Long, Boolean) -> Unit,
+    createTemplate: (Long) -> Unit,
     navigateToAccountsScreen: () -> Unit,
     navigateToCategoriesScreen: () -> Unit,
     navigateToCounterPartyScreen: () -> Unit,
@@ -530,10 +531,13 @@ fun TransactionsScreen(
                         )
                     }
 
-                    SheetType.CLONE_TRANSACTION -> {
-                        CloneTransactionSheet(
+                    SheetType.TRANSACTION_ACTIONS -> {
+                        TransactionActionsSheet(
                             cloneTransaction = { setCurrentDateTime ->
                                 cloneTransaction(selectedTransactionId, setCurrentDateTime)
+                            },
+                            createTemplate = {
+                                createTemplate(selectedTransactionId)
                             },
                             dismiss = {
                                 scope
@@ -682,7 +686,7 @@ fun TransactionsScreen(
                                 onLongClick = { id ->
                                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     selectedTransactionId = id
-                                    sheetType = SheetType.CLONE_TRANSACTION
+                                    sheetType = SheetType.TRANSACTION_ACTIONS
                                 },
                                 modifier = Modifier.animateItem()
                             )
@@ -834,7 +838,7 @@ fun TransactionsScreen(
                                     onLongClick = { id ->
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         selectedTransactionId = id
-                                        sheetType = SheetType.CLONE_TRANSACTION
+                                        sheetType = SheetType.TRANSACTION_ACTIONS
                                     },
                                     modifier = Modifier.animateItem()
                                 )
@@ -1049,10 +1053,13 @@ fun TransactionsScreen(
                             )
                         }
 
-                        SheetType.CLONE_TRANSACTION -> {
-                            CloneTransactionSheet(
+                        SheetType.TRANSACTION_ACTIONS -> {
+                            TransactionActionsSheet(
                                 cloneTransaction = { setCurrentDateTime ->
                                     cloneTransaction(selectedTransactionId, setCurrentDateTime)
+                                },
+                                createTemplate = {
+                                    createTemplate(selectedTransactionId)
                                 },
                                 dismiss = {
                                     scope
@@ -1108,6 +1115,7 @@ fun TransactionsScreenPreview() {
         setSortConfig = { _, _ -> },
         filterByAmount = { _, _ -> },
         cloneTransaction = { _, _ -> },
+        createTemplate = {},
         navigateToAccountsScreen = {},
         navigateToCategoriesScreen = {},
         navigateToCounterPartyScreen = {},
@@ -1156,6 +1164,7 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             setSortConfig = viewModel::setSortConfig,
             filterByAmount = viewModel::setFilterAmounts,
             cloneTransaction = viewModel::cloneTransaction,
+            createTemplate = viewModel::createTemplateFromTransaction,
             navigateToMethodsScreen = {
                 navController.navigate(Routes.Methods.route) {
                     launchSingleTop = true
