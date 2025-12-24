@@ -533,7 +533,13 @@ fun MigrateScreenBottomAppBar(
                 CustomFloatingActionButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        setSheetType(SheetType.CATEGORY)
+                        if (selectedCategoryCount == null) {
+                            setSheetType(SheetType.CATEGORY)
+                        } else if (selectedCounterPartyCount == null) {
+                            setSheetType(SheetType.COUNTERPARTY)
+                        } else {
+                            setSheetType(SheetType.METHOD)
+                        }
                     },
                     enabled = migrateEnabled,
                 ) {
