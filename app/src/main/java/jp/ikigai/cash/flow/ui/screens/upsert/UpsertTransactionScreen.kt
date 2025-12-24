@@ -91,6 +91,7 @@ import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.TimePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.TimePickerSheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
@@ -368,7 +369,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.TIME -> {
-                        TimePickerSheet(
+                        TimePickerLandscapeSheet(
                             time = dateTime,
                             updateTime = setTime,
                             dismiss = {

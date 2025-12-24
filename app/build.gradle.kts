@@ -86,6 +86,9 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.5.0")
     implementation("io.insert-koin:koin-androidx-compose:3.5.0")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+    implementation("io.github.dongchyeon:time-picker:1.1.1")
+
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")
     implementation("androidx.compose.material3.adaptive:adaptive:1.1.0")
