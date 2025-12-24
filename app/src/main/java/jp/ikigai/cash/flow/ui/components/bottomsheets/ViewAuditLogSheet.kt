@@ -414,8 +414,8 @@ fun ViewAuditLogSheet(
                 }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.Start
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = auditLogDetails.formattedBeforeBalance,
@@ -423,10 +423,14 @@ fun ViewAuditLogSheet(
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.alpha(0.6f)
                     )
+                    Icon(
+                        imageVector = TablerIcons.ArrowDownCircle,
+                        contentDescription = "before to after arrow icon",
+                        modifier = Modifier.size(50.dp)
+                    )
                     Text(
                         text = auditLogDetails.formattedAfterBalance,
                         style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.padding(end = 15.dp)
                     )
                 }
             }
@@ -505,10 +509,10 @@ fun ViewAuditLogLandscapeSheet(
                         modifier = Modifier.fillMaxWidth(0.98f)
                     )
                 }
-                Column(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.Start
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     Text(
                         text = auditLogDetails.formattedBeforeBalance,
@@ -516,10 +520,16 @@ fun ViewAuditLogLandscapeSheet(
                         textDecoration = TextDecoration.LineThrough,
                         modifier = Modifier.alpha(0.6f)
                     )
+                    Icon(
+                        imageVector = TablerIcons.ArrowDownCircle,
+                        contentDescription = "before to after arrow icon",
+                        modifier = Modifier
+                            .size(50.dp)
+                            .rotate(-90f)
+                    )
                     Text(
                         text = auditLogDetails.formattedAfterBalance,
                         style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.padding(end = 15.dp)
                     )
                 }
             }
