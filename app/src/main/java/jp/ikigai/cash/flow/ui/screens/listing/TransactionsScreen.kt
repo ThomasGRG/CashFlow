@@ -67,16 +67,26 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.TransactionScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCategoryLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCounterPartyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MoreOptionsSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTemplateSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.TransactionActionsSheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
@@ -376,7 +386,7 @@ fun TransactionsScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CURRENCY -> {
-                        CurrencySheet(
+                        CurrencyLandscapeSheet(
                             index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
                             selectedCurrency = selectedCurrency,
                             setSelectedCurrency = { currency ->
@@ -394,7 +404,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.DATE_RANGE -> {
-                        DateRangePickerSheet(
+                        DateRangePickerLandscapeSheet(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
@@ -428,7 +438,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.AMOUNT -> {
-                        AmountFilterSheet(
+                        AmountFilterLandscapeSheet(
                             minAmount = filterAmountMin,
                             maxAmount = filterAmountMax,
                             filter = filterByAmount,
@@ -443,7 +453,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.CATEGORY -> {
-                        FilterCategorySheet(
+                        FilterCategoryLandscapeSheet(
                             selectedCategoryMap = selectedCategories,
                             filter = setSelectedCategories,
                             categories = categories,
@@ -458,7 +468,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.COUNTERPARTY -> {
-                        FilterCounterPartySheet(
+                        FilterCounterPartyLandscapeSheet(
                             selectedCounterPartyMap = selectedCounterParties,
                             includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
                             counterParties = counterParties,
@@ -474,7 +484,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.METHOD -> {
-                        FilterMethodSheet(
+                        FilterMethodLandscapeSheet(
                             selectedMethodsMap = selectedMethods,
                             filter = setSelectedMethods,
                             methods = methods,
@@ -489,7 +499,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.ACCOUNT -> {
-                        FilterAccountSheet(
+                        FilterAccountLandscapeSheet(
                             selectedAccountsMap = selectedAccounts,
                             filter = setSelectedAccounts,
                             accounts = accounts,
@@ -504,7 +514,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.TYPE -> {
-                        FilterTransactionTypeSheet(
+                        FilterTransactionTypeLandscapeSheet(
                             selectedTransactionTypes = selectedTransactionTypes,
                             filter = setSelectedTransactionTypes,
                             dismiss = {
@@ -518,7 +528,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.TEMPLATES -> {
-                        SelectTemplateSheet(
+                        SelectTemplateLandscapeSheet(
                             templates = templates,
                             addNewTransaction = addTransaction,
                             dismiss = {
@@ -550,7 +560,7 @@ fun TransactionsScreen(
                     }
 
                     SheetType.SORT -> {
-                        SortConfigSheet(
+                        SortConfigLandscapeSheet(
                             selectedField = sortField,
                             selectedDirection = sortDirection,
                             fields = sortFields,

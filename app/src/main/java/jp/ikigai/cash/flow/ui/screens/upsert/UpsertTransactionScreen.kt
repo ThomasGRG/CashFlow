@@ -75,13 +75,21 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DatePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DatePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategoryLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectTransactionTypeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.TimePickerSheet
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
@@ -335,7 +343,7 @@ fun UpsertTransactionScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CONFIRM_NAVIGATION -> {
-                        ConfirmNavigationSheet(
+                        ConfirmNavigationLandscapeSheet(
                             message = stringResource(id = R.string.navigation_confirmation_label),
                             navigate = navigateBack,
                             dismiss = {
@@ -347,7 +355,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.DATE -> {
-                        DatePickerSheet(
+                        DatePickerLandscapeSheet(
                             date = dateTime,
                             setDate = setDate,
                             selectableDates = selectableDates,
@@ -372,7 +380,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.CATEGORY -> {
-                        SelectCategorySheet(
+                        SelectCategoryLandscapeSheet(
                             index = categories.indexOfFirst { it.categoryId == selectedCategory.categoryId }
                                 .coerceAtLeast(0),
                             selectedCategoryId = selectedCategory.categoryId,
@@ -387,7 +395,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.COUNTERPARTY -> {
-                        SelectCounterPartySheet(
+                        SelectCounterPartyLandscapeSheet(
                             index = counterParties.indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
                                 .coerceAtLeast(0),
                             selectedCounterPartyId = selectedCounterParty.counterPartyId,
@@ -402,7 +410,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.METHOD -> {
-                        SelectMethodSheet(
+                        SelectMethodLandscapeSheet(
                             index = methods.indexOfFirst { it.methodId == selectedMethod.methodId }
                                 .coerceAtLeast(0),
                             selectedMethodId = selectedMethod.methodId,
@@ -417,7 +425,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.ACCOUNT -> {
-                        SelectAccountSheet(
+                        SelectAccountLandscapeSheet(
                             index = accounts.indexOfFirst { it.accountId == selectedAccount.accountId }
                                 .coerceAtLeast(0),
                             selectedAccountId = selectedAccount.accountId,
@@ -432,7 +440,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.TYPE -> {
-                        SelectTransactionTypeSheet(
+                        SelectTransactionTypeLandscapeSheet(
                             selectedTransactionType = transactionType,
                             setSelectedTransactionType = setTransactionType,
                             dismiss = {
@@ -444,7 +452,7 @@ fun UpsertTransactionScreen(
                     }
 
                     SheetType.CONFIRM_DELETE -> {
-                        ConfirmDeleteSheet(
+                        ConfirmDeleteLandscapeSheet(
                             message = stringResource(id = R.string.delete_transaction_confirmation_label),
                             delete = deleteTransaction,
                             dismiss = {

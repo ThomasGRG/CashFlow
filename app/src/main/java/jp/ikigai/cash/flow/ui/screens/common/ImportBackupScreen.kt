@@ -63,15 +63,25 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ImportBackupScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ReviewDetailsLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ReviewDetailsSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategoryLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -533,7 +543,7 @@ fun ImportBackupScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.REVIEW -> {
-                        ReviewDetailsSheet(
+                        ReviewDetailsLandscapeSheet(
                             selectedTempCategoryCount = selectedTempCategoryCount,
                             selectedTempCounterPartyCount = selectedTempCounterPartyCount,
                             selectedTempMethodCount = selectedTempMethodCount,
@@ -550,7 +560,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.CONFIRM_NAVIGATION -> {
-                        ConfirmNavigationSheet(
+                        ConfirmNavigationLandscapeSheet(
                             message = stringResource(id = R.string.navigation_confirmation_label),
                             navigate = navigateBack,
                             dismiss = {
@@ -562,7 +572,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.DATE_RANGE -> {
-                        DateRangePickerSheet(
+                        DateRangePickerLandscapeSheet(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
@@ -578,7 +588,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.CURRENCY -> {
-                        FilterCurrencySheet(
+                        FilterCurrencyLandscapeSheet(
                             selectedCurrencyCodes = selectedCurrencies,
                             currencies = currencies,
                             filter = setSelectedCurrencies,
@@ -591,7 +601,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.AMOUNT -> {
-                        AmountFilterSheet(
+                        AmountFilterLandscapeSheet(
                             minAmount = filterAmountMin,
                             maxAmount = filterAmountMax,
                             filter = filterByAmount,
@@ -604,7 +614,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.CATEGORY -> {
-                        SelectCategorySheet(
+                        SelectCategoryLandscapeSheet(
                             index = dbCategories
                                 .indexOfFirst { it.categoryId == categoryMappings[selectedTempCategoryId]?.categoryId }
                                 .coerceAtLeast(0),
@@ -623,7 +633,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.COUNTERPARTY -> {
-                        SelectCounterPartySheet(
+                        SelectCounterPartyLandscapeSheet(
                             index = dbCounterParties
                                 .indexOfFirst { it.counterPartyId == counterPartyMappings[selectedTempCounterPartyId]?.counterPartyId }
                                 .coerceAtLeast(0),
@@ -642,7 +652,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.METHOD -> {
-                        SelectMethodSheet(
+                        SelectMethodLandscapeSheet(
                             index = dbMethods
                                 .indexOfFirst { it.methodId == methodMappings[selectedTempMethodId]?.methodId }
                                 .coerceAtLeast(0),
@@ -660,7 +670,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.ACCOUNT -> {
-                        SelectAccountSheet(
+                        SelectAccountLandscapeSheet(
                             index = currencyAccountMap[selectedTempAccountCurrency]
                                 ?.indexOfFirst { it.accountId == accountMappings[selectedTempAccountId]?.accountId }
                                 ?.coerceAtLeast(0) ?: 0,
@@ -680,7 +690,7 @@ fun ImportBackupScreen(
                     }
 
                     SheetType.TYPE -> {
-                        FilterTransactionTypeSheet(
+                        FilterTransactionTypeLandscapeSheet(
                             selectedTransactionTypes = selectedTransactionTypes,
                             filter = setSelectedTransactionTypes,
                             dismiss = {

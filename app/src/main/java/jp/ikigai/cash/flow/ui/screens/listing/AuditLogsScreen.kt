@@ -46,7 +46,9 @@ import jp.ikigai.cash.flow.data.dto.audit.AuditLogListItem
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.AuditLogsScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ViewAuditLogLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ViewAuditLogSheet
 import jp.ikigai.cash.flow.ui.components.cards.AuditLogCard
 import jp.ikigai.cash.flow.ui.components.common.AuditLogGroupHeader
@@ -141,7 +143,7 @@ fun AuditLogsScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.DATE_RANGE -> {
-                        DateRangePickerSheet(
+                        DateRangePickerLandscapeSheet(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
@@ -159,11 +161,11 @@ fun AuditLogsScreen(
                     SheetType.AUDIT_LOG -> {
                         when (val log = selectedAuditLog) {
                             is AuditLogListItem.TransactionLog -> {
-                                ViewAuditLogSheet(auditLogDetails = log)
+                                ViewAuditLogLandscapeSheet(auditLogDetails = log)
                             }
 
                             is AuditLogListItem.AccountLog -> {
-                                ViewAuditLogSheet(auditLogDetails = log)
+                                ViewAuditLogLandscapeSheet(auditLogDetails = log)
                             }
 
                             null -> {}

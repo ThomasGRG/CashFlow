@@ -54,6 +54,7 @@ import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.ui.components.bottombars.ListingScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SortConfigSheet
 import jp.ikigai.cash.flow.ui.components.cards.AccountCard
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
@@ -167,7 +168,7 @@ fun AccountScreen(
             sheetState = sheetState,
             showBottomSheet = sheetType != SheetType.NONE,
             bottomSheetContent = {
-                SortConfigSheet(
+                SortConfigLandscapeSheet(
                     selectedField = sortField,
                     selectedDirection = sortDirection,
                     fields = sortFields,

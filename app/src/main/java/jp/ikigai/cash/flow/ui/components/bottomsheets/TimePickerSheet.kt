@@ -73,7 +73,9 @@ fun TimePickerSheet(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     dismiss()
-                    updateTime(time.withHour(timePickerState.hour).withMinute(timePickerState.minute))
+                    updateTime(
+                        time.withHour(timePickerState.hour).withMinute(timePickerState.minute)
+                    )
                 },
                 modifier = Modifier
                     .weight(1f)

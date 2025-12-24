@@ -5,12 +5,17 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -183,6 +188,144 @@ fun SelectTemplateSheet(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.new_transaction_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectTemplateLandscapeSheet(
+    templates: List<SelectTemplateInfoDTO>,
+    addNewTransaction: (Long) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    var filteredTemplates by remember {
+        mutableStateOf(templates)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        filteredTemplates = if (searchText.isBlank()) {
+            templates
+        } else {
+            templates
+                .filter {
+                    it.annotatedName.text.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
+                .map {
+                    it.copy(
+                        annotatedName = getHighlightedString(it.annotatedName.text, searchText)
+                    )
+                }
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                ),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            SearchBox(
+                searchText = searchText,
+                setSearchText = {
+                    searchText = it
+                },
+                focusRequester = focusRequester,
+                interactionSource = interactionSource,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    addNewTransaction(0L)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.new_transaction_button_label))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(
+                items = filteredTemplates,
+                key = { template -> "template-${template.id}" }
+            ) { template ->
+                SelectTemplateCard(
+                    data = template,
+                    onClick = { id ->
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        dismiss()
+                        addNewTransaction(id)
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredTemplates.isEmpty()) {
+                item(
+                    key = "no_results"
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.no_results_found_search_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                            .animateItem()
+                    )
+                }
             }
         }
     }

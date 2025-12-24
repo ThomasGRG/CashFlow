@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +66,7 @@ fun ViewAuditLogSheet(
         )
         if (auditLogDetails.before != null) {
             AuditLogTransactionCard(
+                modifier = Modifier.fillMaxWidth(),
                 data = auditLogDetails.before,
                 compareData = auditLogDetails.after,
                 formattedAmount = auditLogDetails.formattedBeforeAmount
@@ -81,6 +83,7 @@ fun ViewAuditLogSheet(
         }
         if (auditLogDetails.after != null) {
             AuditLogTransactionCard(
+                modifier = Modifier.fillMaxWidth(),
                 data = auditLogDetails.after,
                 compareData = null,
                 formattedAmount = auditLogDetails.formattedAfterAmount
@@ -90,10 +93,76 @@ fun ViewAuditLogSheet(
 }
 
 @Composable
+fun ViewAuditLogLandscapeSheet(
+    auditLogDetails: AuditLogListItem.TransactionLog
+) {
+    val entityTypeLabel = stringResource(id = auditLogDetails.entityType.label)
+    val logActionLabel = stringResource(id = auditLogDetails.logAction.label)
+
+    Column(
+        modifier = Modifier.padding(10.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "$entityTypeLabel $logActionLabel",
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Start,
+            )
+            Text(
+                text = auditLogDetails.dateTime,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.alpha(0.7f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (auditLogDetails.before != null) {
+                AuditLogTransactionCard(
+                    modifier = Modifier.weight(1f),
+                    data = auditLogDetails.before,
+                    compareData = auditLogDetails.after,
+                    formattedAmount = auditLogDetails.formattedBeforeAmount
+                )
+            }
+            if (auditLogDetails.before != null && auditLogDetails.after != null) {
+                Icon(
+                    imageVector = TablerIcons.ArrowDownCircle,
+                    contentDescription = "before to after arrow icon",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .rotate(-90f)
+                )
+            }
+            if (auditLogDetails.after != null) {
+                AuditLogTransactionCard(
+                    modifier = Modifier.weight(1f),
+                    data = auditLogDetails.after,
+                    compareData = null,
+                    formattedAmount = auditLogDetails.formattedAfterAmount
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun AuditLogTransactionCard(
+    modifier: Modifier,
     data: TransactionAuditDTO,
     compareData: TransactionAuditDTO?,
-    formattedAmount: String
+    formattedAmount: String,
 ) {
     val showComparisons by remember(key1 = compareData) {
         mutableStateOf(compareData != null)
@@ -128,7 +197,7 @@ fun AuditLogTransactionCard(
     }
 
     OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
     ) {
         Column(
             modifier = Modifier
@@ -303,6 +372,99 @@ fun ViewAuditLogSheet(
                 .alpha(0.7f)
                 .padding(bottom = 10.dp)
         )
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = auditLogDetails.after.accountName,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .padding(end = 10.dp)
+                    )
+                    Icon(
+                        imageVector = Constants.DEFAULT_ACCOUNT_ICON,
+                        contentDescription = Constants.DEFAULT_ACCOUNT_ICON.name,
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(0.98f)
+                    )
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = auditLogDetails.formattedBeforeBalance,
+                        style = MaterialTheme.typography.displaySmall,
+                        textDecoration = TextDecoration.LineThrough,
+                        modifier = Modifier.alpha(0.6f)
+                    )
+                    Text(
+                        text = auditLogDetails.formattedAfterBalance,
+                        style = MaterialTheme.typography.displaySmall,
+                        modifier = Modifier.padding(end = 15.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ViewAuditLogLandscapeSheet(
+    auditLogDetails: AuditLogListItem.AccountLog
+) {
+    val entityTypeLabel = stringResource(id = auditLogDetails.entityType.label)
+    val logActionLabel = stringResource(id = auditLogDetails.logAction.label)
+
+    Column(
+        modifier = Modifier.padding(10.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "$entityTypeLabel $logActionLabel",
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Start,
+            )
+            Text(
+                text = auditLogDetails.dateTime,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.alpha(0.7f)
+            )
+        }
         OutlinedCard(
             modifier = Modifier.fillMaxWidth(),
         ) {

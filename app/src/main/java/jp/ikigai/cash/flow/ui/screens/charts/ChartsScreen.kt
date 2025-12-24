@@ -86,12 +86,19 @@ import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.ChartsScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.CurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.MonthRangePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MonthRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategoryLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCategorySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectChartTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectChartTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.SelectMethodSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.screenStates.charts.ChartsScreenState
@@ -257,7 +264,7 @@ fun ChartsScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CHART -> {
-                        SelectChartTypeSheet(
+                        SelectChartTypeLandscapeSheet(
                             index = chartTypes
                                 .indexOfFirst { it == selectedChartType }
                                 .coerceAtLeast(0),
@@ -275,7 +282,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.MONTH_RANGE -> {
-                        MonthRangePickerSheet(
+                        MonthRangePickerLandscapeSheet(
                             start = yearMonthSelectionStart,
                             end = yearMonthSelectionEnd,
                             filter = setYearMonthRange,
@@ -293,7 +300,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.CURRENCY -> {
-                        CurrencySheet(
+                        CurrencyLandscapeSheet(
                             index = currencies.indexOfFirst { it.currency.currencyCode == selectedCurrency },
                             selectedCurrency = selectedCurrency,
                             setSelectedCurrency = setSelectedCurrency,
@@ -309,7 +316,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.ACCOUNT -> {
-                        SelectAccountSheet(
+                        SelectAccountLandscapeSheet(
                             index = accounts
                                 .indexOfFirst { it.accountId == selectedAccount.accountId }
                                 .coerceAtLeast(0),
@@ -327,7 +334,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.CATEGORY -> {
-                        SelectCategorySheet(
+                        SelectCategoryLandscapeSheet(
                             index = categories
                                 .indexOfFirst { it.categoryId == selectedCategory.categoryId }
                                 .coerceAtLeast(0),
@@ -345,7 +352,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.COUNTERPARTY -> {
-                        SelectCounterPartySheet(
+                        SelectCounterPartyLandscapeSheet(
                             index = counterParties
                                 .indexOfFirst { it.counterPartyId == selectedCounterParty.counterPartyId }
                                 .coerceAtLeast(0),
@@ -363,7 +370,7 @@ fun ChartsScreen(
                     }
 
                     SheetType.METHOD -> {
-                        SelectMethodSheet(
+                        SelectMethodLandscapeSheet(
                             index = methods
                                 .indexOfFirst { it.methodId == selectedMethod.methodId }
                                 .coerceAtLeast(0),

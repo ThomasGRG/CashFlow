@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -126,6 +129,115 @@ fun RestoreSortConfigSheet(
             ) {
                 Text(
                     text = stringResource(id = R.string.restore_button_label)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RestoreSortConfigLandscapeSheet(
+    restore: (Map<Int, Boolean>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val screens by remember {
+        mutableStateOf(
+            listOf(
+                R.string.accounts_screen_label,
+                R.string.categories_screen_label,
+                R.string.counter_parties_screen_label,
+                R.string.methods_screen_label,
+                R.string.templates_screen_label,
+                R.string.transactions_screen_label,
+            )
+        )
+    }
+
+    val selectedScreens = remember {
+        mutableStateMapOf(
+            R.string.accounts_screen_label to true,
+            R.string.categories_screen_label to true,
+            R.string.counter_parties_screen_label to true,
+            R.string.methods_screen_label to true,
+            R.string.templates_screen_label to true,
+            R.string.transactions_screen_label to true,
+        )
+    }
+
+    val selectedCount by remember {
+        derivedStateOf {
+            selectedScreens.filter { it.value }.size
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    restore(selectedScreens)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedCount > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.restore_button_label)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            items(
+                items = screens,
+                key = { screen -> screen },
+                contentType = { "selectable" }
+            ) { screen ->
+                MultiSelectCard(
+                    checked = {
+                        selectedScreens.getOrDefault(screen, true)
+                    },
+                    label = stringResource(id = screen),
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        selectedScreens[screen] = !selectedScreens[screen]!!
+                    },
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
         }

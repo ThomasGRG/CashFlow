@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -230,6 +231,188 @@ fun MonthRangePickerSheet(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.filter_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun MonthRangePickerLandscapeSheet(
+    start: YearMonth? = null,
+    end: YearMonth? = null,
+    filter: (YearMonth, YearMonth) -> Unit,
+    reset: () -> Unit,
+    dismiss: () -> Unit,
+) {
+    val configuration = LocalConfiguration.current
+    val haptics = LocalHapticFeedback.current
+
+    val locale by remember(key1 = configuration) {
+        mutableStateOf(configuration.locales[0])
+    }
+
+    val years by remember {
+        mutableStateOf(
+            (1900..2100).toList()
+        )
+    }
+
+    val currentYearMonth by remember {
+        mutableStateOf(YearMonth.now(ZoneId.systemDefault()))
+    }
+
+    var startYearMonth: YearMonth? by remember(key1 = start) {
+        mutableStateOf(start)
+    }
+
+    var endYearMonth: YearMonth? by remember(key1 = end) {
+        mutableStateOf(end)
+    }
+
+    val startYearMonthDisplayString by remember(key1 = startYearMonth) {
+        mutableStateOf(
+            startYearMonth?.let {
+                "${it.month.getDisplayName(TextStyle.SHORT, locale)}, ${it.year}"
+            }
+        )
+    }
+
+    val startYearMonthStringPlaceholder = stringResource(R.string.start_month_placeholder_label)
+
+    val endYearMonthDisplayString by remember(key1 = endYearMonth) {
+        mutableStateOf(
+            endYearMonth?.let {
+                "${it.month.getDisplayName(TextStyle.SHORT, locale)}, ${it.year}"
+            }
+        )
+    }
+
+    val endYearMonthStringPlaceholder = stringResource(R.string.end_month_placeholder_label)
+
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        val year = startYearMonth?.year ?: (currentYearMonth.year - 1)
+        listState.scrollToItem(
+            index = years.indexOf(year).coerceAtLeast(0),
+            scrollOffset = 250,
+        )
+    }
+    Row(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${startYearMonthDisplayString ?: startYearMonthStringPlaceholder} - ${endYearMonthDisplayString ?: endYearMonthStringPlaceholder}",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            FilledTonalButton(
+                enabled = startYearMonth != null && endYearMonth != null,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(startYearMonth!!, endYearMonth!!)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.filter_button_label))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    reset()
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.reset_button_label))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+        ) {
+            items(
+                items = years,
+                key = { year -> year }
+            ) { year ->
+                Column {
+                    Text(
+                        text = "$year",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 12.dp, bottom = 6.dp, top = 6.dp)
+                    )
+
+                    val rangeSelectionInfo by remember(startYearMonth, endYearMonth) {
+                        mutableStateOf(
+                            SelectedRangeInfo.calculateRangeInfo(
+                                year = year,
+                                startMonth = startYearMonth,
+                                endMonth = endYearMonth
+                            )
+                        )
+                    }
+
+                    Year(
+                        locale = locale,
+                        year = year,
+                        onMonthSelectionChange = { yearMonth ->
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (startYearMonth != null && endYearMonth != null) {
+                                startYearMonth = yearMonth
+                                endYearMonth = null
+                            } else if (startYearMonth == null || yearMonth < startYearMonth) {
+                                startYearMonth = yearMonth
+                            } else {
+                                endYearMonth = yearMonth
+                            }
+                        },
+                        currentYearMonth = currentYearMonth,
+                        startYearMonth = startYearMonth,
+                        endYearMonth = endYearMonth,
+                        maxSelectableYearMonth = currentYearMonth,
+                        rangeSelectionInfo = rangeSelectionInfo
+                    )
+                }
             }
         }
     }

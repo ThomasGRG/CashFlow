@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -17,7 +20,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -188,6 +193,138 @@ fun ChooseIconSheet(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(text = stringResource(id = R.string.search_field_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun ChooseIconLandscapeSheet(
+    dismiss: () -> Unit,
+    setIcon: (ImageVector) -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    var searchText by remember {
+        mutableStateOf("")
+    }
+
+    val icons by remember {
+        mutableStateOf(TablerIcons.AllIcons)
+    }
+
+    var filteredIconList by remember {
+        mutableStateOf(icons)
+    }
+
+    LaunchedEffect(key1 = searchText) {
+        delay(300)
+        filteredIconList = if (searchText.isBlank()) {
+            icons
+        } else {
+            icons
+                .filter { icon ->
+                    icon.name.contains(
+                        searchText.trim(),
+                        ignoreCase = true
+                    )
+                }
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                ),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            SearchBox(
+                searchText = searchText,
+                setSearchText = {
+                    searchText = it
+                },
+                focusRequester = focusRequester,
+                interactionSource = interactionSource,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .height(50.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(35),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(58.dp),
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+        ) {
+            items(
+                items = filteredIconList,
+                key = { icon -> "icon-${icon.name}" }
+            ) { icon ->
+                Icon(
+                    imageVector = icon,
+                    contentDescription = icon.name,
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .padding(6.dp)
+                        .clickable(
+                            enabled = true,
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                setIcon(icon)
+                                dismiss()
+                            },
+                        )
+                        .animateItem()
+                )
+            }
+            if (searchText.isNotBlank() && filteredIconList.isEmpty()) {
+                item(
+                    key = "no_results",
+                    span = StaggeredGridItemSpan.FullLine
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.no_results_found_search_placeholder_label,
+                            searchText
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .animateItem()
+                    )
+                }
             }
         }
     }

@@ -64,9 +64,13 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ChooseIconLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ChooseIconSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ResetIconLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ResetIconSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -215,7 +219,7 @@ fun UpsertCategoryScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CONFIRM_NAVIGATION -> {
-                        ConfirmNavigationSheet(
+                        ConfirmNavigationLandscapeSheet(
                             message = stringResource(id = R.string.navigation_confirmation_label),
                             navigate = navigateBack,
                             dismiss = {
@@ -227,7 +231,7 @@ fun UpsertCategoryScreen(
                     }
 
                     SheetType.RESET_ICON -> {
-                        ResetIconSheet(
+                        ResetIconLandscapeSheet(
                             reset = {
                                 setIcon(Constants.DEFAULT_CATEGORY_ICON)
                             },
@@ -240,7 +244,7 @@ fun UpsertCategoryScreen(
                     }
 
                     SheetType.WARN_DELETE -> {
-                        ConfirmDeleteSheet(
+                        ConfirmDeleteLandscapeSheet(
                             message = stringResource(id = R.string.category_transactions_deletion_warning_label),
                             delete = deleteCategory,
                             migrate = {
@@ -255,7 +259,7 @@ fun UpsertCategoryScreen(
                     }
 
                     SheetType.CONFIRM_DELETE -> {
-                        ConfirmDeleteSheet(
+                        ConfirmDeleteLandscapeSheet(
                             message = stringResource(id = R.string.delete_category_confirmation_label),
                             delete = deleteCategory,
                             dismiss = {
@@ -267,7 +271,7 @@ fun UpsertCategoryScreen(
                     }
 
                     SheetType.SELECT_ICON -> {
-                        ChooseIconSheet(
+                        ChooseIconLandscapeSheet(
                             setIcon = setIcon,
                             dismiss = {
                                 scope

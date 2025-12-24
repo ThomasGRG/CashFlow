@@ -141,6 +141,8 @@
     <string name="delete_button_label">Delete</string>
     <string name="filter_button_label">Filter</string>
     <string name="filter_button_with_count_label">Filter (%1$d)</string>
+    <string name="select_all_button_label">Select all</string>
+    <string name="unselect_all_button_label">Unselect all</string>
     <string name="new_transaction_button_label">New</string>
     <string name="clone_transaction_button_label">Clone transaction</string>
     <string name="clone_transaction_current_date_button_label">Clone transaction with current time</string>

@@ -3,6 +3,7 @@ package jp.ikigai.cash.flow.ui.components.bottomsheets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -100,6 +101,82 @@ fun SelectTransactionTypeSheet(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectTransactionTypeLandscapeSheet(
+    selectedTransactionType: TransactionType,
+    setSelectedTransactionType: (TransactionType) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    Row(
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .weight(2f)
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item(
+                key = "credit",
+                contentType = "row"
+            ) {
+                SelectableCard(
+                    checked = { selectedTransactionType == TransactionType.CREDIT },
+                    label = AnnotatedString(stringResource(id = TransactionType.CREDIT.label)),
+                    icon = TransactionType.CREDIT.icon,
+                    iconTint = TransactionType.CREDIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        dismiss()
+                        setSelectedTransactionType(TransactionType.CREDIT)
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            item(
+                key = "debit",
+                contentType = "row"
+            ) {
+                SelectableCard(
+                    checked = { selectedTransactionType == TransactionType.DEBIT },
+                    label = AnnotatedString(stringResource(id = TransactionType.DEBIT.label)),
+                    icon = TransactionType.DEBIT.icon,
+                    iconTint = TransactionType.DEBIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        dismiss()
+                        setSelectedTransactionType(TransactionType.DEBIT)
+                    },
+                    modifier = Modifier.animateItem()
+                )
             }
         }
     }
@@ -212,6 +289,119 @@ fun FilterTransactionTypeSheet(
                         id = R.string.filter_button_with_count_label,
                         selectedTypes.size
                     )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterTransactionTypeLandscapeSheet(
+    selectedTransactionTypes: List<TransactionType>,
+    filter: (List<TransactionType>) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val selectedTypes = remember {
+        mutableStateListOf<TransactionType>()
+    }
+
+    LaunchedEffect(Unit) {
+        selectedTypes.addAll(selectedTransactionTypes)
+    }
+
+    Row(
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    filter(selectedTypes)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+                enabled = selectedTypes.isNotEmpty()
+            ) {
+                Text(
+                    text = stringResource(
+                        id = R.string.filter_button_with_count_label,
+                        selectedTypes.size
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            modifier = Modifier
+                .weight(2f)
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item(
+                key = "credit",
+                contentType = "row"
+            ) {
+                MultiSelectCard(
+                    checked = {
+                        selectedTypes.contains(TransactionType.CREDIT)
+                    },
+                    label = AnnotatedString(stringResource(id = TransactionType.CREDIT.label)),
+                    icon = TransactionType.CREDIT.icon,
+                    iconTint = TransactionType.CREDIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (selectedTypes.contains(TransactionType.CREDIT)) {
+                            selectedTypes.remove(TransactionType.CREDIT)
+                        } else {
+                            selectedTypes.add(TransactionType.CREDIT)
+                        }
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            }
+            item(
+                key = "debit",
+                contentType = "row"
+            ) {
+                MultiSelectCard(
+                    checked = {
+                        selectedTypes.contains(TransactionType.DEBIT)
+                    },
+                    label = AnnotatedString(stringResource(id = TransactionType.DEBIT.label)),
+                    icon = TransactionType.DEBIT.icon,
+                    iconTint = TransactionType.DEBIT.color,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (selectedTypes.contains(TransactionType.DEBIT)) {
+                            selectedTypes.remove(TransactionType.DEBIT)
+                        } else {
+                            selectedTypes.add(TransactionType.DEBIT)
+                        }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
         }

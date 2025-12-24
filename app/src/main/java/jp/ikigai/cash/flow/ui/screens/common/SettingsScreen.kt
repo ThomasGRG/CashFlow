@@ -51,6 +51,7 @@ import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.components.bottombars.SettingsScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.RestoreSortConfigLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.RestoreSortConfigSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -114,7 +115,7 @@ fun SettingsScreen(
             },
             showBottomSheet = sheetType != SheetType.NONE,
             bottomSheetContent = {
-                RestoreSortConfigSheet(
+                RestoreSortConfigLandscapeSheet(
                     restore = { selectedScreens ->
                         scope.launch {
                             preferencesDataStore.restoreDefaults(selectedScreens)

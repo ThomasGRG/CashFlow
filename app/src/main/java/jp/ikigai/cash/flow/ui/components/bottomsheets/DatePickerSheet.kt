@@ -4,11 +4,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
@@ -18,6 +22,9 @@ import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -90,6 +97,96 @@ fun DatePickerSheet(
             ) {
                 Text(text = stringResource(id = R.string.set_button_label))
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerLandscapeSheet(
+    date: ZonedDateTime,
+    selectableDates: SelectableDates = DatePickerDefaults.AllDates,
+    setDate: (ZonedDateTime) -> Unit,
+    dismiss: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = date.toEpochMilli(),
+        selectableDates = selectableDates
+    )
+
+    val dateFormatter by remember {
+        mutableStateOf(
+            DatePickerDefaults.dateFormatter()
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            DatePickerDefaults.DatePickerTitle(
+                displayMode = datePickerState.displayMode,
+            )
+            DatePickerDefaults.DatePickerHeadline(
+                selectedDateMillis = datePickerState.selectedDateMillis,
+                displayMode = datePickerState.displayMode,
+                dateFormatter = dateFormatter,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                    setDate(datePickerState.selectedDateMillis!!.toZonedDateTime())
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35),
+            ) {
+                Text(text = stringResource(id = R.string.set_button_label))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .verticalScroll(
+                    rememberScrollState()
+                ),
+        ) {
+            DatePicker(
+                state = datePickerState,
+                title = null,
+                headline = null,
+                showModeToggle = false,
+                modifier = Modifier.fillMaxSize(),
+                colors = DatePickerDefaults.colors(
+                    containerColor = BottomSheetDefaults.ContainerColor
+                )
+            )
         }
     }
 }

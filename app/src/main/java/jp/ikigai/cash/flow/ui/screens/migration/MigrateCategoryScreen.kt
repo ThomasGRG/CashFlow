@@ -52,13 +52,21 @@ import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.MigrateScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.AmountFilterSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.DateRangePickerSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterAccountSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCounterPartyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCounterPartySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencyLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterCurrencySheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterMethodSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.FilterTransactionTypeSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.MigrateCategoryLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.MigrateCategorySheet
 import jp.ikigai.cash.flow.ui.components.cards.TransactionCard
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
@@ -335,7 +343,7 @@ fun MigrateCategoryScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.DATE_RANGE -> {
-                        DateRangePickerSheet(
+                        DateRangePickerLandscapeSheet(
                             startDate = startDate,
                             endDate = endDate,
                             filter = setStartDateAndEndDate,
@@ -351,7 +359,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.CURRENCY -> {
-                        FilterCurrencySheet(
+                        FilterCurrencyLandscapeSheet(
                             selectedCurrencyCodes = selectedCurrencies,
                             currencies = currencies,
                             filter = setSelectedCurrencies,
@@ -364,7 +372,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.AMOUNT -> {
-                        AmountFilterSheet(
+                        AmountFilterLandscapeSheet(
                             minAmount = filterAmountMin,
                             maxAmount = filterAmountMax,
                             filter = filterByAmount,
@@ -377,7 +385,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.CATEGORY -> {
-                        MigrateCategorySheet(
+                        MigrateCategoryLandscapeSheet(
                             migrateCount = selectedTransactionCount,
                             selectCategory = migrate,
                             categories = categories,
@@ -390,7 +398,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.COUNTERPARTY -> {
-                        FilterCounterPartySheet(
+                        FilterCounterPartyLandscapeSheet(
                             selectedCounterPartyIds = selectedCounterParties,
                             includeNoCounterPartyTransactions = includeNoCounterPartyTransactions,
                             filter = setSelectedCounterParties,
@@ -404,7 +412,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.METHOD -> {
-                        FilterMethodSheet(
+                        FilterMethodLandscapeSheet(
                             selectedMethodIds = selectedMethods,
                             methods = methods,
                             filter = setSelectedMethods,
@@ -417,7 +425,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.ACCOUNT -> {
-                        FilterAccountSheet(
+                        FilterAccountLandscapeSheet(
                             selectedAccountIds = selectedAccounts,
                             accounts = accounts,
                             filter = setSelectedAccounts,
@@ -430,7 +438,7 @@ fun MigrateCategoryScreen(
                     }
 
                     SheetType.TYPE -> {
-                        FilterTransactionTypeSheet(
+                        FilterTransactionTypeLandscapeSheet(
                             selectedTransactionTypes = selectedTransactionTypes,
                             filter = setSelectedTransactionTypes,
                             dismiss = {

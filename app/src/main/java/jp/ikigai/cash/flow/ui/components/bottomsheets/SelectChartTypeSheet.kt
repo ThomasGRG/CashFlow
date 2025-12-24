@@ -3,6 +3,8 @@ package jp.ikigai.cash.flow.ui.components.bottomsheets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -87,6 +89,73 @@ fun SelectChartTypeSheet(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectChartTypeLandscapeSheet(
+    index: Int,
+    selectedChartType: ChartType,
+    setSelectedChartType: (ChartType) -> Unit,
+    chartTypes: List<ChartType>,
+    dismiss: () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        listState.scrollToItem(index)
+    }
+    Row(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight()
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(
+                items = chartTypes,
+                key = { chartType -> chartType.name }
+            ) { chartType ->
+                SelectableCard(
+                    checked = { chartType == selectedChartType },
+                    label = stringResource(id = chartType.label),
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        dismiss()
+                        setSelectedChartType(chartType)
+                    },
+                    modifier = Modifier.animateItem()
+                )
             }
         }
     }

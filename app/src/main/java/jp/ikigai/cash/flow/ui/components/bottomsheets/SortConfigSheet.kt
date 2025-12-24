@@ -3,10 +3,13 @@ package jp.ikigai.cash.flow.ui.components.bottomsheets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -121,6 +124,110 @@ fun SortConfigSheet(
                 shape = RoundedCornerShape(35)
             ) {
                 Text(text = stringResource(id = R.string.sort_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+fun SortConfigLandscapeSheet(
+    selectedField: String,
+    selectedDirection: SortDirection,
+    fields: Map<String, String>,
+    sort: (String, SortDirection) -> Unit,
+    dismiss: () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+
+    var option by remember {
+        mutableStateOf(selectedField)
+    }
+
+    var direction by remember {
+        mutableStateOf(selectedDirection)
+    }
+
+    Row(
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    sort(option, direction)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.sort_button_label))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            FilledTonalButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    dismiss()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(35)
+            ) {
+                Text(text = stringResource(id = R.string.cancel_button_label))
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(2f)
+                .padding(start = 10.dp, bottom = 10.dp, end = 10.dp, top = 8.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            fields.forEach {
+                SelectableCard(
+                    checked = { it.value == option },
+                    label = buildAnnotatedString { append(it.key) },
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        option = it.value
+                    },
+                    modifier = Modifier
+                )
+            }
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                SegmentedButton(
+                    selected = direction == SortDirection.ASC,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        direction = SortDirection.ASC
+                    },
+                    shape = RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                ) {
+                    Text(text = stringResource(id = R.string.ascending_label))
+                }
+                SegmentedButton(
+                    selected = direction == SortDirection.DESC,
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        direction = SortDirection.DESC
+                    },
+                    shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+                ) {
+                    Text(text = stringResource(id = R.string.descending_label))
+                }
             }
         }
     }

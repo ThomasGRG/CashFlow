@@ -60,7 +60,9 @@ import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteSheet
+import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationLandscapeSheet
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmNavigationSheet
 import jp.ikigai.cash.flow.ui.components.common.LandscapeScaffold
 import jp.ikigai.cash.flow.ui.components.common.OneHandModeScaffold
@@ -204,7 +206,7 @@ fun UpsertMethodScreen(
             bottomSheetContent = {
                 when (sheetType) {
                     SheetType.CONFIRM_NAVIGATION -> {
-                        ConfirmNavigationSheet(
+                        ConfirmNavigationLandscapeSheet(
                             message = stringResource(id = R.string.navigation_confirmation_label),
                             navigate = navigateBack,
                             dismiss = {
@@ -216,7 +218,7 @@ fun UpsertMethodScreen(
                     }
 
                     SheetType.WARN_DELETE -> {
-                        ConfirmDeleteSheet(
+                        ConfirmDeleteLandscapeSheet(
                             message = stringResource(id = R.string.method_transactions_deletion_warning_label),
                             delete = deleteMethod,
                             migrate = {
@@ -231,7 +233,7 @@ fun UpsertMethodScreen(
                     }
 
                     SheetType.CONFIRM_DELETE -> {
-                        ConfirmDeleteSheet(
+                        ConfirmDeleteLandscapeSheet(
                             message = stringResource(id = R.string.delete_method_confirmation_label),
                             delete = deleteMethod,
                             dismiss = {
