@@ -366,7 +366,10 @@ class ExportTransactionsScreenViewModel(
         var result: Event
 
         val exportTemplates = if (includeTemplates) getExportTemplates() else emptyList()
-        val exportTransactions = getExportTransactions(state.value.selectedTransactions)
+        val exportTransactions = getExportTransactions(
+            selectedTransactionIds = state.value.selectedTransactions,
+            includeTemplates = includeTemplates,
+        )
         val exportCategories = getExportCategories(
             exportTransactions.map { it.categoryId }.toSet()
         )
@@ -410,7 +413,10 @@ class ExportTransactionsScreenViewModel(
         }
     }
 
-    private fun getExportTransactions(selectedTransactionIds: Set<Long>): List<TransactionExport> {
+    private fun getExportTransactions(
+        selectedTransactionIds: Set<Long>,
+        includeTemplates: Boolean
+    ): List<TransactionExport> {
         val transactions = database
             .transactionQueries
             .getByIds(selectedTransactionIds)
@@ -429,7 +435,11 @@ class ExportTransactionsScreenViewModel(
                 categoryId = it.transactionCategoryId,
                 counterPartyId = it.transactionCounterPartyId,
                 methodId = it.transactionMethodId,
-                templateId = it.transactionTemplateId
+                templateId = if (includeTemplates) {
+                    it.transactionTemplateId
+                } else {
+                    0L
+                },
             )
         }
     }
