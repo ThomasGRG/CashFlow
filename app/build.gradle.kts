@@ -14,8 +14,8 @@ android {
         applicationId = "jp.ikigai.cash.flow"
         minSdk = 30
         targetSdk = 35
-        versionCode = 27
-        versionName = "3.5.0"
+        versionCode = 28
+        versionName = "3.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
