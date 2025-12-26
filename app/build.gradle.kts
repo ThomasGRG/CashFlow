@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "jp.ikigai.cash.flow"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "jp.ikigai.cash.flow"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 28
         versionName = "3.5.1"
 
