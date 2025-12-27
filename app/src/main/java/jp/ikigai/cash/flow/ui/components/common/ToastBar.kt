@@ -1,7 +1,5 @@
 package jp.ikigai.cash.flow.ui.components.common
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import compose.icons.TablerIcons
+import compose.icons.tablericons.X
 
 @Composable
 fun ToastBar(
@@ -33,7 +33,7 @@ fun ToastBar(
                 },
                 content = {
                     Icon(
-                        Icons.Filled.Close,
+                        imageVector = TablerIcons.X,
                         contentDescription = "dismiss",
                     )
                 },

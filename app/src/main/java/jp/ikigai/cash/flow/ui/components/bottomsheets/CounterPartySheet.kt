@@ -18,10 +18,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -46,6 +42,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Check
+import compose.icons.tablericons.Search
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
@@ -862,7 +862,11 @@ fun FilterCounterPartySheet(
                 onCheckedChange = null,
                 thumbContent = {
                     Icon(
-                        imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                        imageVector = if (includeTransactionsWithNoCounterParty) {
+                            TablerIcons.Check
+                        } else {
+                            TablerIcons.X
+                        },
                         contentDescription = null,
                         modifier = Modifier.size(SwitchDefaults.IconSize),
                     )
@@ -919,7 +923,10 @@ fun FilterCounterPartySheet(
                     .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                Icon(
+                    imageVector = TablerIcons.Search,
+                    contentDescription = "Search"
+                )
             }
             FilledTonalButton(
                 onClick = {
@@ -1072,7 +1079,11 @@ fun FilterCounterPartyLandscapeSheet(
                     onCheckedChange = null,
                     thumbContent = {
                         Icon(
-                            imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                            imageVector = if (includeTransactionsWithNoCounterParty) {
+                                TablerIcons.Check
+                            } else {
+                                TablerIcons.X
+                            },
                             contentDescription = null,
                             modifier = Modifier.size(SwitchDefaults.IconSize),
                         )
@@ -1352,7 +1363,11 @@ fun FilterCounterPartySheet(
                 onCheckedChange = null,
                 thumbContent = {
                     Icon(
-                        imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                        imageVector = if (includeTransactionsWithNoCounterParty) {
+                            TablerIcons.Check
+                        } else {
+                            TablerIcons.X
+                        },
                         contentDescription = null,
                         modifier = Modifier.size(SwitchDefaults.IconSize),
                     )
@@ -1409,7 +1424,10 @@ fun FilterCounterPartySheet(
                     .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                Icon(
+                    imageVector = TablerIcons.Search,
+                    contentDescription = "Search"
+                )
             }
             FilledTonalButton(
                 onClick = {
@@ -1569,7 +1587,11 @@ fun FilterCounterPartyLandscapeSheet(
                     onCheckedChange = null,
                     thumbContent = {
                         Icon(
-                            imageVector = if (includeTransactionsWithNoCounterParty) Icons.Filled.Check else Icons.Filled.Clear,
+                            imageVector = if (includeTransactionsWithNoCounterParty) {
+                                TablerIcons.Check
+                            } else {
+                                TablerIcons.X
+                            },
                             contentDescription = null,
                             modifier = Modifier.size(SwitchDefaults.IconSize),
                         )

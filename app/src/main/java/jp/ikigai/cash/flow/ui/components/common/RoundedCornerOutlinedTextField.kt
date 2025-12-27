@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +45,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.X
 
 @Composable
 fun RoundedCornerOutlinedTextField(
@@ -139,7 +139,7 @@ fun RoundedCornerOutlinedTextField(
                         exit = scaleOut() + fadeOut()
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Clear,
+                            imageVector = TablerIcons.X,
                             contentDescription = "clear field",
                             modifier = Modifier
                                 .clickable(
@@ -285,7 +285,7 @@ fun RoundedCornerOutlinedTextField(
                         exit = scaleOut() + fadeOut()
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Clear,
+                            imageVector = TablerIcons.X,
                             contentDescription = "clear field",
                             modifier = Modifier
                                 .clickable(

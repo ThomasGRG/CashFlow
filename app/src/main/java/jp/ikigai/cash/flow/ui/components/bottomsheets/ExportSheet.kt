@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Check
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.R
 
 @Composable
@@ -82,7 +82,11 @@ fun ExportSheet(
                 onCheckedChange = null,
                 thumbContent = {
                     Icon(
-                        imageVector = if (includeTemplates) Icons.Filled.Check else Icons.Filled.Clear,
+                        imageVector = if (includeTemplates) {
+                            TablerIcons.Check
+                        } else {
+                            TablerIcons.X
+                        },
                         contentDescription = null,
                         modifier = Modifier.size(SwitchDefaults.IconSize),
                     )
@@ -168,7 +172,11 @@ fun ExportLandscapeSheet(
                     onCheckedChange = null,
                     thumbContent = {
                         Icon(
-                            imageVector = if (includeTemplates) Icons.Filled.Check else Icons.Filled.Clear,
+                            imageVector = if (includeTemplates) {
+                                TablerIcons.Check
+                            } else {
+                                TablerIcons.X
+                            },
                             contentDescription = null,
                             modifier = Modifier.size(SwitchDefaults.IconSize),
                         )

@@ -16,8 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,6 +62,7 @@ import compose.icons.tablericons.CashBanknote
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.Receipt
 import compose.icons.tablericons.Typography
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
@@ -700,7 +699,7 @@ fun UpsertTransactionScreen(
                         label = stringResource(id = R.string.counter_party_field_label),
                         placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                         leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                        trailingIcon = Icons.Filled.Clear,
+                        trailingIcon = TablerIcons.X,
                         onTrailingIconClick = {
                             setSelectedCounterParty(
                                 CounterPartyWithTransactionMetadata(
@@ -1110,7 +1109,7 @@ fun UpsertTransactionScreen(
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                     leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                    trailingIcon = Icons.Filled.Clear,
+                    trailingIcon = TablerIcons.X,
                     onTrailingIconClick = {
                         setSelectedCounterParty(
                             CounterPartyWithTransactionMetadata(

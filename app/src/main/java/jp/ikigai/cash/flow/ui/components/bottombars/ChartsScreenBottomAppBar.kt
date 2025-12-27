@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -38,6 +36,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.ChartBar
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.ChartType
@@ -233,7 +232,7 @@ fun ChartsScreenBottomAppBar(
                         .fillMaxSize()
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }
@@ -454,7 +453,7 @@ fun ChartsScreenBottomAppBar(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }

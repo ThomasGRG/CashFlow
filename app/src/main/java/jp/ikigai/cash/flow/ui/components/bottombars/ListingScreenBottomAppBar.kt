@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -32,7 +28,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.ChartPie
+import compose.icons.tablericons.Plus
+import compose.icons.tablericons.Search
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 
@@ -67,7 +66,7 @@ fun ListingScreenBottomAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }
@@ -101,7 +100,7 @@ fun ListingScreenBottomAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        imageVector = TablerIcons.Plus,
                         contentDescription = "add"
                     )
                 }
@@ -118,7 +117,7 @@ fun ListingScreenBottomAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Search,
+                        imageVector = TablerIcons.Search,
                         contentDescription = "search"
                     )
                 }
@@ -191,7 +190,7 @@ fun ListingScreenBottomAppBar(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = TablerIcons.ArrowLeft,
                     contentDescription = "navigate back"
                 )
             }
@@ -224,7 +223,7 @@ fun ListingScreenBottomAppBar(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
+                    imageVector = TablerIcons.Plus,
                     contentDescription = "add"
                 )
             }

@@ -19,10 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -41,9 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
+import compose.icons.tablericons.ArrowRight
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseImport
 import compose.icons.tablericons.FileImport
+import compose.icons.tablericons.Search
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
@@ -177,7 +176,7 @@ fun ImportBackupScreenBottomAppBar(
                         .fillMaxSize(),
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }
@@ -269,7 +268,10 @@ fun ImportBackupScreenBottomAppBar(
                                 .fillMaxSize(),
                             enabled = enabled
                         ) {
-                            Icon(imageVector = Icons.Outlined.Search, contentDescription = "search")
+                            Icon(
+                                imageVector = TablerIcons.Search,
+                                contentDescription = "search"
+                            )
                         }
                     }
                 }
@@ -291,7 +293,7 @@ fun ImportBackupScreenBottomAppBar(
                                 .fillMaxSize()
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                imageVector = TablerIcons.ArrowRight,
                                 contentDescription = "navigate to next screen"
                             )
                         }
@@ -482,7 +484,7 @@ fun ImportBackupScreenBottomAppBar(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = TablerIcons.ArrowLeft,
                             contentDescription = "navigate back"
                         )
                     }
@@ -555,7 +557,7 @@ fun ImportBackupScreenBottomAppBar(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                imageVector = TablerIcons.ArrowRight,
                                 contentDescription = "navigate to next screen"
                             )
                         }

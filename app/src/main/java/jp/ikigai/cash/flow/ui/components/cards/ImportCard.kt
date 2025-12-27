@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Check
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
@@ -98,7 +98,7 @@ fun MapCategoryCard(
             CustomOutlinedButton(
                 value = mappedCategory.categoryName,
                 leadingIcon = mappedCategory.icon,
-                trailingIcon = Icons.Filled.Clear,
+                trailingIcon = TablerIcons.X,
                 onTrailingIconClick = clearSelectedCategory,
                 enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
@@ -183,7 +183,7 @@ fun MapCounterPartyCard(
             CustomOutlinedButton(
                 value = mappedCounterParty.counterPartyName,
                 leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                trailingIcon = Icons.Filled.Clear,
+                trailingIcon = TablerIcons.X,
                 onTrailingIconClick = clearSelectedCounterParty,
                 enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
@@ -268,7 +268,7 @@ fun MapMethodCard(
             CustomOutlinedButton(
                 value = mappedMethod.methodName,
                 leadingIcon = Constants.DEFAULT_METHOD_ICON,
-                trailingIcon = Icons.Filled.Clear,
+                trailingIcon = TablerIcons.X,
                 onTrailingIconClick = clearSelectedMethod,
                 enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),
@@ -387,7 +387,11 @@ fun MapAccountCard(
                         enabled = selected && mappedAccount.accountId > 0,
                         thumbContent = {
                             Icon(
-                                imageVector = if (restoreBalance) Icons.Filled.Check else Icons.Filled.Clear,
+                                imageVector = if (restoreBalance) {
+                                    TablerIcons.Check
+                                } else {
+                                    TablerIcons.X
+                                },
                                 contentDescription = null,
                                 modifier = Modifier.size(SwitchDefaults.IconSize),
                             )
@@ -398,7 +402,7 @@ fun MapAccountCard(
             CustomOutlinedButton(
                 value = if (mappedAccount.accountId > 0) "${mappedAccount.accountName} - ${mappedAccount.formattedBalance}" else "",
                 leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
-                trailingIcon = Icons.Filled.Clear,
+                trailingIcon = TablerIcons.X,
                 onTrailingIconClick = clearSelectedSource,
                 enabled = canSelect && selected,
                 label = stringResource(id = R.string.map_to_field_label),

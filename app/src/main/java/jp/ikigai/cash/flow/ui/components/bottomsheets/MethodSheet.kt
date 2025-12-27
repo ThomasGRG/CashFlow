@@ -17,8 +17,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -41,6 +39,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Search
 import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
@@ -869,7 +869,10 @@ fun FilterMethodSheet(
                     .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                Icon(
+                    imageVector = TablerIcons.Search,
+                    contentDescription = "Search"
+                )
             }
             FilledTonalButton(
                 onClick = {
@@ -1279,7 +1282,10 @@ fun FilterMethodSheet(
                     .size(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                Icon(
+                    imageVector = TablerIcons.Search,
+                    contentDescription = "Search"
+                )
             }
             FilledTonalButton(
                 onClick = {

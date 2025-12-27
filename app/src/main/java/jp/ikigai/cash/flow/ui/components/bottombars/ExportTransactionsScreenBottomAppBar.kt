@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -30,8 +27,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.DatabaseExport
+import compose.icons.tablericons.Search
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
@@ -229,7 +228,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         .fillMaxSize()
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }
@@ -277,7 +276,10 @@ fun ExportTransactionsScreenBottomAppBar(
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search")
+                    Icon(
+                        imageVector = TablerIcons.Search,
+                        contentDescription = "search"
+                    )
                 }
                 IconButton(
                     onClick = {
@@ -499,7 +501,7 @@ fun ExportTransactionsScreenBottomAppBar(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }

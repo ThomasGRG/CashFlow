@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,6 +24,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.R
 
 @Composable
@@ -57,7 +57,7 @@ fun SearchBox(
                 exit = scaleOut() + fadeOut()
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Clear,
+                    imageVector = TablerIcons.X,
                     contentDescription = "clear field",
                     modifier = Modifier
                         .clickable(

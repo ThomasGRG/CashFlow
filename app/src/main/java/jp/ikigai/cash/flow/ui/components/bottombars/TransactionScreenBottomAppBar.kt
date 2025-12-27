@@ -11,10 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
@@ -40,6 +36,9 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
 import compose.icons.tablericons.CalendarEvent
+import compose.icons.tablericons.DotsVertical
+import compose.icons.tablericons.Plus
+import compose.icons.tablericons.Search
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
@@ -245,7 +244,7 @@ fun TransactionScreenBottomAppBar(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Add,
+                            imageVector = TablerIcons.Plus,
                             contentDescription = "add new transaction"
                         )
                     }
@@ -259,7 +258,10 @@ fun TransactionScreenBottomAppBar(
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = "search")
+                    Icon(
+                        imageVector = TablerIcons.Search,
+                        contentDescription = "search"
+                    )
                 }
                 IconButton(
                     onClick = {
@@ -270,7 +272,10 @@ fun TransactionScreenBottomAppBar(
                         .weight(1f)
                         .fillMaxSize()
                 ) {
-                    Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "more")
+                    Icon(
+                        imageVector = TablerIcons.DotsVertical,
+                        contentDescription = "more"
+                    )
                 }
             }
         }
@@ -465,7 +470,7 @@ fun TransactionScreenBottomAppBar(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.MoreVert,
+                        imageVector = TablerIcons.DotsVertical,
                         contentDescription = "more"
                     )
                 }
@@ -498,7 +503,7 @@ fun TransactionScreenBottomAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Add,
+                        imageVector = TablerIcons.Plus,
                         contentDescription = "add new transaction"
                     )
                 }

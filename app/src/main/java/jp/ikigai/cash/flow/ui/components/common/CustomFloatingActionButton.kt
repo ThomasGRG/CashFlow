@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
@@ -18,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Search
 
 @Composable
 fun CustomFloatingActionButton(
@@ -56,13 +56,13 @@ fun CustomFloatingActionButtonPreview() {
         modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) {
         CustomFloatingActionButton(enabled = true, onClick = {}) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "")
+            Icon(imageVector = TablerIcons.Search, contentDescription = "")
         }
         CustomFloatingActionButton(enabled = false, onClick = {}) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "")
+            Icon(imageVector = TablerIcons.Search, contentDescription = "")
         }
         FloatingActionButton(onClick = {}) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "")
+            Icon(imageVector = TablerIcons.Search, contentDescription = "")
         }
     }
 }

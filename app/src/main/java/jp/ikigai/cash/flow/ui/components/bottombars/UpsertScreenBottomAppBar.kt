@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBar
@@ -29,8 +26,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.DeviceFloppy
 import compose.icons.tablericons.Replace
+import compose.icons.tablericons.Trash
 import jp.ikigai.cash.flow.ui.components.common.CustomFloatingActionButton
 
 @Composable
@@ -62,7 +61,7 @@ fun UpsertScreenBottomAppBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back",
                     )
                 }
@@ -99,8 +98,8 @@ fun UpsertScreenBottomAppBar(
                         enabled = enabled
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = Icons.Outlined.Delete.name,
+                            imageVector = TablerIcons.Trash,
+                            contentDescription = TablerIcons.Trash.name,
                         )
                     }
                 }
@@ -150,7 +149,7 @@ fun UpsertScreenBottomAppBar(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = TablerIcons.ArrowLeft,
                     contentDescription = "navigate back"
                 )
             }
@@ -163,8 +162,8 @@ fun UpsertScreenBottomAppBar(
                     enabled = enabled
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = Icons.Outlined.Delete.name,
+                        imageVector = TablerIcons.Trash,
+                        contentDescription = TablerIcons.Trash.name,
                     )
                 }
             }
@@ -227,7 +226,7 @@ fun UpsertScreenBottomAppBar(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = TablerIcons.ArrowLeft,
                     contentDescription = "navigate back"
                 )
             }
@@ -266,8 +265,8 @@ fun UpsertScreenBottomAppBar(
                     enabled = enabled
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = Icons.Outlined.Delete.name,
+                        imageVector = TablerIcons.Trash,
+                        contentDescription = TablerIcons.Trash.name,
                     )
                 }
             }

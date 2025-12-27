@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -54,6 +52,7 @@ import compose.icons.tablericons.ClipboardList
 import compose.icons.tablericons.FileText
 import compose.icons.tablericons.LetterCase
 import compose.icons.tablericons.Typography
+import compose.icons.tablericons.X
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
@@ -514,7 +513,7 @@ fun UpsertTransactionTemplateScreen(
                         label = stringResource(id = R.string.category_field_label),
                         placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                         leadingIcon = selectedCategory.icon,
-                        trailingIcon = Icons.Filled.Clear,
+                        trailingIcon = TablerIcons.X,
                         onTrailingIconClick = {
                             setSelectedCategory(
                                 CategoryWithTransactionMetadata(
@@ -536,7 +535,7 @@ fun UpsertTransactionTemplateScreen(
                         label = stringResource(id = R.string.counter_party_field_label),
                         placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                         leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                        trailingIcon = Icons.Filled.Clear,
+                        trailingIcon = TablerIcons.X,
                         onTrailingIconClick = {
                             setSelectedCounterParty(
                                 CounterPartyWithTransactionMetadata(
@@ -557,7 +556,7 @@ fun UpsertTransactionTemplateScreen(
                         label = stringResource(id = R.string.method_field_label),
                         placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                         leadingIcon = Constants.DEFAULT_METHOD_ICON,
-                        trailingIcon = Icons.Filled.Clear,
+                        trailingIcon = TablerIcons.X,
                         onTrailingIconClick = {
                             setSelectedMethod(
                                 MethodWithTransactionMetadata(
@@ -578,7 +577,7 @@ fun UpsertTransactionTemplateScreen(
                         label = stringResource(id = R.string.account_field_label),
                         placeHolder = stringResource(id = R.string.select_account_placeholder_label),
                         leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
-                        trailingIcon = Icons.Filled.Clear,
+                        trailingIcon = TablerIcons.X,
                         onTrailingIconClick = {
                             setSelectedAccount(
                                 AccountWithTransactionMetadata(
@@ -855,7 +854,7 @@ fun UpsertTransactionTemplateScreen(
                     label = stringResource(id = R.string.category_field_label),
                     placeHolder = stringResource(id = R.string.select_category_placeholder_label),
                     leadingIcon = selectedCategory.icon,
-                    trailingIcon = Icons.Filled.Clear,
+                    trailingIcon = TablerIcons.X,
                     onTrailingIconClick = {
                         setSelectedCategory(
                             CategoryWithTransactionMetadata(
@@ -877,7 +876,7 @@ fun UpsertTransactionTemplateScreen(
                     label = stringResource(id = R.string.counter_party_field_label),
                     placeHolder = stringResource(id = R.string.counter_party_placeholder_label),
                     leadingIcon = Constants.DEFAULT_COUNTERPARTY_ICON,
-                    trailingIcon = Icons.Filled.Clear,
+                    trailingIcon = TablerIcons.X,
                     onTrailingIconClick = {
                         setSelectedCounterParty(
                             CounterPartyWithTransactionMetadata(
@@ -898,7 +897,7 @@ fun UpsertTransactionTemplateScreen(
                     label = stringResource(id = R.string.method_field_label),
                     placeHolder = stringResource(id = R.string.select_method_placeholder_label),
                     leadingIcon = Constants.DEFAULT_METHOD_ICON,
-                    trailingIcon = Icons.Filled.Clear,
+                    trailingIcon = TablerIcons.X,
                     onTrailingIconClick = {
                         setSelectedMethod(
                             MethodWithTransactionMetadata(
@@ -919,7 +918,7 @@ fun UpsertTransactionTemplateScreen(
                     label = stringResource(id = R.string.account_field_label),
                     placeHolder = stringResource(id = R.string.select_account_placeholder_label),
                     leadingIcon = Constants.DEFAULT_ACCOUNT_ICON,
-                    trailingIcon = Icons.Filled.Clear,
+                    trailingIcon = TablerIcons.X,
                     onTrailingIconClick = {
                         setSelectedAccount(
                             AccountWithTransactionMetadata(
