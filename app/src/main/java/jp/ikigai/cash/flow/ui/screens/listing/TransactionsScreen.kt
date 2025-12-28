@@ -369,21 +369,6 @@ fun TransactionsScreen(
             onDismissToastBar = {
                 showToastBar = false
             },
-            showEmptyPlaceholder = transactions.isEmpty(),
-            emptyPlaceholderText = if (totalTransactionCount == 0L) {
-                stringResource(id = R.string.transactions_screen_empty_placeholder_label)
-            } else if (transactionCount != 0L) {
-                if (searchText.isNotBlank()) {
-                    stringResource(
-                        id = R.string.no_results_found_search_placeholder_label,
-                        searchText
-                    )
-                } else {
-                    stringResource(id = R.string.no_results_found_filters_placeholder_label)
-                }
-            } else {
-                stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
-            },
             sheetState = sheetState,
             showBottomSheet = sheetType != SheetType.NONE,
             bottomSheetContent = {
@@ -658,6 +643,32 @@ fun TransactionsScreen(
                             )
                         }
                     }
+                    if (transactions.isEmpty()) {
+                        item(
+                            key = "placeholder"
+                        ) {
+                            Text(
+                                text = if (totalTransactionCount == 0L) {
+                                    stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+                                } else if (transactionCount != 0L) {
+                                    if (searchText.isNotBlank()) {
+                                        stringResource(
+                                            id = R.string.no_results_found_search_placeholder_label,
+                                            searchText
+                                        )
+                                    } else {
+                                        stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                                    }
+                                } else {
+                                    stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
+                                },
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 50.dp),
+                            )
+                        }
+                    }
                     transactions.forEach { entry ->
                         when (val header = entry.key) {
                             is TransactionHeader.DateHeader -> {
@@ -806,6 +817,32 @@ fun TransactionsScreen(
                                 )
                             }
                         }
+                        if (transactions.isEmpty()) {
+                            item(
+                                key = "placeholder"
+                            ) {
+                                Text(
+                                    text = if (totalTransactionCount == 0L) {
+                                        stringResource(id = R.string.transactions_screen_empty_placeholder_label)
+                                    } else if (transactionCount != 0L) {
+                                        if (searchText.isNotBlank()) {
+                                            stringResource(
+                                                id = R.string.no_results_found_search_placeholder_label,
+                                                searchText
+                                            )
+                                        } else {
+                                            stringResource(id = R.string.no_results_found_filters_placeholder_label)
+                                        }
+                                    } else {
+                                        stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
+                                    },
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 50.dp),
+                                )
+                            }
+                        }
                         transactions.forEach { entry ->
                             when (val header = entry.key) {
                                 is TransactionHeader.DateHeader -> {
@@ -858,27 +895,6 @@ fun TransactionsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.TopCenter)
-                    )
-                } else if (transactions.isEmpty()) {
-                    Text(
-                        text = if (totalTransactionCount == 0L) {
-                            stringResource(id = R.string.transactions_screen_empty_placeholder_label)
-                        } else if (transactionCount != 0L) {
-                            if (searchText.isNotBlank()) {
-                                stringResource(
-                                    id = R.string.no_results_found_search_placeholder_label,
-                                    searchText
-                                )
-                            } else {
-                                stringResource(id = R.string.no_results_found_filters_placeholder_label)
-                            }
-                        } else {
-                            stringResource(id = R.string.no_transactions_found_date_range_currency_placeholder_label)
-                        },
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.align(
-                            Alignment.Center
-                        )
                     )
                 }
                 AnimatedVisibility(
