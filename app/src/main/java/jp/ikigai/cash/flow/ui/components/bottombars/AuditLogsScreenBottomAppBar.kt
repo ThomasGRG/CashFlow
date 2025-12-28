@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -46,62 +47,48 @@ fun AuditLogsScreenBottomAppBar(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateBack()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navigateBack()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.ArrowLeft,
-                        contentDescription = "navigate back"
-                    )
-                }
+                Icon(
+                    imageVector = TablerIcons.ArrowLeft,
+                    contentDescription = "navigate back"
+                )
             }
-            Row(
-                modifier = Modifier.weight(3f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onCalendarClick()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCalendarClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.CalendarEvent,
-                        contentDescription = "select time period"
-                    )
-                }
+                Icon(
+                    imageVector = TablerIcons.CalendarEvent,
+                    contentDescription = "select time period"
+                )
             }
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSortClick()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onSortClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = if (sortDirection == SortDirection.DESC) {
-                            TablerIcons.SortDescending
-                        } else {
-                            TablerIcons.SortAscending
-                        },
-                        contentDescription = "sort direction icon"
-                    )
-                }
+                Icon(
+                    imageVector = if (sortDirection == SortDirection.DESC) {
+                        TablerIcons.SortDescending
+                    } else {
+                        TablerIcons.SortAscending
+                    },
+                    contentDescription = "sort direction icon"
+                )
             }
         }
     }
@@ -150,7 +137,8 @@ fun AuditLogsScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     navigateBack()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = TablerIcons.ArrowLeft,
@@ -161,7 +149,8 @@ fun AuditLogsScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCalendarClick()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = TablerIcons.CalendarEvent,
@@ -172,7 +161,8 @@ fun AuditLogsScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onSortClick()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = if (sortDirection == SortDirection.DESC) {

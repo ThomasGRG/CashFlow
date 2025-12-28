@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -171,9 +172,7 @@ fun ImportBackupScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize(),
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -194,9 +193,7 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 setSheetType(SheetType.DATE_RANGE)
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize(),
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                             enabled = enabled
                         ) {
                             Icon(
@@ -263,9 +260,7 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onSearchClick()
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize(),
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                             enabled = enabled
                         ) {
                             Icon(
@@ -289,8 +284,7 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 navigateToNext()
                             },
-                            modifier = Modifier
-                                .fillMaxSize()
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                         ) {
                             Icon(
                                 imageVector = TablerIcons.ArrowRight,
@@ -308,9 +302,7 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onToggleSelectClick()
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize(),
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                             enabled = enabled
                         ) {
                             AnimatedToggleSelectIcon(deselectVisible = allSelected)
@@ -482,6 +474,7 @@ fun ImportBackupScreenBottomAppBar(
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             navigateBack()
                         },
+                        modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                     ) {
                         Icon(
                             imageVector = TablerIcons.ArrowLeft,
@@ -506,7 +499,8 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 setSheetType(SheetType.DATE_RANGE)
                             },
-                            enabled = enabled
+                            enabled = enabled,
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                         ) {
                             Icon(
                                 imageVector = TablerIcons.CalendarEvent,
@@ -532,7 +526,8 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onToggleSelectClick()
                             },
-                            enabled = enabled
+                            enabled = enabled,
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                         ) {
                             AnimatedToggleSelectIcon(deselectVisible = allSelected)
                         }
@@ -555,6 +550,7 @@ fun ImportBackupScreenBottomAppBar(
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 navigateToNext()
                             },
+                            modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                         ) {
                             Icon(
                                 imageVector = TablerIcons.ArrowRight,

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -218,7 +218,7 @@ fun MigrateScreenBottomAppBar(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -226,9 +226,7 @@ fun MigrateScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -241,33 +239,24 @@ fun MigrateScreenBottomAppBar(
                         setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
                         contentDescription = "select time period"
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                CustomFloatingActionButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.CATEGORY)
+                    },
+                    enabled = migrateEnabled
                 ) {
-                    CustomFloatingActionButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            setSheetType(SheetType.CATEGORY)
-                        },
-                        enabled = migrateEnabled
-                    ) {
-                        Icon(
-                            imageVector = TablerIcons.Replace,
-                            contentDescription = "migrate transactions"
-                        )
-                    }
+                    Icon(
+                        imageVector = TablerIcons.Replace,
+                        contentDescription = "migrate transactions"
+                    )
                 }
                 IconButton(
                     onClick = {
@@ -275,9 +264,7 @@ fun MigrateScreenBottomAppBar(
                         onSearchClick()
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.Search,
@@ -290,9 +277,7 @@ fun MigrateScreenBottomAppBar(
                         onToggleSelectClick()
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     AnimatedToggleSelectIcon(deselectVisible = allSelected)
                 }
@@ -505,6 +490,7 @@ fun MigrateScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -517,6 +503,7 @@ fun MigrateScreenBottomAppBar(
                         setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
@@ -529,6 +516,7 @@ fun MigrateScreenBottomAppBar(
                         onToggleSelectClick()
                     },
                     enabled = enabled,
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     AnimatedToggleSelectIcon(deselectVisible = allSelected)
                 }

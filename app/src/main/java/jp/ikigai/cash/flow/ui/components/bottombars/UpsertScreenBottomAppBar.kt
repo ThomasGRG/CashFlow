@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -58,7 +59,8 @@ fun UpsertScreenBottomAppBar(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
-                    }
+                    },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -95,7 +97,8 @@ fun UpsertScreenBottomAppBar(
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             deleteClick()
                         },
-                        enabled = enabled
+                        enabled = enabled,
+                        modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                     ) {
                         Icon(
                             imageVector = TablerIcons.Trash,
@@ -146,7 +149,8 @@ fun UpsertScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     navigateBack()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = TablerIcons.ArrowLeft,
@@ -159,7 +163,8 @@ fun UpsertScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         deleteClick()
                     },
-                    enabled = enabled
+                    enabled = enabled,
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.Trash,

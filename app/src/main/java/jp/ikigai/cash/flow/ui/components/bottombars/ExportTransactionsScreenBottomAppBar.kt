@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -215,7 +215,7 @@ fun ExportTransactionsScreenBottomAppBar(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -223,9 +223,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -238,33 +236,24 @@ fun ExportTransactionsScreenBottomAppBar(
                         setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
                         contentDescription = "select time period"
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                CustomFloatingActionButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        setSheetType(SheetType.EXPORT)
+                    },
+                    enabled = exportEnabled
                 ) {
-                    CustomFloatingActionButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            setSheetType(SheetType.EXPORT)
-                        },
-                        enabled = exportEnabled
-                    ) {
-                        Icon(
-                            imageVector = TablerIcons.DatabaseExport,
-                            contentDescription = "export transactions"
-                        )
-                    }
+                    Icon(
+                        imageVector = TablerIcons.DatabaseExport,
+                        contentDescription = "export transactions"
+                    )
                 }
                 IconButton(
                     onClick = {
@@ -272,9 +261,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         onSearchClick()
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.Search,
@@ -287,9 +274,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         onToggleSelectClick()
                     },
                     enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     AnimatedToggleSelectIcon(deselectVisible = allSelected)
                 }
@@ -499,6 +484,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
@@ -511,6 +497,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         setSheetType(SheetType.DATE_RANGE)
                     },
                     enabled = enabled,
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
@@ -523,6 +510,7 @@ fun ExportTransactionsScreenBottomAppBar(
                         onToggleSelectClick()
                     },
                     enabled = enabled,
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     AnimatedToggleSelectIcon(deselectVisible = allSelected)
                 }

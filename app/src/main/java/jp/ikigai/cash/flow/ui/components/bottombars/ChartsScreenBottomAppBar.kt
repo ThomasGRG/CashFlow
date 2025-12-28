@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -219,7 +219,7 @@ fun ChartsScreenBottomAppBar(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -227,18 +227,13 @@ fun ChartsScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,
                         contentDescription = "navigate back"
                     )
                 }
-                Spacer(
-                    modifier = Modifier.weight(4f)
-                )
             }
         }
     }
@@ -451,6 +446,7 @@ fun ChartsScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         navigateBack()
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.ArrowLeft,

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -203,7 +203,7 @@ fun TransactionScreenBottomAppBar(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -211,9 +211,7 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.CURRENCY)
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Text(text = selectedCurrencySymbol, fontSize = TextUnit(22f, TextUnitType.Sp))
                 }
@@ -222,41 +220,30 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.DATE_RANGE)
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
                         contentDescription = "select time period"
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            addTransaction()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = TablerIcons.Plus,
-                            contentDescription = "add new transaction"
-                        )
+                FloatingActionButton(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        addTransaction()
                     }
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.Plus,
+                        contentDescription = "add new transaction"
+                    )
                 }
                 IconButton(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         onSearchClick()
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.Search,
@@ -268,9 +255,7 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.MORE_OPTIONS)
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.DotsVertical,
@@ -468,6 +453,7 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.MORE_OPTIONS)
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.DotsVertical,
@@ -479,6 +465,7 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.DATE_RANGE)
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Icon(
                         imageVector = TablerIcons.CalendarEvent,
@@ -490,6 +477,7 @@ fun TransactionScreenBottomAppBar(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         setSheetType(SheetType.CURRENCY)
                     },
+                    modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
                 ) {
                     Text(
                         text = selectedCurrencySymbol,

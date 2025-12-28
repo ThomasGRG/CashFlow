@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -52,92 +53,67 @@ fun ListingScreenBottomAppBar(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navigateBack()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navigateBack()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.ArrowLeft,
-                        contentDescription = "navigate back"
-                    )
-                }
+                Icon(
+                    imageVector = TablerIcons.ArrowLeft,
+                    contentDescription = "navigate back"
+                )
             }
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    sortClick()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        sortClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = sortIcon,
-                        contentDescription = "sort"
-                    )
-                }
+                Icon(
+                    imageVector = sortIcon,
+                    contentDescription = "sort"
+                )
             }
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        addClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.Plus,
-                        contentDescription = "add"
-                    )
+            FloatingActionButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    addClick()
                 }
+            ) {
+                Icon(
+                    imageVector = TablerIcons.Plus,
+                    contentDescription = "add"
+                )
             }
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    searchClick()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        searchClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.Search,
-                        contentDescription = "search"
-                    )
-                }
+                Icon(
+                    imageVector = TablerIcons.Search,
+                    contentDescription = "search"
+                )
             }
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    chartClick()
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
-                IconButton(
-                    onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        chartClick()
-                    }
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.ChartPie,
-                        contentDescription = "graph"
-                    )
-                }
+                Icon(
+                    imageVector = TablerIcons.ChartPie,
+                    contentDescription = "graph"
+                )
             }
         }
     }
@@ -187,7 +163,8 @@ fun ListingScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     navigateBack()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = TablerIcons.ArrowLeft,
@@ -198,7 +175,8 @@ fun ListingScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     sortClick()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = sortIcon,
@@ -209,7 +187,8 @@ fun ListingScreenBottomAppBar(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     chartClick()
-                }
+                },
+                modifier = Modifier.defaultMinSize(minHeight = 70.dp, minWidth = 70.dp),
             ) {
                 Icon(
                     imageVector = TablerIcons.ChartPie,
