@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +46,10 @@ fun MoreOptionsSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 5.dp, end = 5.dp, bottom = 20.dp),
+            .padding(start = 5.dp, end = 5.dp, bottom = 20.dp)
+            .verticalScroll(
+                rememberScrollState()
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -63,7 +68,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -84,7 +89,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -113,7 +118,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -142,7 +147,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -163,7 +168,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -192,7 +197,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
@@ -213,7 +218,7 @@ fun MoreOptionsSheet(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 58.dp),
+                    .heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(
