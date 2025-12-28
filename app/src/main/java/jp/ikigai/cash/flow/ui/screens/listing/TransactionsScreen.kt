@@ -57,8 +57,7 @@ import androidx.core.os.ConfigurationCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.window.core.layout.WindowHeightSizeClass
-import androidx.window.core.layout.WindowWidthSizeClass
+import androidx.window.core.layout.WindowSizeClass
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
 import jp.ikigai.cash.flow.data.Routes
@@ -356,7 +355,11 @@ fun TransactionsScreen(
         mutableLongStateOf(0L)
     }
 
-    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+    if (
+        windowSizeClass.isWidthAtLeastBreakpoint(
+            WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
+        )
+    ) {
         LandscapeScaffold(
             loading = loading,
             showToastBar = showToastBar,

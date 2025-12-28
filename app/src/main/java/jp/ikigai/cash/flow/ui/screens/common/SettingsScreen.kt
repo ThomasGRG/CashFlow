@@ -40,8 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.window.core.layout.WindowHeightSizeClass
-import androidx.window.core.layout.WindowWidthSizeClass
+import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Settings
 import jp.ikigai.cash.flow.BuildConfig
@@ -103,7 +102,11 @@ fun SettingsScreen(
         mutableStateOf(SheetType.NONE)
     }
 
-    if (windowSizeClass.windowHeightSizeClass == WindowHeightSizeClass.COMPACT && windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.MEDIUM) {
+    if (
+        windowSizeClass.isWidthAtLeastBreakpoint(
+            WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
+        )
+    ) {
         LandscapeScaffold(
             sheetState = sheetState,
             showToastBar = showToastBar,
