@@ -158,7 +158,7 @@ fun OneHandModeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -265,7 +265,7 @@ fun OneHandModeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -370,7 +370,7 @@ fun OneHandModeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -483,7 +483,7 @@ fun OneHandModeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }

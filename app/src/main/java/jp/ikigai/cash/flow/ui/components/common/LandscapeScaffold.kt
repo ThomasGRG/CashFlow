@@ -112,7 +112,7 @@ fun LandscapeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -189,7 +189,7 @@ fun LandscapeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -270,7 +270,7 @@ fun LandscapeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }
@@ -342,7 +342,7 @@ fun LandscapeScaffold(
             ModalBottomSheet(
                 onDismissRequest = onDismissSheet,
                 sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                sheetGesturesEnabled = false,
             ) {
                 bottomSheetContent()
             }

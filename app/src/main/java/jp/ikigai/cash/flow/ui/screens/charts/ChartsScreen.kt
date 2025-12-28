@@ -619,7 +619,7 @@ fun ChartsScreen(
                         sheetType = SheetType.NONE
                     },
                     sheetState = sheetState,
-//                sheetGesturesEnabled: Boolean = false, TODO()
+                    sheetGesturesEnabled = false,
                 ) {
                     when (sheetType) {
                         SheetType.CHART -> {
