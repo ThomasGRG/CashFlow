@@ -1,10 +1,5 @@
 package jp.ikigai.cash.flow.ui.screens.listing
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -201,19 +196,13 @@ fun CounterPartyScreen(
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    AnimatedVisibility(
-                        visible = count > 0,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        SearchBox(
-                            modifier = Modifier.background(MaterialTheme.colorScheme.background),
-                            searchText = searchText,
-                            setSearchText = setSearchText,
-                            focusRequester = focusRequester,
-                            interactionSource = interactionSource
-                        )
-                    }
+                    SearchBox(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
+                    )
                     Spacer(modifier = Modifier.weight(1f))
                     ListingScreenBottomAppBar(
                         title = stringResource(id = R.string.counter_parties_label),
@@ -223,17 +212,11 @@ fun CounterPartyScreen(
                         ),
                         navigateBack = navigateBack,
                         sortClick = {
-                            if (count > 0) {
-                                sheetType = SheetType.SORT
-                            }
+                            sheetType = SheetType.SORT
                         },
                         sortIcon = sortIcon,
                         addClick = addNewCounterParty,
-                        chartClick = {
-                            if (count > 0) {
-                                viewCharts()
-                            }
-                        },
+                        chartClick = viewCharts,
                     )
                 }
             },
@@ -310,26 +293,18 @@ fun CounterPartyScreen(
                 ListingScreenBottomAppBar(
                     navigateBack = navigateBack,
                     sortClick = {
-                        if (count > 0) {
-                            sheetType = SheetType.SORT
-                        }
+                        sheetType = SheetType.SORT
                     },
                     sortIcon = sortIcon,
                     addClick = addNewCounterParty,
                     searchClick = {
-                        if (count > 0) {
-                            if (isFocused) {
-                                keyboardController?.show()
-                            } else {
-                                focusRequester.requestFocus()
-                            }
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
                         }
                     },
-                    chartClick = {
-                        if (count > 0) {
-                            viewCharts()
-                        }
-                    }
+                    chartClick = viewCharts,
                 )
             }
         ) {
@@ -344,21 +319,15 @@ fun CounterPartyScreen(
                     key = "search",
                     contentType = "search_box"
                 ) {
-                    AnimatedVisibility(
-                        visible = count > 0,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        SearchBox(
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.background)
-                                .padding(top = 5.dp, bottom = 8.dp),
-                            searchText = searchText,
-                            setSearchText = setSearchText,
-                            focusRequester = focusRequester,
-                            interactionSource = interactionSource
-                        )
-                    }
+                    SearchBox(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(top = 5.dp, bottom = 8.dp),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
+                    )
                 }
                 items(
                     items = counterParties,

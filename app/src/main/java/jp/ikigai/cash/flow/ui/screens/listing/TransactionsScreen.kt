@@ -592,15 +592,13 @@ fun TransactionsScreen(
                     verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    AnimatedVisibility(visible = transactionCount != 0L) {
-                        SearchBox(
-                            modifier = Modifier.padding(bottom = 10.dp),
-                            searchText = searchText,
-                            setSearchText = setSearchText,
-                            focusRequester = focusRequester,
-                            interactionSource = interactionSource
-                        )
-                    }
+                    SearchBox(
+                        modifier = Modifier.padding(bottom = 10.dp),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
+                    )
                     Spacer(modifier = Modifier.weight(1f))
                     TransactionScreenBottomAppBar(
                         title = stringResource(id = R.string.transactions_label),
@@ -758,12 +756,10 @@ fun TransactionsScreen(
                         }
                     },
                     onSearchClick = {
-                        if (!(transactions.isEmpty() && searchText.isEmpty())) {
-                            if (isFocused) {
-                                keyboardController?.show()
-                            } else {
-                                focusRequester.requestFocus()
-                            }
+                        if (isFocused) {
+                            keyboardController?.show()
+                        } else {
+                            focusRequester.requestFocus()
                         }
                     },
                     setSheetType = {
@@ -778,16 +774,14 @@ fun TransactionsScreen(
                     .padding(contentPadding)
             ) {
                 Column {
-                    AnimatedVisibility(visible = transactionCount != 0L) {
-                        SearchBox(
-                            modifier = Modifier
-                                .padding(top = 5.dp, start = 10.dp, end = 10.dp),
-                            searchText = searchText,
-                            setSearchText = setSearchText,
-                            focusRequester = focusRequester,
-                            interactionSource = interactionSource
-                        )
-                    }
+                    SearchBox(
+                        modifier = Modifier
+                            .padding(top = 5.dp, start = 10.dp, end = 10.dp),
+                        searchText = searchText,
+                        setSearchText = setSearchText,
+                        focusRequester = focusRequester,
+                        interactionSource = interactionSource
+                    )
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
