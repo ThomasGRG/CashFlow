@@ -1,7 +1,6 @@
 package jp.ikigai.cash.flow.ui.components.bottombars
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.FilledTonalButton
@@ -41,6 +39,7 @@ import compose.icons.tablericons.ChartBar
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.ui.components.buttons.CustomOutlinedButton
+import jp.ikigai.cash.flow.ui.components.common.FilterContainer
 
 @Composable
 fun ChartsScreenBottomAppBar(
@@ -93,14 +92,11 @@ fun ChartsScreenBottomAppBar(
             leadingIcon = TablerIcons.ChartBar,
             onClick = onSelectChartClick
         )
-        Row(
-            modifier = Modifier
-                .padding(top = 6.dp, start = 10.dp, end = 10.dp, bottom = 6.dp)
-                .horizontalScroll(
-                    rememberScrollState()
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        FilterContainer(
+            padding = PaddingValues(
+                top = 6.dp,
+                bottom = 10.dp
+            )
         ) {
             FilledTonalButton(
                 onClick = {
@@ -292,14 +288,8 @@ fun ChartsScreenBottomAppBar(
             onClick = onSelectChartClick
         )
         Spacer(modifier = Modifier.weight(1f))
-        Row(
-            modifier = Modifier
-                .padding(top = 6.dp, bottom = 6.dp)
-                .horizontalScroll(
-                    rememberScrollState()
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        FilterContainer(
+            modifier = Modifier.padding(bottom = 10.dp),
         ) {
             FilledTonalButton(
                 onClick = {
