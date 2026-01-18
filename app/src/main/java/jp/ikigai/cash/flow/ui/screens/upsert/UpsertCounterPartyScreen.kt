@@ -62,18 +62,17 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Typography
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.MigrateCounterPartyRoute
+import jp.ikigai.cash.flow.data.UpsertCounterPartyRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
 import jp.ikigai.cash.flow.ui.components.bottomsheets.ConfirmDeleteLandscapeSheet
@@ -91,6 +90,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -549,27 +549,21 @@ fun UpsertCounterPartyScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.upsertCounterPartyScreen(navController: NavController) {
-    composable(
-        route = Routes.UpsertCounterParty.route,
-        arguments = listOf(
-            navArgument("id") {
-                defaultValue = 0L
-                type = NavType.LongType
-            }
-        )
-    ) {
-        val viewModel: UpsertCounterPartyScreenViewModel = koinViewModel()
+fun EntryProviderScope<NavKey>.upsertCounterPartyScreen(backStack: NavBackStack<NavKey>) {
+    entry<UpsertCounterPartyRoute> { route ->
+        val viewModel: UpsertCounterPartyScreenViewModel = koinViewModel {
+            parametersOf(route.id)
+        }
         val state by viewModel.state.collectAsState()
 
         UpsertCounterPartyScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             migrateTransactions = { id ->
-                navController.navigate(Routes.MigrateCounterParty.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    MigrateCounterPartyRoute(id = id)
+                )
             },
             checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setName = viewModel::setName,

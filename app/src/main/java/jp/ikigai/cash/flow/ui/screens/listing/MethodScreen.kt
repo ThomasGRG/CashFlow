@@ -52,15 +52,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.InsightsRoute
+import jp.ikigai.cash.flow.data.MethodsRoute
+import jp.ikigai.cash.flow.data.UpsertMethodRoute
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -380,10 +382,8 @@ fun MethodScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.methodScreen(navController: NavController) {
-    composable(
-        route = Routes.Methods.route
-    ) {
+fun EntryProviderScope<NavKey>.methodScreen(backStack: NavBackStack<NavKey>) {
+    entry<MethodsRoute> { route ->
         val viewModel: MethodScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
@@ -391,24 +391,22 @@ fun NavGraphBuilder.methodScreen(navController: NavController) {
 
         MethodScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             viewCharts = {
-                navController.navigate(
-                    Routes.Insights.getRoute(ChartType.METHOD_DEBIT_CREDIT_BAR_CHART)
-                ) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    InsightsRoute(ChartType.METHOD_DEBIT_CREDIT_BAR_CHART)
+                )
             },
             addNewTransactionMethod = {
-                navController.navigate(Routes.UpsertMethod.getRoute()) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertMethodRoute()
+                )
             },
             editTransactionMethod = { id ->
-                navController.navigate(Routes.UpsertMethod.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertMethodRoute(id = id)
+                )
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,

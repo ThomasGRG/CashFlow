@@ -17,80 +17,66 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package jp.ikigai.cash.flow.data
 
+import androidx.navigation3.runtime.NavKey
 import jp.ikigai.cash.flow.data.enums.ChartType
+import kotlinx.serialization.Serializable
 
-sealed class Routes(val route: String) {
+@Serializable
+data object SettingsRoute : NavKey
 
-    data object Settings : Routes("settings")
+@Serializable
+data object AuditLogsRoute : NavKey
 
-    data object AuditLogs : Routes("auditLogs")
+@Serializable
+data class InsightsRoute(val type: ChartType = ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART) : NavKey
 
-    data object Insights : Routes("insights?type={type}") {
-        fun getRoute(type: ChartType = ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART): String {
-            return "insights?type=${type.name}"
-        }
-    }
+@Serializable
+data object ExportTransactionsRoute : NavKey
 
-    data object ExportTransactions : Routes("exportTransactions")
-    data object ImportBackup : Routes("importBackup")
+@Serializable
+data object ImportBackupRoute : NavKey
 
-    data object Transactions : Routes("transactions")
-    data object UpsertTransaction : Routes("upsertTransaction?id={id}&templateId={templateId}") {
-        fun getRoute(id: Long = 0L, templateId: Long = 0L): String {
-            return "upsertTransaction?id=${id}&templateId=${templateId}"
-        }
-    }
+@Serializable
+data object TransactionsRoute : NavKey
 
-    data object CounterParties : Routes("counterParties")
-    data object UpsertCounterParty : Routes("upsertCounterParty?id={id}") {
-        fun getRoute(id: Long = 0L): String {
-            return "upsertCounterParty?id=${id}"
-        }
-    }
+@Serializable
+data class UpsertTransactionRoute(val id: Long = 0L, val templateId: Long = 0L) : NavKey
 
-    data object MigrateCounterParty : Routes("migrateCounterParty?id={id}") {
-        fun getRoute(id: Long): String {
-            return "migrateCounterParty?id=${id}"
-        }
-    }
+@Serializable
+data object CounterPartiesRoute : NavKey
 
-    data object Accounts : Routes("accounts")
-    data object UpsertAccount : Routes("upsertAccount?id={id}") {
-        fun getRoute(id: Long = 0L): String {
-            return "upsertAccount?id=${id}"
-        }
-    }
+@Serializable
+data class UpsertCounterPartyRoute(val id: Long = 0L) : NavKey
 
-    data object Methods : Routes("methods")
-    data object UpsertMethod : Routes("upsertMethod?id={id}") {
-        fun getRoute(id: Long = 0L): String {
-            return "upsertMethod?id=${id}"
-        }
-    }
+@Serializable
+data class MigrateCounterPartyRoute(val id: Long) : NavKey
 
-    data object MigrateMethod : Routes("migrateMethod?id={id}") {
-        fun getRoute(id: Long): String {
-            return "migrateMethod?id=${id}"
-        }
-    }
+@Serializable
+data object AccountsRoute : NavKey
 
-    data object Categories : Routes("categories")
-    data object UpsertCategory : Routes("upsertCategory?id={id}") {
-        fun getRoute(id: Long = 0L): String {
-            return "upsertCategory?id=${id}"
-        }
-    }
+@Serializable
+data class UpsertAccountRoute(val id: Long = 0L) : NavKey
 
-    data object MigrateCategory : Routes("migrateCategory?id={id}") {
-        fun getRoute(id: Long): String {
-            return "migrateCategory?id=${id}"
-        }
-    }
+@Serializable
+data object MethodsRoute : NavKey
 
-    data object Templates : Routes("templates")
-    data object UpsertTemplate : Routes("upsertTemplate?id={id}") {
-        fun getRoute(id: Long = 0L): String {
-            return "upsertTemplate?id=${id}"
-        }
-    }
-}
+@Serializable
+data class UpsertMethodRoute(val id: Long = 0L) : NavKey
+
+@Serializable
+data class MigrateMethodRoute(val id: Long) : NavKey
+
+@Serializable
+data object CategoriesRoute : NavKey
+
+@Serializable
+data class UpsertCategoryRoute(val id: Long = 0L) : NavKey
+
+@Serializable
+data class MigrateCategoryRoute(val id: Long) : NavKey
+
+@Serializable
+data object TemplatesRoute : NavKey
+
+@Serializable
+data class UpsertTemplateRoute(val id: Long = 0L) : NavKey

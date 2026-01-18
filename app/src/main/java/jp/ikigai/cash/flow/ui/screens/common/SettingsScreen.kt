@@ -54,16 +54,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Settings
 import jp.ikigai.cash.flow.BuildConfig
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.AuditLogsRoute
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.ExportTransactionsRoute
+import jp.ikigai.cash.flow.data.ImportBackupRoute
+import jp.ikigai.cash.flow.data.SettingsRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.preferences.CashFlowPreferencesDataStore
 import jp.ikigai.cash.flow.ui.components.bottombars.SettingsScreenBottomAppBar
@@ -404,31 +407,23 @@ fun SettingsScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.settingsScreen(navController: NavController) {
-    composable(
-        route = Routes.Settings.route
-    ) {
+fun EntryProviderScope<NavKey>.settingsScreen(backStack: NavBackStack<NavKey>) {
+    entry<SettingsRoute> { route ->
         val preferencesDataStore = koinInject<CashFlowPreferencesDataStore>()
 
         SettingsScreen(
             preferencesDataStore = preferencesDataStore,
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             navigateToImportScreen = {
-                navController.navigate(Routes.ImportBackup.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(ImportBackupRoute)
             },
             navigateToExportScreen = {
-                navController.navigate(Routes.ExportTransactions.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(ExportTransactionsRoute)
             },
             navigateToAuditLogsScreen = {
-                navController.navigate(Routes.AuditLogs.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(AuditLogsRoute)
             },
         )
     }

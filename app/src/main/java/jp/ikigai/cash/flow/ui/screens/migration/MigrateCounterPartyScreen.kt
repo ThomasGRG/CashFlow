@@ -54,16 +54,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.MigrateCounterPartyRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -99,6 +97,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.Locale
@@ -821,16 +820,11 @@ fun MigrateCounterPartyScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.migrateCounterPartyScreen(navController: NavController) {
-    composable(
-        route = Routes.MigrateCounterParty.route,
-        arguments = listOf(
-            navArgument("id") {
-                type = NavType.LongType
-            }
-        )
-    ) {
-        val viewModel: MigrateCounterPartyScreenViewModel = koinViewModel()
+fun EntryProviderScope<NavKey>.migrateCounterPartyScreen(backStack: NavBackStack<NavKey>) {
+    entry<MigrateCounterPartyRoute> { route ->
+        val viewModel: MigrateCounterPartyScreenViewModel = koinViewModel {
+            parametersOf(route.id)
+        }
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
         val filtersState by viewModel.filtersState.collectAsState()
@@ -838,7 +832,7 @@ fun NavGraphBuilder.migrateCounterPartyScreen(navController: NavController) {
 
         MigrateCounterPartyScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             migrate = viewModel::migrateTransactions,
             toggleSelection = viewModel::toggleSelection,

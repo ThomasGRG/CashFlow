@@ -71,14 +71,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import jp.ikigai.cash.flow.R
+import jp.ikigai.cash.flow.data.AccountsRoute
+import jp.ikigai.cash.flow.data.CategoriesRoute
+import jp.ikigai.cash.flow.data.CounterPartiesRoute
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.MethodsRoute
+import jp.ikigai.cash.flow.data.SettingsRoute
+import jp.ikigai.cash.flow.data.TemplatesRoute
 import jp.ikigai.cash.flow.data.TransactionHeader
+import jp.ikigai.cash.flow.data.TransactionsRoute
+import jp.ikigai.cash.flow.data.UpsertTransactionRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -1169,10 +1176,8 @@ fun TransactionsScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.transactionsScreen(navController: NavController) {
-    composable(
-        Routes.Transactions.route
-    ) {
+fun EntryProviderScope<NavKey>.transactionsScreen(backStack: NavBackStack<NavKey>) {
+    entry<TransactionsRoute> { route ->
         val uriHandler = LocalUriHandler.current
         val viewModel: TransactionsScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
@@ -1182,14 +1187,14 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
         TransactionsScreen(
             canAddTransaction = viewModel::canAddTransaction,
             addTransaction = { templateId ->
-                navController.navigate(Routes.UpsertTransaction.getRoute(templateId = templateId)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertTransactionRoute(templateId = templateId)
+                )
             },
             editTransaction = { id ->
-                navController.navigate(Routes.UpsertTransaction.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertTransactionRoute(id = id)
+                )
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,
@@ -1206,34 +1211,22 @@ fun NavGraphBuilder.transactionsScreen(navController: NavController) {
             cloneTransaction = viewModel::cloneTransaction,
             createTemplate = viewModel::createTemplateFromTransaction,
             navigateToMethodsScreen = {
-                navController.navigate(Routes.Methods.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(MethodsRoute)
             },
             navigateToAccountsScreen = {
-                navController.navigate(Routes.Accounts.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(AccountsRoute)
             },
             navigateToCategoriesScreen = {
-                navController.navigate(Routes.Categories.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(CategoriesRoute)
             },
             navigateToCounterPartyScreen = {
-                navController.navigate(Routes.CounterParties.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(CounterPartiesRoute)
             },
             navigateToTemplatesScreen = {
-                navController.navigate(Routes.Templates.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(TemplatesRoute)
             },
             navigateToSettingsScreen = {
-                navController.navigate(Routes.Settings.route) {
-                    launchSingleTop = true
-                }
+                backStack.add(SettingsRoute)
             },
             openGithubPage = {
                 uriHandler.openUri("https://github.com/ThomasGRG/CashFlow/releases")

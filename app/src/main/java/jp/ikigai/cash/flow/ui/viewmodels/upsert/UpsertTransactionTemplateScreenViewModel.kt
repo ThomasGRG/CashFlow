@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.coroutines.asFlow
@@ -52,11 +51,9 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class UpsertTransactionTemplateScreenViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val templateId: Long,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
-
-    private val templateId: Long = checkNotNull(savedStateHandle["id"])
 
     private var currencyFormatterMap = getCurrencyFormatterMap()
 

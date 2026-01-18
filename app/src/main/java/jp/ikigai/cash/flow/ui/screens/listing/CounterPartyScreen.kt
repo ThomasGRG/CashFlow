@@ -52,15 +52,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.CounterPartiesRoute
+import jp.ikigai.cash.flow.data.InsightsRoute
+import jp.ikigai.cash.flow.data.UpsertCounterPartyRoute
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -380,10 +382,8 @@ fun CounterPartyScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.counterPartyScreen(navController: NavController) {
-    composable(
-        route = Routes.CounterParties.route
-    ) {
+fun EntryProviderScope<NavKey>.counterPartyScreen(backStack: NavBackStack<NavKey>) {
+    entry<CounterPartiesRoute> { route ->
         val viewModel: CounterPartyScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
@@ -391,24 +391,22 @@ fun NavGraphBuilder.counterPartyScreen(navController: NavController) {
 
         CounterPartyScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             viewCharts = {
-                navController.navigate(
-                    Routes.Insights.getRoute(ChartType.COUNTERPARTY_DEBIT_CREDIT_BAR_CHART)
-                ) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    InsightsRoute(ChartType.COUNTERPARTY_DEBIT_CREDIT_BAR_CHART)
+                )
             },
             addNewCounterParty = {
-                navController.navigate(Routes.UpsertCounterParty.getRoute()) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertCounterPartyRoute()
+                )
             },
             editCounterParty = { id ->
-                navController.navigate(Routes.UpsertCounterParty.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertCounterPartyRoute(id = id)
+                )
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,

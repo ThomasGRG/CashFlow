@@ -63,9 +63,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import jp.ikigai.cash.flow.AccountWithTransactionMetadata
 import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
@@ -73,7 +73,7 @@ import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.ImportBackupRoute
 import jp.ikigai.cash.flow.data.dto.TransactionWithChips
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -1336,10 +1336,8 @@ fun ImportBackupScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.importBackupScreen(navController: NavController) {
-    composable(
-        route = Routes.ImportBackup.route
-    ) {
+fun EntryProviderScope<NavKey>.importBackupScreen(backStack: NavBackStack<NavKey>) {
+    entry<ImportBackupRoute> { route ->
         val viewModel: ImportBackupScreenViewModel = koinViewModel()
         val mainState by viewModel.primaryState.collectAsState()
         val secondaryState by viewModel.secondaryState.collectAsState()
@@ -1349,7 +1347,7 @@ fun NavGraphBuilder.importBackupScreen(navController: NavController) {
 
         ImportBackupScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             setLocale = viewModel::setLocale,
             loadFile = viewModel::loadFile,

@@ -52,16 +52,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.InsightsRoute
+import jp.ikigai.cash.flow.data.TemplatesRoute
+import jp.ikigai.cash.flow.data.UpsertTemplateRoute
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -415,10 +417,8 @@ fun TransactionTemplateScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
-    composable(
-        route = Routes.Templates.route
-    ) {
+fun EntryProviderScope<NavKey>.transactionTemplateScreen(backStack: NavBackStack<NavKey>) {
+    entry<TemplatesRoute> { route ->
         val viewModel: TransactionTemplateScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
@@ -426,26 +426,24 @@ fun NavGraphBuilder.transactionTemplateScreen(navController: NavController) {
 
         TransactionTemplateScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             viewCharts = {
-                navController.navigate(
-                    Routes.Insights.getRoute(ChartType.TEMPLATE_TRANSACTION_COUNT_BAR_CHART)
-                ) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    InsightsRoute(ChartType.TEMPLATE_TRANSACTION_COUNT_BAR_CHART)
+                )
             },
             addNewTransactionTemplate = {
                 if (viewModel.canAddTransaction()) {
-                    navController.navigate(Routes.UpsertTemplate.getRoute()) {
-                        launchSingleTop = true
-                    }
+                    backStack.add(
+                        UpsertTemplateRoute()
+                    )
                 }
             },
             editTransactionTemplate = { id ->
-                navController.navigate(Routes.UpsertTemplate.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertTemplateRoute(id = id)
+                )
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,

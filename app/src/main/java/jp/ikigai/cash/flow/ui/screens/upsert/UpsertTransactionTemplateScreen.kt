@@ -55,11 +55,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Archive
@@ -76,7 +74,7 @@ import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Constants
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.UpsertTemplateRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
 import jp.ikigai.cash.flow.ui.components.bottombars.UpsertScreenBottomAppBar
@@ -106,6 +104,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -984,22 +983,16 @@ fun UpsertTransactionTemplateScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.upsertTransactionTemplateScreen(navController: NavController) {
-    composable(
-        route = Routes.UpsertTemplate.route,
-        arguments = listOf(
-            navArgument("id") {
-                defaultValue = 0L
-                type = NavType.LongType
-            }
-        )
-    ) {
-        val viewModel: UpsertTransactionTemplateScreenViewModel = koinViewModel()
+fun EntryProviderScope<NavKey>.upsertTransactionTemplateScreen(backStack: NavBackStack<NavKey>) {
+    entry<UpsertTemplateRoute> { route ->
+        val viewModel: UpsertTransactionTemplateScreenViewModel = koinViewModel {
+            parametersOf(route.id)
+        }
         val state by viewModel.state.collectAsState()
 
         UpsertTransactionTemplateScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             checkNameAlreadyInUse = viewModel::checkNameAlreadyInUse,
             setLocale = viewModel::setLocale,

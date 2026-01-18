@@ -59,13 +59,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import jp.ikigai.cash.flow.R
 import jp.ikigai.cash.flow.data.Event
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.ExportTransactionsRoute
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -903,10 +903,8 @@ fun ExportTransactionsScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.exportTransactionsScreen(navController: NavController) {
-    composable(
-        route = Routes.ExportTransactions.route
-    ) {
+fun EntryProviderScope<NavKey>.exportTransactionsScreen(backStack: NavBackStack<NavKey>) {
+    entry<ExportTransactionsRoute> { route ->
         val viewModel: ExportTransactionsScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
@@ -915,7 +913,7 @@ fun NavGraphBuilder.exportTransactionsScreen(navController: NavController) {
 
         ExportTransactionsScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             export = viewModel::export,
             toggleSelection = viewModel::toggleSelection,

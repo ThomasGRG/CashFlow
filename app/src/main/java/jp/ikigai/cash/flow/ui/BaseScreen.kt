@@ -18,16 +18,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package jp.ikigai.cash.flow.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import jp.ikigai.cash.flow.data.Constants
-import jp.ikigai.cash.flow.data.Routes
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import jp.ikigai.cash.flow.data.TransactionsRoute
 import jp.ikigai.cash.flow.ui.screens.charts.chartsScreen
 import jp.ikigai.cash.flow.ui.screens.common.exportTransactionsScreen
 import jp.ikigai.cash.flow.ui.screens.common.importBackupScreen
@@ -51,68 +56,86 @@ import jp.ikigai.cash.flow.ui.screens.upsert.upsertTransactionTemplateScreen
 
 @Composable
 fun BaseScreen() {
-    val navController = rememberNavController()
+    val backStack = rememberNavBackStack(TransactionsRoute)
 
-    NavHost(
+    NavDisplay(
+        backStack = backStack,
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        navController = navController,
-        startDestination = Routes.Transactions.route,
-        enterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(Constants.TWEEN_DURATION)
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            transactionsScreen(backStack = backStack)
+            upsertTransactionScreen(backStack = backStack)
+
+            transactionTemplateScreen(backStack = backStack)
+            upsertTransactionTemplateScreen(backStack = backStack)
+
+            accountScreen(backStack = backStack)
+            upsertAccountScreen(backStack = backStack)
+
+            categoryScreen(backStack = backStack)
+            upsertCategoryScreen(backStack = backStack)
+            migrateCategoryScreen(backStack = backStack)
+
+            counterPartyScreen(backStack = backStack)
+            upsertCounterPartyScreen(backStack = backStack)
+            migrateCounterPartyScreen(backStack = backStack)
+
+            methodScreen(backStack = backStack)
+            upsertMethodScreen(backStack = backStack)
+            migrateMethodScreen(backStack = backStack)
+
+            chartsScreen(backStack = backStack)
+
+            auditLogsScreen(backStack = backStack)
+
+            settingsScreen(backStack = backStack)
+
+            exportTransactionsScreen(backStack = backStack)
+
+            importBackupScreen(backStack = backStack)
+        },
+        transitionSpec = {
+            ContentTransform(
+                targetContentEnter = slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                ),
+                initialContentExit = slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    targetOffset = { it / 2 },
+                ),
             )
         },
-        exitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(Constants.TWEEN_DURATION)
+        popTransitionSpec = {
+            ContentTransform(
+                targetContentEnter = slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    initialOffset = { it / 2 },
+                ),
+                initialContentExit = slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                ),
             )
         },
-        popEnterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(Constants.TWEEN_DURATION)
+        predictivePopTransitionSpec = { swipeEdge ->
+            ContentTransform(
+                targetContentEnter = fadeIn(
+                    initialAlpha = 0.6f,
+                ),
+                initialContentExit = slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    targetOffset = { it / 3 }
+                ),
             )
         },
-        popExitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(Constants.TWEEN_DURATION)
-            )
-        }
-    ) {
-        auditLogsScreen(navController = navController)
-
-        settingsScreen(navController = navController)
-
-        exportTransactionsScreen(navController = navController)
-
-        importBackupScreen(navController = navController)
-
-        chartsScreen(navController = navController)
-
-        transactionsScreen(navController = navController)
-        upsertTransactionScreen(navController = navController)
-
-        transactionTemplateScreen(navController = navController)
-        upsertTransactionTemplateScreen(navController = navController)
-
-        categoryScreen(navController = navController)
-        upsertCategoryScreen(navController = navController)
-        migrateCategoryScreen(navController = navController)
-
-        counterPartyScreen(navController = navController)
-        upsertCounterPartyScreen(navController = navController)
-        migrateCounterPartyScreen(navController = navController)
-
-        methodScreen(navController = navController)
-        upsertMethodScreen(navController = navController)
-        migrateMethodScreen(navController = navController)
-
-        accountScreen(navController = navController)
-        upsertAccountScreen(navController = navController)
-    }
+    )
 }

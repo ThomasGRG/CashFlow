@@ -37,37 +37,65 @@ import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertCounterPartyScreenViewMode
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertMethodScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionScreenViewModel
 import jp.ikigai.cash.flow.ui.viewmodels.upsert.UpsertTransactionTemplateScreenViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
     single { CashFlowPreferencesDataStore(get()) }
 
-    viewModel() { AuditLogsScreenViewModel() }
+    viewModel { AuditLogsScreenViewModel() }
 
-    viewModel() { ChartsScreenViewModel(get()) }
+    viewModel { parameters ->
+        ChartsScreenViewModel(parameters.get())
+    }
 
-    viewModel() { TransactionsScreenViewModel(get()) }
-    viewModel() { UpsertTransactionScreenViewModel(get()) }
+    viewModel { TransactionsScreenViewModel(get()) }
+    viewModel { parameters ->
+        UpsertTransactionScreenViewModel(parameters[0], parameters[1])
+    }
 
-    viewModel() { CounterPartyScreenViewModel(get()) }
-    viewModel() { UpsertCounterPartyScreenViewModel(get()) }
-    viewModel() { MigrateCounterPartyScreenViewModel(get()) }
+    viewModel { CounterPartyScreenViewModel(get()) }
 
-    viewModel() { AccountScreenViewModel(get()) }
-    viewModel() { UpsertAccountScreenViewModel(get()) }
+    viewModel { parameters ->
+        UpsertCounterPartyScreenViewModel(parameters.get())
+    }
 
-    viewModel() { MethodScreenViewModel(get()) }
-    viewModel() { UpsertMethodScreenViewModel(get()) }
-    viewModel() { MigrateMethodScreenViewModel(get()) }
+    viewModel { parameters ->
+        MigrateCounterPartyScreenViewModel(parameters.get())
+    }
 
-    viewModel() { CategoryScreenViewModel(get()) }
-    viewModel() { UpsertCategoryScreenViewModel(get()) }
-    viewModel() { MigrateCategoryScreenViewModel(get()) }
+    viewModel { AccountScreenViewModel(get()) }
 
-    viewModel() { ExportTransactionsScreenViewModel() }
-    viewModel() { ImportBackupScreenViewModel() }
+    viewModel { parameters ->
+        UpsertAccountScreenViewModel(parameters.get())
+    }
 
-    viewModel() { TransactionTemplateScreenViewModel(get()) }
-    viewModel() { UpsertTransactionTemplateScreenViewModel(get()) }
+    viewModel { MethodScreenViewModel(get()) }
+
+    viewModel { parameters ->
+        UpsertMethodScreenViewModel(parameters.get())
+    }
+
+    viewModel { parameters ->
+        MigrateMethodScreenViewModel(parameters.get())
+    }
+
+    viewModel { CategoryScreenViewModel(get()) }
+
+    viewModel { parameters ->
+        UpsertCategoryScreenViewModel(parameters.get())
+    }
+
+    viewModel { parameters ->
+        MigrateCategoryScreenViewModel(parameters.get())
+    }
+
+    viewModel { ExportTransactionsScreenViewModel() }
+    viewModel { ImportBackupScreenViewModel() }
+
+    viewModel { TransactionTemplateScreenViewModel(get()) }
+
+    viewModel { parameters ->
+        UpsertTransactionTemplateScreenViewModel(parameters.get())
+    }
 }

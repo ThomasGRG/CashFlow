@@ -50,14 +50,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Book
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.AuditLogsRoute
 import jp.ikigai.cash.flow.data.dto.audit.AuditLogListItem
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -441,10 +441,8 @@ fun AuditLogsScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.auditLogsScreen(navController: NavController) {
-    composable(
-        route = Routes.AuditLogs.route
-    ) {
+fun EntryProviderScope<NavKey>.auditLogsScreen(backStack: NavBackStack<NavKey>) {
+    entry<AuditLogsRoute> { route ->
         val viewModel: AuditLogsScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val filtersState by viewModel.filtersState.collectAsState()
@@ -452,7 +450,7 @@ fun NavGraphBuilder.auditLogsScreen(navController: NavController) {
 
         AuditLogsScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             setStartDateAndEndDate = viewModel::setStartDateAndEndDate,
             setSortDirection = viewModel::setSortDirection,

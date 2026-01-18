@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package jp.ikigai.cash.flow.ui.viewmodels.migration
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.coroutines.asFlow
@@ -68,13 +67,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MigrateMethodScreenViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val methodId: Long,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private val datePattern = "dd-LLL-yyyy"
-
-    private val methodId: Long = checkNotNull(savedStateHandle["id"])
 
     private var loadDataJob: Job? = null
     private var loadTransactionsJob: Job? = null

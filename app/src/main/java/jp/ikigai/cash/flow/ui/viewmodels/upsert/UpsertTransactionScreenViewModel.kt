@@ -19,7 +19,6 @@ package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
 import android.os.Handler
 import android.os.Looper
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.coroutines.asFlow
@@ -60,14 +59,12 @@ import java.time.ZonedDateTime
 import java.util.Locale
 
 class UpsertTransactionScreenViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val transactionId: Long,
+    private val templateId: Long,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private val datePattern = "EEEE, dd-LLL-yyyy"
-
-    private val transactionId: Long = checkNotNull(savedStateHandle["id"])
-    private val templateId: Long = checkNotNull(savedStateHandle["templateId"])
 
     private var currencyFormatterMap = getCurrencyFormatterMap()
 

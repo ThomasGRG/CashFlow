@@ -63,7 +63,9 @@ Simple expense tracker built with Jetpack Compose and Kotlin
 ---
 
 - [compose-icons](https://github.com/DevSrSouza/compose-icons) [MIT-License]
-- navigation-compose [Apache 2.0 License]
+- navigation3-runtime [Apache 2.0 License]
+- navigation3-ui [Apache 2.0 License]
+- lifecycle-viewmodel-navigation3 [Apache 2.0 License]
 - datastore-preferences [Apache 2.0 License]
 - [kotlinx-serialization-json](https://github.com/Kotlin/kotlinx.serialization) [Apache 2.0 License]
 - [vico](https://github.com/patrykandpatrick/vico) [Apache 2.0 License]

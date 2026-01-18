@@ -57,11 +57,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
@@ -97,7 +95,7 @@ import jp.ikigai.cash.flow.CategoryWithTransactionMetadata
 import jp.ikigai.cash.flow.CounterPartyWithTransactionMetadata
 import jp.ikigai.cash.flow.MethodWithTransactionMetadata
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.InsightsRoute
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.TransactionType
@@ -122,6 +120,7 @@ import jp.ikigai.cash.flow.ui.viewmodels.charts.ChartsScreenViewModel
 import jp.ikigai.cash.flow.utils.getCurrencyFormatterMap
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import java.time.YearMonth
 import java.util.Locale
 
@@ -1119,17 +1118,11 @@ fun TotalDebitCreditBarChart(
     )
 }
 
-fun NavGraphBuilder.chartsScreen(navController: NavController) {
-    composable(
-        route = Routes.Insights.route,
-        arguments = listOf(
-            navArgument("type") {
-                defaultValue = ChartType.TRANSACTION_TYPE_AMOUNT_BAR_CHART.name
-                type = NavType.StringType
-            }
-        )
-    ) {
-        val viewModel: ChartsScreenViewModel = koinViewModel()
+fun EntryProviderScope<NavKey>.chartsScreen(backStack: NavBackStack<NavKey>) {
+    entry<InsightsRoute> { route ->
+        val viewModel: ChartsScreenViewModel = koinViewModel {
+            parametersOf(route.type)
+        }
         val state by viewModel.state.collectAsState()
         val loading by viewModel.loadingState.collectAsState()
         val hasData by viewModel.hasDataState.collectAsState()
@@ -1142,7 +1135,7 @@ fun NavGraphBuilder.chartsScreen(navController: NavController) {
 
         ChartsScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             setLocale = viewModel::setLocale,
             setChartType = viewModel::setChartType,

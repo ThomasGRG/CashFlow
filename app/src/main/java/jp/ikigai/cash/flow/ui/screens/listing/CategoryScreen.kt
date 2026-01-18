@@ -52,15 +52,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.window.core.layout.WindowSizeClass
 import compose.icons.TablerIcons
 import compose.icons.tablericons.SortAscending
 import compose.icons.tablericons.SortDescending
 import jp.ikigai.cash.flow.R
-import jp.ikigai.cash.flow.data.Routes
+import jp.ikigai.cash.flow.data.CategoriesRoute
+import jp.ikigai.cash.flow.data.InsightsRoute
+import jp.ikigai.cash.flow.data.UpsertCategoryRoute
 import jp.ikigai.cash.flow.data.enums.ChartType
 import jp.ikigai.cash.flow.data.enums.SheetType
 import jp.ikigai.cash.flow.data.enums.SortDirection
@@ -380,10 +382,8 @@ fun CategoryScreenPreview() {
     )
 }
 
-fun NavGraphBuilder.categoryScreen(navController: NavController) {
-    composable(
-        route = Routes.Categories.route
-    ) {
+fun EntryProviderScope<NavKey>.categoryScreen(backStack: NavBackStack<NavKey>) {
+    entry<CategoriesRoute> { route ->
         val viewModel: CategoryScreenViewModel = koinViewModel()
         val state by viewModel.state.collectAsState()
         val searchState by viewModel.searchState.collectAsState()
@@ -391,24 +391,22 @@ fun NavGraphBuilder.categoryScreen(navController: NavController) {
 
         CategoryScreen(
             navigateBack = {
-                navController.popBackStack()
+                backStack.removeLastOrNull()
             },
             viewCharts = {
-                navController.navigate(
-                    Routes.Insights.getRoute(ChartType.CATEGORY_DEBIT_CREDIT_BAR_CHART)
-                ) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    InsightsRoute(ChartType.CATEGORY_DEBIT_CREDIT_BAR_CHART)
+                )
             },
             addNewCategory = {
-                navController.navigate(Routes.UpsertCategory.getRoute()) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertCategoryRoute()
+                )
             },
             editCategory = { id ->
-                navController.navigate(Routes.UpsertCategory.getRoute(id)) {
-                    launchSingleTop = true
-                }
+                backStack.add(
+                    UpsertCategoryRoute(id = id)
+                )
             },
             searchState = searchState,
             setSearchText = viewModel::setSearchText,

@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package jp.ikigai.cash.flow.ui.viewmodels.upsert
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.coroutines.asFlow
@@ -42,13 +41,11 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class UpsertCounterPartyScreenViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val counterPartyId: Long,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
 
     private var numberFormatter = getNumberFormatter()
-
-    private val counterPartyId: Long = checkNotNull(savedStateHandle["id"])
 
     private val _event: Channel<Event> = Channel(Int.MAX_VALUE)
     val event: Flow<Event> = _event.receiveAsFlow()

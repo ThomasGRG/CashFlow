@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package jp.ikigai.cash.flow.ui.viewmodels.charts
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -52,11 +51,9 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 class ChartsScreenViewModel(
-    savedStateHandle: SavedStateHandle,
+    initialChartType: ChartType,
     private val database: CashFlowDatabase = Database.database
 ) : ViewModel() {
-
-    private val initialChartType: String = checkNotNull(savedStateHandle["type"])
 
     private var currencyFormatterMap = getCurrencyFormatterMap()
 
@@ -64,9 +61,7 @@ class ChartsScreenViewModel(
     val labelKey: ExtraStore.Key<List<String>> = ExtraStore.Key()
 
     private val _state = MutableStateFlow(
-        ChartsScreenState(
-            selectedChartType = ChartType.valueOf(initialChartType)
-        )
+        ChartsScreenState(selectedChartType = initialChartType)
     )
     val state: StateFlow<ChartsScreenState> = _state.asStateFlow()
 
