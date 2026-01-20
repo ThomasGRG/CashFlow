@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -61,13 +62,13 @@ fun SelectChartTypeSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.height(300.dp),
+            modifier = Modifier.heightIn(max = 300.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

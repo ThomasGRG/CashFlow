@@ -169,7 +169,7 @@ fun ChooseIconSheet(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -338,7 +338,7 @@ fun ChooseIconLandscapeSheet(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }

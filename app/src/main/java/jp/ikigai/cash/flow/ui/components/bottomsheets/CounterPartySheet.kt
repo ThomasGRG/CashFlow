@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -134,7 +135,7 @@ fun SelectCounterPartySheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -148,7 +149,7 @@ fun SelectCounterPartySheet(
         )
         LazyColumn(
             state = listState,
-            modifier = Modifier.height(230.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -170,20 +171,24 @@ fun SelectCounterPartySheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -344,20 +349,24 @@ fun SelectCounterPartyLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -435,7 +444,7 @@ fun MigrateCounterPartySheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -448,7 +457,7 @@ fun MigrateCounterPartySheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(230.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -469,30 +478,33 @@ fun MigrateCounterPartySheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
             }
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             FilledTonalButton(
                 onClick = {
@@ -501,7 +513,8 @@ fun MigrateCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
@@ -518,7 +531,8 @@ fun MigrateCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
             ) {
@@ -532,7 +546,8 @@ fun MigrateCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f),
                 shape = RoundedCornerShape(35),
                 enabled = selectedCounterParty.counterPartyId > 0,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
@@ -692,20 +707,24 @@ fun MigrateCounterPartyLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -800,7 +819,7 @@ fun FilterCounterPartySheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -813,7 +832,7 @@ fun FilterCounterPartySheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(230.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -837,20 +856,24 @@ fun FilterCounterPartySheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -891,10 +914,9 @@ fun FilterCounterPartySheet(
             )
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             FilledTonalButton(
                 onClick = {
@@ -903,7 +925,8 @@ fun FilterCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -953,7 +976,8 @@ fun FilterCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 enabled = selectedCount > 0 || includeTransactionsWithNoCounterParty,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -1190,20 +1214,24 @@ fun FilterCounterPartyLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -1302,7 +1330,7 @@ fun FilterCounterPartySheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -1315,7 +1343,7 @@ fun FilterCounterPartySheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(230.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -1338,20 +1366,24 @@ fun FilterCounterPartySheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -1392,10 +1424,9 @@ fun FilterCounterPartySheet(
             )
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             FilledTonalButton(
                 onClick = {
@@ -1404,7 +1435,8 @@ fun FilterCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -1457,7 +1489,8 @@ fun FilterCounterPartySheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 enabled = selectedCount > 0 || includeTransactionsWithNoCounterParty,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -1700,20 +1733,24 @@ fun FilterCounterPartyLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredCounterPartyList.isEmpty()) {
+            if (filteredCounterPartyList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (counterParties.isEmpty()) {
+                            stringResource(id = R.string.counter_parties_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }

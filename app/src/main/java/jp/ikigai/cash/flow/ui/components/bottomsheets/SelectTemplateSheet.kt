@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -107,7 +108,7 @@ fun SelectTemplateSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -120,7 +121,7 @@ fun SelectTemplateSheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(200.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -153,15 +154,14 @@ fun SelectTemplateSheet(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
             }
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -339,7 +339,7 @@ fun SelectTemplateLandscapeSheet(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }

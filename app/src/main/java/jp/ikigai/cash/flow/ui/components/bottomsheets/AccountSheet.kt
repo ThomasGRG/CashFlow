@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -138,7 +139,7 @@ fun SelectAccountSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -152,7 +153,7 @@ fun SelectAccountSheet(
         )
         LazyColumn(
             state = listState,
-            modifier = Modifier.height(200.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -174,20 +175,24 @@ fun SelectAccountSheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -356,20 +361,24 @@ fun SelectAccountLandscapeSheet(
                     modifier = Modifier.animateItem(),
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -464,7 +473,7 @@ fun FilterAccountSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -477,7 +486,7 @@ fun FilterAccountSheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(200.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -500,30 +509,33 @@ fun FilterAccountSheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
             }
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             FilledTonalButton(
                 onClick = {
@@ -532,7 +544,8 @@ fun FilterAccountSheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -582,7 +595,8 @@ fun FilterAccountSheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 enabled = selectedCount > 0,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -712,7 +726,7 @@ fun FilterAccountLandscapeSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(50.dp),
+                    .height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
                 Text(
@@ -784,20 +798,24 @@ fun FilterAccountLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
@@ -894,7 +912,7 @@ fun FilterAccountSheet(
 
     Column(
         modifier = Modifier
-            .padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -907,7 +925,7 @@ fun FilterAccountSheet(
             interactionSource = interactionSource
         )
         LazyColumn(
-            modifier = Modifier.height(200.dp),
+            modifier = Modifier.heightIn(max = 240.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -930,30 +948,33 @@ fun FilterAccountSheet(
                         .animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
             }
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             FilledTonalButton(
                 onClick = {
@@ -962,7 +983,8 @@ fun FilterAccountSheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -1014,7 +1036,8 @@ fun FilterAccountSheet(
                 },
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp)
-                    .height(50.dp),
+                    .height(50.dp)
+                    .weight(1f, fill = true),
                 shape = RoundedCornerShape(35),
                 enabled = selectedCount > 0,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -1146,7 +1169,7 @@ fun FilterAccountLandscapeSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(50.dp),
+                    .height(50.dp),
                 shape = RoundedCornerShape(35)
             ) {
                 Text(
@@ -1219,20 +1242,24 @@ fun FilterAccountLandscapeSheet(
                     modifier = Modifier.animateItem()
                 )
             }
-            if (searchText.isNotBlank() && filteredAccountList.isEmpty()) {
+            if (filteredAccountList.isEmpty()) {
                 item(
                     key = "no_results"
                 ) {
                     Text(
-                        text = stringResource(
-                            id = R.string.no_results_found_search_placeholder_label,
-                            searchText
-                        ),
+                        text = if (accounts.isEmpty()) {
+                            stringResource(id = R.string.accounts_screen_empty_placeholder_label)
+                        } else {
+                            stringResource(
+                                id = R.string.no_results_found_search_placeholder_label,
+                                searchText
+                            )
+                        },
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
+                            .padding(horizontal = 10.dp, vertical = 50.dp)
                             .animateItem()
                     )
                 }
