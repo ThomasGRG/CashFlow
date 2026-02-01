@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package jp.ikigai.cash.flow.utils
 
 import java.time.Instant
+import java.time.Year
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -42,7 +43,11 @@ fun getMonthEndDate(): ZonedDateTime {
     return ZonedDateTime.of(
         currentDateTime.year,
         currentDateTime.monthValue,
-        currentDateTime.month.maxLength(),
+        if (Year.of(currentDateTime.year).isLeap) {
+            currentDateTime.month.maxLength()
+        } else {
+            currentDateTime.month.minLength()
+        },
         23,
         59,
         59,
